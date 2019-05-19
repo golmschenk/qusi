@@ -8,6 +8,7 @@ from data_cube_downloader import DataCubeDownloader
 
 class TestDataCubeDownloader:
     """Tests for the TESS input catalog code."""
+
     @pytest.mark.functional
     def test_can_download_a_tess_data_cube_from_a_gaia_source_id(self):
         """Checks that the TESS input catalog can be downloaded."""
@@ -26,6 +27,7 @@ class TestDataCubeDownloader:
         # Add a check for the cube values.
         assert False  # Finish the test!
 
+    @pytest.mark.functional
     def test_can_retrieve_tess_input_catalog_number_from_gaia_source_id(self):
         """Tests that given a Gaia source ID, the TESS input catalog number can be retrieved."""
         data_cube_downloader = DataCubeDownloader()
@@ -34,3 +36,13 @@ class TestDataCubeDownloader:
         tess_input_catalog_id_list = data_cube_downloader.get_tess_input_catalog_ids_from_gaia_source_ids(
             gaia_source_id_list)
         assert set(expected_tess_input_catalog_id_list) == set(tess_input_catalog_id_list)
+
+    @pytest.mark.functional
+    def test_can_retrieve_gaia_cepheid_source_ids(self):
+        """Tests that the list of cepheids from the Gaia DR2 can be retrieved."""
+        data_cube_downloader = DataCubeDownloader()
+        expected_gaia_source_id_list = [5956362046015245056, 261548119462093568]
+        unexpected_gaia_source_id_list = [5876134427743626880, 5880735196683220992]
+        gaia_source_id_list = data_cube_downloader.get_all_cepheid_gaia_source_ids()
+        assert all(entry in gaia_source_id_list for entry in expected_gaia_source_id_list)
+        assert not any(entry in gaia_source_id_list for entry in unexpected_gaia_source_id_list)

@@ -1,13 +1,13 @@
 """Code for downloading data cubes."""
+import json
 import os
+import sys
 from typing import List
-
-import pandas as pd
+from urllib.parse import urlencode
 import numpy as np
-import gzip
-import urllib.request
-import tarfile
-import shutil
+from urllib.parse import quote as urlencode
+import http.client as httplib
+from astroquery.gaia import Gaia
 
 
 class DataCubeDownloader:
@@ -18,38 +18,52 @@ class DataCubeDownloader:
         os.makedirs(self.data_directory, exist_ok=True)
 
     @staticmethod
-    def download_tess_input_catalog():
-        """Downloads the full TESS input catalog."""
-        base_url = 'https://archive.stsci.edu/missions/tess/catalogs/tic_v7/'
-        filename = 'tic_v7_full.tar.gz'
-        out_file_path = filename[:-3]
-        response = urllib.request.urlopen(base_url + filename)
-        with open(out_file_path, 'wb') as outfile:
-            outfile.write(gzip.decompress(response.read()))
-        tar_file = tarfile.open('tic_v7_full.tar')
-        tar_file.extractall()
+    def mast_query(request):
+        """Make a MAST query """
+        server = 'mast.stsci.edu'
+        python_version = '.'.join(map(str, sys.version_info[:3]))
+        http_headers = {'Content-type': 'application/x-www-form-urlencoded',
+                        'Accept': 'text/plain',
+                        'User-agent': 'python-requests/' + python_version}
+        request_string = json.dumps(request)
+        request_string = urlencode(request_string)
+        https_connection = httplib.HTTPSConnection(server)
+        https_connection.request('POST', '/api/v0/invoke', 'request=' + request_string, http_headers)
+        response = https_connection.getresponse()
+        head = response.getheaders()
+        content = response.read().decode('utf-8')
+        https_connection.close()
+        return head, content
 
     def get_tess_input_catalog_ids_from_gaia_source_ids(self, gaia_source_id_list: List[int]) -> List[int]:
         """Retrieves the TESS input catalog IDs based on Gaia source IDs."""
-        # Column 0 is the TIC ID and column 8 is the Gaia ID.
-        tess_input_catalog_path = os.path.join(self.data_directory, 'tess_input_catalog.csv')
-        tess_input_catalog_iter = pd.read_csv(tess_input_catalog_path, usecols=[0, 8], names=['ID', 'GAIA'],
-                                              iterator=True, chunksize=1000, header=None)
-        matched_data_frame = pd.concat([chunk[chunk['GAIA'].isin(gaia_source_id_list)]
-                                        for chunk in tess_input_catalog_iter])
-        id_list = matched_data_frame['ID'].unique()
-        return id_list
+        gaia_source_ids = list(map(str, gaia_source_id_list))
+        request = {'service': 'Mast.Catalogs.Filtered.Tic',
+                   'format': 'json',
+                   'params': {
+                       'columns': 'ID, GAIA',
+                       'filters': [
+                           {'paramName': 'GAIA',
+                            'values': gaia_source_ids}
+                       ]
+                   }}
+        headers, response_string = self.mast_query(request)
+        response_json = json.loads(response_string)
+        tess_input_catalog_id_list = [entry['ID'] for entry in response_json['data']]
+        return tess_input_catalog_id_list
 
-    def get_all_cepheid_gaia_source_ids(self):
+    @staticmethod
+    def get_all_cepheid_gaia_source_ids():
         """Gets all the Gaia source IDs for all the cepheids in the Gaia DR2."""
-        gaia_cepheid_path = os.path.join(self.data_directory, 'gaia_cepheids.csv')
-        gaia_cepheid_data_frame = pd.read_csv(gaia_cepheid_path, usecols=['source_id'])
-        source_id_list = gaia_cepheid_data_frame['source_id'].unique()
+        # noinspection SqlResolve,SqlNoDataSourceInspection
+        job = Gaia.launch_job_async('select source_id from gaiadr2.vari_cepheid')
+        job_results = job.get_results()
+        source_id_list = job_results['source_id'].data.tolist()
         return source_id_list
 
 
 if __name__ == '__main__':
     data_cube_downloader = DataCubeDownloader()
-    source_ids = data_cube_downloader.get_all_cepheid_gaia_source_ids()
-    tic_ids = data_cube_downloader.get_tess_input_catalog_ids_from_gaia_source_ids(source_ids)
-    np.save('tic_ceph.npy', tic_ids)
+    source_ids_ = data_cube_downloader.get_all_cepheid_gaia_source_ids()
+    tic_ids = data_cube_downloader.get_tess_input_catalog_ids_from_gaia_source_ids(source_ids_)
+    np.save('tic_cepheid.npy', tic_ids)
