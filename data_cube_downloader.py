@@ -2,12 +2,14 @@
 import json
 import os
 import sys
-from typing import List
+from typing import List, Dict
 from urllib.parse import urlencode
 import numpy as np
 from urllib.parse import quote as urlencode
 import http.client as httplib
 from astroquery.gaia import Gaia
+from astroquery.mast import Tesscut
+from astropy.coordinates import SkyCoord
 
 
 class DataCubeDownloader:
@@ -18,7 +20,7 @@ class DataCubeDownloader:
         os.makedirs(self.data_directory, exist_ok=True)
 
     @staticmethod
-    def mast_query(request):
+    def mast_query(request: Dict):
         """Make a MAST query """
         server = 'mast.stsci.edu'
         python_version = '.'.join(map(str, sys.version_info[:3]))
@@ -36,7 +38,10 @@ class DataCubeDownloader:
         return head, content
 
     def get_tess_input_catalog_ids_from_gaia_source_ids(self, gaia_source_id_list: List[int]) -> List[int]:
-        """Retrieves the TESS input catalog IDs based on Gaia source IDs."""
+        """
+        Retrieves the TESS input catalog IDs based on Gaia source IDs.
+        Note, only the brightest Gaia source corresponding to a TIC star will return a TIC ID.
+        """
         gaia_source_ids = list(map(str, gaia_source_id_list))
         request = {'service': 'Mast.Catalogs.Filtered.Tic',
                    'format': 'json',
@@ -51,6 +56,34 @@ class DataCubeDownloader:
         response_json = json.loads(response_string)
         tess_input_catalog_id_list = [entry['ID'] for entry in response_json['data']]
         return tess_input_catalog_id_list
+
+    def get_ra_and_dec_for_tess_input_catalog_id(self, tess_input_catalog_id: int) -> (float, float):
+        """Retrieves the RA and DEC for a TESS input catalog ID."""
+        tess_input_catalog_id = str(tess_input_catalog_id)
+        request = {'service': 'Mast.Catalogs.Filtered.Tic',
+                   'format': 'json',
+                   'params': {
+                       'columns': 'ra, dec',
+                       'filters': [
+                           {'paramName': 'ID',
+                            'values': [tess_input_catalog_id]}
+                       ]
+                   }}
+        headers, response_string = self.mast_query(request)
+        response_json = json.loads(response_string)
+        ra = response_json['data'][0]['ra']
+        dec = response_json['data'][0]['dec']
+        return ra, dec
+
+    @staticmethod
+    def get_ra_and_dec_for_gaia_source_id(gaia_source_id: int) -> (float, float):
+        """Retrieves the RA and DEC for a Gaia source ID."""
+        # noinspection SqlResolve,SqlNoDataSourceInspection
+        job = Gaia.launch_job_async(f'select ra, dec from gaiadr2.gaia_source where source_id={gaia_source_id}')
+        job_results = job.get_results()
+        ra = job_results['ra'].data[0]
+        dec = job_results['dec'].data[0]
+        return ra, dec
 
     @staticmethod
     def get_all_cepheid_gaia_source_ids():
