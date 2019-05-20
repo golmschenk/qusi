@@ -94,9 +94,24 @@ class DataCubeDownloader:
         source_id_list = job_results['source_id'].data.tolist()
         return source_id_list
 
+    def get_data_cubes_for_gaia_source_id(self, gaia_source_id: int, cube_side_size: int = 5) -> List[np.ndarray]:
+        """Get the available TESS data cubes from FFIs for a Gaia source ID."""
+        ra, dec = self.get_ra_and_dec_for_gaia_source_id(gaia_source_id)
+        coordinates = SkyCoord(ra, dec, unit="deg")
+        cutouts = Tesscut.get_cutouts(coordinates, cube_side_size)
+        cubes = []
+        for cutout in cutouts:
+            # The HDU at index 1 is the flux table.
+            cube = np.stack([frame['FLUX'] for frame in cutout[1].data], axis=-1)
+            cubes.append(cube)
+        return cubes
+
 
 if __name__ == '__main__':
     data_cube_downloader = DataCubeDownloader()
     source_ids_ = data_cube_downloader.get_all_cepheid_gaia_source_ids()
-    tic_ids = data_cube_downloader.get_tess_input_catalog_ids_from_gaia_source_ids(source_ids_)
-    np.save('tic_cepheid.npy', tic_ids)
+    cube_count = 0
+    for source_id in source_ids_:
+        cubes = data_cube_downloader.get_data_cubes_for_gaia_source_id(source_id)
+        cube_count += len(cubes)
+        print(cube_count)

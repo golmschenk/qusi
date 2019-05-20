@@ -9,6 +9,7 @@ from data_cube_downloader import DataCubeDownloader
 class TestDataCubeDownloader:
     """Tests for the TESS input catalog code."""
 
+    @pytest.mark.skip
     @pytest.mark.functional
     def test_can_download_a_tess_data_cube_from_a_gaia_source_id(self):
         """Checks that the TESS input catalog can be downloaded."""
@@ -46,3 +47,12 @@ class TestDataCubeDownloader:
         gaia_source_id_list = data_cube_downloader.get_all_cepheid_gaia_source_ids()
         assert all(entry in gaia_source_id_list for entry in expected_gaia_source_id_list)
         assert not any(entry in gaia_source_id_list for entry in unexpected_gaia_source_id_list)
+
+    @pytest.mark.functional
+    def test_can_extract_ffi_image_cube_for_tess_input_catalog_id(self):
+        data_cube_downloader = DataCubeDownloader()
+        gaia_source_id = 582320496444448896
+        cubes = data_cube_downloader.get_data_cubes_for_gaia_source_id(gaia_source_id, cube_side_size=20)
+        cube = cubes[0]
+        assert cube.shape[0] == 20
+        assert cube.shape[1] == 20
