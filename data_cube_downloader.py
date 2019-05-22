@@ -21,7 +21,7 @@ class DataCubeDownloader:
 
     @staticmethod
     def mast_query(request: Dict):
-        """Make a MAST query """
+        """Make a MAST query."""
         server = 'mast.stsci.edu'
         python_version = '.'.join(map(str, sys.version_info[:3]))
         http_headers = {'Content-type': 'application/x-www-form-urlencoded',
@@ -90,6 +90,21 @@ class DataCubeDownloader:
         """Gets all the Gaia source IDs for all the cepheids in the Gaia DR2."""
         # noinspection SqlResolve,SqlNoDataSourceInspection
         job = Gaia.launch_job_async('select source_id from gaiadr2.vari_cepheid')
+        job_results = job.get_results()
+        source_id_list = job_results['source_id'].data.tolist()
+        return source_id_list
+
+    @staticmethod
+    def get_non_cepheid_gaia_source_ids(number_to_get=10000):
+        """Gets Gaia source IDs for any non-cepheids source in the Gaia DR2."""
+        # noinspection SqlResolve,SqlNoDataSourceInspection
+        non_cepheid_query = f'''
+        SELECT TOP {number_to_get} gaiadr2.gaia_source.source_id
+        FROM gaiadr2.gaia_source
+        WHERE NOT EXISTS (SELECT gaiadr2.vari_cepheid.source_id FROM gaiadr2.vari_cepheid
+                          WHERE gaiadr2.gaia_source.source_id = gaiadr2.gaia_source.source_id)
+        '''
+        job = Gaia.launch_job_async(non_cepheid_query)
         job_results = job.get_results()
         source_id_list = job_results['source_id'].data.tolist()
         return source_id_list
