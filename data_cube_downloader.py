@@ -99,10 +99,10 @@ class DataCubeDownloader:
         """Gets Gaia source IDs for any non-cepheids source in the Gaia DR2."""
         # noinspection SqlResolve,SqlNoDataSourceInspection
         non_cepheid_query = f'''
-        SELECT TOP {number_to_get} gaiadr2.gaia_source.source_id
-        FROM gaiadr2.gaia_source
-        WHERE NOT EXISTS (SELECT gaiadr2.vari_cepheid.source_id FROM gaiadr2.vari_cepheid
-                          WHERE gaiadr2.gaia_source.source_id = gaiadr2.gaia_source.source_id)
+        SELECT TOP {number_to_get} t1.source_id
+        FROM gaiadr2.gaia_source t1
+            LEFT JOIN gaiadr2.vari_cepheid t2 ON t1.source_id = t2.source_id
+        WHERE t2.source_id IS NULL
         '''
         job = Gaia.launch_job_async(non_cepheid_query)
         job_results = job.get_results()
