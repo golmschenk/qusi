@@ -95,11 +95,11 @@ class DataCubeDownloader:
         return source_id_list
 
     @staticmethod
-    def get_non_cepheid_gaia_source_ids(number_to_get: int = 10000):
+    def get_non_cepheid_gaia_source_ids():
         """Gets Gaia source IDs for any non-cepheids source in the Gaia DR2."""
         # noinspection SqlResolve,SqlNoDataSourceInspection
         non_cepheid_query = f'''
-        SELECT TOP {number_to_get} t1.source_id
+        SELECT t1.source_id
         FROM gaiadr2.gaia_source t1
             LEFT JOIN gaiadr2.vari_cepheid t2 ON t1.source_id = t2.source_id
         WHERE t2.source_id IS NULL
@@ -124,31 +124,26 @@ class DataCubeDownloader:
     def download_positive_negative_cepheid_database(self, maximum_positive_examples: int = 10000,
                                                     maximum_negative_examples: int = 100000):
         """Downloads a positive/negative cepheid database."""
-        positive_dataset_directory = os.path.join(self.data_directory, 'positive')
-        os.makedirs(positive_dataset_directory, exist_ok=True)
         cepheid_source_ids = self.get_all_cepheid_gaia_source_ids()
-        positive_count = 0
-        for cepheid_source_id in cepheid_source_ids:
-            cepheid_cubes = self.get_data_cubes_for_gaia_source_id(cepheid_source_id)
-            for index, cepheid_cube in enumerate(cepheid_cubes):
-                np.save(os.path.join(positive_dataset_directory, f'{cepheid_source_id}_{index}.npy'), cepheid_cube)
-                positive_count += 1
-                if positive_count >= maximum_positive_examples:
-                    break
-            if positive_count >= maximum_positive_examples:
-                break
-        negative_dataset_directory = os.path.join(self.data_directory, 'negative')
-        os.makedirs(negative_dataset_directory, exist_ok=True)
+        self.download_cubes_for_source_id_list('positive', cepheid_source_ids,
+                                               maximum_examples=maximum_positive_examples)
         non_cepheid_source_ids = self.get_non_cepheid_gaia_source_ids()
-        negative_count = 0
-        for non_cepheid_source_id in non_cepheid_source_ids:
-            non_cepheid_cubes = self.get_data_cubes_for_gaia_source_id(non_cepheid_source_id)
-            for index, non_cepheid_cube in enumerate(non_cepheid_cubes):
-                np.save(os.path.join(negative_dataset_directory, f'{non_cepheid_source_id}_{index}.npy'), non_cepheid_cube)
-                negative_count += 1
-                if negative_count >= maximum_negative_examples:
+        self.download_cubes_for_source_id_list('negative', non_cepheid_source_ids,
+                                               maximum_examples=maximum_negative_examples)
+
+    def download_cubes_for_source_id_list(self, dataset_name: str, source_ids: List[int], maximum_examples: int):
+        """Downloads a set of cubes from a set of source_ids."""
+        dataset_directory = os.path.join(self.data_directory, dataset_name)
+        os.makedirs(dataset_directory, exist_ok=True)
+        count = 0
+        for source_id in source_ids:
+            cubes = self.get_data_cubes_for_gaia_source_id(source_id)
+            for index, cube in enumerate(cubes):
+                np.save(os.path.join(dataset_directory, f'{source_id}_{index}.npy'), cube)
+                count += 1
+                if count >= maximum_examples:
                     break
-            if negative_count >= maximum_negative_examples:
+            if count >= maximum_examples:
                 break
 
 
