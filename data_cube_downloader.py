@@ -125,25 +125,25 @@ class DataCubeDownloader:
                                                     maximum_negative_examples: int = 100000):
         """Downloads a positive/negative cepheid database."""
         cepheid_source_ids = self.get_all_cepheid_gaia_source_ids()
-        self.download_cubes_for_source_id_list('positive', cepheid_source_ids,
-                                               maximum_examples=maximum_positive_examples)
+        self.download_cubes_for_gaia_source_id_list('positive', cepheid_source_ids,
+                                                    maximum_cubes=maximum_positive_examples)
         non_cepheid_source_ids = self.get_non_cepheid_gaia_source_ids()
-        self.download_cubes_for_source_id_list('negative', non_cepheid_source_ids,
-                                               maximum_examples=maximum_negative_examples)
+        self.download_cubes_for_gaia_source_id_list('negative', non_cepheid_source_ids,
+                                                    maximum_cubes=maximum_negative_examples)
 
-    def download_cubes_for_source_id_list(self, dataset_name: str, source_ids: List[int], maximum_examples: int):
-        """Downloads a set of cubes from a set of source_ids."""
+    def download_cubes_for_gaia_source_id_list(self, dataset_name: str, source_ids: List[int], maximum_cubes: int):
+        """Downloads a set of cubes from a set of Gaia source IDs."""
         dataset_directory = os.path.join(self.data_directory, dataset_name)
         os.makedirs(dataset_directory, exist_ok=True)
-        count = 0
+        cube_count = 0
         for source_id in source_ids:
             cubes = self.get_data_cubes_for_gaia_source_id(source_id)
             for index, cube in enumerate(cubes):
                 np.save(os.path.join(dataset_directory, f'{source_id}_{index}.npy'), cube)
-                count += 1
-                if count >= maximum_examples:
+                cube_count += 1
+                if cube_count >= maximum_cubes:
                     break
-            if count >= maximum_examples:
+            if cube_count >= maximum_cubes:
                 break
 
 
