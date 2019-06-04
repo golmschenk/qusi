@@ -18,6 +18,7 @@ class DataCubeDownloader:
     def __init__(self):
         self.data_directory = 'data'
         os.makedirs(self.data_directory, exist_ok=True)
+        self.magnitude_filter_value = 16
 
     @staticmethod
     def mast_query(request: Dict):
@@ -85,24 +86,28 @@ class DataCubeDownloader:
         dec = job_results['dec'].data[0]
         return ra, dec
 
-    @staticmethod
-    def get_all_cepheid_gaia_source_ids():
+    def get_all_cepheid_gaia_source_ids(self):
         """Gets all the Gaia source IDs for all the cepheids in the Gaia DR2."""
         # noinspection SqlResolve,SqlNoDataSourceInspection
-        job = Gaia.launch_job_async('select source_id from gaiadr2.vari_cepheid')
+        cepheid_query = f'''
+        SELECT t1.source_id
+        FROM gaiadr2.gaia_source t1 LEFT JOIN gaiadr2.vari_cepheid t2 ON t1.source_id = t2.source_id
+        WHERE t2.source_id IS NOT NULL AND (t1.phot_bp_mean_mag < {self.magnitude_filter_value}
+                                            OR t1.phot_g_mean_flux < {self.magnitude_filter_value})
+        '''
+        job = Gaia.launch_job_async(cepheid_query)
         job_results = job.get_results()
         source_id_list = job_results['source_id'].data.tolist()
         return source_id_list
 
-    @staticmethod
-    def get_non_cepheid_gaia_source_ids():
+    def get_non_cepheid_gaia_source_ids(self):
         """Gets Gaia source IDs for any non-cepheids source in the Gaia DR2."""
         # noinspection SqlResolve,SqlNoDataSourceInspection
         non_cepheid_query = f'''
         SELECT t1.source_id
-        FROM gaiadr2.gaia_source t1
-            LEFT JOIN gaiadr2.vari_cepheid t2 ON t1.source_id = t2.source_id
-        WHERE t2.source_id IS NULL
+        FROM gaiadr2.gaia_source t1 LEFT JOIN gaiadr2.vari_cepheid t2 ON t1.source_id = t2.source_id
+        WHERE t2.source_id IS NULL AND (t1.phot_bp_mean_mag < {self.magnitude_filter_value}
+                                        OR t1.phot_g_mean_flux < {self.magnitude_filter_value})
         '''
         job = Gaia.launch_job_async(non_cepheid_query)
         job_results = job.get_results()
