@@ -177,7 +177,7 @@ class DataCubeDownloader:
         self.download_cubes_for_gaia_source_id_list('classic-cepheids', classic_cepheid_source_ids)
 
     def download_positive_negative_cepheid_database(self, maximum_positive_examples: int = 10000,
-                                                    maximum_negative_examples: int = 100000):
+                                                    maximum_negative_examples: int = 40000):
         """Downloads a positive/negative cepheid database."""
         cepheid_source_ids = self.get_all_cepheid_gaia_source_ids()
         self.download_cubes_for_gaia_source_id_list('positive', cepheid_source_ids,
