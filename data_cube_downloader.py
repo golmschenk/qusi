@@ -10,6 +10,7 @@ import http.client as httplib
 from astroquery.gaia import Gaia
 from astroquery.mast import Tesscut
 from astropy.coordinates import SkyCoord
+from requests.exceptions import HTTPError
 
 
 class DataCubeDownloader:
@@ -37,6 +38,31 @@ class DataCubeDownloader:
         content = response.read().decode('utf-8')
         https_connection.close()
         return head, content
+
+    @staticmethod
+    def launch_gaia_job(query_string):
+        """Query on Gaia repeating if there is a time out error."""
+        job = None
+        while True:
+            try:
+                job = Gaia.launch_job_async(query_string)
+                break
+            except TimeoutError:
+                print('Timed out, trying again...')
+                continue
+        return job
+
+    @staticmethod
+    def get_tess_cuts(coordinates, cube_side_size):
+        """Gets the TESS cuts for a given set of coordinates. Retries on HTTP error."""
+        cutouts = None
+        while True:
+            try:
+                cutouts = Tesscut.get_cutouts(coordinates, cube_side_size)
+                break
+            except HTTPError:
+                continue
+        return cutouts
 
     def get_tess_input_catalog_ids_from_gaia_source_ids(self, gaia_source_id_list: List[int]) -> List[int]:
         """
@@ -76,11 +102,10 @@ class DataCubeDownloader:
         dec = response_json['data'][0]['dec']
         return ra, dec
 
-    @staticmethod
-    def get_ra_and_dec_for_gaia_source_id(gaia_source_id: int) -> (float, float):
+    def get_ra_and_dec_for_gaia_source_id(self, gaia_source_id: int) -> (float, float):
         """Retrieves the RA and DEC for a Gaia source ID."""
         # noinspection SqlResolve,SqlNoDataSourceInspection
-        job = Gaia.launch_job_async(f'select ra, dec from gaiadr2.gaia_source where source_id={gaia_source_id}')
+        job = self.launch_gaia_job(f'select ra, dec from gaiadr2.gaia_source where source_id={gaia_source_id}')
         job_results = job.get_results()
         ra = job_results['ra'].data[0]
         dec = job_results['dec'].data[0]
@@ -95,7 +120,7 @@ class DataCubeDownloader:
         WHERE t2.source_id IS NOT NULL AND (t1.phot_bp_mean_mag < {self.magnitude_filter_value}
                                             OR t1.phot_g_mean_flux < {self.magnitude_filter_value})
         '''
-        job = Gaia.launch_job_async(cepheid_query)
+        job = self.launch_gaia_job(cepheid_query)
         job_results = job.get_results()
         source_id_list = job_results['source_id'].data.tolist()
         return source_id_list
@@ -109,7 +134,7 @@ class DataCubeDownloader:
         WHERE t2.source_id IS NULL AND (t1.phot_bp_mean_mag < {self.magnitude_filter_value}
                                         OR t1.phot_g_mean_flux < {self.magnitude_filter_value})
         '''
-        job = Gaia.launch_job_async(non_cepheid_query)
+        job = self.launch_gaia_job(non_cepheid_query)
         job_results = job.get_results()
         source_id_list = job_results['source_id'].data.tolist()
         return source_id_list
