@@ -14,7 +14,7 @@ class SanityCheckNetwork(Sequential):
         self.add(Reshape([1]))
 
 
-class SimpleCnn(Sequential):
+class SimpleCubeCnn(Sequential):
     """A simple simple 3D CNN for TESS data cubes."""
     def __init__(self):
         super().__init__()
