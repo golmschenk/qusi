@@ -1,6 +1,8 @@
 """Code for downloading data cubes."""
 import json
+import math
 import os
+import random
 import sys
 from typing import List, Dict
 from urllib.parse import urlencode
@@ -139,17 +141,40 @@ class DataCubeDownloader:
         source_id_list = job_results['source_id'].data.tolist()
         return source_id_list
 
+    def get_all_classic_cepheid_gaia_source_ids(self):
+        """Gets all the Gaia source IDs for all the classic cepheids in the Gaia DR2."""
+        # noinspection SqlResolve,SqlNoDataSourceInspection
+        job = self.launch_gaia_job("select source_id from gaiadr2.vari_cepheid where type_best_classification='DCEP'")
+        job_results = job.get_results()
+        source_id_list = job_results['source_id'].data.tolist()
+        return source_id_list
+
+    def get_all_type_2_cepheid_gaia_source_ids(self):
+        """Gets all the Gaia source IDs for all the type 2 cepheids in the Gaia DR2."""
+        # noinspection SqlResolve,SqlNoDataSourceInspection
+        job = self.launch_gaia_job("select source_id from gaiadr2.vari_cepheid where type_best_classification='T2CEP'")
+        job_results = job.get_results()
+        source_id_list = job_results['source_id'].data.tolist()
+        return source_id_list
+
     def get_data_cubes_for_gaia_source_id(self, gaia_source_id: int, cube_side_size: int = 10) -> List[np.ndarray]:
         """Get the available TESS data cubes from FFIs for a Gaia source ID."""
         ra, dec = self.get_ra_and_dec_for_gaia_source_id(gaia_source_id)
         coordinates = SkyCoord(ra, dec, unit="deg")
-        cutouts = Tesscut.get_cutouts(coordinates, cube_side_size)
+        cutouts = self.get_tess_cuts(coordinates, cube_side_size)
         cubes = []
         for cutout in cutouts:
             # The HDU at index 1 is the flux table.
             cube = np.stack([frame['FLUX'] for frame in cutout[1].data], axis=-1)
             cubes.append(cube)
         return cubes
+
+    def download_classic_cepheid_and_type_2_cepheid_database(self):
+        """Downloads a positive/negative cepheid database."""
+        type_2_cepheid_source_ids = self.get_all_type_2_cepheid_gaia_source_ids()
+        self.download_cubes_for_gaia_source_id_list('type-2-cepheids', type_2_cepheid_source_ids)
+        classic_cepheid_source_ids = self.get_all_classic_cepheid_gaia_source_ids()
+        self.download_cubes_for_gaia_source_id_list('classic-cepheids', classic_cepheid_source_ids)
 
     def download_positive_negative_cepheid_database(self, maximum_positive_examples: int = 10000,
                                                     maximum_negative_examples: int = 100000):
@@ -161,8 +186,12 @@ class DataCubeDownloader:
         self.download_cubes_for_gaia_source_id_list('negative', non_cepheid_source_ids,
                                                     maximum_cubes=maximum_negative_examples)
 
-    def download_cubes_for_gaia_source_id_list(self, dataset_name: str, source_ids: List[int], maximum_cubes: int):
+    def download_cubes_for_gaia_source_id_list(self, dataset_name: str, source_ids: List[int],
+                                               maximum_cubes: int = math.inf):
         """Downloads a set of cubes from a set of Gaia source IDs."""
+        if maximum_cubes != math.inf:
+            random.seed(0)
+            random.shuffle(source_ids)  # Randomize which sources to download if not downloading them all.
         dataset_directory = os.path.join(self.data_directory, dataset_name)
         os.makedirs(dataset_directory, exist_ok=True)
         cube_count = 0
