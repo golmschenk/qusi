@@ -1,8 +1,7 @@
 """Code for network architectures."""
 from tensorflow import sigmoid
 from tensorflow.python.keras import Sequential
-from tensorflow.python.keras.activations import relu
-from tensorflow.python.keras.layers import Conv3D, MaxPool3D, Flatten, Dense, Reshape
+from tensorflow.python.keras.layers import Conv3D, MaxPool3D, Flatten, Dense, Reshape, LeakyReLU
 from tensorflow.python.keras.regularizers import l2
 
 
@@ -19,7 +18,7 @@ class SimpleCubeCnn(Sequential):
     """A simple simple 3D CNN for TESS data cubes."""
     def __init__(self):
         super().__init__()
-        leaky_relu = relu(alpha=0.01)
+        leaky_relu = LeakyReLU(alpha=0.01)
         l2_regularizer = l2(0.001)
         self.add(Conv3D(16, [3, 3, 1], activation=leaky_relu, kernel_regularizer=l2_regularizer))
         self.add(Conv3D(16, [1, 1, 4], activation=leaky_relu, kernel_regularizer=l2_regularizer))
