@@ -15,7 +15,7 @@ class SanityCheckNetwork(Sequential):
 
 
 class SimpleCubeCnn(Sequential):
-    """A simple simple 3D CNN for TESS data cubes."""
+    """A simple 3D CNN for TESS data cubes."""
     def __init__(self):
         super().__init__()
         leaky_relu = LeakyReLU(alpha=0.01)

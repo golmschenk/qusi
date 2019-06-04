@@ -52,10 +52,10 @@ def train():
     # Prepare the logging.
     datetime_string = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
     trial_directory = os.path.join(logs_directory, f'{trial_name} {datetime_string}')
-    train_log_dir = os.path.join(trial_directory, 'train')
-    test_log_dir = os.path.join(trial_directory, 'validation')
-    train_summary_writer = tf.summary.create_file_writer(train_log_dir)
-    test_summary_writer = tf.summary.create_file_writer(test_log_dir)
+    training_log_directory = os.path.join(trial_directory, 'train')
+    validation_log_directory = os.path.join(trial_directory, 'validation')
+    train_summary_writer = tf.summary.create_file_writer(training_log_directory)
+    test_summary_writer = tf.summary.create_file_writer(validation_log_directory)
 
     # Run the training.
     for epoch in range(epochs_to_run):
