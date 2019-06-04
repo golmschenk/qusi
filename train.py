@@ -27,7 +27,7 @@ def train():
     validation_accuracy_metric = tf.keras.metrics.BinaryAccuracy(name='Validation Accuracy')
 
     # Define the training and evaluation functions.
-    @tf.function(autograph=False)
+    @tf.function
     def train_step(training_examples, training_labels):
         """Runs the training step."""
         with tf.GradientTape() as tape:
@@ -40,7 +40,7 @@ def train():
         training_loss_metric(training_loss)
         training_accuracy_metric(training_labels, predictions)
 
-    @tf.function(autograph=False)
+    @tf.function
     def validation_step(testing_examples, testing_labels):
         """Runs the testing step."""
         predictions = model(testing_examples, training=False)
