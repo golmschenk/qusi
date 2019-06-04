@@ -45,7 +45,6 @@ soupsieve==1.9.1
 tb-nightly==1.14.0a20190301
 tensorboard==1.13.1
 tensorflow==2.0.0a0
-tensorflow-gpu==2.0.0a0
 tensorflow-estimator==1.13.0
 termcolor==1.1.0
 tf-estimator-nightly==1.14.0.dev2019030115

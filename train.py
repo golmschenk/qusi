@@ -53,7 +53,7 @@ def train():
     datetime_string = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
     trial_directory = os.path.join(logs_directory, f'{trial_name} {datetime_string}')
     train_log_dir = os.path.join(trial_directory, 'train')
-    test_log_dir = os.path.join(trial_directory, 'test')
+    test_log_dir = os.path.join(trial_directory, 'validation')
     train_summary_writer = tf.summary.create_file_writer(train_log_dir)
     test_summary_writer = tf.summary.create_file_writer(test_log_dir)
 
