@@ -48,7 +48,6 @@ tensorflow==2.0.0a0
 tensorflow-estimator==1.13.0
 termcolor==1.1.0
 tf-estimator-nightly==1.14.0.dev2019030115
-torch==1.1.0
 tqdm==4.32.1
 urllib3==1.25.2
 wcwidth==0.1.7
