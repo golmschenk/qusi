@@ -19,12 +19,12 @@ def train():
     logs_directory = 'logs'
 
     # Setup the training and evaluation metrics.
-    loss_function = tf.keras.losses.BinaryCrossentropy()
-    optimizer = tf.keras.optimizers.Adam()
-    training_loss_metric = tf.keras.metrics.Mean(name='Training Loss')
-    training_accuracy_metric = tf.keras.metrics.BinaryAccuracy(name='Training Accuracy')
-    validation_loss_metric = tf.keras.metrics.Mean(name='Validation Loss')
-    validation_accuracy_metric = tf.keras.metrics.BinaryAccuracy(name='Validation Accuracy')
+    loss_function = tf.losses.BinaryCrossentropy()
+    optimizer = tf.optimizers.Adam()
+    training_loss_metric = tf.metrics.Mean(name='Training Loss')
+    training_accuracy_metric = tf.metrics.BinaryAccuracy(name='Training Accuracy')
+    validation_loss_metric = tf.metrics.Mean(name='Validation Loss')
+    validation_accuracy_metric = tf.metrics.BinaryAccuracy(name='Validation Accuracy')
 
     # Define the training and evaluation functions.
     @tf.function
@@ -41,13 +41,13 @@ def train():
         training_accuracy_metric(training_labels, predictions)
 
     @tf.function
-    def validation_step(testing_examples, testing_labels):
+    def validation_step(validation_examples, validation_labels):
         """Runs the testing step."""
-        predictions = model(testing_examples, training=False)
+        predictions = model(validation_examples, training=False)
         predictions = tf.reshape(predictions, [-1])
-        validation_loss = loss_function(testing_labels, predictions)
+        validation_loss = loss_function(validation_labels, predictions)
         validation_loss_metric(validation_loss)
-        validation_accuracy_metric(testing_labels, predictions)
+        validation_accuracy_metric(validation_labels, predictions)
 
     # Prepare the logging.
     datetime_string = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
@@ -59,13 +59,13 @@ def train():
 
     # Run the training.
     for epoch in range(epochs_to_run):
-        for images, labels in training_dataset:
-            train_step(images, labels)
+        for training_images_, training_labels_ in training_dataset:
+            train_step(training_images_, training_labels_)
         with train_summary_writer.as_default():
             tf.summary.scalar('loss', training_loss_metric.result(), step=epoch)
             tf.summary.scalar('accuracy', training_accuracy_metric.result(), step=epoch)
-        for validation_images, validation_labels in validation_dataset:
-            validation_step(validation_images, validation_labels)
+        for validation_images_, validation_labels_ in validation_dataset:
+            validation_step(validation_images_, validation_labels_)
         with test_summary_writer.as_default():
             tf.summary.scalar('loss', validation_loss_metric.result(), step=epoch)
             tf.summary.scalar('accuracy', validation_accuracy_metric.result(), step=epoch)

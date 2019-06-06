@@ -43,9 +43,9 @@ class DataCubeDownloader:
 
     @staticmethod
     def launch_gaia_job(query_string):
-        """Query on Gaia repeating if there is a time out error."""
+        """Query on Gaia repeating on errors."""
         job = None
-        while True:
+        while True:  # This loop plus try is used to repeat if a connection error happens.
             try:
                 job = Gaia.launch_job_async(query_string)
                 break
@@ -56,13 +56,14 @@ class DataCubeDownloader:
 
     @staticmethod
     def get_tess_cuts(coordinates, cube_side_size):
-        """Gets the TESS cuts for a given set of coordinates. Retries on HTTP error."""
+        """Gets the TESS cuts for a given set of coordinates, repeating on errors."""
         cutouts = None
-        while True:
+        while True:  # This loop plus try is used to repeat if a connection error happens.
             try:
                 cutouts = Tesscut.get_cutouts(coordinates, cube_side_size)
                 break
             except HTTPError:
+                print('HTTP error, trying again...')
                 continue
         return cutouts
 
@@ -161,11 +162,14 @@ class DataCubeDownloader:
         """Get the available TESS data cubes from FFIs for a Gaia source ID."""
         ra, dec = self.get_ra_and_dec_for_gaia_source_id(gaia_source_id)
         coordinates = SkyCoord(ra, dec, unit="deg")
-        cutouts = self.get_tess_cuts(coordinates, cube_side_size)
+        fits_cutouts = self.get_tess_cuts(coordinates, cube_side_size)
         cubes = []
-        for cutout in cutouts:
-            # The HDU at index 1 is the flux table.
-            cube = np.stack([frame['FLUX'] for frame in cutout[1].data], axis=-1)
+        for cutout in fits_cutouts:
+            flux_arrays = []
+            # The FITS HDU at index 1 is the flux table.
+            for frame in cutout[1].data:
+                flux_arrays.append(frame['FLUX'])
+            cube = np.stack(flux_arrays, axis=-1)
             cubes.append(cube)
         return cubes
 
