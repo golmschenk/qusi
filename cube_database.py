@@ -9,7 +9,6 @@ import tensorflow as tf
 
 class CubeDatabase:
     """A representing a dataset of TESS data cubes for binary classification."""
-
     def __init__(self, positive_data_directory: str, negative_data_directory: str):
         self.positive_data_directory = positive_data_directory
         self.negative_data_directory = negative_data_directory
@@ -35,6 +34,7 @@ class CubeDatabase:
         labels = positive_labels + negative_labels
         example_paths, labels = self.shuffle_in_unison(example_paths, labels, seed=0)
         labels = labels.astype(np.int32)
+        labels = np.expand_dims(labels, axis=-1)
         file_path_dataset = tf.data.Dataset.from_tensor_slices(example_paths)
         labels_dataset = tf.data.Dataset.from_tensor_slices(labels)
         full_dataset = tf.data.Dataset.zip((file_path_dataset, labels_dataset))
@@ -44,6 +44,7 @@ class CubeDatabase:
         load_and_preprocess_function = lambda file_path, label: tuple(
             tf.py_function(self.load_and_preprocess_numpy_file, [file_path, label], [tf.float32, tf.int32]))
         training_dataset = training_dataset.map(load_and_preprocess_function)
+        training_dataset = training_dataset.shuffle(buffer_size=1000)
         training_dataset = training_dataset.batch(self.batch_size).prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
         validation_dataset = validation_dataset.map(load_and_preprocess_function)
         validation_dataset = validation_dataset.batch(self.batch_size)

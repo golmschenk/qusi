@@ -39,3 +39,4 @@ class SimpleCubeCnn(Sequential):
         self.add(Conv3D(32, [1, 1, 9], activation=leaky_relu, kernel_regularizer=l2_regularizer))
         self.add(Conv3D(16, [1, 1, 1], activation=leaky_relu, kernel_regularizer=l2_regularizer))
         self.add(Conv3D(1, [1, 1, 1], activation=sigmoid))
+        self.add(Reshape([1]))
