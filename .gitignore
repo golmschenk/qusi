@@ -230,3 +230,6 @@ venv.bak/
 # mypy
 .mypy_cache/
 
+### Project specific
+data/
+logs/
