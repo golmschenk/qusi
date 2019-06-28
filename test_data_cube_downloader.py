@@ -52,7 +52,7 @@ class TestDataCubeDownloader:
     def test_can_extract_ffi_image_cube_for_tess_input_catalog_id(self):
         data_cube_downloader = DataCubeDownloader()
         gaia_source_id = 582320496444448896
-        cubes = data_cube_downloader.get_data_cubes_for_gaia_source_id(gaia_source_id, cube_side_size=20)
+        cubes = data_cube_downloader.get_tess_data_cubes_for_gaia_source_id(gaia_source_id, cube_side_size=20)
         cube = cubes[0]
         assert cube.shape[0] == 20
         assert cube.shape[1] == 20
