@@ -18,8 +18,8 @@ class TestDataCubeDownloader:
         gaia_source_id = 4052922352453886976
         expected_tess_input_catalog_id = 50559830
         tess_quarter = 0
-        DataCubeDownloader.download_data_cube(gaia_source_id=gaia_source_id)
-        tess_data_cube_path = os.path.join(data_cube_downloader.data_directory,
+        DataCubeDownloader().download_tess_cubes_for_gaia_source_id_list('functional test', [gaia_source_id])
+        tess_data_cube_path = os.path.join(data_cube_downloader.data_directory, 'functional test'
                                            f'{expected_tess_input_catalog_id}_{tess_quarter}.npy')
         assert os.path.exists(tess_data_cube_path)
         tess_data_cube = np.load(tess_data_cube_path)
