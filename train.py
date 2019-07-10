@@ -23,6 +23,8 @@ def train():
     optimizer = tf.optimizers.Adam()
     loss_metric = tf.keras.losses.BinaryCrossentropy(name='Loss')
     accuracy_metric = tf.metrics.BinaryAccuracy(name='Accuracy')
+    precision_metric = tf.metrics.Precision(name='Precision')
+    recall_metric = tf.metrics.Recall(name='Recall')
 
     # Setup logging.
     datetime_string = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
@@ -30,7 +32,7 @@ def train():
     tensorboard_callback = callbacks.TensorBoard(log_dir=trial_directory)
 
     # Compile and train model.
-    model.compile(optimizer=optimizer, loss=loss_metric, metrics=[accuracy_metric])
+    model.compile(optimizer=optimizer, loss=loss_metric, metrics=[accuracy_metric, precision_metric, recall_metric])
     model.fit(training_dataset, epochs=epochs_to_run, validation_data=validation_dataset,
               callbacks=[tensorboard_callback])
 
