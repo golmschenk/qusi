@@ -61,13 +61,12 @@ class LightcurveDatabase:
         time_steps = self.time_steps_per_example
         start_slice = np.random.randint(0, lightcurve.shape[0] - time_steps)
         lightcurve = lightcurve[:, :, start_slice:start_slice + time_steps]
-        lightcurve = np.expand_dims(lightcurve, axis=-1)
-        lightcurve = np.clip(lightcurve, a_min=1, a_max=None)
-        lightcurve = np.log10(lightcurve)
         lightcurve -= np.min(lightcurve)
+        lightcurve = np.log1p(lightcurve)
         array_max = np.max(lightcurve)
         if array_max != 0:
             lightcurve /= array_max
+        lightcurve = np.expand_dims(lightcurve, axis=-1)
         return lightcurve
 
     @staticmethod
