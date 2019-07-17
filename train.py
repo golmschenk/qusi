@@ -4,15 +4,15 @@ import os
 import tensorflow as tf
 from tensorflow.python.keras import callbacks
 
-from cube_database import CubeDatabase
-from models import SimpleCubeCnn
+from lightcurve_database import LightcurveDatabase
+from models import SimpleLightcurveCnn
 
 
 def train():
     """Runs the training."""
     # Basic training settings.
-    model = SimpleCubeCnn()
-    database = CubeDatabase('data/positive', 'data/negative')
+    model = SimpleLightcurveCnn()
+    database = LightcurveDatabase('data/positive', 'data/negative')
     epochs_to_run = 1000
     trial_name = 'baseline'
     logs_directory = 'logs'

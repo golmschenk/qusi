@@ -1,7 +1,7 @@
 """Code for network architectures."""
 from tensorflow import sigmoid
 from tensorflow.python.keras import Sequential
-from tensorflow.python.keras.layers import Conv3D, MaxPool3D, Flatten, Dense, Reshape, LeakyReLU
+from tensorflow.python.keras.layers import Conv3D, MaxPool3D, Flatten, Dense, Reshape, LeakyReLU, Conv1D
 from tensorflow.python.keras.regularizers import l2
 
 
@@ -39,4 +39,20 @@ class SimpleCubeCnn(Sequential):
         self.add(Conv3D(32, [1, 1, 9], activation=leaky_relu, kernel_regularizer=l2_regularizer))
         self.add(Conv3D(16, [1, 1, 1], activation=leaky_relu, kernel_regularizer=l2_regularizer))
         self.add(Conv3D(1, [1, 1, 1], activation=sigmoid))
+        self.add(Reshape([1]))
+
+
+class SimpleLightcurveCnn(Sequential):
+    """A simple 1D CNN for lightcurves."""
+    def __init__(self):
+        super().__init__()
+        leaky_relu = LeakyReLU(alpha=0.01)
+        l2_regularizer = l2(0.001)
+        self.add(Conv1D(8, kernel_size=4, strides=2, activation=leaky_relu, kernel_regularizer=l2_regularizer))
+        self.add(Conv1D(16, kernel_size=4, strides=2, activation=leaky_relu, kernel_regularizer=l2_regularizer))
+        self.add(Conv1D(32, kernel_size=4, strides=2, activation=leaky_relu, kernel_regularizer=l2_regularizer))
+        self.add(Conv1D(64, kernel_size=4, strides=2, activation=leaky_relu, kernel_regularizer=l2_regularizer))
+        self.add(Conv1D(128, kernel_size=4, strides=2, activation=leaky_relu, kernel_regularizer=l2_regularizer))
+        self.add(Conv1D(1, kernel_size=9, activation=leaky_relu, kernel_regularizer=l2_regularizer))
+        self.add(Conv3D(1, [1], activation=sigmoid))
         self.add(Reshape([1]))
