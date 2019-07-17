@@ -53,6 +53,6 @@ class SimpleLightcurveCnn(Sequential):
         self.add(Conv1D(32, kernel_size=4, strides=2, activation=leaky_relu, kernel_regularizer=l2_regularizer))
         self.add(Conv1D(64, kernel_size=4, strides=2, activation=leaky_relu, kernel_regularizer=l2_regularizer))
         self.add(Conv1D(128, kernel_size=4, strides=2, activation=leaky_relu, kernel_regularizer=l2_regularizer))
-        self.add(Conv1D(1, kernel_size=9, activation=leaky_relu, kernel_regularizer=l2_regularizer))
-        self.add(Conv3D(1, [1], activation=sigmoid))
+        self.add(Conv1D(20, kernel_size=9, activation=leaky_relu, kernel_regularizer=l2_regularizer))
+        self.add(Conv1D(1, [1], activation=sigmoid))
         self.add(Reshape([1]))
