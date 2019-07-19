@@ -12,7 +12,7 @@ class LightcurveDatabase:
     def __init__(self, positive_data_directory: str, negative_data_directory: str):
         self.positive_data_directory = positive_data_directory
         self.negative_data_directory = negative_data_directory
-        self.time_steps_per_example = 800
+        self.time_steps_per_example = 30000
         self.batch_size = 100
         training_dataset, validation_dataset = self.generate_datasets()
         self.training_dataset: tf.data.Dataset = training_dataset
@@ -52,26 +52,41 @@ class LightcurveDatabase:
 
     def load_and_preprocess_numpy_file(self, file_path: tf.Tensor, label: int) -> (np.ndarray, int):
         """Loads numpy files from the tensor alongside labels."""
-        cube = np.load(file_path.numpy())
-        cube = self.preprocess_lightcurve(cube)
-        return cube.astype(np.float32), label
+        lightcurve = np.load(file_path.numpy())
+        lightcurve = self.preprocess_and_augment_lightcurve(lightcurve)
+        return lightcurve.astype(np.float32), label
 
-    def preprocess_lightcurve(self, lightcurve: np.ndarray):
-        """Slices and normalizes cubes."""
-        time_steps = self.time_steps_per_example
-        start_slice = np.random.randint(0, lightcurve.shape[0] - time_steps)
-        lightcurve = lightcurve[:, :, start_slice:start_slice + time_steps]
+    def preprocess_and_augment_lightcurve(self, lightcurve: np.ndarray):
+        """Slices and normalizes lightcurves."""
+        lightcurve = self.remove_random_values(lightcurve)  # Helps prevent overfitting.
+        lightcurve = self.roll_lightcurve(lightcurve)  # Helps prevent overfitting.
+        lightcurve = self.make_uniform_length(lightcurve)  # Current network expects a fixed length.
+        lightcurve = self.normalize(lightcurve)
+        lightcurve = np.expand_dims(lightcurve, axis=-1)  # Network uses a "channel" dimension.
+        return lightcurve
+
+    def make_uniform_length(self, lightcurve):
+        """Makes all lightcurves the same length, but clipping those too large and repeating those too small."""
+        if lightcurve.shape[0] > self.time_steps_per_example:
+            start_slice = np.random.randint(0, lightcurve.shape[0] - self.time_steps_per_example)
+            lightcurve = lightcurve[:, :, start_slice:start_slice + self.time_steps_per_example]
+        else:
+            elements_to_repeat = self.time_steps_per_example - lightcurve.shape[0]
+            lightcurve = np.pad(lightcurve, (0, elements_to_repeat), mode='wrap')
+        return lightcurve
+
+    def normalize(self, lightcurve):
+        """Normalizes from 0 to 1 on the logarithm of the lightcurve."""
         lightcurve -= np.min(lightcurve)
         lightcurve = np.log1p(lightcurve)
         array_max = np.max(lightcurve)
         if array_max != 0:
             lightcurve /= array_max
-        lightcurve = np.expand_dims(lightcurve, axis=-1)
         return lightcurve
 
     @staticmethod
     def remove_bad_files(file_path_list: List[str]):
-        """Removes problematic cubes (all values the same, containing infinite or NaN values)."""
+        """Removes problematic lightcurves (all values the same, containing infinite or NaN values)."""
         new_file_path_list = []
         for file_path in file_path_list:
             array = np.load(file_path)
@@ -92,3 +107,15 @@ class LightcurveDatabase:
             np.random.seed(seed)
         indexes = np.random.permutation(len(a))
         return np.array(a)[indexes], np.array(b)[indexes]
+
+    def remove_random_values(self, lightcurve):
+        """Removes random values from the lightcurve."""
+        max_values_to_remove = 10
+        values_to_remove = random.randrange(max_values_to_remove)
+        random_indexes = np.random.randint(0, len(lightcurve), size=values_to_remove)
+        return np.delete(lightcurve, random_indexes)
+
+    def roll_lightcurve(self, lightcurve):
+        """Randomly rolls the lightcurve, moving starting elements to the end."""
+        shift = np.random.randint(0, len(lightcurve))
+        return np.roll(lightcurve, shift)
