@@ -1,7 +1,8 @@
 """Code for network architectures."""
 from tensorflow import sigmoid
 from tensorflow.python.keras import Sequential
-from tensorflow.python.keras.layers import Conv3D, MaxPool3D, Flatten, Dense, Reshape, LeakyReLU, Conv1D
+from tensorflow.python.keras.layers import Conv3D, MaxPool3D, Flatten, Dense, Reshape, LeakyReLU, Conv1D, \
+    BatchNormalization
 from tensorflow.python.keras.regularizers import l2
 
 
@@ -49,10 +50,25 @@ class SimpleLightcurveCnn(Sequential):
         leaky_relu = LeakyReLU(alpha=0.01)
         l2_regularizer = l2(0.001)
         self.add(Conv1D(8, kernel_size=4, strides=2, activation=leaky_relu, kernel_regularizer=l2_regularizer))
+        self.add(Conv1D(8, kernel_size=4, strides=2, activation=leaky_relu, kernel_regularizer=l2_regularizer))
+        self.add(Conv1D(8, kernel_size=4, strides=2, activation=leaky_relu, kernel_regularizer=l2_regularizer))
+        self.add(BatchNormalization())
         self.add(Conv1D(16, kernel_size=4, strides=2, activation=leaky_relu, kernel_regularizer=l2_regularizer))
+        self.add(BatchNormalization())
+        self.add(Conv1D(16, kernel_size=4, strides=2, activation=leaky_relu, kernel_regularizer=l2_regularizer))
+        self.add(BatchNormalization())
+        self.add(Conv1D(16, kernel_size=4, strides=2, activation=leaky_relu, kernel_regularizer=l2_regularizer))
+        self.add(BatchNormalization())
         self.add(Conv1D(32, kernel_size=4, strides=2, activation=leaky_relu, kernel_regularizer=l2_regularizer))
+        self.add(BatchNormalization())
+        self.add(Conv1D(32, kernel_size=4, strides=2, activation=leaky_relu, kernel_regularizer=l2_regularizer))
+        self.add(BatchNormalization())
+        self.add(Conv1D(32, kernel_size=4, strides=2, activation=leaky_relu, kernel_regularizer=l2_regularizer))
+        self.add(BatchNormalization())
         self.add(Conv1D(64, kernel_size=4, strides=2, activation=leaky_relu, kernel_regularizer=l2_regularizer))
-        self.add(Conv1D(128, kernel_size=4, strides=2, activation=leaky_relu, kernel_regularizer=l2_regularizer))
-        self.add(Conv1D(20, kernel_size=9, activation=leaky_relu, kernel_regularizer=l2_regularizer))
+        self.add(BatchNormalization())
+        self.add(Conv1D(64, kernel_size=4, strides=2, activation=leaky_relu, kernel_regularizer=l2_regularizer))
+        self.add(BatchNormalization())
+        self.add(Conv1D(10, kernel_size=12, activation=leaky_relu, kernel_regularizer=l2_regularizer))
         self.add(Conv1D(1, [1], activation=sigmoid))
         self.add(Reshape([1]))
