@@ -126,6 +126,8 @@ class LightcurveDatabase:
 
     def enforce_data_ratio(self, positive_examples, negative_examples):
         """Repeats examples to enforce a given training ratio."""
+        if self.positive_to_negative_data_ratio is None:
+            return
         existing_ratio = len(positive_examples) / len(negative_examples)
         if existing_ratio < self.positive_to_negative_data_ratio:
             desired_number_of_positive_examples = int(self.positive_to_negative_data_ratio * len(negative_examples))
