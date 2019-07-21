@@ -9,7 +9,8 @@ import tensorflow as tf
 
 class LightcurveDatabase:
     """A representing a dataset of lightcurves for binary classification."""
-    def __init__(self, positive_data_directory: str, negative_data_directory: str):
+    def __init__(self, positive_data_directory: str, negative_data_directory: str,
+                 positive_to_negative_data_ratio: float = None):
         self.positive_data_directory = positive_data_directory
         self.negative_data_directory = negative_data_directory
         self.time_steps_per_example = 30000
@@ -17,6 +18,7 @@ class LightcurveDatabase:
         training_dataset, validation_dataset = self.generate_datasets()
         self.training_dataset: tf.data.Dataset = training_dataset
         self.validation_dataset: tf.data.Dataset = validation_dataset
+        self.positive_to_negative_data_ratio = positive_to_negative_data_ratio
 
     def generate_datasets(self) -> (tf.data.Dataset, tf.data.Dataset):
         """Generates the training and testing datasets."""
@@ -24,11 +26,13 @@ class LightcurveDatabase:
                                   os.listdir(self.positive_data_directory) if file_name.endswith('.npy')]
         positive_example_paths = self.remove_bad_files(positive_example_paths)
         print(f'{len(positive_example_paths)} positive examples.')
-        positive_labels = [1] * len(positive_example_paths)
         negative_example_paths = [os.path.join(self.negative_data_directory, file_name) for file_name in
                                   os.listdir(self.negative_data_directory) if file_name.endswith('.npy')]
         negative_example_paths = self.remove_bad_files(negative_example_paths)
         print(f'{len(negative_example_paths)} negative examples.')
+        positive_example_paths, negative_example_paths = self.enforce_data_ratio(positive_example_paths,
+                                                                                 negative_example_paths)
+        positive_labels = [1] * len(positive_example_paths)
         negative_labels = [0] * len(negative_example_paths)
         example_paths = positive_example_paths + negative_example_paths
         labels = positive_labels + negative_labels
@@ -119,3 +123,17 @@ class LightcurveDatabase:
         """Randomly rolls the lightcurve, moving starting elements to the end."""
         shift = np.random.randint(0, len(lightcurve))
         return np.roll(lightcurve, shift)
+
+    def enforce_data_ratio(self, positive_examples, negative_examples):
+        """Repeats examples to enforce a given training ratio."""
+        existing_ratio = len(positive_examples) / len(negative_examples)
+        if existing_ratio < self.positive_to_negative_data_ratio:
+            desired_number_of_positive_examples = int(self.positive_to_negative_data_ratio * len(negative_examples))
+            additional_positive_examples_needed = desired_number_of_positive_examples - len(positive_examples)
+            positive_examples = np.pad(positive_examples, (0, additional_positive_examples_needed), mode='wrap')
+        else:
+            desired_number_of_negative_examples = int(
+                (1 / self.positive_to_negative_data_ratio) * len(positive_examples))
+            additional_negative_examples_needed = desired_number_of_negative_examples - len(negative_examples)
+            negative_examples = np.pad(negative_examples, (0, additional_negative_examples_needed), mode='wrap')
+        return positive_examples, negative_examples
