@@ -15,10 +15,10 @@ class LightcurveDatabase:
         self.negative_data_directory = negative_data_directory
         self.time_steps_per_example = 30000
         self.batch_size = 100
+        self.positive_to_negative_data_ratio = positive_to_negative_data_ratio
         training_dataset, validation_dataset = self.generate_datasets()
         self.training_dataset: tf.data.Dataset = training_dataset
         self.validation_dataset: tf.data.Dataset = validation_dataset
-        self.positive_to_negative_data_ratio = positive_to_negative_data_ratio
 
     def generate_datasets(self) -> (tf.data.Dataset, tf.data.Dataset):
         """Generates the training and testing datasets."""
@@ -127,15 +127,15 @@ class LightcurveDatabase:
     def enforce_data_ratio(self, positive_examples, negative_examples):
         """Repeats examples to enforce a given training ratio."""
         if self.positive_to_negative_data_ratio is None:
-            return
+            return positive_examples, negative_examples
         existing_ratio = len(positive_examples) / len(negative_examples)
         if existing_ratio < self.positive_to_negative_data_ratio:
             desired_number_of_positive_examples = int(self.positive_to_negative_data_ratio * len(negative_examples))
             additional_positive_examples_needed = desired_number_of_positive_examples - len(positive_examples)
-            positive_examples = np.pad(positive_examples, (0, additional_positive_examples_needed), mode='wrap')
+            positive_examples = list(np.pad(positive_examples, (0, additional_positive_examples_needed), mode='wrap'))
         else:
             desired_number_of_negative_examples = int(
                 (1 / self.positive_to_negative_data_ratio) * len(positive_examples))
             additional_negative_examples_needed = desired_number_of_negative_examples - len(negative_examples)
-            negative_examples = np.pad(negative_examples, (0, additional_negative_examples_needed), mode='wrap')
+            negative_examples = list(np.pad(negative_examples, (0, additional_negative_examples_needed), mode='wrap'))
         return positive_examples, negative_examples
