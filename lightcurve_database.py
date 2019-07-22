@@ -73,7 +73,7 @@ class LightcurveDatabase:
         """Makes all lightcurves the same length, but clipping those too large and repeating those too small."""
         if lightcurve.shape[0] > self.time_steps_per_example:
             start_slice = np.random.randint(0, lightcurve.shape[0] - self.time_steps_per_example)
-            lightcurve = lightcurve[:, :, start_slice:start_slice + self.time_steps_per_example]
+            lightcurve = lightcurve[start_slice:start_slice + self.time_steps_per_example]
         else:
             elements_to_repeat = self.time_steps_per_example - lightcurve.shape[0]
             lightcurve = np.pad(lightcurve, (0, elements_to_repeat), mode='wrap')
