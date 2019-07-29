@@ -9,6 +9,7 @@ import tensorflow as tf
 
 class LightcurveDatabase:
     """A representing a dataset of lightcurves for binary classification."""
+
     def __init__(self, positive_data_directory: str, negative_data_directory: str,
                  positive_to_negative_data_ratio: float = None):
         self.positive_data_directory = positive_data_directory
@@ -30,28 +31,40 @@ class LightcurveDatabase:
                                   os.listdir(self.negative_data_directory) if file_name.endswith('.npy')]
         negative_example_paths = self.remove_bad_files(negative_example_paths)
         print(f'{len(negative_example_paths)} negative examples.')
-        positive_example_paths, negative_example_paths = self.enforce_data_ratio(positive_example_paths,
-                                                                                 negative_example_paths)
-        positive_labels = [1] * len(positive_example_paths)
-        negative_labels = [0] * len(negative_example_paths)
-        example_paths = positive_example_paths + negative_example_paths
-        labels = positive_labels + negative_labels
-        example_paths, labels = self.shuffle_in_unison(example_paths, labels, seed=0)
-        labels = labels.astype(np.int32)
-        labels = np.expand_dims(labels, axis=-1)
-        file_path_dataset = tf.data.Dataset.from_tensor_slices(example_paths)
-        labels_dataset = tf.data.Dataset.from_tensor_slices(labels)
-        full_dataset = tf.data.Dataset.zip((file_path_dataset, labels_dataset))
-        validation_dataset_size = int(len(labels) * 0.2)
-        validation_dataset = full_dataset.take(validation_dataset_size)
-        training_dataset = full_dataset.skip(validation_dataset_size)
+        positive_datasets = self.get_training_and_validation_datasets_for_file_paths(positive_example_paths, 1)
+        positive_training_dataset, positive_validation_dataset = positive_datasets
+        negative_datasets = self.get_training_and_validation_datasets_for_file_paths(negative_example_paths, 0)
+        negative_training_dataset, negative_validation_dataset = negative_datasets
+        if self.positive_to_negative_data_ratio is not None:
+            training_dataset = tf.data.experimental.sample_from_datasets(
+                [positive_training_dataset, negative_training_dataset], [self.positive_to_negative_data_ratio, 1.0])
+        else:
+            training_dataset = positive_training_dataset.concatenate(negative_training_dataset)
+        validation_dataset = positive_validation_dataset.concatenate(negative_validation_dataset)
         load_and_preprocess_function = lambda file_path, label: tuple(
             tf.py_function(self.load_and_preprocess_numpy_file, [file_path, label], [tf.float32, tf.int32]))
         training_dataset = training_dataset.map(load_and_preprocess_function, num_parallel_calls=16)
         training_dataset = training_dataset.shuffle(buffer_size=5000)
         training_dataset = training_dataset.batch(self.batch_size).prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
         validation_dataset = validation_dataset.map(load_and_preprocess_function, num_parallel_calls=16)
-        validation_dataset = validation_dataset.batch(self.batch_size).prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
+        validation_dataset = validation_dataset.batch(self.batch_size).prefetch(
+            buffer_size=tf.data.experimental.AUTOTUNE)
+        return training_dataset, validation_dataset
+
+    def get_training_and_validation_datasets_for_file_paths(self, example_paths: List[str], label: int,
+                                                            validation_dataset_size_ratio: float = 0.2) -> (
+                                                            tf.data.Dataset, tf.data.Dataset):
+        """Creates a TensorFlow Dataset from a list of file names and desired label for those files."""
+        labels = [label] * len(example_paths)
+        example_paths, labels = self.shuffle_in_unison(example_paths, labels, seed=0)
+        labels = labels.astype(np.int32)
+        labels = np.expand_dims(labels, axis=-1)
+        file_path_dataset = tf.data.Dataset.from_tensor_slices(example_paths)
+        labels_dataset = tf.data.Dataset.from_tensor_slices(labels)
+        dataset = tf.data.Dataset.zip((file_path_dataset, labels_dataset))
+        validation_dataset_size = int(len(labels) * validation_dataset_size_ratio)
+        validation_dataset = dataset.take(validation_dataset_size)
+        training_dataset = dataset.skip(validation_dataset_size)
         return training_dataset, validation_dataset
 
     def load_and_preprocess_numpy_file(self, file_path: tf.Tensor, label: int) -> (np.ndarray, int):
@@ -69,7 +82,7 @@ class LightcurveDatabase:
         lightcurve = np.expand_dims(lightcurve, axis=-1)  # Network uses a "channel" dimension.
         return lightcurve
 
-    def make_uniform_length(self, lightcurve):
+    def make_uniform_length(self, lightcurve: np.ndarray) -> np.ndarray:
         """Makes all lightcurves the same length, but clipping those too large and repeating those too small."""
         if lightcurve.shape[0] > self.time_steps_per_example:
             start_slice = np.random.randint(0, lightcurve.shape[0] - self.time_steps_per_example)
@@ -79,7 +92,7 @@ class LightcurveDatabase:
             lightcurve = np.pad(lightcurve, (0, elements_to_repeat), mode='wrap')
         return lightcurve
 
-    def normalize(self, lightcurve):
+    def normalize(self, lightcurve: np.ndarray) -> np.ndarray:
         """Normalizes from 0 to 1 on the logarithm of the lightcurve."""
         lightcurve -= np.min(lightcurve)
         lightcurve = np.log1p(lightcurve)
@@ -119,23 +132,7 @@ class LightcurveDatabase:
         random_indexes = np.random.randint(0, len(lightcurve), size=values_to_remove)
         return np.delete(lightcurve, random_indexes)
 
-    def roll_lightcurve(self, lightcurve):
+    def roll_lightcurve(self, lightcurve: np.ndarray) -> np.ndarray:
         """Randomly rolls the lightcurve, moving starting elements to the end."""
         shift = np.random.randint(0, len(lightcurve))
         return np.roll(lightcurve, shift)
-
-    def enforce_data_ratio(self, positive_examples, negative_examples):
-        """Repeats examples to enforce a given training ratio."""
-        if self.positive_to_negative_data_ratio is None:
-            return positive_examples, negative_examples
-        existing_ratio = len(positive_examples) / len(negative_examples)
-        if existing_ratio < self.positive_to_negative_data_ratio:
-            desired_number_of_positive_examples = int(self.positive_to_negative_data_ratio * len(negative_examples))
-            additional_positive_examples_needed = desired_number_of_positive_examples - len(positive_examples)
-            positive_examples = list(np.pad(positive_examples, (0, additional_positive_examples_needed), mode='wrap'))
-        else:
-            desired_number_of_negative_examples = int(
-                (1 / self.positive_to_negative_data_ratio) * len(positive_examples))
-            additional_negative_examples_needed = desired_number_of_negative_examples - len(negative_examples)
-            negative_examples = list(np.pad(negative_examples, (0, additional_negative_examples_needed), mode='wrap'))
-        return positive_examples, negative_examples
