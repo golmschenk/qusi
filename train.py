@@ -12,7 +12,7 @@ def train():
     """Runs the training."""
     # Basic training settings.
     model = SimpleLightcurveCnn()
-    database = LightcurveDatabase('data/positive', 'data/negative')
+    database = LightcurveDatabase('data/positive', 'data/negative', positive_to_negative_data_ratio=1)
     epochs_to_run = 1000
     trial_name = 'baseline'
     logs_directory = 'logs'
