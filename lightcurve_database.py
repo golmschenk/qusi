@@ -36,10 +36,7 @@ class LightcurveDatabase:
         positive_training_dataset, positive_validation_dataset = positive_datasets
         negative_datasets = self.get_training_and_validation_datasets_for_file_paths(negative_example_paths, 0)
         negative_training_dataset, negative_validation_dataset = negative_datasets
-        if self.positive_to_negative_data_ratio is not None:
-            training_dataset = self.get_ratio_enforced_dataset(positive_training_dataset, negative_training_dataset)
-        else:
-            training_dataset = positive_training_dataset.concatenate(negative_training_dataset)
+        training_dataset = self.get_ratio_enforced_dataset(positive_training_dataset, negative_training_dataset)
         validation_dataset = positive_validation_dataset.concatenate(negative_validation_dataset)
         load_and_preprocess_function = lambda file_path, label: tuple(
             tf.py_function(self.load_and_preprocess_numpy_file, [file_path, label], [tf.float32, tf.int32]))
