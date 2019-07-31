@@ -51,21 +51,19 @@ class LightcurveDatabase:
     def get_ratio_enforced_dataset(self, positive_training_dataset: tf.data.Dataset,
                                    negative_training_dataset: tf.data.Dataset) -> tf.data.Dataset:
         """Generates a dataset with an enforced data ratio."""
-        if self.positive_to_negative_data_ratio is None:
-            return positive_training_dataset.concatenate(negative_training_dataset)
-        positive_count = len(list(positive_training_dataset))
-        negative_count = len(list(positive_training_dataset))
-        existing_ratio = positive_count / negative_count
-        if existing_ratio < self.positive_to_negative_data_ratio:
-            desired_number_of_positive_examples = int(self.positive_to_negative_data_ratio * negative_count)
-            positive_training_dataset = self.repeat_dataset_to_size(positive_training_dataset,
-                                                                    desired_number_of_positive_examples)
-        else:
-            desired_number_of_negative_examples = int((1 / self.positive_to_negative_data_ratio) * positive_count)
-            negative_training_dataset = self.repeat_dataset_to_size(negative_training_dataset,
-                                                                    desired_number_of_negative_examples)
-        return tf.data.experimental.sample_from_datasets([positive_training_dataset, negative_training_dataset],
-                                                         [self.positive_to_negative_data_ratio, 1.0])
+        if self.positive_to_negative_data_ratio is not None:
+            positive_count = len(list(positive_training_dataset))
+            negative_count = len(list(negative_training_dataset))
+            existing_ratio = positive_count / negative_count
+            if existing_ratio < self.positive_to_negative_data_ratio:
+                desired_number_of_positive_examples = int(self.positive_to_negative_data_ratio * negative_count)
+                positive_training_dataset = self.repeat_dataset_to_size(positive_training_dataset,
+                                                                        desired_number_of_positive_examples)
+            else:
+                desired_number_of_negative_examples = int((1 / self.positive_to_negative_data_ratio) * positive_count)
+                negative_training_dataset = self.repeat_dataset_to_size(negative_training_dataset,
+                                                                        desired_number_of_negative_examples)
+        return positive_training_dataset.concatenate(negative_training_dataset)
 
     @staticmethod
     def repeat_dataset_to_size(dataset: tf.data.Dataset, size: int) -> tf.data.Dataset:
