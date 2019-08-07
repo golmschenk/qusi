@@ -40,8 +40,8 @@ class LightcurveDatabase:
         validation_dataset = positive_validation_dataset.concatenate(negative_validation_dataset)
         load_and_preprocess_function = lambda file_path, label: tuple(
             tf.py_function(self.load_and_preprocess_numpy_file, [file_path, label], [tf.float32, tf.int32]))
+        training_dataset = training_dataset.shuffle(buffer_size=len(list(training_dataset)))
         training_dataset = training_dataset.map(load_and_preprocess_function, num_parallel_calls=16)
-        training_dataset = training_dataset.shuffle(buffer_size=5000)
         training_dataset = training_dataset.batch(self.batch_size).prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
         validation_dataset = validation_dataset.map(load_and_preprocess_function, num_parallel_calls=16)
         validation_dataset = validation_dataset.batch(self.batch_size).prefetch(
