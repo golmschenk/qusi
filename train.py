@@ -20,7 +20,7 @@ def train():
     # Prepare training data and metrics.
     training_dataset = database.training_dataset
     validation_dataset = database.validation_dataset
-    optimizer = tf.optimizers.Adam()
+    optimizer = tf.optimizers.Adam(learning_rate=1e-4)
     loss_metric = tf.keras.losses.BinaryCrossentropy(name='Loss')
     accuracy_metric = tf.metrics.BinaryAccuracy(name='Accuracy')
     precision_metric = tf.metrics.Precision(name='Precision')
