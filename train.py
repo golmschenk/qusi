@@ -11,15 +11,15 @@ from models import SimpleLightcurveCnn
 def train():
     """Runs the training."""
     # Basic training settings.
+    tf.keras.backend.set_learning_phase(True)
     model = SimpleLightcurveCnn()
-    database = LightcurveDatabase('data/positive', 'data/negative', positive_to_negative_data_ratio=1)
+    database = LightcurveDatabase()
     epochs_to_run = 1000
     trial_name = 'baseline'
     logs_directory = 'logs'
 
     # Prepare training data and metrics.
-    training_dataset = database.training_dataset
-    validation_dataset = database.validation_dataset
+    training_dataset, validation_dataset = database.generate_datasets('data/positive', 'data/negative')
     optimizer = tf.optimizers.Adam(learning_rate=1e-4)
     loss_metric = tf.keras.losses.BinaryCrossentropy(name='Loss')
     accuracy_metric = tf.metrics.BinaryAccuracy(name='Accuracy')
@@ -33,8 +33,18 @@ def train():
 
     # Compile and train model.
     model.compile(optimizer=optimizer, loss=loss_metric, metrics=[accuracy_metric, precision_metric, recall_metric])
-    model.fit(training_dataset, epochs=epochs_to_run, validation_data=validation_dataset,
-              callbacks=[tensorboard_callback])
+    try:
+        model.fit(training_dataset, epochs=epochs_to_run, validation_data=validation_dataset,
+                  callbacks=[tensorboard_callback])
+    except KeyboardInterrupt:
+        print('Interrupted. Saving model before quitting...')
+    finally:
+        model.save_weights(os.path.join(trial_directory, 'model.ckpt'))
+
+        inference_dataset = database.generate_inference_dataset('data/inference')
+        dataset_tensor = tf.convert_to_tensor(inference_dataset)
+        predictions = model.predict(dataset_tensor)
+        print(predictions)
 
 
 if __name__ == '__main__':

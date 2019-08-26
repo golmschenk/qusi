@@ -11,32 +11,27 @@ import tensorflow as tf
 class LightcurveDatabase:
     """A representing a dataset of lightcurves for binary classification."""
 
-    def __init__(self, positive_data_directory: str, negative_data_directory: str,
-                 positive_to_negative_data_ratio: float = None):
-        self.positive_data_directory = positive_data_directory
-        self.negative_data_directory = negative_data_directory
+    def __init__(self):
         self.time_steps_per_example = 30000
         self.batch_size = 100
-        self.positive_to_negative_data_ratio = positive_to_negative_data_ratio
-        training_dataset, validation_dataset = self.generate_datasets()
-        self.training_dataset: tf.data.Dataset = training_dataset
-        self.validation_dataset: tf.data.Dataset = validation_dataset
 
-    def generate_datasets(self) -> (tf.data.Dataset, tf.data.Dataset):
-        """Generates the training and testing datasets."""
-        positive_example_paths = [os.path.join(self.positive_data_directory, file_name) for file_name in
-                                  os.listdir(self.positive_data_directory) if file_name.endswith('.npy')]
-        positive_example_paths = self.remove_bad_files(positive_example_paths)
+    def generate_datasets(self, positive_data_directory, negative_data_directory,
+                          positive_to_negative_data_ratio: float = None) -> (tf.data.Dataset, tf.data.Dataset):
+        """Generates the training and validation datasets."""
+        positive_example_paths = [os.path.join(positive_data_directory, file_name) for file_name in
+                                  os.listdir(positive_data_directory) if file_name.endswith('.npy')]
         print(f'{len(positive_example_paths)} positive examples.')
-        negative_example_paths = [os.path.join(self.negative_data_directory, file_name) for file_name in
-                                  os.listdir(self.negative_data_directory) if file_name.endswith('.npy')]
-        negative_example_paths = self.remove_bad_files(negative_example_paths)
+        negative_example_paths = [os.path.join(negative_data_directory, file_name) for file_name in
+                                  os.listdir(negative_data_directory) if file_name.endswith('.npy')]
+        random.shuffle(negative_example_paths)
+        negative_example_paths = negative_example_paths[:len(positive_example_paths)]
         print(f'{len(negative_example_paths)} negative examples.')
         positive_datasets = self.get_training_and_validation_datasets_for_file_paths(positive_example_paths, 1)
         positive_training_dataset, positive_validation_dataset = positive_datasets
         negative_datasets = self.get_training_and_validation_datasets_for_file_paths(negative_example_paths, 0)
         negative_training_dataset, negative_validation_dataset = negative_datasets
-        training_dataset = self.get_ratio_enforced_dataset(positive_training_dataset, negative_training_dataset)
+        training_dataset = self.get_ratio_enforced_dataset(positive_training_dataset, negative_training_dataset,
+                                                           positive_to_negative_data_ratio)
         validation_dataset = positive_validation_dataset.concatenate(negative_validation_dataset)
         load_and_preprocess_function = lambda file_path, label: tuple(
             tf.py_function(self.load_and_preprocess_numpy_file, [file_path, label], [tf.float32, tf.int32]))
@@ -49,18 +44,19 @@ class LightcurveDatabase:
         return training_dataset, validation_dataset
 
     def get_ratio_enforced_dataset(self, positive_training_dataset: tf.data.Dataset,
-                                   negative_training_dataset: tf.data.Dataset) -> tf.data.Dataset:
+                                   negative_training_dataset: tf.data.Dataset,
+                                   positive_to_negative_data_ratio: float) -> tf.data.Dataset:
         """Generates a dataset with an enforced data ratio."""
-        if self.positive_to_negative_data_ratio is not None:
+        if positive_to_negative_data_ratio is not None:
             positive_count = len(list(positive_training_dataset))
             negative_count = len(list(negative_training_dataset))
             existing_ratio = positive_count / negative_count
-            if existing_ratio < self.positive_to_negative_data_ratio:
-                desired_number_of_positive_examples = int(self.positive_to_negative_data_ratio * negative_count)
+            if existing_ratio < positive_to_negative_data_ratio:
+                desired_number_of_positive_examples = int(positive_to_negative_data_ratio * negative_count)
                 positive_training_dataset = self.repeat_dataset_to_size(positive_training_dataset,
                                                                         desired_number_of_positive_examples)
             else:
-                desired_number_of_negative_examples = int((1 / self.positive_to_negative_data_ratio) * positive_count)
+                desired_number_of_negative_examples = int((1 / positive_to_negative_data_ratio) * positive_count)
                 negative_training_dataset = self.repeat_dataset_to_size(negative_training_dataset,
                                                                         desired_number_of_negative_examples)
         return positive_training_dataset.concatenate(negative_training_dataset)
@@ -88,11 +84,14 @@ class LightcurveDatabase:
         training_dataset = dataset.skip(validation_dataset_size)
         return training_dataset, validation_dataset
 
-    def load_and_preprocess_numpy_file(self, file_path: tf.Tensor, label: int) -> (np.ndarray, int):
+    def load_and_preprocess_numpy_file(self, file_path: tf.Tensor, label: int = None) -> (np.ndarray, int):
         """Loads numpy files from the tensor alongside labels."""
         lightcurve = np.load(file_path.numpy())
         lightcurve = self.preprocess_and_augment_lightcurve(lightcurve)
-        return lightcurve.astype(np.float32), label
+        if label is None:
+            return lightcurve.astype(np.float32)
+        else:
+            return lightcurve.astype(np.float32), label
 
     def preprocess_and_augment_lightcurve(self, lightcurve: np.ndarray):
         """Slices and normalizes lightcurves."""
@@ -160,3 +159,14 @@ class LightcurveDatabase:
         """Randomly rolls the lightcurve, moving starting elements to the end."""
         shift = np.random.randint(0, len(lightcurve))
         return np.roll(lightcurve, shift)
+
+    def generate_inference_dataset(self, inference_directory):
+        """Generates the testing dataset."""
+        example_paths = [os.path.join(inference_directory, file_name) for file_name in
+                         os.listdir(inference_directory) if file_name.endswith('.npy')]
+        examples = []
+        for example_path in example_paths:
+            lightcurve = np.load(example_path)
+            lightcurve = self.preprocess_and_augment_lightcurve(lightcurve)
+            examples.append(lightcurve.astype(np.float32))
+        return example_paths, examples
