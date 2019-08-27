@@ -5,8 +5,6 @@ import tensorflow as tf
 from lightcurve_database import LightcurveDatabase
 from models import SimpleLightcurveCnn
 
-tf.keras.backend.set_learning_phase(True)
-
 print('Preprocessing data...')
 database = LightcurveDatabase()
 example_paths, inference_dataset = database.generate_inference_dataset('data/inference')

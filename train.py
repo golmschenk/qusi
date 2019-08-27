@@ -11,7 +11,6 @@ from models import SimpleLightcurveCnn
 def train():
     """Runs the training."""
     # Basic training settings.
-    tf.keras.backend.set_learning_phase(True)
     model = SimpleLightcurveCnn()
     database = LightcurveDatabase()
     epochs_to_run = 1000
@@ -40,11 +39,6 @@ def train():
         print('Interrupted. Saving model before quitting...')
     finally:
         model.save_weights(os.path.join(trial_directory, 'model.ckpt'))
-
-        inference_dataset = database.generate_inference_dataset('data/inference')
-        dataset_tensor = tf.convert_to_tensor(inference_dataset)
-        predictions = model.predict(dataset_tensor)
-        print(predictions)
 
 
 if __name__ == '__main__':
