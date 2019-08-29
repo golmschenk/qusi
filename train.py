@@ -17,6 +17,12 @@ def train():
     trial_name = 'baseline'
     logs_directory = 'logs'
 
+    # Setup logging.
+    datetime_string = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+    trial_directory = os.path.join(logs_directory, f'{trial_name} {datetime_string}')
+    tensorboard_callback = callbacks.TensorBoard(log_dir=trial_directory)
+    database.trial_directory = trial_directory
+
     # Prepare training data and metrics.
     training_dataset, validation_dataset = database.generate_datasets('data/positive', 'data/negative')
     optimizer = tf.optimizers.Adam(learning_rate=1e-4)
@@ -24,11 +30,6 @@ def train():
     accuracy_metric = tf.metrics.BinaryAccuracy(name='Accuracy')
     precision_metric = tf.metrics.Precision(name='Precision')
     recall_metric = tf.metrics.Recall(name='Recall')
-
-    # Setup logging.
-    datetime_string = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-    trial_directory = os.path.join(logs_directory, f'{trial_name} {datetime_string}')
-    tensorboard_callback = callbacks.TensorBoard(log_dir=trial_directory)
 
     # Compile and train model.
     model.compile(optimizer=optimizer, loss=loss_metric, metrics=[accuracy_metric, precision_metric, recall_metric])

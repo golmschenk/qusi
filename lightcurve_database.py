@@ -5,6 +5,7 @@ import random
 from typing import List
 
 import numpy as np
+import pandas as pd
 import tensorflow as tf
 
 
@@ -14,6 +15,7 @@ class LightcurveDatabase:
     def __init__(self):
         self.time_steps_per_example = 30000
         self.batch_size = 100
+        self.trial_directory = None
 
     def generate_datasets(self, positive_data_directory, negative_data_directory,
                           positive_to_negative_data_ratio: float = None) -> (tf.data.Dataset, tf.data.Dataset):
@@ -33,6 +35,9 @@ class LightcurveDatabase:
         training_dataset = self.get_ratio_enforced_dataset(positive_training_dataset, negative_training_dataset,
                                                            positive_to_negative_data_ratio)
         validation_dataset = positive_validation_dataset.concatenate(negative_validation_dataset)
+        if self.trial_directory is not None:
+            self.log_dataset_file_names(training_dataset, dataset_name='training')
+            self.log_dataset_file_names(validation_dataset, dataset_name='validation')
         load_and_preprocess_function = lambda file_path, label: tuple(
             tf.py_function(self.load_and_preprocess_numpy_file, [file_path, label], [tf.float32, tf.int32]))
         training_dataset = training_dataset.shuffle(buffer_size=len(list(training_dataset)))
@@ -42,6 +47,13 @@ class LightcurveDatabase:
         validation_dataset = validation_dataset.batch(self.batch_size).prefetch(
             buffer_size=tf.data.experimental.AUTOTUNE)
         return training_dataset, validation_dataset
+
+    def log_dataset_file_names(self, dataset: tf.data.Dataset, dataset_name: str):
+        """Saves the names of the files used in a dataset to a CSV file in the trail directory."""
+        os.makedirs(self.trial_directory, exist_ok=True)
+        training_example_paths = [example[0].numpy().decode('utf-8') for example in list(dataset)]
+        series = pd.Series(training_example_paths)
+        series.to_csv(os.path.join(self.trial_directory, f'{dataset_name}.csv'), header=False, index=False)
 
     def get_ratio_enforced_dataset(self, positive_training_dataset: tf.data.Dataset,
                                    negative_training_dataset: tf.data.Dataset,
@@ -94,7 +106,7 @@ class LightcurveDatabase:
             return lightcurve.astype(np.float32), label
 
     def preprocess_and_augment_lightcurve(self, lightcurve: np.ndarray):
-        """Slices and normalizes lightcurves."""
+        """Prepares the lightcurves for training with several preprocessing and augmenting steps."""
         lightcurve = self.remove_random_values(lightcurve)  # Helps prevent overfitting.
         lightcurve = self.roll_lightcurve(lightcurve)  # Helps prevent overfitting.
         lightcurve = self.make_uniform_length(lightcurve)  # Current network expects a fixed length.
@@ -103,7 +115,7 @@ class LightcurveDatabase:
         return lightcurve
 
     def make_uniform_length(self, lightcurve: np.ndarray) -> np.ndarray:
-        """Makes all lightcurves the same length, but clipping those too large and repeating those too small."""
+        """Makes all lightcurves the same length, by clipping those too large and repeating those too small."""
         if lightcurve.shape[0] > self.time_steps_per_example:
             start_slice = np.random.randint(0, lightcurve.shape[0] - self.time_steps_per_example)
             lightcurve = lightcurve[start_slice:start_slice + self.time_steps_per_example]
@@ -161,7 +173,7 @@ class LightcurveDatabase:
         return np.roll(lightcurve, shift)
 
     def generate_inference_dataset(self, inference_directory):
-        """Generates the testing dataset."""
+        """Generates the inference dataset."""
         example_paths = [os.path.join(inference_directory, file_name) for file_name in
                          os.listdir(inference_directory) if file_name.endswith('.npy')]
         examples = []
