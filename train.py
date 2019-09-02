@@ -27,12 +27,13 @@ def train():
     training_dataset, validation_dataset = database.generate_datasets('data/positive', 'data/negative')
     optimizer = tf.optimizers.Adam(learning_rate=1e-4)
     loss_metric = tf.keras.losses.BinaryCrossentropy(name='Loss')
-    accuracy_metric = tf.metrics.BinaryAccuracy(name='Accuracy')
-    precision_metric = tf.metrics.Precision(name='Precision')
-    recall_metric = tf.metrics.Recall(name='Recall')
+    metrics = [tf.metrics.BinaryAccuracy(name='Accuracy'), tf.metrics.Precision(name='Precision'),
+               tf.metrics.Recall(name='Recall'),
+               tf.metrics.SpecificityAtSensitivity(0.9, name='Specificity_at_90_percent_sensitivity'),
+               tf.metrics.SensitivityAtSpecificity(0.9, name='Sensitivity_at_90_percent_specificity')]
 
     # Compile and train model.
-    model.compile(optimizer=optimizer, loss=loss_metric, metrics=[accuracy_metric, precision_metric, recall_metric])
+    model.compile(optimizer=optimizer, loss=loss_metric, metrics=metrics)
     try:
         model.fit(training_dataset, epochs=epochs_to_run, validation_data=validation_dataset,
                   callbacks=[tensorboard_callback])
