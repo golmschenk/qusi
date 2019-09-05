@@ -25,8 +25,6 @@ class LightcurveDatabase:
         print(f'{len(positive_example_paths)} positive examples.')
         negative_example_paths = [os.path.join(negative_data_directory, file_name) for file_name in
                                   os.listdir(negative_data_directory) if file_name.endswith('.npy')]
-        random.shuffle(negative_example_paths)
-        negative_example_paths = negative_example_paths[:len(positive_example_paths)]
         print(f'{len(negative_example_paths)} negative examples.')
         positive_datasets = self.get_training_and_validation_datasets_for_file_paths(positive_example_paths, 1)
         positive_training_dataset, positive_validation_dataset = positive_datasets
