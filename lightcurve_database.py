@@ -103,7 +103,7 @@ class LightcurveDatabase:
         else:
             return lightcurve.astype(np.float32), label
 
-    def preprocess_and_augment_lightcurve(self, lightcurve: np.ndarray):
+    def preprocess_and_augment_lightcurve(self, lightcurve: np.ndarray) -> np.ndarray:
         """Prepares the lightcurves for training with several preprocessing and augmenting steps."""
         lightcurve = self.remove_random_values(lightcurve)  # Helps prevent overfitting.
         lightcurve = self.roll_lightcurve(lightcurve)  # Helps prevent overfitting.
@@ -133,7 +133,7 @@ class LightcurveDatabase:
         return lightcurve
 
     @staticmethod
-    def remove_bad_files(file_path_list: List[str]):
+    def remove_bad_files(file_path_list: List[str]) -> List[str]:
         """Removes problematic lightcurves (all values the same, containing infinite or NaN values)."""
         new_file_path_list = []
         for file_path in file_path_list:
@@ -157,7 +157,7 @@ class LightcurveDatabase:
         return np.array(a)[indexes], np.array(b)[indexes]
 
     @staticmethod
-    def remove_random_values(lightcurve):
+    def remove_random_values(lightcurve: np.ndarray) -> np.ndarray:
         """Removes random values from the lightcurve."""
         max_values_to_remove = 10
         values_to_remove = random.randrange(max_values_to_remove)
@@ -170,7 +170,7 @@ class LightcurveDatabase:
         shift = np.random.randint(0, len(lightcurve))
         return np.roll(lightcurve, shift)
 
-    def generate_inference_dataset(self, inference_directory):
+    def generate_inference_dataset(self, inference_directory: str) -> (List[str], List[np.ndarray]):
         """Generates the inference dataset."""
         example_paths = [os.path.join(inference_directory, file_name) for file_name in
                          os.listdir(inference_directory) if file_name.endswith('.npy')]
