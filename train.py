@@ -24,7 +24,8 @@ def train():
     database.trial_directory = trial_directory
 
     # Prepare training data and metrics.
-    training_dataset, validation_dataset = database.generate_datasets('data/positive', 'data/negative')
+    training_dataset, validation_dataset = database.generate_datasets('data/positive', 'data/negative',
+                                                                      positive_to_negative_data_ratio=1)
     optimizer = tf.optimizers.Adam(learning_rate=1e-4)
     loss_metric = tf.keras.losses.BinaryCrossentropy(name='Loss')
     metrics = [tf.metrics.BinaryAccuracy(name='Accuracy'), tf.metrics.Precision(name='Precision'),
