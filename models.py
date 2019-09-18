@@ -2,7 +2,7 @@
 from tensorflow import sigmoid
 from tensorflow.python.keras import Sequential, Model
 from tensorflow.python.keras.layers import Conv3D, MaxPool3D, Flatten, Dense, Reshape, LeakyReLU, Conv1D, \
-    BatchNormalization
+    BatchNormalization, LSTM_v2 as LSTM
 from tensorflow.python.keras.regularizers import l2
 
 
@@ -107,4 +107,21 @@ class SimpleLightcurveCnn(Model):
         x = self.convolution11(x)
         x = self.convolution12(x)
         x = self.reshape(x)
+        return x
+
+
+class SimpleLightcurveLstm(Model):
+    def __init__(self):
+        super().__init__()
+        self.lstm0 = LSTM(10, return_sequences=True)
+        self.lstm1 = LSTM(20, return_sequences=True)
+        self.lstm2 = LSTM(30)
+        self.dense = Dense(1, activation=sigmoid)
+
+    def call(self, inputs, training=False, mask=None):
+        x = inputs
+        x = self.lstm0(x)
+        x = self.lstm1(x)
+        x = self.lstm2(x)
+        x = self.dense(x)
         return x
