@@ -41,8 +41,10 @@ class LightcurveDatabase:
             tf.py_function(self.load_and_preprocess_example_file, [file_path, label], [tf.float32, tf.int32]))
         training_dataset = training_dataset.shuffle(buffer_size=len(list(training_dataset)))
         training_dataset = training_dataset.map(load_and_preprocess_function, num_parallel_calls=16)
+        training_dataset = training_dataset.map(self.set_shape_function, num_parallel_calls=16)
         training_dataset = training_dataset.batch(self.batch_size).prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
         validation_dataset = validation_dataset.map(load_and_preprocess_function, num_parallel_calls=16)
+        validation_dataset = validation_dataset.map(self.set_shape_function, num_parallel_calls=16)
         validation_dataset = validation_dataset.batch(self.batch_size).prefetch(
             buffer_size=tf.data.experimental.AUTOTUNE)
         return training_dataset, validation_dataset
@@ -53,6 +55,18 @@ class LightcurveDatabase:
         training_example_paths = [example[0].numpy().decode('utf-8') for example in list(dataset)]
         series = pd.Series(training_example_paths)
         series.to_csv(os.path.join(self.trial_directory, f'{dataset_name}.csv'), header=False, index=False)
+
+    def set_shape_function(self, lightcurve: tf.Tensor, label: tf.Tensor):
+        """
+        Explicitly sets the shapes of the lightcurve and label tensor, otherwise TensorFlow can't infer it.
+
+        :param lightcurve: The lightcurve tensor.
+        :param label: The label tensor.
+        :return: The lightcurve and label tensor with TensorFlow inferable shapes.
+        """
+        lightcurve.set_shape([self.time_steps_per_example, 1])
+        label.set_shape([1])
+        return lightcurve, label
 
     def get_ratio_enforced_dataset(self, positive_training_dataset: tf.data.Dataset,
                                    negative_training_dataset: tf.data.Dataset,
