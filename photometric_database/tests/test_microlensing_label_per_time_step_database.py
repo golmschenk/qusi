@@ -17,3 +17,7 @@ class TestMicrolensingLabelPerTimeStepDatabase:
         assert database.get_length_of_chord_in_circle(radius=50, apothem=5) == pytest.approx(99.4987)
         assert database.get_length_of_chord_in_circle(radius=50, apothem=25) == pytest.approx(86.6025)
         assert database.get_length_of_chord_in_circle(radius=50, apothem=45) == pytest.approx(43.5890)
+        with pytest.raises(AssertionError):
+            database.get_length_of_chord_in_circle(radius=50, apothem=55)
+        with pytest.raises(AssertionError):
+            database.get_length_of_chord_in_circle(radius=50, apothem=-5)
