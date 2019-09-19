@@ -25,6 +25,6 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
                                       names=column_names)
         return meta_data_frame
 
-    def get_length_of_chord_in_circle(self, radius, apothem):
+    def length_of_chord_in_circle(self, radius, apothem):
         assert 0 <= apothem <= radius
         return 2 * (radius ** 2 - apothem ** 2) ** 0.5
