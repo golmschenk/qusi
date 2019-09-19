@@ -4,7 +4,7 @@ import os
 import tensorflow as tf
 from tensorflow.python.keras import callbacks
 
-from microlensing_label_per_example_database import MicrolensingLabelPerExampleDatabase
+from photometric_database.microlensing_label_per_example_database import MicrolensingLabelPerExampleDatabase
 from models import SimpleLightcurveCnn
 
 
