@@ -24,3 +24,6 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
         meta_data_frame = pd.read_csv(meta_data_file_path, comment='#', header=None, delim_whitespace=True,
                                       names=column_names)
         return meta_data_frame
+
+    def get_length_of_chord_in_circle(self, radius, apothem):
+        return 2 * (radius ** 2 - apothem ** 2) ** 0.5
