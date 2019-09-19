@@ -32,7 +32,7 @@ MarkupSafe==1.1.1
 matplotlib==3.1.0
 mock==3.0.5
 more-itertools==7.0.0
-numpy==1.16.3
+numpy==1.16.4
 oktopus==0.1.2
 opt-einsum==3.0.1
 packaging==19.1
@@ -41,6 +41,7 @@ Pillow==6.1.0
 pluggy==0.11.0
 protobuf==3.7.1
 py==1.8.0
+pyarrow==0.14.1
 pydot==1.4.1
 pyparsing==2.4.0
 pytest==4.5.0
@@ -56,8 +57,10 @@ tb-nightly==1.14.0a20190603
 tensorboard==1.13.1
 tensorflow==2.0.0b1
 tensorflow-estimator==1.13.0
+tensorflow-estimator-2.0-preview==1.14.0.dev2019090601
 termcolor==1.1.0
 tf-estimator-nightly==1.14.0.dev2019060501
+tf-nightly-2.0-preview==2.0.0.dev20190906
 torch==1.1.0
 tornado==6.0.3
 tqdm==4.32.1

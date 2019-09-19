@@ -2,11 +2,11 @@
 
 import tensorflow as tf
 
-from lightcurve_database import LightcurveDatabase
+from microlensing_label_per_example_database import MicrolensingLabelPerExampleDatabase
 from models import SimpleLightcurveCnn
 
 print('Preprocessing data...')
-database = LightcurveDatabase()
+database = MicrolensingLabelPerExampleDatabase()
 example_paths, inference_dataset = database.generate_inference_dataset('data/inference')
 
 model = SimpleLightcurveCnn()

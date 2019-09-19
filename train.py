@@ -4,7 +4,7 @@ import os
 import tensorflow as tf
 from tensorflow.python.keras import callbacks
 
-from lightcurve_database import LightcurveDatabase
+from microlensing_label_per_example_database import MicrolensingLabelPerExampleDatabase
 from models import SimpleLightcurveCnn
 
 
@@ -12,7 +12,7 @@ def train():
     """Runs the training."""
     # Basic training settings.
     model = SimpleLightcurveCnn()
-    database = LightcurveDatabase()
+    database = MicrolensingLabelPerExampleDatabase()
     epochs_to_run = 1000
     trial_name = 'baseline'
     logs_directory = 'logs'
