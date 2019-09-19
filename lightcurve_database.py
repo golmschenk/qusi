@@ -20,11 +20,12 @@ class LightcurveDatabase:
     def generate_datasets(self, positive_data_directory, negative_data_directory,
                           positive_to_negative_data_ratio: float = None) -> (tf.data.Dataset, tf.data.Dataset):
         """Generates the training and validation datasets."""
+        data_format_suffixes = ('.npy', '.pkl', '.feather')
         positive_example_paths = [os.path.join(positive_data_directory, file_name) for file_name in
-                                  os.listdir(positive_data_directory) if file_name.endswith('.npy')]
+                                  os.listdir(positive_data_directory) if file_name.endswith(data_format_suffixes)]
         print(f'{len(positive_example_paths)} positive examples.')
         negative_example_paths = [os.path.join(negative_data_directory, file_name) for file_name in
-                                  os.listdir(negative_data_directory) if file_name.endswith('.npy')]
+                                  os.listdir(negative_data_directory) if file_name.endswith(data_format_suffixes)]
         print(f'{len(negative_example_paths)} negative examples.')
         positive_datasets = self.get_training_and_validation_datasets_for_file_paths(positive_example_paths, 1)
         positive_training_dataset, positive_validation_dataset = positive_datasets
@@ -37,7 +38,7 @@ class LightcurveDatabase:
             self.log_dataset_file_names(training_dataset, dataset_name='training')
             self.log_dataset_file_names(validation_dataset, dataset_name='validation')
         load_and_preprocess_function = lambda file_path, label: tuple(
-            tf.py_function(self.load_and_preprocess_numpy_file, [file_path, label], [tf.float32, tf.int32]))
+            tf.py_function(self.load_and_preprocess_example_file, [file_path, label], [tf.float32, tf.int32]))
         training_dataset = training_dataset.shuffle(buffer_size=len(list(training_dataset)))
         training_dataset = training_dataset.map(load_and_preprocess_function, num_parallel_calls=16)
         training_dataset = training_dataset.batch(self.batch_size).prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
@@ -94,9 +95,17 @@ class LightcurveDatabase:
         training_dataset = dataset.skip(validation_dataset_size)
         return training_dataset, validation_dataset
 
-    def load_and_preprocess_numpy_file(self, file_path: tf.Tensor, label: int = None) -> (np.ndarray, int):
+    def load_and_preprocess_example_file(self, file_path: tf.Tensor, label: int = None) -> (np.ndarray, int):
         """Loads numpy files from the tensor alongside labels."""
-        lightcurve = np.load(file_path.numpy())
+        file_path_string = file_path.numpy().decode('utf-8')
+        if file_path_string.endswith('.npy'):
+            lightcurve = np.load(file_path_string)
+        elif file_path_string.endswith('.pkl'):
+            lightcurve = pd.read_pickle(file_path_string)['flux'].values
+        elif file_path_string.endswith('.feather'):
+            lightcurve = pd.read_feather(file_path_string)['flux'].values
+        else:
+            raise ValueError(f'Unknown extension when loading data from {file_path}')
         lightcurve = self.preprocess_and_augment_lightcurve(lightcurve)
         if label is None:
             return lightcurve.astype(np.float32)
