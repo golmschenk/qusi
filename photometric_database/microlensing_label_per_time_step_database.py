@@ -28,3 +28,20 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
     def length_of_chord_in_circle(self, radius, apothem):
         assert 0 <= apothem <= radius
         return 2 * (radius ** 2 - apothem ** 2) ** 0.5
+
+    def einstein_normalized_separation_in_direction_of_motion(self, observation_time: float,
+                                                              minimum_separation_time: float,
+                                                              einstein_crossing_time: float) -> float:
+        r"""
+        Gets the einstein normalized separation of the source relative to the minimum separation position due to motion.
+        This will be the separation perpendicular to the line between the minimum separation position and the lens.
+        :math:`u_v = 2 \dfrac{t-t_0}{t_E}`
+
+        :param observation_time: :math:`t`, current time of the observation.
+        :param minimum_separation_time: :math:`t_0`, the time the minimum separation between source and lens occurs at.
+        :param einstein_crossing_time: :math:`t_E`, the time it would take the source to cross the center of the
+                                       Einstein ring
+        :return: :math:`u_v`, the separation in the direction of source motion.
+        """
+        return 2 * (observation_time - minimum_separation_time) / einstein_crossing_time
+
