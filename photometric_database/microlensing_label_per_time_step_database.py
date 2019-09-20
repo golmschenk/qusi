@@ -1,4 +1,5 @@
 """Code for representing a dataset of lightcurves for binary classification with a single label per time step."""
+import numpy as np
 import pandas as pd
 
 from photometric_database.lightcurve_database import LightcurveDatabase
@@ -26,9 +27,9 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
         return meta_data_frame
 
     @staticmethod
-    def einstein_normalized_separation_in_direction_of_motion(observation_time: float,
-                                                              minimum_separation_time: float,
-                                                              einstein_crossing_time: float) -> float:
+    def einstein_normalized_separation_in_direction_of_motion(observation_time: np.float32,
+                                                              minimum_separation_time: np.float32,
+                                                              einstein_crossing_time: np.float32) -> np.float32:
         r"""
         Gets the einstein normalized separation of the source relative to the minimum separation position due to motion.
         This will be the separation perpendicular to the line between the minimum separation position and the lens.
@@ -41,4 +42,3 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
         :return: :math:`u_v`, the separation in the direction of source motion.
         """
         return 2 * (observation_time - minimum_separation_time) / einstein_crossing_time
-
