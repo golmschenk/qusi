@@ -47,3 +47,23 @@ class TestMicrolensingLabelPerTimeStepDatabase:
             minimum_separation_time=minimum_separation_time2,
             einstein_crossing_time=einstein_crossing_time2)
         assert np.array_equal(separation2, [2, 4])
+
+    def test_can_calculate_magnification(self, database):
+        observation_time0 = np.float32(100)
+        minimum_separation_time0 = np.float32(200)
+        minimum_einstein_separation0 = np.float32(0)
+        einstein_crossing_time0 = np.float32(200)
+        magnification0 = database.calculate_magnification(observation_time=observation_time0,
+                                                          minimum_separation_time=minimum_separation_time0,
+                                                          minimum_einstein_separation=minimum_einstein_separation0,
+                                                          einstein_crossing_time=einstein_crossing_time0)
+        assert magnification0 == pytest.approx(1.3416407)
+        observation_times1 = np.float32([np.sin(np.pi/4), 0, -1e10])
+        minimum_separation_times1 = np.float32(0)
+        minimum_einstein_separations1 = np.float32([np.cos(np.pi / 4), 0, 0])
+        einstein_crossing_times1 = np.float32(2)
+        separations1 = database.calculate_magnification(observation_time=observation_times1,
+                                                        minimum_separation_time=minimum_separation_times1,
+                                                        minimum_einstein_separation=minimum_einstein_separations1,
+                                                        einstein_crossing_time=einstein_crossing_times1)
+        assert np.allclose(separations1, [1.3416407, np.inf, 1])

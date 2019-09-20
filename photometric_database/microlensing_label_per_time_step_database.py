@@ -33,6 +33,7 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
         r"""
         Gets the einstein normalized separation of the source relative to the minimum separation position due to motion.
         This will be the separation perpendicular to the line between the minimum separation position and the lens.
+        Broadcasts for arrays times.
         :math:`u_v = 2 \dfrac{t-t_0}{t_E}`
 
         :param observation_time: :math:`t`, current time of the observation.
@@ -42,3 +43,26 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
         :return: :math:`u_v`, the separation in the direction of source motion.
         """
         return 2 * (observation_time - minimum_separation_time) / einstein_crossing_time
+
+    def calculate_magnification(self, observation_time: np.float32, minimum_separation_time: np.float32,
+                                minimum_einstein_separation: np.float32, einstein_crossing_time: np.float32
+                                ) -> np.float32:
+        """
+        Calculates the magnification of a microlensing event for a given time step. Broadcasts for arrays of times.
+        Allows an infinite magnification in cases where the separation is zero.
+
+        :param observation_time: :math:`t`, current time of the observation.
+        :param minimum_separation_time: :math:`t_0`, the time the minimum separation between source and lens occurs at.
+        :param minimum_einstein_separation: :math:`u_0`, the minimum einstein normalized separation.
+        :param einstein_crossing_time: :math:`t_E`, the time it would take the source to cross the center of the
+                                       Einstein ring
+        :return: :math:`A`, the magnification for the passed time step(s).
+        """
+        separation_in_direction_of_motion = self.einstein_normalized_separation_in_direction_of_motion(
+            observation_time=observation_time, minimum_separation_time=minimum_separation_time,
+            einstein_crossing_time=einstein_crossing_time
+        )
+        u = np.linalg.norm([minimum_einstein_separation, separation_in_direction_of_motion], axis=0)
+        with np.errstate(divide='ignore'):  # Divide by zero resulting in infinity is ok here.
+            magnification = (u**2 + 2) / (u * (u**2 + 4)**0.5)
+        return magnification
