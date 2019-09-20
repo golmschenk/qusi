@@ -21,15 +21,6 @@ class TestMicrolensingLabelPerTimeStepDatabase:
         meta_data_frame = database.load_microlensing_meta_data(meta_data_file_path)
         assert meta_data_frame['tE'].iloc[1] == 1.1946342164440846e+02
 
-    def test_can_get_the_length_of_a_chord_in_a_circle(self, database):
-        assert database.length_of_chord_in_circle(radius=50, apothem=5) == pytest.approx(99.4987)
-        assert database.length_of_chord_in_circle(radius=50, apothem=25) == pytest.approx(86.6025)
-        assert database.length_of_chord_in_circle(radius=50, apothem=45) == pytest.approx(43.5890)
-        with pytest.raises(AssertionError):
-            database.length_of_chord_in_circle(radius=50, apothem=55)
-        with pytest.raises(AssertionError):
-            database.length_of_chord_in_circle(radius=50, apothem=-5)
-
     def test_can_calculate_einstein_normalized_separation_in_direction_of_motion(self, database):
         minimum_separation_time0 = 0
         observation_time0 = 100

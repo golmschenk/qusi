@@ -25,11 +25,8 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
                                       names=column_names)
         return meta_data_frame
 
-    def length_of_chord_in_circle(self, radius, apothem):
-        assert 0 <= apothem <= radius
-        return 2 * (radius ** 2 - apothem ** 2) ** 0.5
-
-    def einstein_normalized_separation_in_direction_of_motion(self, observation_time: float,
+    @staticmethod
+    def einstein_normalized_separation_in_direction_of_motion(observation_time: float,
                                                               minimum_separation_time: float,
                                                               einstein_crossing_time: float) -> float:
         r"""
