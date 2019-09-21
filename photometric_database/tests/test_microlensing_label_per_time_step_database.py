@@ -58,7 +58,7 @@ class TestMicrolensingLabelPerTimeStepDatabase:
                                                           minimum_einstein_separation=minimum_einstein_separation0,
                                                           einstein_crossing_time=einstein_crossing_time0)
         assert magnification0 == pytest.approx(1.3416407)
-        observation_times1 = np.float32([np.sin(np.pi/4), 0, -1e10])
+        observation_times1 = np.float32([np.sin(np.pi / 4), 0, -1e10])
         minimum_separation_times1 = np.float32(0)
         minimum_einstein_separations1 = np.float32([np.cos(np.pi / 4), 0, 0])
         einstein_crossing_times1 = np.float32(2)
@@ -67,3 +67,24 @@ class TestMicrolensingLabelPerTimeStepDatabase:
                                                         minimum_einstein_separation=minimum_einstein_separations1,
                                                         einstein_crossing_time=einstein_crossing_times1)
         assert np.allclose(separations1, [1.3416407, np.inf, 1])
+
+    def test_can_get_meta_data_for_lightcurve_file_path(self, database):
+        meta_data_file_path = 'photometric_database/tests/resources/shortened_candlist_RADec.dat.txt'
+        meta_data_frame = database.load_microlensing_meta_data(meta_data_file_path)
+        lightcurve_file_path = 'photometric_database/tests/resources/test1-R-1-0-100869.phot.cor.feather'
+        lightcurve_meta_data = database.get_meta_data_for_lightcurve_file_path(
+            lightcurve_file_path=lightcurve_file_path,
+            meta_data_frame=meta_data_frame
+        )
+        assert lightcurve_meta_data['t0'] == 5000
+        assert lightcurve_meta_data['umin'] == -1
+
+    def test_can_calculate_magnitude_for_each_lightcurve_time_step(self, database):
+        meta_data_file_path = 'photometric_database/tests/resources/shortened_candlist_RADec.dat.txt'
+        meta_data_frame = database.load_microlensing_meta_data(meta_data_file_path)
+        lightcurve_file_path = 'photometric_database/tests/resources/test1-R-1-0-100869.phot.cor.feather'
+        magnitudes = database.calculate_magnitudes_for_lightcurve(lightcurve_file_path=lightcurve_file_path,
+                                                                  meta_data_frame=meta_data_frame)
+        expected_magnitudes = [1.22826472, 1.34164079, 1.22826472, 1.10111717, 1.04349839, 1.02015629, 1.01019792,
+                               1.00558664, 1.00327366, 1.00202891]
+        assert np.allclose(magnitudes, expected_magnitudes)

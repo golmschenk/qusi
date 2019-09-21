@@ -1,6 +1,7 @@
 """Code for representing a dataset of lightcurves for binary classification with a single label per time step."""
 import numpy as np
 import pandas as pd
+from pathlib import Path
 
 from photometric_database.lightcurve_database import LightcurveDatabase
 
@@ -47,9 +48,14 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
     def calculate_magnification(self, observation_time: np.float32, minimum_separation_time: np.float32,
                                 minimum_einstein_separation: np.float32, einstein_crossing_time: np.float32
                                 ) -> np.float32:
-        """
+        r"""
         Calculates the magnification of a microlensing event for a given time step. Broadcasts for arrays of times.
         Allows an infinite magnification in cases where the separation is zero.
+        With :math:`u` as the einstein normalized separation, does
+        .. math::
+           u_v = 2 \dfrac{t-t_0}{t_E}
+           u = \sqrt{u_0^2 + u_v^2}
+           A = \dfrac{u^2 + 2}{u \sqrt{u^2 + 4}}
 
         :param observation_time: :math:`t`, current time of the observation.
         :param minimum_separation_time: :math:`t_0`, the time the minimum separation between source and lens occurs at.
@@ -64,5 +70,35 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
         )
         u = np.linalg.norm([minimum_einstein_separation, separation_in_direction_of_motion], axis=0)
         with np.errstate(divide='ignore'):  # Divide by zero resulting in infinity is ok here.
-            magnification = (u**2 + 2) / (u * (u**2 + 4)**0.5)
+            magnification = (u ** 2 + 2) / (u * (u ** 2 + 4) ** 0.5)
         return magnification
+
+    @staticmethod
+    def get_meta_data_for_lightcurve_file_path(lightcurve_file_path: str,
+                                               meta_data_frame: pd.DataFrame) -> pd.Series:
+        """
+        Gets the meta data for a lightcurve based on the file name from the meta data frame.
+
+        :param lightcurve_file_path: The lightcurve file path.
+        :param meta_data_frame: The meta data frame.
+        :return: The lightcurve meta data.
+        """
+        lightcurve_file_name_stem = Path(lightcurve_file_path).stem.split('.')[0]  # Remove all extensions
+        field, _, chip, sub_frame, id_ = lightcurve_file_name_stem.split('-')
+        # noinspection SpellCheckingInspection
+        lightcurve_meta_data = meta_data_frame[(meta_data_frame['ID'] == int(id_)) &
+                                               (meta_data_frame['field'] == field) &
+                                               (meta_data_frame['chip'] == int(chip)) &
+                                               (meta_data_frame['nsub'] == int(sub_frame))].iloc[0]
+        return lightcurve_meta_data
+
+    def calculate_magnitudes_for_lightcurve(self, lightcurve_file_path: str,
+                                            meta_data_frame: pd.DataFrame) -> np.float32:
+        lightcurve_data_frame = pd.read_feather(lightcurve_file_path)
+        observation_times = lightcurve_data_frame.HJD.values
+        lightcurve_meta_data = self.get_meta_data_for_lightcurve_file_path(lightcurve_file_path, meta_data_frame)
+        magnitudes = self.calculate_magnification(observation_time=observation_times,
+                                                  minimum_separation_time=lightcurve_meta_data['t0'],
+                                                  minimum_einstein_separation=lightcurve_meta_data['umin'],
+                                                  einstein_crossing_time=lightcurve_meta_data['tE'])
+        return magnitudes
