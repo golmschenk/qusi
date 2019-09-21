@@ -94,6 +94,13 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
 
     def calculate_magnitudes_for_lightcurve(self, lightcurve_file_path: str,
                                             meta_data_frame: pd.DataFrame) -> np.float32:
+        """
+        Calculates the magnitudes for each time step of a lightcurve.
+
+        :param lightcurve_file_path: The path to the lightcurve data.
+        :param meta_data_frame: The meta data frame containing the meta data for the passed lightcurve.
+        :return: The magnitudes for each time step of the lightcurve.
+        """
         lightcurve_data_frame = pd.read_feather(lightcurve_file_path)
         observation_times = lightcurve_data_frame.HJD.values
         lightcurve_meta_data = self.get_meta_data_for_lightcurve_file_path(lightcurve_file_path, meta_data_frame)
@@ -102,3 +109,18 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
                                                   minimum_einstein_separation=lightcurve_meta_data['umin'],
                                                   einstein_crossing_time=lightcurve_meta_data['tE'])
         return magnitudes
+
+    def magnitude_threshold_label_for_lightcurve(self, lightcurve_file_path: str, meta_data_frame: pd.DataFrame,
+                                                 threshold: float) -> np.bool:
+        """
+        Gets the binary per time step label for a lightcurve based on a microlensing magnitude threshold.
+
+        :param lightcurve_file_path: The lightcurve file path.
+        :param meta_data_frame: The meta data frame containing the meta data for the passed lightcurve.
+        :param threshold: The magnitude threshold required for a time step to be labeled positive.
+        :return: The label containing a binary value per time step.
+        """
+        magnitudes = self.calculate_magnitudes_for_lightcurve(lightcurve_file_path=lightcurve_file_path,
+                                                              meta_data_frame=meta_data_frame)
+        label = magnitudes > threshold
+        return label
