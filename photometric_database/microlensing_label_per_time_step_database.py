@@ -1,6 +1,9 @@
 """Code for representing a dataset of lightcurves for binary classification with a single label per time step."""
+from typing import Union
+
 import numpy as np
 import pandas as pd
+import tensorflow as tf
 from pathlib import Path
 
 from photometric_database.lightcurve_database import LightcurveDatabase
@@ -8,6 +11,83 @@ from photometric_database.lightcurve_database import LightcurveDatabase
 
 class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
     """A representing a dataset of lightcurves for binary classification with a single label per time step."""
+    def __init__(self):
+        super().__init__()
+        self.meta_data_frame: Union[pd.DataFrame, None] = None
+        self.time_steps_per_example = 300
+
+    def generate_datasets(self, positive_data_directory: str, negative_data_directory: str,
+                          meta_data_file_path: str) -> (tf.data.Dataset, tf.data.Dataset):
+        """
+        Generates the training and validation datasets.
+
+        :param positive_data_directory: The path to the directory containing the positive example files.
+        :param negative_data_directory: The path to the directory containing the negative example files.
+        :param meta_data_file_path: The path to the microlensing meta data file.
+        :return: The training and validation datasets.
+        """
+        positive_example_paths = list(Path(positive_data_directory).glob('*.feather'))
+        print(f'{len(positive_example_paths)} positive examples.')
+        negative_example_paths = list(Path(negative_data_directory).glob('*.feather'))
+        print(f'{len(negative_example_paths)} negative examples.')
+        self.meta_data_frame = pd.read_feather(meta_data_file_path)
+        full_dataset = tf.data.Dataset.from_tensor_slices(positive_example_paths + negative_example_paths)
+        full_dataset_size = len(list(full_dataset))
+        full_dataset = full_dataset.shuffle(buffer_size=full_dataset_size, seed=0)
+        validation_dataset_size = int(full_dataset_size * self.validation_ratio)
+        validation_dataset = full_dataset.take(validation_dataset_size)
+        training_dataset = full_dataset.skip(validation_dataset_size)
+        training_dataset = training_dataset.shuffle(buffer_size=len(list(training_dataset)))
+        training_dataset = training_dataset.map(self.training_preprocessing, num_parallel_calls=16)
+        training_dataset = training_dataset.batch(self.batch_size).prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
+        validation_dataset = validation_dataset.map(self.evaluation_preprocessing, num_parallel_calls=16)
+        validation_dataset = validation_dataset.batch(self.batch_size).prefetch(
+            buffer_size=tf.data.experimental.AUTOTUNE)
+        return training_dataset, validation_dataset
+
+    def training_preprocessing(self, example_path_tensor: tf.Tensor) -> (tf.Tensor, tf.Tensor):
+        """
+        Loads and preprocesses the data for training.
+
+        :param example_path_tensor: The tensor containing the path to the example to load.
+        :return: The example and its corresponding label.
+        """
+        example, label = self.evaluation_preprocessing(example_path_tensor)
+        example, label, example.numpy(), label.numpy()
+        example_and_label = np.concatenate([example, label], axis=1)
+        example_and_label = self.get_random_segment(example_and_label)
+        example, label = example_and_label[:, :2], example_and_label[:, 2]
+        return tf.convert_to_tensor(example, dtype=tf.float32), tf.convert_to_tensor(label, dtype=tf.float32)
+
+    def evaluation_preprocessing(self, example_path_tensor: tf.Tensor) -> (tf.Tensor, tf.Tensor):
+        """
+        Loads and preprocesses the data for evaluation.
+
+        :param example_path_tensor: The tensor containing the path to the example to load.
+        :return: The example and its corresponding label.
+        """
+        example_path = example_path_tensor.numpy().decode('utf-8')
+        example_data_frame = pd.read_feather(example_path)
+        fluxes = example_data_frame['flux'].values
+        fluxes = self.normalize(fluxes)
+        times = example_data_frame['HJD'].values
+        time_differences = np.diff(times, prepend=times[0])
+        example = np.stack([fluxes, time_differences], axis=-1)
+        if self.is_positive(example_path):
+            label = self.magnification_threshold_label_for_lightcurve(example_path, self.meta_data_frame, threshold=1.1)
+        else:
+            label = np.zeros_like(fluxes)
+        return tf.convert_to_tensor(example, dtype=tf.float32), tf.convert_to_tensor(label, dtype=tf.float32)
+
+    @staticmethod
+    def is_positive(example_path):
+        """
+        Checks if an example contains a microlensing event or not.
+
+        :param example_path: The path to the example to check.
+        :return: Whether or not the example contains a microlensing event.
+        """
+        return 'positive' in example_path
 
     @staticmethod
     def load_microlensing_meta_data(meta_data_file_path: str) -> pd.DataFrame:
@@ -102,7 +182,7 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
         :return: The magnifications for each time step of the lightcurve.
         """
         lightcurve_data_frame = pd.read_feather(lightcurve_file_path)
-        observation_times = lightcurve_data_frame.HJD.values
+        observation_times = lightcurve_data_frame['HJD'].values
         lightcurve_meta_data = self.get_meta_data_for_lightcurve_file_path(lightcurve_file_path, meta_data_frame)
         magnifications = self.calculate_magnification(observation_time=observation_times,
                                                       minimum_separation_time=lightcurve_meta_data['t0'],
@@ -124,3 +204,14 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
                                                                       meta_data_frame=meta_data_frame)
         label = magnifications > threshold
         return label
+
+    def get_random_segment(self, example: np.ndarray) -> np.ndarray:
+        """
+        Extracts a random segment from an example which is the length specified by the database.
+
+        :param example: The example to extract a segment from.
+        :return: The extracted segment.
+        """
+        start_slice = np.random.randint(0, example.shape[0] - self.time_steps_per_example)
+        example = example[start_slice:start_slice + self.time_steps_per_example]
+        return example

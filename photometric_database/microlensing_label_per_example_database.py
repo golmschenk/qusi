@@ -72,8 +72,19 @@ class MicrolensingLabelPerExampleDatabase(LightcurveDatabase):
         times_to_repeat = math.ceil(size / current_size)
         return dataset.repeat(times_to_repeat).take(size)
 
-    def get_training_and_validation_datasets_for_file_paths(self, example_paths: List[str], label: int,
-                                                            validation_dataset_size_ratio: float = 0.2) -> (
+    def set_shape_function(self, lightcurve: tf.Tensor, label: tf.Tensor):
+        """
+        Explicitly sets the shapes of the lightcurve and label tensor, otherwise TensorFlow can't infer it.
+
+        :param lightcurve: The lightcurve tensor.
+        :param label: The label tensor.
+        :return: The lightcurve and label tensor with TensorFlow inferable shapes.
+        """
+        lightcurve.set_shape([self.time_steps_per_example, 1])
+        label.set_shape([1])
+        return lightcurve, label
+
+    def get_training_and_validation_datasets_for_file_paths(self, example_paths: List[str], label: int) -> (
                                                             tf.data.Dataset, tf.data.Dataset):
         """Creates a TensorFlow Dataset from a list of file names and desired label for those files."""
         labels = [label] * len(example_paths)
@@ -83,7 +94,7 @@ class MicrolensingLabelPerExampleDatabase(LightcurveDatabase):
         file_path_dataset = tf.data.Dataset.from_tensor_slices(example_paths)
         labels_dataset = tf.data.Dataset.from_tensor_slices(labels)
         dataset = tf.data.Dataset.zip((file_path_dataset, labels_dataset))
-        validation_dataset_size = int(len(labels) * validation_dataset_size_ratio)
+        validation_dataset_size = int(len(labels) * self.validation_ratio)
         validation_dataset = dataset.take(validation_dataset_size)
         training_dataset = dataset.skip(validation_dataset_size)
         return training_dataset, validation_dataset
