@@ -1,5 +1,5 @@
 """Code for representing a dataset of lightcurves for binary classification with a single label per time step."""
-from typing import Union
+from typing import Union, List
 
 import numpy as np
 import pandas as pd
@@ -27,11 +27,12 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
         :param meta_data_file_path: The path to the microlensing meta data file.
         :return: The training and validation datasets.
         """
+        self.meta_data_frame = pd.read_feather(meta_data_file_path)
         positive_example_paths = list(Path(positive_data_directory).glob('*.feather'))
+        positive_example_paths = self.remove_file_paths_with_no_meta_data(positive_example_paths, self.meta_data_frame)
         print(f'{len(positive_example_paths)} positive examples.')
         negative_example_paths = list(Path(negative_data_directory).glob('*.feather'))
         print(f'{len(negative_example_paths)} negative examples.')
-        self.meta_data_frame = pd.read_feather(meta_data_file_path)
         full_dataset = tf.data.Dataset.from_tensor_slices(positive_example_paths + negative_example_paths)
         full_dataset_size = len(list(full_dataset))
         full_dataset = full_dataset.shuffle(buffer_size=full_dataset_size, seed=0)
@@ -158,8 +159,7 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
             magnification = (u ** 2 + 2) / (u * (u ** 2 + 4) ** 0.5)
         return magnification
 
-    @staticmethod
-    def get_meta_data_for_lightcurve_file_path(lightcurve_file_path: str,
+    def get_meta_data_for_lightcurve_file_path(self, lightcurve_file_path: Union[str, Path],
                                                meta_data_frame: pd.DataFrame) -> pd.Series:
         """
         Gets the meta data for a lightcurve based on the file name from the meta data frame.
@@ -168,13 +168,38 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
         :param meta_data_frame: The meta data frame.
         :return: The lightcurve meta data.
         """
+        lightcurve_meta_data = self.get_meta_data_frame_for_lightcurve_file_path(lightcurve_file_path, meta_data_frame)
+        return lightcurve_meta_data.iloc[0]
+
+    def check_if_meta_data_exists_for_lightcurve_file_path(self, lightcurve_file_path: Union[str, Path],
+                                                           meta_data_frame: pd.DataFrame) -> bool:
+        """
+        Gets the meta data for a lightcurve based on the file name from the meta data frame.
+
+        :param lightcurve_file_path: The lightcurve file path.
+        :param meta_data_frame: The meta data frame.
+        :return: The lightcurve meta data.
+        """
+        lightcurve_meta_data = self.get_meta_data_frame_for_lightcurve_file_path(lightcurve_file_path, meta_data_frame)
+        return lightcurve_meta_data.shape[0] > 0
+
+    @staticmethod
+    def get_meta_data_frame_for_lightcurve_file_path(lightcurve_file_path: Union[str, Path],
+                                                     meta_data_frame: pd.DataFrame) -> pd.DataFrame:
+        """
+        Gets the meta data frame containing all rows for a lightcurve based on the file name from the meta data frame.
+
+        :param lightcurve_file_path: The lightcurve file path.
+        :param meta_data_frame: The meta data frame.
+        :return: The lightcurve meta data frame.
+        """
         lightcurve_file_name_stem = Path(lightcurve_file_path).name.split('.')[0]  # Remove all extensions
         field, _, chip, sub_frame, id_ = lightcurve_file_name_stem.split('-')
         # noinspection SpellCheckingInspection
         lightcurve_meta_data = meta_data_frame[(meta_data_frame['ID'] == int(id_)) &
                                                (meta_data_frame['field'] == field) &
                                                (meta_data_frame['chip'] == int(chip)) &
-                                               (meta_data_frame['nsub'] == int(sub_frame))].iloc[0]
+                                               (meta_data_frame['nsub'] == int(sub_frame))]
         return lightcurve_meta_data
 
     def magnification_threshold_label_for_lightcurve_meta_data(self, observation_times: np.float32,
@@ -222,3 +247,17 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
             einstein_crossing_time=lightcurve_microlensing_meta_data['tE']
         )
         return magnifications
+
+    def remove_file_paths_with_no_meta_data(self, file_paths: List[Path], meta_data_frame: pd.DataFrame) -> List[Path]:
+        """
+        Filters file paths on whether or not the meta data frame contains an entry for them.
+
+        :param file_paths: The file paths to be filtered.
+        :param meta_data_frame: The meta data frame.
+        :return: The filtered file paths containing only paths which appear in the meta data frame.
+        """
+        filtered_file_paths = []
+        for file_path in file_paths:
+            if self.check_if_meta_data_exists_for_lightcurve_file_path(file_path, meta_data_frame):
+                filtered_file_paths.append(file_path)
+        return filtered_file_paths

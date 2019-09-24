@@ -1,4 +1,6 @@
 """Tests for the MicrolensingLabelPerTimeStepDatabase class."""
+from pathlib import Path
+
 import pytest
 import numpy as np
 import pandas as pd
@@ -19,14 +21,22 @@ class TestMicrolensingLabelPerTimeStepDatabase:
         return MicrolensingLabelPerTimeStepDatabase()
 
     @pytest.fixture
-    def lightcurve_file_path(self) -> str:
+    def positive_directory_path(self) -> str:
+        """
+        Provides a path to a positive data directory.
+
+        :return: The positive data directory path.
+        """
+        return 'photometric_database/tests/resources/test_data_directory/positive'
+
+    @pytest.fixture
+    def lightcurve_file_path(self, positive_directory_path) -> str:
         """
         Provides a lightcurve file path for the test.
 
         :return: The lightcurve file path.
         """
-        return ('photometric_database/tests/resources/test_data_directory/' +
-                'positive/positive1-R-1-0-100869.phot.cor.feather')
+        return f'{positive_directory_path}/positive1-R-1-0-100869.phot.cor.feather'
 
     @pytest.fixture
     def meta_data_file_path(self) -> str:
@@ -122,3 +132,27 @@ class TestMicrolensingLabelPerTimeStepDatabase:
         expected_magnifications = [1.22826472, 1.34164079, 1.22826472, 1.10111717, 1.04349839, 1.02015629, 1.01019792,
                                    1.00558664, 1.00327366, 1.00202891]
         assert np.allclose(magnifications, expected_magnifications)
+
+    def test_can_check_if_meta_data_exists_for_lightcurve_file_path(self, database, meta_data_file_path,
+                                                                    lightcurve_file_path, positive_directory_path):
+        meta_data_frame = database.load_microlensing_meta_data(meta_data_file_path)
+        has_meta_data0 = database.check_if_meta_data_exists_for_lightcurve_file_path(
+            lightcurve_file_path=lightcurve_file_path,
+            meta_data_frame=meta_data_frame
+        )
+        assert has_meta_data0
+        has_meta_data1 = database.check_if_meta_data_exists_for_lightcurve_file_path(
+            lightcurve_file_path=f'{positive_directory_path}/positive2-R-8-8-8.phot.cor.feather',
+            meta_data_frame=meta_data_frame
+        )
+        assert not has_meta_data1
+
+    def test_can_filter_positive_paths_based_on_available_microlensing_meta_data(self, database,
+                                                                                 positive_directory_path,
+                                                                                 meta_data_file_path):
+        positive_file_paths = list(Path(positive_directory_path).glob('**/*.feather'))
+        meta_data_frame = database.load_microlensing_meta_data(meta_data_file_path)
+        assert len(positive_file_paths) == 2
+        filtered_positive_file_paths = database.remove_file_paths_with_no_meta_data(file_paths=positive_file_paths,
+                                                                                    meta_data_frame=meta_data_frame)
+        assert len(filtered_positive_file_paths) == 1
