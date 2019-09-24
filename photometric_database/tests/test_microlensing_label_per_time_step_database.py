@@ -18,8 +18,26 @@ class TestMicrolensingLabelPerTimeStepDatabase:
         """
         return MicrolensingLabelPerTimeStepDatabase()
 
-    def test_can_read_microlensing_meta_data_file(self, database):
-        meta_data_file_path = 'photometric_database/tests/resources/shortened_candlist_RADec.dat.txt'
+    @pytest.fixture
+    def lightcurve_file_path(self) -> str:
+        """
+        Provides a lightcurve file path for the test.
+
+        :return: The lightcurve file path.
+        """
+        return ('photometric_database/tests/resources/test_data_directory/' +
+                'positive/positive1-R-1-0-100869.phot.cor.feather')
+
+    @pytest.fixture
+    def meta_data_file_path(self) -> str:
+        """
+        Provides a microlensing meta data file path for the test.
+
+        :return: The meta data file path.
+        """
+        return 'photometric_database/tests/resources/test_candlist_RADec.dat.txt'
+
+    def test_can_read_microlensing_meta_data_file(self, database, meta_data_file_path):
         meta_data_frame = database.load_microlensing_meta_data(meta_data_file_path)
         assert meta_data_frame['tE'].iloc[1] == 1.1946342164440846e+02
 
@@ -69,10 +87,8 @@ class TestMicrolensingLabelPerTimeStepDatabase:
                                                         einstein_crossing_time=einstein_crossing_times1)
         assert np.allclose(separations1, [1.3416407, np.inf, 1])
 
-    def test_can_get_meta_data_for_lightcurve_file_path(self, database):
-        meta_data_file_path = 'photometric_database/tests/resources/shortened_candlist_RADec.dat.txt'
+    def test_can_get_meta_data_for_lightcurve_file_path(self, database, meta_data_file_path, lightcurve_file_path):
         meta_data_frame = database.load_microlensing_meta_data(meta_data_file_path)
-        lightcurve_file_path = 'photometric_database/tests/resources/test1-R-1-0-100869.phot.cor.feather'
         lightcurve_meta_data = database.get_meta_data_for_lightcurve_file_path(
             lightcurve_file_path=lightcurve_file_path,
             meta_data_frame=meta_data_frame
@@ -80,10 +96,9 @@ class TestMicrolensingLabelPerTimeStepDatabase:
         assert lightcurve_meta_data['t0'] == 5000
         assert lightcurve_meta_data['umin'] == -1
 
-    def test_can_generate_magnification_threshold_label_for_lightcurve(self, database):
-        meta_data_file_path = 'photometric_database/tests/resources/shortened_candlist_RADec.dat.txt'
+    def test_can_generate_magnification_threshold_label_for_lightcurve(self, database, meta_data_file_path,
+                                                                       lightcurve_file_path):
         meta_data_frame = database.load_microlensing_meta_data(meta_data_file_path)
-        lightcurve_file_path = 'photometric_database/tests/resources/test1-R-1-0-100869.phot.cor.feather'
         lightcurve_microlensing_meta_data = database.get_meta_data_for_lightcurve_file_path(lightcurve_file_path,
                                                                                             meta_data_frame)
         times = pd.read_feather(lightcurve_file_path)['HJD'].values
@@ -95,10 +110,8 @@ class TestMicrolensingLabelPerTimeStepDatabase:
         expected_label = [1, 1, 1, 1, 0, 0, 0, 0, 0, 0]
         assert np.array_equal(lightcurve_label, expected_label)
 
-    def test_can_calculate_magnifications_for_times(self, database):
-        meta_data_file_path = 'photometric_database/tests/resources/shortened_candlist_RADec.dat.txt'
+    def test_can_calculate_magnifications_for_times(self, database, meta_data_file_path, lightcurve_file_path):
         meta_data_frame = database.load_microlensing_meta_data(meta_data_file_path)
-        lightcurve_file_path = 'photometric_database/tests/resources/test1-R-1-0-100869.phot.cor.feather'
         lightcurve_microlensing_meta_data = database.get_meta_data_for_lightcurve_file_path(lightcurve_file_path,
                                                                                             meta_data_frame)
         times = pd.read_feather(lightcurve_file_path)['HJD'].values
