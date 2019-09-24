@@ -163,7 +163,7 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
         :param meta_data_frame: The meta data frame.
         :return: The lightcurve meta data.
         """
-        lightcurve_file_name_stem = Path(lightcurve_file_path).stem.split('.')[0]  # Remove all extensions
+        lightcurve_file_name_stem = Path(lightcurve_file_path).name.split('.')[0]  # Remove all extensions
         field, _, chip, sub_frame, id_ = lightcurve_file_name_stem.split('-')
         # noinspection SpellCheckingInspection
         lightcurve_meta_data = meta_data_frame[(meta_data_frame['ID'] == int(id_)) &
