@@ -94,10 +94,14 @@ class TestMicrolensingLabelPerTimeStepDatabase:
         meta_data_file_path = 'photometric_database/tests/resources/shortened_candlist_RADec.dat.txt'
         meta_data_frame = database.load_microlensing_meta_data(meta_data_file_path)
         lightcurve_file_path = 'photometric_database/tests/resources/test1-R-1-0-100869.phot.cor.feather'
-        lightcurve_label = database.magnification_threshold_label_for_lightcurve(
-            lightcurve_file_path=lightcurve_file_path,
-            meta_data_frame=meta_data_frame,
-            threshold=1.1)
+        lightcurve_microlensing_meta_data = database.get_meta_data_for_lightcurve_file_path(lightcurve_file_path,
+                                                                                            meta_data_frame)
+        times = pd.read_feather(lightcurve_file_path)['HJD'].values
+        lightcurve_label = database.magnification_threshold_label_for_lightcurve_meta_data(
+            observation_times=times,
+            lightcurve_meta_data=lightcurve_microlensing_meta_data,
+            threshold=1.1
+        )
         expected_label = [1, 1, 1, 1, 0, 0, 0, 0, 0, 0]
         assert np.array_equal(lightcurve_label, expected_label)
 

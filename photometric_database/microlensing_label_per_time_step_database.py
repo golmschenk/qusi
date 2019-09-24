@@ -77,7 +77,9 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
         if self.is_positive(example_path):
             lightcurve_microlensing_meta_data = self.get_meta_data_for_lightcurve_file_path(example_path,
                                                                                             self.meta_data_frame)
-            label = self.calculate_magnifications_for_lightcurve_meta_data(times, lightcurve_microlensing_meta_data)
+            label = self.magnification_threshold_label_for_lightcurve_meta_data(times,
+                                                                                lightcurve_microlensing_meta_data,
+                                                                                threshold=1.1)
         else:
             label = np.zeros_like(fluxes)
         return tf.convert_to_tensor(example, dtype=tf.float32), tf.convert_to_tensor(label, dtype=tf.float32)
@@ -190,18 +192,21 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
         magnifications = self.calculate_magnifications_for_lightcurve_meta_data(observation_times, lightcurve_meta_data)
         return magnifications
 
-    def magnification_threshold_label_for_lightcurve(self, lightcurve_file_path: str, meta_data_frame: pd.DataFrame,
-                                                     threshold: float) -> np.bool:
+    def magnification_threshold_label_for_lightcurve_meta_data(self, observation_times: np.float32,
+                                                               lightcurve_meta_data: pd.Series,
+                                                               threshold: float) -> np.bool:
         """
         Gets the binary per time step label for a lightcurve based on a microlensing magnification threshold.
 
-        :param lightcurve_file_path: The lightcurve file path.
-        :param meta_data_frame: The meta data frame containing the meta data for the passed lightcurve.
+        :param observation_times: The observation times to calculate magnifications of.
+        :param lightcurve_meta_data: The microlensing meta data for magnifications to be based off.
         :param threshold: The magnification threshold required for a time step to be labeled positive.
         :return: The label containing a binary value per time step.
         """
-        magnifications = self.calculate_magnifications_for_lightcurve(lightcurve_file_path=lightcurve_file_path,
-                                                                      meta_data_frame=meta_data_frame)
+        magnifications = self.calculate_magnifications_for_lightcurve_meta_data(
+            times=observation_times,
+            lightcurve_microlensing_meta_data=lightcurve_meta_data
+        )
         label = magnifications > threshold
         return label
 
