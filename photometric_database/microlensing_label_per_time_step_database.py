@@ -33,16 +33,21 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
         print(f'{len(positive_example_paths)} positive examples.')
         negative_example_paths = list(Path(negative_data_directory).glob('*.feather'))
         print(f'{len(negative_example_paths)} negative examples.')
-        full_dataset = tf.data.Dataset.from_tensor_slices(positive_example_paths + negative_example_paths)
+        example_paths = [str(example_path) for example_path in positive_example_paths + negative_example_paths]
+        full_dataset = tf.data.Dataset.from_tensor_slices(example_paths)
         full_dataset_size = len(list(full_dataset))
         full_dataset = full_dataset.shuffle(buffer_size=full_dataset_size, seed=0)
         validation_dataset_size = int(full_dataset_size * self.validation_ratio)
         validation_dataset = full_dataset.take(validation_dataset_size)
         training_dataset = full_dataset.skip(validation_dataset_size)
         training_dataset = training_dataset.shuffle(buffer_size=len(list(training_dataset)))
-        training_dataset = training_dataset.map(self.training_preprocessing, num_parallel_calls=16)
+        training_preprocessor = lambda file_path: tuple(tf.py_function(self.training_preprocessing,
+                                                                       [file_path], [tf.float32, tf.float32]))
+        training_dataset = training_dataset.map(training_preprocessor, num_parallel_calls=None)
         training_dataset = training_dataset.batch(self.batch_size).prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
-        validation_dataset = validation_dataset.map(self.evaluation_preprocessing, num_parallel_calls=16)
+        validation_preprocessor = lambda file_path: tuple(tf.py_function(self.evaluation_preprocessing,
+                                                                         [file_path], [tf.float32, tf.float32]))
+        validation_dataset = validation_dataset.map(validation_preprocessor, num_parallel_calls=None)
         validation_dataset = validation_dataset.batch(self.batch_size).prefetch(
             buffer_size=tf.data.experimental.AUTOTUNE)
         return training_dataset, validation_dataset
@@ -55,8 +60,8 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
         :return: The example and its corresponding label.
         """
         example, label = self.evaluation_preprocessing(example_path_tensor)
-        example, label, example.numpy(), label.numpy()
-        example_and_label = np.concatenate([example, label], axis=1)
+        example, label = example.numpy(), label.numpy()
+        example_and_label = np.concatenate([example, np.expand_dims(label, axis=-1)], axis=1)
         example_and_label = self.get_random_segment(example_and_label)
         example, label = example_and_label[:, :2], example_and_label[:, 2]
         return tf.convert_to_tensor(example, dtype=tf.float32), tf.convert_to_tensor(label, dtype=tf.float32)

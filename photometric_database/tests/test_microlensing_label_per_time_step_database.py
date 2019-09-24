@@ -21,6 +21,15 @@ class TestMicrolensingLabelPerTimeStepDatabase:
         return MicrolensingLabelPerTimeStepDatabase()
 
     @pytest.fixture
+    def data_directory_path(self) -> str:
+        """
+        Provides a path to a data directory.
+
+        :return: The data directory path.
+        """
+        return 'photometric_database/tests/resources/test_data_directory'
+
+    @pytest.fixture
     def positive_directory_path(self) -> str:
         """
         Provides a path to a positive data directory.
@@ -156,3 +165,24 @@ class TestMicrolensingLabelPerTimeStepDatabase:
         filtered_positive_file_paths = database.remove_file_paths_with_no_meta_data(file_paths=positive_file_paths,
                                                                                     meta_data_frame=meta_data_frame)
         assert len(filtered_positive_file_paths) == 1
+
+    def test_examples_of_generated_datasets_have_appropriate_sizes(self, database, data_directory_path):
+        database.time_steps_per_example = 4
+        datasets = database.generate_datasets(
+            positive_data_directory=f'{data_directory_path}/positive',
+            negative_data_directory=f'{data_directory_path}/negative',
+            meta_data_file_path=f'{data_directory_path}/test_candlist_RADec.dat.feather'
+        )
+        training_dataset, validation_dataset = datasets
+        training_batch_examples, training_batch_labels = next(iter(training_dataset))
+        assert len(training_batch_examples.shape) == 3
+        assert training_batch_examples.shape[1] == 4
+        assert training_batch_examples.shape[2] == 2
+        assert len(training_batch_labels.shape) == 2
+        assert training_batch_labels.shape[1] == 4
+        validation_batch_examples, validation_batch_labels = next(iter(validation_dataset))
+        assert len(validation_batch_examples.shape) == 3
+        assert validation_batch_examples.shape[1] == 10
+        assert validation_batch_examples.shape[2] == 2
+        assert len(validation_batch_labels.shape) == 2
+        assert validation_batch_labels.shape[1] == 10
