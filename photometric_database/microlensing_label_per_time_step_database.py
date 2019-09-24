@@ -68,7 +68,7 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
         :return: The example and its corresponding label.
         """
         example_path = example_path_tensor.numpy().decode('utf-8')
-        example_data_frame = pd.read_feather(example_path)
+        example_data_frame = pd.read_feather(example_path, columns=['HJD', 'flux'])
         fluxes = example_data_frame['flux'].values
         fluxes = self.normalize(fluxes)
         times = example_data_frame['HJD'].values
