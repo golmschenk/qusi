@@ -177,21 +177,6 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
                                                (meta_data_frame['nsub'] == int(sub_frame))].iloc[0]
         return lightcurve_meta_data
 
-    def calculate_magnifications_for_lightcurve(self, lightcurve_file_path: str,
-                                                meta_data_frame: pd.DataFrame) -> np.float32:
-        """
-        Calculates the magnifications for each time step of a lightcurve.
-
-        :param lightcurve_file_path: The path to the lightcurve data.
-        :param meta_data_frame: The meta data frame containing the meta data for the passed lightcurve.
-        :return: The magnifications for each time step of the lightcurve.
-        """
-        lightcurve_data_frame = pd.read_feather(lightcurve_file_path)
-        observation_times = lightcurve_data_frame['HJD'].values
-        lightcurve_meta_data = self.get_meta_data_for_lightcurve_file_path(lightcurve_file_path, meta_data_frame)
-        magnifications = self.calculate_magnifications_for_lightcurve_meta_data(observation_times, lightcurve_meta_data)
-        return magnifications
-
     def magnification_threshold_label_for_lightcurve_meta_data(self, observation_times: np.float32,
                                                                lightcurve_meta_data: pd.Series,
                                                                threshold: float) -> np.bool:

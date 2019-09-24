@@ -80,16 +80,6 @@ class TestMicrolensingLabelPerTimeStepDatabase:
         assert lightcurve_meta_data['t0'] == 5000
         assert lightcurve_meta_data['umin'] == -1
 
-    def test_can_calculate_magnification_for_each_lightcurve_time_step(self, database):
-        meta_data_file_path = 'photometric_database/tests/resources/shortened_candlist_RADec.dat.txt'
-        meta_data_frame = database.load_microlensing_meta_data(meta_data_file_path)
-        lightcurve_file_path = 'photometric_database/tests/resources/test1-R-1-0-100869.phot.cor.feather'
-        magnifications = database.calculate_magnifications_for_lightcurve(lightcurve_file_path=lightcurve_file_path,
-                                                                          meta_data_frame=meta_data_frame)
-        expected_magnifications = [1.22826472, 1.34164079, 1.22826472, 1.10111717, 1.04349839, 1.02015629, 1.01019792,
-                                   1.00558664, 1.00327366, 1.00202891]
-        assert np.allclose(magnifications, expected_magnifications)
-
     def test_can_generate_magnification_threshold_label_for_lightcurve(self, database):
         meta_data_file_path = 'photometric_database/tests/resources/shortened_candlist_RADec.dat.txt'
         meta_data_frame = database.load_microlensing_meta_data(meta_data_file_path)
