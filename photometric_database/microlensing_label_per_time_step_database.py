@@ -11,6 +11,7 @@ from photometric_database.lightcurve_database import LightcurveDatabase
 
 class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
     """A representing a dataset of lightcurves for binary classification with a single label per time step."""
+
     def __init__(self):
         super().__init__()
         self.meta_data_frame: Union[pd.DataFrame, None] = None
@@ -74,7 +75,9 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
         time_differences = np.diff(times, prepend=times[0])
         example = np.stack([fluxes, time_differences], axis=-1)
         if self.is_positive(example_path):
-            label = self.magnification_threshold_label_for_lightcurve(example_path, self.meta_data_frame, threshold=1.1)
+            lightcurve_microlensing_meta_data = self.get_meta_data_for_lightcurve_file_path(example_path,
+                                                                                            self.meta_data_frame)
+            label = self.calculate_magnifications_for_lightcurve_meta_data(times, lightcurve_microlensing_meta_data)
         else:
             label = np.zeros_like(fluxes)
         return tf.convert_to_tensor(example, dtype=tf.float32), tf.convert_to_tensor(label, dtype=tf.float32)
@@ -184,10 +187,7 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
         lightcurve_data_frame = pd.read_feather(lightcurve_file_path)
         observation_times = lightcurve_data_frame['HJD'].values
         lightcurve_meta_data = self.get_meta_data_for_lightcurve_file_path(lightcurve_file_path, meta_data_frame)
-        magnifications = self.calculate_magnification(observation_time=observation_times,
-                                                      minimum_separation_time=lightcurve_meta_data['t0'],
-                                                      minimum_einstein_separation=lightcurve_meta_data['umin'],
-                                                      einstein_crossing_time=lightcurve_meta_data['tE'])
+        magnifications = self.calculate_magnifications_for_lightcurve_meta_data(observation_times, lightcurve_meta_data)
         return magnifications
 
     def magnification_threshold_label_for_lightcurve(self, lightcurve_file_path: str, meta_data_frame: pd.DataFrame,
@@ -215,3 +215,20 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
         start_slice = np.random.randint(0, example.shape[0] - self.time_steps_per_example)
         example = example[start_slice:start_slice + self.time_steps_per_example]
         return example
+
+    def calculate_magnifications_for_lightcurve_meta_data(self, times: np.float32,
+                                                          lightcurve_microlensing_meta_data: pd.Series) -> np.float32:
+        """
+        Calculates the magnification values for a given set of times based on the meta data of a specific lightcurve.
+
+        :param times: The observation times to calculate magnifications for.
+        :param lightcurve_microlensing_meta_data: The microlensing meta data for magnifications to be based off.
+        :return: An array of the magnification of each time.
+        """
+        magnifications = self.calculate_magnification(
+            observation_time=times,
+            minimum_separation_time=lightcurve_microlensing_meta_data['t0'],
+            minimum_einstein_separation=lightcurve_microlensing_meta_data['umin'],
+            einstein_crossing_time=lightcurve_microlensing_meta_data['tE']
+        )
+        return magnifications

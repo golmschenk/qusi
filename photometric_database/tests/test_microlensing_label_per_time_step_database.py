@@ -1,6 +1,7 @@
 """Tests for the MicrolensingLabelPerTimeStepDatabase class."""
 import pytest
 import numpy as np
+import pandas as pd
 
 from photometric_database.microlensing_label_per_time_step_database import MicrolensingLabelPerTimeStepDatabase
 
@@ -99,3 +100,18 @@ class TestMicrolensingLabelPerTimeStepDatabase:
             threshold=1.1)
         expected_label = [1, 1, 1, 1, 0, 0, 0, 0, 0, 0]
         assert np.array_equal(lightcurve_label, expected_label)
+
+    def test_can_calculate_magnifications_for_times(self, database):
+        meta_data_file_path = 'photometric_database/tests/resources/shortened_candlist_RADec.dat.txt'
+        meta_data_frame = database.load_microlensing_meta_data(meta_data_file_path)
+        lightcurve_file_path = 'photometric_database/tests/resources/test1-R-1-0-100869.phot.cor.feather'
+        lightcurve_microlensing_meta_data = database.get_meta_data_for_lightcurve_file_path(lightcurve_file_path,
+                                                                                            meta_data_frame)
+        times = pd.read_feather(lightcurve_file_path)['HJD'].values
+        magnifications = database.calculate_magnifications_for_lightcurve_meta_data(
+            times=times,
+            lightcurve_microlensing_meta_data=lightcurve_microlensing_meta_data
+        )
+        expected_magnifications = [1.22826472, 1.34164079, 1.22826472, 1.10111717, 1.04349839, 1.02015629, 1.01019792,
+                                   1.00558664, 1.00327366, 1.00202891]
+        assert np.allclose(magnifications, expected_magnifications)
