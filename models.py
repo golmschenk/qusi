@@ -115,13 +115,13 @@ class SimpleLightcurveLstm(Model):
         super().__init__()
         self.lstm0 = LSTM(10, return_sequences=True)
         self.lstm1 = LSTM(20, return_sequences=True)
-        self.lstm2 = LSTM(30)
-        self.dense = Dense(1, activation=sigmoid)
+        self.lstm2 = LSTM(30, return_sequences=True)
+        self.convolution0 = Conv1D(1, kernel_size=1, activation=sigmoid)
 
     def call(self, inputs, training=False, mask=None):
         x = inputs
         x = self.lstm0(x)
         x = self.lstm1(x)
         x = self.lstm2(x)
-        x = self.dense(x)
+        x = self.convolution0(x)
         return x
