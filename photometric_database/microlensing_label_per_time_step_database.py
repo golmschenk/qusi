@@ -222,6 +222,7 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
         :return: The lightcurve meta data frame.
         """
         lightcurve_file_name_stem = Path(lightcurve_file_path).name.split('.')[0]  # Remove all extensions
+        lightcurve_file_name_stem = lightcurve_file_name_stem.split('_')[-1]  # Removes naming redundancy
         field, _, chip, sub_frame, id_ = lightcurve_file_name_stem.split('-')
         # noinspection SpellCheckingInspection
         lightcurve_meta_data = meta_data_frame[(meta_data_frame['ID'] == int(id_)) &
@@ -256,12 +257,18 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
         :param example: The example to extract a segment from.
         :return: The extracted segment.
         """
-        while True:
-            example_and_label = np.concatenate([example, np.expand_dims(label, axis=-1)], axis=1)
-            example_and_label = self.make_uniform_length(example_and_label, length)
-            extracted_example, extracted_label = example_and_label[:, :2], example_and_label[:, 2]
-            if not label.any() or extracted_label.any():
-                return extracted_example, extracted_label
+        if label.any():
+            positive_indexes = np.where(label)[0]
+            start_positive = positive_indexes[0]
+            end_positive = positive_indexes[-1]
+            valid_range_start = max(0, start_positive + 1 - length)
+            valid_range_end = min(label.shape[0], end_positive + length)
+            example = example[valid_range_start:valid_range_end]
+            label = label[valid_range_start:valid_range_end]
+        example_and_label = np.concatenate([example, np.expand_dims(label, axis=-1)], axis=1)
+        example_and_label = self.make_uniform_length(example_and_label, length)
+        extracted_example, extracted_label = example_and_label[:, :2], example_and_label[:, 2]
+        return extracted_example, extracted_label
 
     def calculate_magnifications_for_lightcurve_meta_data(self, times: np.float32,
                                                           lightcurve_microlensing_meta_data: pd.Series) -> np.float32:

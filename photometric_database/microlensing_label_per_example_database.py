@@ -70,10 +70,7 @@ class MicrolensingLabelPerExampleDatabase(LightcurveDatabase):
         else:
             raise ValueError(f'Unknown extension when loading data from {file_path_string}')
         lightcurve = self.preprocess_and_augment_lightcurve(lightcurve)
-        if label is None:
-            return lightcurve.astype(np.float32)
-        else:
-            return lightcurve.astype(np.float32), self.is_positive(file_path_string)
+        return lightcurve.astype(np.float32), self.is_positive(file_path_string)
         
     def preprocess_and_augment_lightcurve(self, lightcurve: np.ndarray) -> np.ndarray:
         """Prepares the lightcurves for training with several preprocessing and augmenting steps."""
