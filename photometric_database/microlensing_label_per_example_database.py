@@ -1,6 +1,5 @@
 """Code for representing a dataset of lightcurves for binary classification with a single label per example."""
 import os
-import math
 from typing import List
 import numpy as np
 import pandas as pd
@@ -25,9 +24,9 @@ class MicrolensingLabelPerExampleDatabase(LightcurveDatabase):
         negative_example_paths = [os.path.join(negative_data_directory, file_name) for file_name in
                                   os.listdir(negative_data_directory) if file_name.endswith(data_format_suffixes)]
         print(f'{len(negative_example_paths)} negative examples.')
-        positive_datasets = self.get_training_and_validation_datasets_for_file_paths(positive_example_paths, 1)
+        positive_datasets = self.get_training_and_validation_datasets_for_file_paths(positive_example_paths)
         positive_training_dataset, positive_validation_dataset = positive_datasets
-        negative_datasets = self.get_training_and_validation_datasets_for_file_paths(negative_example_paths, 0)
+        negative_datasets = self.get_training_and_validation_datasets_for_file_paths(negative_example_paths)
         negative_training_dataset, negative_validation_dataset = negative_datasets
         training_dataset = self.get_ratio_enforced_dataset(positive_training_dataset, negative_training_dataset,
                                                            positive_to_negative_data_ratio)
@@ -35,8 +34,8 @@ class MicrolensingLabelPerExampleDatabase(LightcurveDatabase):
         if self.trial_directory is not None:
             self.log_dataset_file_names(training_dataset, dataset_name='training')
             self.log_dataset_file_names(validation_dataset, dataset_name='validation')
-        load_and_preprocess_function = lambda file_path, label: tuple(
-            tf.py_function(self.load_and_preprocess_example_file, [file_path, label], [tf.float32, tf.int32]))
+        load_and_preprocess_function = lambda file_path: tuple(
+            tf.py_function(self.load_and_preprocess_example_file, [file_path], [tf.float32, tf.int32]))
         training_dataset = training_dataset.shuffle(buffer_size=len(list(training_dataset)))
         training_dataset = training_dataset.map(load_and_preprocess_function, num_parallel_calls=16)
         training_dataset = training_dataset.map(self.set_shape_function, num_parallel_calls=16)
@@ -46,31 +45,6 @@ class MicrolensingLabelPerExampleDatabase(LightcurveDatabase):
         validation_dataset = validation_dataset.batch(self.batch_size).prefetch(
             buffer_size=tf.data.experimental.AUTOTUNE)
         return training_dataset, validation_dataset
-
-    def get_ratio_enforced_dataset(self, positive_training_dataset: tf.data.Dataset,
-                                   negative_training_dataset: tf.data.Dataset,
-                                   positive_to_negative_data_ratio: float) -> tf.data.Dataset:
-        """Generates a dataset with an enforced data ratio."""
-        if positive_to_negative_data_ratio is not None:
-            positive_count = len(list(positive_training_dataset))
-            negative_count = len(list(negative_training_dataset))
-            existing_ratio = positive_count / negative_count
-            if existing_ratio < positive_to_negative_data_ratio:
-                desired_number_of_positive_examples = int(positive_to_negative_data_ratio * negative_count)
-                positive_training_dataset = self.repeat_dataset_to_size(positive_training_dataset,
-                                                                        desired_number_of_positive_examples)
-            else:
-                desired_number_of_negative_examples = int((1 / positive_to_negative_data_ratio) * positive_count)
-                negative_training_dataset = self.repeat_dataset_to_size(negative_training_dataset,
-                                                                        desired_number_of_negative_examples)
-        return positive_training_dataset.concatenate(negative_training_dataset)
-
-    @staticmethod
-    def repeat_dataset_to_size(dataset: tf.data.Dataset, size: int) -> tf.data.Dataset:
-        """Repeats a dataset to make it a desired length."""
-        current_size = len(list(dataset))
-        times_to_repeat = math.ceil(size / current_size)
-        return dataset.repeat(times_to_repeat).take(size)
 
     def set_shape_function(self, lightcurve: tf.Tensor, label: tf.Tensor):
         """
@@ -84,22 +58,7 @@ class MicrolensingLabelPerExampleDatabase(LightcurveDatabase):
         label.set_shape([1])
         return lightcurve, label
 
-    def get_training_and_validation_datasets_for_file_paths(self, example_paths: List[str], label: int) -> (
-                                                            tf.data.Dataset, tf.data.Dataset):
-        """Creates a TensorFlow Dataset from a list of file names and desired label for those files."""
-        labels = [label] * len(example_paths)
-        example_paths, labels = self.shuffle_in_unison(example_paths, labels, seed=0)
-        labels = labels.astype(np.int32)
-        labels = np.expand_dims(labels, axis=-1)
-        file_path_dataset = tf.data.Dataset.from_tensor_slices(example_paths)
-        labels_dataset = tf.data.Dataset.from_tensor_slices(labels)
-        dataset = tf.data.Dataset.zip((file_path_dataset, labels_dataset))
-        validation_dataset_size = int(len(labels) * self.validation_ratio)
-        validation_dataset = dataset.take(validation_dataset_size)
-        training_dataset = dataset.skip(validation_dataset_size)
-        return training_dataset, validation_dataset
-
-    def load_and_preprocess_example_file(self, file_path: tf.Tensor, label: int = None) -> (np.ndarray, int):
+    def load_and_preprocess_example_file(self, file_path: tf.Tensor) -> (np.ndarray, int):
         """Loads numpy files from the tensor alongside labels."""
         file_path_string = file_path.numpy().decode('utf-8')
         if file_path_string.endswith('.npy'):
@@ -109,30 +68,20 @@ class MicrolensingLabelPerExampleDatabase(LightcurveDatabase):
         elif file_path_string.endswith('.feather'):
             lightcurve = pd.read_feather(file_path_string)['flux'].values
         else:
-            raise ValueError(f'Unknown extension when loading data from {file_path}')
+            raise ValueError(f'Unknown extension when loading data from {file_path_string}')
         lightcurve = self.preprocess_and_augment_lightcurve(lightcurve)
         if label is None:
             return lightcurve.astype(np.float32)
         else:
-            return lightcurve.astype(np.float32), label
+            return lightcurve.astype(np.float32), self.is_positive(file_path_string)
         
     def preprocess_and_augment_lightcurve(self, lightcurve: np.ndarray) -> np.ndarray:
         """Prepares the lightcurves for training with several preprocessing and augmenting steps."""
         lightcurve = self.remove_random_values(lightcurve)  # Helps prevent overfitting.
         lightcurve = self.roll_lightcurve(lightcurve)  # Helps prevent overfitting.
-        lightcurve = self.make_uniform_length(lightcurve)  # Current network expects a fixed length.
+        lightcurve = self.make_uniform_length(lightcurve, self.time_steps_per_example)  # Current network expects a fixed length.
         lightcurve = self.normalize(lightcurve)
         lightcurve = np.expand_dims(lightcurve, axis=-1)  # Network uses a "channel" dimension.
-        return lightcurve
-
-    def make_uniform_length(self, lightcurve: np.ndarray) -> np.ndarray:
-        """Makes all lightcurves the same length, by clipping those too large and repeating those too small."""
-        if lightcurve.shape[0] > self.time_steps_per_example:
-            start_slice = np.random.randint(0, lightcurve.shape[0] - self.time_steps_per_example)
-            lightcurve = lightcurve[start_slice:start_slice + self.time_steps_per_example]
-        else:
-            elements_to_repeat = self.time_steps_per_example - lightcurve.shape[0]
-            lightcurve = np.pad(lightcurve, (0, elements_to_repeat), mode='wrap')
         return lightcurve
 
     @staticmethod

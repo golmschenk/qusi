@@ -15,7 +15,8 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
     def __init__(self):
         super().__init__()
         self.meta_data_frame: Union[pd.DataFrame, None] = None
-        self.time_steps_per_example = 500
+        self.time_steps_per_example = 2000
+        self.time_steps_per_validation_example = 30000
 
     def generate_datasets(self, positive_data_directory: str, negative_data_directory: str,
                           meta_data_file_path: str) -> (tf.data.Dataset, tf.data.Dataset):
@@ -33,21 +34,23 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
         print(f'{len(positive_example_paths)} positive examples.')
         negative_example_paths = list(Path(negative_data_directory).glob('*.feather'))
         print(f'{len(negative_example_paths)} negative examples.')
-        example_paths = [str(example_path) for example_path in positive_example_paths + negative_example_paths]
-        full_dataset = tf.data.Dataset.from_tensor_slices(example_paths)
-        full_dataset_size = len(list(full_dataset))
-        full_dataset = full_dataset.shuffle(buffer_size=full_dataset_size, seed=0)
-        validation_dataset_size = int(full_dataset_size * self.validation_ratio)
-        validation_dataset = full_dataset.take(validation_dataset_size)
-        training_dataset = full_dataset.skip(validation_dataset_size)
+        positive_datasets = self.get_training_and_validation_datasets_for_file_paths(positive_example_paths)
+        positive_training_dataset, positive_validation_dataset = positive_datasets
+        negative_datasets = self.get_training_and_validation_datasets_for_file_paths(negative_example_paths)
+        negative_training_dataset, negative_validation_dataset = negative_datasets
+        training_dataset = self.get_ratio_enforced_dataset(positive_training_dataset, negative_training_dataset,
+                                                           positive_to_negative_data_ratio=1)
+        validation_dataset = positive_validation_dataset.concatenate(negative_validation_dataset)
         training_dataset = training_dataset.shuffle(buffer_size=len(list(training_dataset)))
         training_preprocessor = lambda file_path: tuple(tf.py_function(self.training_preprocessing,
                                                                        [file_path], [tf.float32, tf.float32]))
         training_dataset = training_dataset.map(training_preprocessor, num_parallel_calls=16)
+        training_dataset = training_dataset.map(self.set_training_shape, num_parallel_calls=16)
         training_dataset = training_dataset.batch(self.batch_size).prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
-        validation_preprocessor = lambda file_path: tuple(tf.py_function(self.evaluation_preprocessing,
+        validation_preprocessor = lambda file_path: tuple(tf.py_function(self.validation_preprocessing,
                                                                          [file_path], [tf.float32, tf.float32]))
         validation_dataset = validation_dataset.map(validation_preprocessor, num_parallel_calls=16)
+        validation_dataset = validation_dataset.map(self.set_validation_shape, num_parallel_calls=16)
         validation_dataset = validation_dataset.batch(1).prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
         return training_dataset, validation_dataset
 
@@ -58,14 +61,21 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
         :param example_path_tensor: The tensor containing the path to the example to load.
         :return: The example and its corresponding label.
         """
-        example, label = self.evaluation_preprocessing(example_path_tensor)
+        example, label = self.general_preprocessing(example_path_tensor)
         example, label = example.numpy(), label.numpy()
-        example_and_label = np.concatenate([example, label], axis=1)
-        example_and_label = self.get_random_segment(example_and_label)
-        example, label = example_and_label[:, :2], example_and_label[:, [2]]
+        example, label = self.make_uniform_length_requiring_positive(example, label, self.time_steps_per_example)
         return tf.convert_to_tensor(example, dtype=tf.float32), tf.convert_to_tensor(label, dtype=tf.float32)
 
-    def evaluation_preprocessing(self, example_path_tensor: tf.Tensor) -> (tf.Tensor, tf.Tensor):
+    def validation_preprocessing(self, example_path_tensor: tf.Tensor) -> (tf.Tensor, tf.Tensor):
+        example, label = self.general_preprocessing(example_path_tensor)
+        example, label = example.numpy(), label.numpy()
+        label = np.expand_dims(label, axis=-1)
+        example_and_label = np.concatenate([example, label], axis=1)
+        example_and_label = self.make_uniform_length(example_and_label, self.time_steps_per_validation_example)
+        example, label = example_and_label[:, :2], example_and_label[:, 2]
+        return tf.convert_to_tensor(example, dtype=tf.float32), tf.convert_to_tensor(label, dtype=tf.float32)
+
+    def general_preprocessing(self, example_path_tensor: tf.Tensor) -> (tf.Tensor, tf.Tensor):
         """
         Loads and preprocesses the data for evaluation.
 
@@ -87,18 +97,31 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
                                                                                 threshold=1.1)
         else:
             label = np.zeros_like(fluxes)
-        label = np.expand_dims(label, axis=-1)
         return tf.convert_to_tensor(example, dtype=tf.float32), tf.convert_to_tensor(label, dtype=tf.float32)
-
-    @staticmethod
-    def is_positive(example_path):
+    
+    def set_training_shape(self, lightcurve: tf.Tensor, label: tf.Tensor):
         """
-        Checks if an example contains a microlensing event or not.
+        Explicitly sets the shapes of the lightcurve and label tensor, otherwise TensorFlow can't infer it.
 
-        :param example_path: The path to the example to check.
-        :return: Whether or not the example contains a microlensing event.
+        :param lightcurve: The lightcurve tensor.
+        :param label: The label tensor.
+        :return: The lightcurve and label tensor with TensorFlow inferable shapes.
         """
-        return 'positive' in example_path
+        lightcurve.set_shape([self.time_steps_per_example, 2])
+        label.set_shape([self.time_steps_per_example])
+        return lightcurve, label
+    
+    def set_validation_shape(self, lightcurve: tf.Tensor, label: tf.Tensor):
+        """
+        Explicitly sets the shapes of the lightcurve and label tensor, otherwise TensorFlow can't infer it.
+
+        :param lightcurve: The lightcurve tensor.
+        :param label: The label tensor.
+        :return: The lightcurve and label tensor with TensorFlow inferable shapes.
+        """
+        lightcurve.set_shape([self.time_steps_per_validation_example, 2])
+        label.set_shape([self.time_steps_per_validation_example])
+        return lightcurve, label
 
     @staticmethod
     def load_microlensing_meta_data(meta_data_file_path: str) -> pd.DataFrame:
@@ -225,16 +248,20 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
         label = magnifications > threshold
         return label
 
-    def get_random_segment(self, example: np.ndarray) -> np.ndarray:
+    def make_uniform_length_requiring_positive(self, example: np.ndarray, label: np.ndarray, length: int
+                                               ) -> (np.ndarray, np.ndarray):
         """
         Extracts a random segment from an example which is the length specified by the database.
 
         :param example: The example to extract a segment from.
         :return: The extracted segment.
         """
-        start_slice = np.random.randint(0, example.shape[0] - self.time_steps_per_example)
-        example = example[start_slice:start_slice + self.time_steps_per_example]
-        return example
+        while True:
+            example_and_label = np.concatenate([example, np.expand_dims(label, axis=-1)], axis=1)
+            example_and_label = self.make_uniform_length(example_and_label, length)
+            extracted_example, extracted_label = example_and_label[:, :2], example_and_label[:, 2]
+            if not label.any() or extracted_label.any():
+                return extracted_example, extracted_label
 
     def calculate_magnifications_for_lightcurve_meta_data(self, times: np.float32,
                                                           lightcurve_microlensing_meta_data: pd.Series) -> np.float32:

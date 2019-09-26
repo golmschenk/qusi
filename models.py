@@ -125,3 +125,66 @@ class SimpleLightcurveLstm(Model):
         x = self.lstm2(x)
         x = self.convolution0(x)
         return x
+
+
+class SimpleLightcurveCnnPerTimeStepLabel(Model):
+    """A simple 1D CNN for lightcurves."""
+
+    def __init__(self):
+        super().__init__()
+        leaky_relu = LeakyReLU(alpha=0.01)
+        l2_regularizer = l2(0.001)
+        self.convolution0 = Conv1D(10, kernel_size=5, activation=leaky_relu, kernel_regularizer=l2_regularizer,
+                                   padding='same')
+        self.convolution1 = Conv1D(10, kernel_size=5, activation=leaky_relu, kernel_regularizer=l2_regularizer,
+                                   padding='same')
+        self.batch_norm0 = BatchNormalization(renorm=True)
+        self.convolution2 = Conv1D(10, kernel_size=5, activation=leaky_relu, kernel_regularizer=l2_regularizer,
+                                   padding='same', dilation_rate=5)
+        self.batch_norm1 = BatchNormalization(renorm=True)
+        self.convolution3 = Conv1D(20, kernel_size=5, activation=leaky_relu, kernel_regularizer=l2_regularizer,
+                                   padding='same', dilation_rate=5)
+        self.batch_norm2 = BatchNormalization(renorm=True)
+        self.convolution4 = Conv1D(20, kernel_size=5, activation=leaky_relu, kernel_regularizer=l2_regularizer,
+                                   padding='same', dilation_rate=10)
+        self.batch_norm3 = BatchNormalization(renorm=True)
+        self.convolution5 = Conv1D(20, kernel_size=5, activation=leaky_relu, kernel_regularizer=l2_regularizer,
+                                   padding='same', dilation_rate=10)
+        self.batch_norm4 = BatchNormalization(renorm=True)
+        self.convolution6 = Conv1D(30, kernel_size=5, activation=leaky_relu, kernel_regularizer=l2_regularizer,
+                                   padding='same', dilation_rate=20)
+        self.batch_norm5 = BatchNormalization(renorm=True)
+        self.convolution7 = Conv1D(30, kernel_size=5, activation=leaky_relu, kernel_regularizer=l2_regularizer,
+                                   padding='same', dilation_rate=20)
+        self.batch_norm6 = BatchNormalization(renorm=True)
+        self.convolution8 = Conv1D(30, kernel_size=5, activation=leaky_relu, kernel_regularizer=l2_regularizer,
+                                   padding='same', dilation_rate=40)
+        self.batch_norm7 = BatchNormalization(renorm=True)
+        self.convolution9 = Conv1D(10, kernel_size=5, activation=leaky_relu, kernel_regularizer=l2_regularizer,
+                                   padding='same', dilation_rate=40)
+        self.convolution10 = Conv1D(1, kernel_size=5, activation=sigmoid, padding='same', dilation_rate=80)
+        self.reshape = Reshape([-1])
+
+    def call(self, inputs, training=False, mask=None):
+        x = inputs
+        x = self.convolution0(x)
+        x = self.convolution1(x)
+        x = self.batch_norm0(x, training=training)
+        x = self.convolution2(x)
+        x = self.batch_norm1(x, training=training)
+        x = self.convolution3(x)
+        x = self.batch_norm2(x, training=training)
+        x = self.convolution4(x)
+        x = self.batch_norm3(x, training=training)
+        x = self.convolution5(x)
+        x = self.batch_norm4(x, training=training)
+        x = self.convolution6(x)
+        x = self.batch_norm5(x, training=training)
+        x = self.convolution7(x)
+        x = self.batch_norm6(x, training=training)
+        x = self.convolution8(x)
+        x = self.batch_norm7(x, training=training)
+        x = self.convolution9(x)
+        x = self.convolution10(x)
+        x = self.reshape(x)
+        return x
