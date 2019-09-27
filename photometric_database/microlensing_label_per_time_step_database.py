@@ -33,7 +33,6 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
         positive_example_paths = self.remove_file_paths_with_no_meta_data(positive_example_paths, self.meta_data_frame)
         print(f'{len(positive_example_paths)} positive examples.')
         negative_example_paths = list(Path(negative_data_directory).glob('*.feather'))
-        negative_example_paths = negative_example_paths[:len(positive_example_paths)]
         print(f'{len(negative_example_paths)} negative examples.')
         positive_datasets = self.get_training_and_validation_datasets_for_file_paths(positive_example_paths)
         positive_training_dataset, positive_validation_dataset = positive_datasets
@@ -46,13 +45,11 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
         training_preprocessor = lambda file_path: tuple(tf.py_function(self.training_preprocessing,
                                                                        [file_path], [tf.float32, tf.float32]))
         training_dataset = training_dataset.map(training_preprocessor, num_parallel_calls=16)
-        training_dataset = training_dataset.map(self.set_training_shape, num_parallel_calls=16)
-        training_dataset = training_dataset.batch(self.batch_size).prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
-        validation_preprocessor = lambda file_path: tuple(tf.py_function(self.validation_preprocessing,
+        training_dataset = training_dataset.padded_batch(self.batch_size, padded_shapes=([None, 2], [None])).prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
+        validation_preprocessor = lambda file_path: tuple(tf.py_function(self.general_preprocessing,
                                                                          [file_path], [tf.float32, tf.float32]))
         validation_dataset = validation_dataset.map(validation_preprocessor, num_parallel_calls=4)
-        validation_dataset = validation_dataset.map(self.set_validation_shape, num_parallel_calls=4)
-        validation_dataset = validation_dataset.batch(1).prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
+        validation_dataset = validation_dataset.padded_batch(1, padded_shapes=([None, 2], [None])).prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
         return training_dataset, validation_dataset
 
     def training_preprocessing(self, example_path_tensor: tf.Tensor) -> (tf.Tensor, tf.Tensor):
@@ -65,15 +62,6 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
         example, label = self.general_preprocessing(example_path_tensor)
         example, label = example.numpy(), label.numpy()
         example, label = self.make_uniform_length_requiring_positive(example, label, self.time_steps_per_example)
-        return tf.convert_to_tensor(example, dtype=tf.float32), tf.convert_to_tensor(label, dtype=tf.float32)
-
-    def validation_preprocessing(self, example_path_tensor: tf.Tensor) -> (tf.Tensor, tf.Tensor):
-        example, label = self.general_preprocessing(example_path_tensor)
-        example, label = example.numpy(), label.numpy()
-        label = np.expand_dims(label, axis=-1)
-        example_and_label = np.concatenate([example, label], axis=1)
-        example_and_label = self.make_uniform_length(example_and_label, self.time_steps_per_validation_example)
-        example, label = example_and_label[:, :2], example_and_label[:, 2]
         return tf.convert_to_tensor(example, dtype=tf.float32), tf.convert_to_tensor(label, dtype=tf.float32)
 
     def general_preprocessing(self, example_path_tensor: tf.Tensor) -> (tf.Tensor, tf.Tensor):
@@ -99,30 +87,6 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
         else:
             label = np.zeros_like(fluxes)
         return tf.convert_to_tensor(example, dtype=tf.float32), tf.convert_to_tensor(label, dtype=tf.float32)
-    
-    def set_training_shape(self, lightcurve: tf.Tensor, label: tf.Tensor):
-        """
-        Explicitly sets the shapes of the lightcurve and label tensor, otherwise TensorFlow can't infer it.
-
-        :param lightcurve: The lightcurve tensor.
-        :param label: The label tensor.
-        :return: The lightcurve and label tensor with TensorFlow inferable shapes.
-        """
-        lightcurve.set_shape([self.time_steps_per_example, 2])
-        label.set_shape([self.time_steps_per_example])
-        return lightcurve, label
-    
-    def set_validation_shape(self, lightcurve: tf.Tensor, label: tf.Tensor):
-        """
-        Explicitly sets the shapes of the lightcurve and label tensor, otherwise TensorFlow can't infer it.
-
-        :param lightcurve: The lightcurve tensor.
-        :param label: The label tensor.
-        :return: The lightcurve and label tensor with TensorFlow inferable shapes.
-        """
-        lightcurve.set_shape([self.time_steps_per_validation_example, 2])
-        label.set_shape([self.time_steps_per_validation_example])
-        return lightcurve, label
 
     @staticmethod
     def load_microlensing_meta_data(meta_data_file_path: str) -> pd.DataFrame:

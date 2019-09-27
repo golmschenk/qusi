@@ -2,7 +2,7 @@
 from tensorflow import sigmoid
 from tensorflow.python.keras import Sequential, Model
 from tensorflow.python.keras.layers import Conv3D, MaxPool3D, Flatten, Dense, Reshape, LeakyReLU, Conv1D, \
-    BatchNormalization, LSTM_v2 as LSTM
+    BatchNormalization, LSTM_v2 as LSTM, AveragePooling1D, AveragePooling1D
 from tensorflow.python.keras.regularizers import l2
 
 
@@ -139,30 +139,39 @@ class SimpleLightcurveCnnPerTimeStepLabel(Model):
         self.convolution1 = Conv1D(10, kernel_size=5, activation=leaky_relu, kernel_regularizer=l2_regularizer,
                                    padding='same')
         self.batch_norm0 = BatchNormalization(renorm=True)
+        self.max_pool0 = AveragePooling1D(pool_size=5, strides=1, padding='same')
         self.convolution2 = Conv1D(10, kernel_size=5, activation=leaky_relu, kernel_regularizer=l2_regularizer,
-                                   padding='same', dilation_rate=5)
+                                   padding='same')
         self.batch_norm1 = BatchNormalization(renorm=True)
+        self.max_pool1 = AveragePooling1D(pool_size=10, strides=1, padding='same')
         self.convolution3 = Conv1D(20, kernel_size=5, activation=leaky_relu, kernel_regularizer=l2_regularizer,
-                                   padding='same', dilation_rate=5)
+                                   padding='same')
         self.batch_norm2 = BatchNormalization(renorm=True)
+        self.max_pool2 = AveragePooling1D(pool_size=10, strides=1, padding='same')
         self.convolution4 = Conv1D(20, kernel_size=5, activation=leaky_relu, kernel_regularizer=l2_regularizer,
-                                   padding='same', dilation_rate=10)
+                                   padding='same')
         self.batch_norm3 = BatchNormalization(renorm=True)
+        self.max_pool3 = AveragePooling1D(pool_size=25, strides=1, padding='same')
         self.convolution5 = Conv1D(20, kernel_size=5, activation=leaky_relu, kernel_regularizer=l2_regularizer,
-                                   padding='same', dilation_rate=10)
+                                   padding='same')
         self.batch_norm4 = BatchNormalization(renorm=True)
+        self.max_pool4 = AveragePooling1D(pool_size=25, strides=1, padding='same')
         self.convolution6 = Conv1D(30, kernel_size=5, activation=leaky_relu, kernel_regularizer=l2_regularizer,
-                                   padding='same', dilation_rate=20)
+                                   padding='same')
         self.batch_norm5 = BatchNormalization(renorm=True)
+        self.max_pool5 = AveragePooling1D(pool_size=50, strides=1, padding='same')
         self.convolution7 = Conv1D(30, kernel_size=5, activation=leaky_relu, kernel_regularizer=l2_regularizer,
-                                   padding='same', dilation_rate=20)
+                                   padding='same')
         self.batch_norm6 = BatchNormalization(renorm=True)
+        self.max_pool6 = AveragePooling1D(pool_size=50, strides=1, padding='same')
         self.convolution8 = Conv1D(30, kernel_size=5, activation=leaky_relu, kernel_regularizer=l2_regularizer,
-                                   padding='same', dilation_rate=40)
+                                   padding='same')
         self.batch_norm7 = BatchNormalization(renorm=True)
+        self.max_pool7 = AveragePooling1D(pool_size=100, strides=1, padding='same')
         self.convolution9 = Conv1D(10, kernel_size=5, activation=leaky_relu, kernel_regularizer=l2_regularizer,
-                                   padding='same', dilation_rate=40)
-        self.convolution10 = Conv1D(1, kernel_size=5, activation=sigmoid, padding='same', dilation_rate=80)
+                                   padding='same')
+        self.max_pool8 = AveragePooling1D(pool_size=100, strides=1, padding='same')
+        self.convolution10 = Conv1D(1, kernel_size=5, activation=sigmoid, padding='same')
         self.reshape = Reshape([-1])
 
     def call(self, inputs, training=False, mask=None):
@@ -170,21 +179,30 @@ class SimpleLightcurveCnnPerTimeStepLabel(Model):
         x = self.convolution0(x)
         x = self.convolution1(x)
         x = self.batch_norm0(x, training=training)
+        x = self.max_pool0(x)
         x = self.convolution2(x)
         x = self.batch_norm1(x, training=training)
+        x = self.max_pool1(x)
         x = self.convolution3(x)
         x = self.batch_norm2(x, training=training)
+        x = self.max_pool2(x)
         x = self.convolution4(x)
         x = self.batch_norm3(x, training=training)
+        x = self.max_pool3(x)
         x = self.convolution5(x)
         x = self.batch_norm4(x, training=training)
+        x = self.max_pool4(x)
         x = self.convolution6(x)
         x = self.batch_norm5(x, training=training)
+        x = self.max_pool5(x)
         x = self.convolution7(x)
         x = self.batch_norm6(x, training=training)
+        x = self.max_pool6(x)
         x = self.convolution8(x)
         x = self.batch_norm7(x, training=training)
+        x = self.max_pool7(x)
         x = self.convolution9(x)
+        x = self.max_pool8(x)
         x = self.convolution10(x)
         x = self.reshape(x)
         return x
