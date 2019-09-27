@@ -33,6 +33,7 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
         positive_example_paths = self.remove_file_paths_with_no_meta_data(positive_example_paths, self.meta_data_frame)
         print(f'{len(positive_example_paths)} positive examples.')
         negative_example_paths = list(Path(negative_data_directory).glob('*.feather'))
+        negative_example_paths = negative_example_paths[:len(positive_example_paths)]
         print(f'{len(negative_example_paths)} negative examples.')
         positive_datasets = self.get_training_and_validation_datasets_for_file_paths(positive_example_paths)
         positive_training_dataset, positive_validation_dataset = positive_datasets
@@ -49,8 +50,8 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
         training_dataset = training_dataset.batch(self.batch_size).prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
         validation_preprocessor = lambda file_path: tuple(tf.py_function(self.validation_preprocessing,
                                                                          [file_path], [tf.float32, tf.float32]))
-        validation_dataset = validation_dataset.map(validation_preprocessor, num_parallel_calls=16)
-        validation_dataset = validation_dataset.map(self.set_validation_shape, num_parallel_calls=16)
+        validation_dataset = validation_dataset.map(validation_preprocessor, num_parallel_calls=4)
+        validation_dataset = validation_dataset.map(self.set_validation_shape, num_parallel_calls=4)
         validation_dataset = validation_dataset.batch(1).prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
         return training_dataset, validation_dataset
 
