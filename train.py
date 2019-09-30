@@ -4,7 +4,7 @@ import os
 import tensorflow as tf
 from tensorflow.python.keras import callbacks
 
-from models import SimpleLightcurveLstm, SimpleLightcurveCnnPerTimeStepLabel
+from models import SimpleLightcurveCnnPerTimeStepLabel
 from photometric_database.microlensing_label_per_time_step_database import MicrolensingLabelPerTimeStepDatabase
 
 
