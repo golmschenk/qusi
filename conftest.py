@@ -3,6 +3,9 @@
 import pytest
 
 
+collect_ignore = ['envs/', 'venv/', 'data/', 'logs/']
+
+
 def pytest_addoption(parser):
     """Adds additional options to the pytest commandline."""
     parser.addoption(

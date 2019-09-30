@@ -4,15 +4,15 @@ import os
 import tensorflow as tf
 from tensorflow.python.keras import callbacks
 
-from lightcurve_database import LightcurveDatabase
-from models import SimpleLightcurveCnn
+from models import SimpleLightcurveCnnPerTimeStepLabel
+from photometric_database.microlensing_label_per_time_step_database import MicrolensingLabelPerTimeStepDatabase
 
 
 def train():
     """Runs the training."""
     # Basic training settings.
-    model = SimpleLightcurveCnn()
-    database = LightcurveDatabase()
+    model = SimpleLightcurveCnnPerTimeStepLabel()
+    database = MicrolensingLabelPerTimeStepDatabase()
     epochs_to_run = 1000
     trial_name = 'baseline'
     logs_directory = 'logs'
@@ -25,7 +25,7 @@ def train():
 
     # Prepare training data and metrics.
     training_dataset, validation_dataset = database.generate_datasets('data/positive', 'data/negative',
-                                                                      positive_to_negative_data_ratio=1)
+                                                                      'data/candlist_RADec.dat.feather')
     optimizer = tf.optimizers.Adam(learning_rate=1e-4)
     loss_metric = tf.keras.losses.BinaryCrossentropy(name='Loss')
     metrics = [tf.metrics.BinaryAccuracy(name='Accuracy'), tf.metrics.Precision(name='Precision'),
