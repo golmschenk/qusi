@@ -16,7 +16,6 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
         super().__init__()
         self.meta_data_frame: Union[pd.DataFrame, None] = None
         self.time_steps_per_example = 2000
-        self.time_steps_per_validation_example = 30000
 
     def generate_datasets(self, positive_data_directory: str, negative_data_directory: str,
                           meta_data_file_path: str) -> (tf.data.Dataset, tf.data.Dataset):
@@ -41,15 +40,20 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
         training_dataset = self.get_ratio_enforced_dataset(positive_training_dataset, negative_training_dataset,
                                                            positive_to_negative_data_ratio=1)
         validation_dataset = positive_validation_dataset.concatenate(negative_validation_dataset)
+        if self.trial_directory is not None:
+            self.log_dataset_file_names(training_dataset, dataset_name='training')
+            self.log_dataset_file_names(validation_dataset, dataset_name='validation')
         training_dataset = training_dataset.shuffle(buffer_size=len(list(training_dataset)))
         training_preprocessor = lambda file_path: tuple(tf.py_function(self.training_preprocessing,
                                                                        [file_path], [tf.float32, tf.float32]))
         training_dataset = training_dataset.map(training_preprocessor, num_parallel_calls=16)
-        training_dataset = training_dataset.padded_batch(self.batch_size, padded_shapes=([None, 2], [None])).prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
+        training_dataset = training_dataset.padded_batch(self.batch_size, padded_shapes=([None, 2], [None])).prefetch(
+            buffer_size=tf.data.experimental.AUTOTUNE)
         validation_preprocessor = lambda file_path: tuple(tf.py_function(self.general_preprocessing,
                                                                          [file_path], [tf.float32, tf.float32]))
         validation_dataset = validation_dataset.map(validation_preprocessor, num_parallel_calls=4)
-        validation_dataset = validation_dataset.padded_batch(1, padded_shapes=([None, 2], [None])).prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
+        validation_dataset = validation_dataset.padded_batch(1, padded_shapes=([None, 2], [None])).prefetch(
+            buffer_size=tf.data.experimental.AUTOTUNE)
         return training_dataset, validation_dataset
 
     def training_preprocessing(self, example_path_tensor: tf.Tensor) -> (tf.Tensor, tf.Tensor):
@@ -217,10 +221,14 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
     def make_uniform_length_requiring_positive(self, example: np.ndarray, label: np.ndarray, length: int
                                                ) -> (np.ndarray, np.ndarray):
         """
-        Extracts a random segment from an example which is the length specified by the database.
+        Extracts a random segment from an example of the length specified. For examples with a positive label,
+        the segment is required to include at least 1 positive time step. Examples shorter than the specified length
+        will be repeated to fit the length.
 
         :param example: The example to extract a segment from.
-        :return: The extracted segment.
+        :param label: The label whose matching segment should be extracted.
+        :param length: The length to make the example.
+        :return: The extracted segment and corresponding label.
         """
         if label.any():
             positive_indexes = np.where(label)[0]

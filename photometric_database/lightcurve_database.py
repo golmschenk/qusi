@@ -22,7 +22,7 @@ class LightcurveDatabase(ABC):
     def log_dataset_file_names(self, dataset: tf.data.Dataset, dataset_name: str):
         """Saves the names of the files used in a dataset to a CSV file in the trail directory."""
         os.makedirs(self.trial_directory, exist_ok=True)
-        training_example_paths = [example[0].numpy().decode('utf-8') for example in list(dataset)]
+        training_example_paths = [example.numpy().decode('utf-8') for example in list(dataset)]
         series = pd.Series(training_example_paths)
         series.to_csv(os.path.join(self.trial_directory, f'{dataset_name}.csv'), header=False, index=False)
 
