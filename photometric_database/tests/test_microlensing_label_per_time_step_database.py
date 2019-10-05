@@ -186,3 +186,9 @@ class TestMicrolensingLabelPerTimeStepDatabase:
         assert validation_batch_examples.shape[2] == 2
         assert len(validation_batch_labels.shape) == 2
         assert validation_batch_labels.shape[1] == 10
+
+    def test_round_to_multiple(self, database):
+        round_number0 = database.round_to_base(130, base=50)
+        assert round_number0 == 150
+        round_number1 = database.round_to_base(6390, base=32)
+        assert round_number1 == 6400

@@ -273,3 +273,13 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
             if self.check_if_meta_data_exists_for_lightcurve_file_path(file_path, meta_data_frame):
                 filtered_file_paths.append(file_path)
         return filtered_file_paths
+
+    def round_to_base(self, number: int, base: int) -> int:
+        """
+        Rounds a number to a specific base/multiple.
+
+        :param number: The number to round.
+        :param base: The base to round to.
+        :return: The rounded number.
+        """
+        return base * round(number / base)
