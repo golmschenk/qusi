@@ -2,11 +2,11 @@
 
 import tensorflow as tf
 
-from photometric_database.microlensing_label_per_example_database import MicrolensingLabelPerExampleDatabase
 from models import SimpleLightcurveCnn
+from photometric_database.microlensing_label_per_time_step_database import MicrolensingLabelPerTimeStepDatabase
 
 print('Preprocessing data...')
-database = MicrolensingLabelPerExampleDatabase()
+database = MicrolensingLabelPerTimeStepDatabase()
 example_paths, inference_dataset = database.generate_inference_dataset('data/inference')
 
 model = SimpleLightcurveCnn()

@@ -77,8 +77,7 @@ class LightcurveDatabase(ABC):
         times_to_repeat = math.ceil(size / current_size)
         return dataset.repeat(times_to_repeat).take(size)
 
-    @staticmethod
-    def is_positive(example_path):
+    def is_positive(self, example_path):
         """
         Checks if an example contains a microlensing event or not.
 

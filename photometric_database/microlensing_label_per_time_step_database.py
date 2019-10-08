@@ -197,6 +197,15 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
         lightcurve_meta_data = self.get_meta_data_frame_for_lightcurve_file_path(lightcurve_file_path, meta_data_frame)
         return lightcurve_meta_data.shape[0] > 0
 
+    def is_positive(self, example_path):
+        """
+        Checks if an example contains a microlensing event or not.
+
+        :param example_path: The path to the example to check.
+        :return: Whether or not the example contains a microlensing event.
+        """
+        return self.check_if_meta_data_exists_for_lightcurve_file_path(example_path, self.meta_data_frame)
+
     @staticmethod
     def get_meta_data_frame_for_lightcurve_file_path(lightcurve_file_path: Union[str, Path],
                                                      meta_data_frame: pd.DataFrame) -> pd.DataFrame:
