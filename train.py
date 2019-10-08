@@ -4,14 +4,15 @@ import os
 import tensorflow as tf
 from tensorflow.python.keras import callbacks
 
-from models import SimpleLightcurveCnnPerTimeStepLabel
+from losses import PerTimeStepBinaryCrossEntropy
+from models import ConvolutionalLstm
 from photometric_database.microlensing_label_per_time_step_database import MicrolensingLabelPerTimeStepDatabase
 
 
 def train():
     """Runs the training."""
     # Basic training settings.
-    model = SimpleLightcurveCnnPerTimeStepLabel()
+    model = ConvolutionalLstm()
     database = MicrolensingLabelPerTimeStepDatabase()
     epochs_to_run = 1000
     trial_name = 'baseline'
@@ -27,7 +28,7 @@ def train():
     training_dataset, validation_dataset = database.generate_datasets('data/positive', 'data/negative',
                                                                       'data/candlist_RADec.dat.feather')
     optimizer = tf.optimizers.Adam(learning_rate=1e-4)
-    loss_metric = tf.keras.losses.BinaryCrossentropy(name='Loss')
+    loss_metric = PerTimeStepBinaryCrossEntropy(name='Loss', positive_weight=20)
     metrics = [tf.metrics.BinaryAccuracy(name='Accuracy'), tf.metrics.Precision(name='Precision'),
                tf.metrics.Recall(name='Recall'),
                tf.metrics.SpecificityAtSensitivity(0.9, name='Specificity_at_90_percent_sensitivity'),
@@ -37,7 +38,7 @@ def train():
     model.compile(optimizer=optimizer, loss=loss_metric, metrics=metrics)
     try:
         model.fit(training_dataset, epochs=epochs_to_run, validation_data=validation_dataset,
-                  callbacks=[tensorboard_callback])
+                  callbacks=[tensorboard_callback], validation_freq=3)
     except KeyboardInterrupt:
         print('Interrupted. Saving model before quitting...')
     finally:
