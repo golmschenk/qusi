@@ -15,7 +15,9 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
     def __init__(self):
         super().__init__()
         self.meta_data_frame: Union[pd.DataFrame, None] = None
-        self.time_steps_per_example = 2000
+        self.time_steps_per_example = 6400
+        self.length_multiple_base = 32
+        self.batch_size = 100
 
     def generate_datasets(self, positive_data_directory: str, negative_data_directory: str,
                           meta_data_file_path: str) -> (tf.data.Dataset, tf.data.Dataset):
@@ -49,7 +51,7 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
         training_dataset = training_dataset.map(training_preprocessor, num_parallel_calls=16)
         training_dataset = training_dataset.padded_batch(self.batch_size, padded_shapes=([None, 2], [None])).prefetch(
             buffer_size=tf.data.experimental.AUTOTUNE)
-        validation_preprocessor = lambda file_path: tuple(tf.py_function(self.general_preprocessing,
+        validation_preprocessor = lambda file_path: tuple(tf.py_function(self.evaluation_preprocessing,
                                                                          [file_path], [tf.float32, tf.float32]))
         validation_dataset = validation_dataset.map(validation_preprocessor, num_parallel_calls=4)
         validation_dataset = validation_dataset.padded_batch(1, padded_shapes=([None, 2], [None])).prefetch(
@@ -65,12 +67,27 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
         """
         example, label = self.general_preprocessing(example_path_tensor)
         example, label = example.numpy(), label.numpy()
-        example, label = self.make_uniform_length_requiring_positive(example, label, self.time_steps_per_example)
+        example, label = self.make_uniform_length_requiring_positive(
+            example, label, self.time_steps_per_example, required_length_multiple_base=self.length_multiple_base
+        )
+        return tf.convert_to_tensor(example, dtype=tf.float32), tf.convert_to_tensor(label, dtype=tf.float32)
+
+    def evaluation_preprocessing(self, example_path_tensor: tf.Tensor) -> (tf.Tensor, tf.Tensor):
+        """
+        Loads and preprocesses the data for evaluation.
+
+        :param example_path_tensor: The tensor containing the path to the example to load.
+        :return: The example and its corresponding label.
+        """
+        example, label = self.general_preprocessing(example_path_tensor)
+        example, label = self.make_uniform_length_requiring_positive(
+            example, label, required_length_multiple_base=self.length_multiple_base
+        )
         return tf.convert_to_tensor(example, dtype=tf.float32), tf.convert_to_tensor(label, dtype=tf.float32)
 
     def general_preprocessing(self, example_path_tensor: tf.Tensor) -> (tf.Tensor, tf.Tensor):
         """
-        Loads and preprocesses the data for evaluation.
+        Loads and preprocesses the data =.
 
         :param example_path_tensor: The tensor containing the path to the example to load.
         :return: The example and its corresponding label.
@@ -218,7 +235,9 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
         label = magnifications > threshold
         return label
 
-    def make_uniform_length_requiring_positive(self, example: np.ndarray, label: np.ndarray, length: int
+    def make_uniform_length_requiring_positive(self, example: np.ndarray, label: np.ndarray,
+                                               length: Union[int, None] = None,
+                                               required_length_multiple_base: Union[int, None] = None
                                                ) -> (np.ndarray, np.ndarray):
         """
         Extracts a random segment from an example of the length specified. For examples with a positive label,
@@ -228,8 +247,15 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
         :param example: The example to extract a segment from.
         :param label: The label whose matching segment should be extracted.
         :param length: The length to make the example.
+        :param required_length_multiple_base: An optional base which the length is rounded to.
         :return: The extracted segment and corresponding label.
         """
+        if length is None:
+            length = label.shape[0]
+        if required_length_multiple_base is not None:
+            length = self.round_to_base(length, base=required_length_multiple_base)
+        if length == label.shape[0]:
+            return example, label
         if label.any():
             positive_indexes = np.where(label)[0]
             start_positive = positive_indexes[0]
@@ -274,7 +300,8 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
                 filtered_file_paths.append(file_path)
         return filtered_file_paths
 
-    def round_to_base(self, number: int, base: int) -> int:
+    @staticmethod
+    def round_to_base(number: int, base: int) -> int:
         """
         Rounds a number to a specific base/multiple.
 
