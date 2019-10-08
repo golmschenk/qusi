@@ -265,7 +265,7 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
             length = self.round_to_base(length, base=required_length_multiple_base)
         if length == label.shape[0]:
             return example, label
-        if label.any():
+        if any(label):
             positive_indexes = np.where(label)[0]
             start_positive = positive_indexes[0]
             end_positive = positive_indexes[-1]
