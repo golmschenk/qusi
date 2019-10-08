@@ -14,7 +14,7 @@ meta_data_path = Path('data/candlist_RADec.dat.feather')
 print('Setting up dataset...')
 database = MicrolensingLabelPerTimeStepDatabase()
 database.meta_data_frame = pd.read_feather(meta_data_path)
-example_paths = pd.read_csv(saved_log_directory.joinpath('validation.csv'))
+example_paths = pd.read_csv(saved_log_directory.joinpath('validation.csv'), header=None)[0].values
 
 print('Loading model...')
 model = ConvolutionalLstm()
