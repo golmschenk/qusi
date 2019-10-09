@@ -20,6 +20,7 @@
 project = 'RAMjET'
 copyright = '2019, Greg Olmschenk'
 author = 'Greg Olmschenk'
+master_doc = 'index'
 
 
 # -- General configuration ---------------------------------------------------
