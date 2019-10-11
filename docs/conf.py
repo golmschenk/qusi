@@ -24,7 +24,7 @@ master_doc = 'index'
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.napoleon', 'autoapi.extension']
 
 autoapi_dirs = ['..']
-autoapi_ignore = ['*envs/*', '*venv/*', '*.pytest_cache/*', '*logs/*', '*data/*', '*docs/*']
+autoapi_ignore = ['*envs/*', '*venv/*', '*.pytest_cache/*', '*logs/*', '*data/*', '*docs/*', '*tests/*']
 
 templates_path = ['_templates']
 exclude_patterns = ['_build', '_templates', 'Thumbs.db', '.DS_Store']
