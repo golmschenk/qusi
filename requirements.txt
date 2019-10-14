@@ -6,3 +6,5 @@ requests==2.22.0
 numpy==1.16.3
 pytest==5.0.1
 sphinx-autoapi==1.2.0
+sphinx_rtd_theme
+sphinx_press_theme
