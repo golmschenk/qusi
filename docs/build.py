@@ -13,5 +13,6 @@ build_directory = Path(configuration_directory, '_build')
 doctree_directory = Path(build_directory, '.doctrees')
 builder = 'html'
 
-app = Sphinx(source_directory, configuration_directory, build_directory, doctree_directory, builder, freshenv=True)
+app = Sphinx(source_directory, configuration_directory, build_directory, doctree_directory, builder, freshenv=True,
+             warningiserror=True)
 app.build()

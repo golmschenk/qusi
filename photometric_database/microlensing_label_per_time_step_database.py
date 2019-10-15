@@ -10,7 +10,7 @@ from photometric_database.lightcurve_database import LightcurveDatabase
 
 
 class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
-    """A representing a dataset of lightcurves for binary classification with a single label per time step."""
+    """A representation of a dataset of lightcurves for binary classification with a single label per time step."""
 
     def __init__(self):
         super().__init__()
@@ -153,9 +153,10 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveDatabase):
         Allows an infinite magnification in cases where the separation is zero.
         With :math:`u` as the einstein normalized separation, does
         .. math::
-           u_v = 2 \dfrac{t-t_0}{t_E}
-           u = \sqrt{u_0^2 + u_v^2}
-           A = \dfrac{u^2 + 2}{u \sqrt{u^2 + 4}}
+
+            u_v = 2 \dfrac{t-t_0}{t_E}
+            u = \sqrt{u_0^2 + u_v^2}
+            A = \dfrac{u^2 + 2}{u \sqrt{u^2 + 4}}
 
         :param observation_time: :math:`t`, current time of the observation.
         :param minimum_separation_time: :math:`t_0`, the time the minimum separation between source and lens occurs at.

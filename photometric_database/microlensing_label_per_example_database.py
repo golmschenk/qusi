@@ -9,7 +9,7 @@ from photometric_database.lightcurve_database import LightcurveDatabase
 
 
 class MicrolensingLabelPerExampleDatabase(LightcurveDatabase):
-    """A representing a dataset of lightcurves for binary classification with a single label per example."""
+    """A representation of a dataset of lightcurves for binary classification with a single label per example."""
     def __init__(self):
         super().__init__()
         self.time_steps_per_example = 30000
