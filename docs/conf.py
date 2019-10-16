@@ -37,7 +37,7 @@ exclude_patterns = ['_build', '_templates', 'Thumbs.db', '.DS_Store']
 # AutoAPI configuration.
 
 autoapi_dirs = ['..']
-autoapi_ignore = ['*envs/*', '*venv/*', '*.pytest_cache/*', '*logs/*', '*data/*', '*docs/conf.py', '*docs/build.py',
+autoapi_ignore = ['*envs/*', '*venv/*', '*.pytest_cache/*', '*logs/*', '*data/*', '*ramjet/docs*',
                   '*tests/*', '*conftest.py', '*ramjet/train.py', '*ramjet/infer.py']
 autoapi_template_dir = '_templates/autoapi'
 
@@ -90,9 +90,13 @@ def linkcode_resolve(domain, info):
     else:
         line_range_jump_option = ''
     repository = Repo('..')
-    branch = repository.active_branch
-    branch_name = branch.name
-    return f'http://github.com/golmschenk/ramjet/blob/{branch_name}/{file_name}{line_range_jump_option}'
+    ref_name = None
+    for ref in repository.refs:  # Manually iterate over refs, because ReadTheDocs uses a detached head.
+        if ref.commit == repository.head.commit:
+            ref_name = ref.name
+    if ref_name is None:
+        ref_name = repository.head.commit
+    return f'http://github.com/golmschenk/ramjet/blob/{ref_name}/{file_name}{line_range_jump_option}'
 
 
 # HTML output configuration

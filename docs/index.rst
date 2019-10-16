@@ -22,5 +22,5 @@ to easily complete these two tasks, and to demonstrate the framework on specific
 
 .. toctree::
 
-    input_data_types
+    data_types
     autoapi/index
