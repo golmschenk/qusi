@@ -11,11 +11,9 @@ from autoapi.mappers.python.objects import PythonPythonMapper
 from sphinx.application import Sphinx
 from git import Repo
 
-
 # Path setup
 
 sys.path.insert(0, os.path.abspath('..'))
-
 
 # Project information
 
@@ -23,7 +21,6 @@ project = 'RAMjET'
 copyright = f'{datetime.datetime.now().year}, Greg Olmschenk'
 author = 'Greg Olmschenk'
 master_doc = 'index'
-
 
 # General Sphinx configuration
 
@@ -33,12 +30,11 @@ add_module_names = False
 templates_path = ['_templates']
 exclude_patterns = ['_build', '_templates', 'Thumbs.db', '.DS_Store']
 
-
 # AutoAPI configuration.
 
 autoapi_dirs = ['..']
-autoapi_ignore = ['*envs/*', '*venv/*', '*.pytest_cache/*', '*logs/*', '*data/*', '*ramjet/docs*',
-                  '*tests/*', '*conftest.py', '*ramjet/train.py', '*ramjet/infer.py']
+autoapi_ignore = ['*envs/*', '*venv/*', '*.pytest_cache/*', '*logs/*', '*data/*', '*docs/conf.py', '*docs/build.py',
+                  '*tests/*', '*conftest.py', '*train.py', '*infer.py']
 autoapi_template_dir = '_templates/autoapi'
 
 
@@ -56,9 +52,11 @@ def linkcode_resolve(domain, info):
     """
     Determine the URL corresponding to a Python object.
     """
+
     class PlaceholderException(Exception):
         """A placeholder exception meant to show where to add specific exceptions in the future for the code linking."""
         pass
+
     if domain != 'py':
         return None
     module_name = info['module']
