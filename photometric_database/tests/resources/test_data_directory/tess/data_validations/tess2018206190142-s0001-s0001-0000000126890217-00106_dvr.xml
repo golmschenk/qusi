@@ -1,0 +1,1026 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<dv:dvTargetResults startCadence="70444" endCadence="90519" planetCandidateCount="1" pipelineTaskId="3830" ticId="126890217" simData="false" sectorsObserved="01" xmlns:dv="http://www.nasa.gov/2018/TESS/DV">
+    <dv:decDegrees provenance="TIC7" value="-43.767515" uncertainty="0.0"/>
+    <dv:effectiveTemp provenance="TIC7" value="5143.0" uncertainty="182.0"/>
+    <dv:limbDarkeningModel modelName="claret_tess_nonlinear_limb_darkening_model" coefficient1="0.67591584" coefficient2="-0.508886" coefficient3="0.9958272" coefficient4="-0.4449505"/>
+    <dv:log10Metallicity provenance="Solar" value="0.0" uncertainty="0.0"/>
+    <dv:log10SurfaceGravity provenance="TIC7" value="4.47072" uncertainty="2.0036"/>
+    <dv:planetResults detrendFilterLength="314" planetNumber="1">
+        <dv:allTransitsFit type="ALL" fullConvergence="true" limbDarkeningModelName="claret_tess_nonlinear_limb_darkening_model" modelChiSquare="518.3488" modelDegreesOfFreedom="627.3148" modelFitSnr="9.397441" planetNumber="1" transitModelName="mandel-agol_geometric_transit_model">
+            <dv:modelParameterCovariance>7.752759E-6 0.0 0.0 -3.522631E-4 -4.3214406E-8 -0.0013969796 0.0 -7.164275E-5 -8.1328006E-5 -0.0031377962 -7.733275E-6 -3.59447E-6 0.018153062 0.002187373 1.6423789E-4 5.456018E-5 0.009613749 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 -3.522631E-4 0.0 0.0 24.327608 0.22095576 45.343884 3.204801 2.27608 2.6411116 231.51674 -6.4656907E-4 0.11818733 -589.12335 -70.99783 419.8957 139.49025 -311.67456 -4.3214406E-8 0.0 0.0 0.22095576 0.024214085 -1.4124801E-5 0.055561103 -6.983721E-7 -8.224184E-7 -7.6569595E-5 8.904619E-8 -3.6867842E-8 1.8363005E-4 2.2117338E-5 -70.188225 -23.316677 9.703559E-5 -0.0013969796 0.0 0.0 45.343884 -1.4124801E-5 178.0686 0.0 8.952125 10.369292 785.7006 -0.0025276516 0.46268603 -2313.8542 -278.81693 0.053681806 0.01783321 -1224.14 0.0 0.0 0.0 3.204801 0.055561103 0.0 0.80585986 0.0 0.0 0.0 0.0 0.0 0.0 0.0 105.58097 35.074223 0.0 -7.164275E-5 0.0 0.0 2.27608 -6.983721E-7 8.952125 0.0 0.46096444 0.5216437 36.437653 -1.2497461E-4 0.02322497 -116.53605 -14.019326 0.002654188 8.8172697E-4 -61.653175 -8.1328006E-5 0.0 0.0 2.6411116 -8.224184E-7 10.369292 0.0 0.5216437 0.6038519 46.317093 -1.4717285E-4 0.026949732 -134.74667 -16.236135 0.0031256303 0.0010383411 -71.28747 -0.0031377962 0.0 0.0 231.51674 -7.6569595E-5 785.7006 0.0 36.437653 46.317093 30905.982 -0.01370223 2.3623817 -10137.307 -1229.4708 0.2910055 0.09667264 -5363.1187 -7.733275E-6 0.0 0.0 -6.4656907E-4 8.904619E-8 -0.0025276516 0.0 -1.2497461E-4 -1.4717285E-4 -0.01370223 1.5934933E-5 -6.5975487E-6 0.032860838 0.0039579268 -3.384232E-4 -1.1242491E-4 0.017364645 -3.59447E-6 0.0 0.0 0.11818733 -3.6867842E-8 0.46268603 0.0 0.02322497 0.026949732 2.3623817 -6.5975487E-6 0.0012059759 -6.011377 -0.7244573 1.4011755E-4 4.654735E-5 -3.1803071 0.018153062 0.0 0.0 -589.12335 1.8363005E-4 -2313.8542 0.0 -116.53605 -134.74667 -10137.307 0.032860838 -6.011377 30070.691 3623.0386 -0.69789255 -0.2318414 15908.841 0.002187373 0.0 0.0 -70.99783 2.2117338E-5 -278.81693 0.0 -14.019326 -16.236135 -1229.4708 0.0039579268 -0.7244573 3623.0386 436.5675 -0.08405773 -0.027924158 1916.7615 1.6423789E-4 0.0 0.0 419.8957 -70.188225 0.053681806 105.58097 0.002654188 0.0031256303 0.2910055 -3.384232E-4 1.4011755E-4 -0.69789255 -0.08405773 308875.03 102608.945 -0.3687872 5.456018E-5 0.0 0.0 139.49025 -23.316677 0.01783321 35.074223 8.8172697E-4 0.0010383411 0.09667264 -1.1242491E-4 4.654735E-5 -0.2318414 -0.027924158 102608.945 34086.91 -0.1225119 0.009613749 0.0 0.0 -311.67456 9.703559E-5 -1224.14 0.0 -61.653175 -71.28747 -5363.1187 0.017364645 -3.1803071 15908.841 1916.7615 -0.3687872 -0.1225119 8416.541</dv:modelParameterCovariance>
+            <dv:modelParameters>
+                <dv:modelParameter fitted="true" name="transitEpochBtjd" uncertainty="0.0027843777" value="1333.9703946164852"/>
+                <dv:modelParameter fitted="false" name="eccentricity" uncertainty="0.0" value="0.0"/>
+                <dv:modelParameter fitted="false" name="longitudeOfPeriDegrees" uncertainty="0.0" value="0.0"/>
+                <dv:modelParameter fitted="false" name="planetRadiusEarthRadii" uncertainty="4.9323025" value="3.5700256333695894"/>
+                <dv:modelParameter fitted="false" name="semiMajorAxisAu" uncertainty="0.15560876" value="0.09283940436528237"/>
+                <dv:modelParameter fitted="true" name="minImpactParameter" uncertainty="13.344235" value="0.2982681058034992"/>
+                <dv:modelParameter fitted="false" name="starRadiusSolarRadii" uncertainty="0.897697" value="0.8976969718933105"/>
+                <dv:modelParameter fitted="false" name="transitDurationHours" uncertainty="0.67894363" value="2.093220621815589"/>
+                <dv:modelParameter fitted="false" name="transitIngressTimeHours" uncertainty="0.7770791" value="0.08050618558201933"/>
+                <dv:modelParameter fitted="false" name="transitDepthPpm" uncertainty="175.80098" value="1565.8574894915623"/>
+                <dv:modelParameter fitted="true" name="orbitalPeriodDays" uncertainty="0.003991858" value="11.075822108515851"/>
+                <dv:modelParameter fitted="true" name="ratioPlanetRadiusToStarRadius" uncertainty="0.034727164" value="0.03642830990024861"/>
+                <dv:modelParameter fitted="true" name="ratioSemiMajorAxisToStarRadius" uncertainty="173.40903" value="40.12778555616733"/>
+                <dv:modelParameter fitted="false" name="inclinationDegrees" uncertainty="20.894197" value="89.57411901116585"/>
+                <dv:modelParameter fitted="false" name="equilibriumTempKelvin" uncertainty="555.76526" value="705.6789174632429"/>
+                <dv:modelParameter fitted="false" name="effectiveStellarFlux" uncertainty="184.6264" value="58.60701106854147"/>
+                <dv:modelParameter fitted="false" name="starDensitySolarDensity" uncertainty="91.74171" value="7.07652757911748"/>
+            </dv:modelParameters>
+        </dv:allTransitsFit>
+        <dv:binaryDiscriminationResults>
+            <dv:longerPeriodComparisonStatistic planetNumber="0" value="0.0" significance="-1.0"/>
+            <dv:oddEvenTransitDepthComparisonStatistic value="13.201999" significance="2.7965067E-4"/>
+            <dv:shorterPeriodComparisonStatistic planetNumber="0" value="0.0" significance="-1.0"/>
+        </dv:binaryDiscriminationResults>
+        <dv:bootstrapResults bootstrapThresholdForDesiredPfa="4.8241177" mesMean="0.70117664" mesStd="0.7696489" significance="1.5597861498490974E-31" transitCount="2.0">
+            <dv:histogram>
+                <dv:statistics>-20.0 -19.899498 -19.798994 -19.698492 -19.59799 -19.497488 -19.396984 -19.296482 -19.19598 -19.095478 -18.994974 -18.894472 -18.79397 -18.693468 -18.592964 -18.492462 -18.39196 -18.291458 -18.190954 -18.090452 -17.98995 -17.889448 -17.788944 -17.688442 -17.58794 -17.487436 -17.386934 -17.286432 -17.18593 -17.085426 -16.984924 -16.884422 -16.78392 -16.683416 -16.582914 -16.482412 -16.38191 -16.281406 -16.180904 -16.080402 -15.979899 -15.879397 -15.778894 -15.678392 -15.577889 -15.477386 -15.376884 -15.2763815 -15.1758795 -15.0753765 -14.9748745 -14.874372 -14.7738695 -14.673367 -14.572865 -14.472362 -14.37186 -14.271357 -14.170855 -14.070352 -13.96985 -13.869347 -13.768845 -13.668342 -13.56784 -13.467337 -13.366835 -13.266332 -13.165829 -13.065327 -12.964824 -12.864322 -12.763819 -12.663317 -12.562814 -12.462312 -12.361809 -12.261307 -12.160804 -12.060302 -11.959799 -11.859297 -11.758794 -11.658292 -11.557789 -11.457287 -11.356784 -11.256282 -11.155779 -11.055276 -10.954774 -10.854271 -10.753769 -10.653266 -10.552764 -10.452261 -10.351759 -10.251256 -10.150754 -10.050251 -9.949749 -9.849246 -9.748744 -9.648241 -9.547739 -9.447236 -9.346734 -9.246231 -9.145729 -9.045226 -8.944724 -8.844221 -8.743718 -8.643216 -8.542713 -8.442211 -8.341708 -8.241206 -8.140703 -8.040201 -7.9396987 -7.839196 -7.738693 -7.6381907 -7.5376883 -7.437186 -7.3366833 -7.236181 -7.1356783 -7.035176 -6.9346733 -6.834171 -6.7336683 -6.633166 -6.5326633 -6.432161 -6.3316584 -6.231156 -6.1306534 -6.030151 -5.9296484 -5.829146 -5.7286434 -5.628141 -5.527638 -5.4271355 -5.326633 -5.2261305 -5.125628 -5.0251255 -4.924623 -4.8241205 -4.723618 -4.6231155 -4.522613 -4.4221106 -4.321608 -4.2211056 -4.120603 -4.0201006 -3.919598 -3.8190954 -3.718593 -3.6180904 -3.517588 -3.4170854 -3.316583 -3.2160804 -3.115578 -3.0150754 -2.914573 -2.8140705 -2.7135677 -2.6130652 -2.5125628 -2.4120603 -2.3115578 -2.2110553 -2.1105528 -2.0100503 -1.9095477 -1.8090452 -1.7085427 -1.6080402 -1.5075377 -1.4070352 -1.3065326 -1.2060301 -1.1055276 -1.0050251 -0.9045226 -0.8040201 -0.7035176 -0.60301507 -0.5025126 -0.40201005 -0.30150753 -0.20100503 -0.10050251 0.0 0.10050251 0.20100503 0.30150753 0.40201005 0.5025126 0.60301507 0.7035176 0.8040201 0.9045226 1.0050251 1.1055276 1.2060301 1.3065326 1.4070352 1.5075377 1.6080402 1.7085427 1.8090452 1.9095477 2.0100503 2.1105528 2.2110553 2.3115578 2.4120603 2.5125628 2.6130652 2.7135677 2.8140705 2.914573 3.0150754 3.115578 3.2160804 3.316583 3.4170854 3.517588 3.6180904 3.718593 3.8190954 3.919598 4.0201006 4.120603 4.2211056 4.321608 4.4221106 4.522613 4.6231155 4.723618 4.8241205 4.924623 5.0251255 5.125628 5.2261305 5.326633 5.4271355 5.527638 5.628141 5.7286434 5.829146 5.9296484 6.030151 6.1306534 6.231156 6.3316584 6.432161 6.5326633 6.633166 6.7336683 6.834171 6.9346733 7.035176 7.1356783 7.236181 7.3366833 7.437186 7.5376883 7.6381907 7.738693 7.839196 7.9396987 8.040201 8.140703 8.241206 8.341708 8.442211 8.542713 8.643216 8.743718 8.844221 8.944724 9.045226 9.145729 9.246231 9.346734 9.447236 9.547739 9.648241 9.748744 9.849246 9.949749 10.050251 10.150754 10.251256 10.351759 10.452261 10.552764 10.653266 10.753769 10.854271 10.954774 11.055276 11.155779 11.256282 11.356784 11.457287 11.557789 11.658292 11.758794 11.859297 11.959799 12.060302 12.160804 12.261307 12.361809 12.462312 12.562814 12.663317 12.763819 12.864322 12.964824 13.065327 13.165829 13.266332 13.366835 13.467337 13.56784 13.668342 13.768845 13.869347 13.96985 14.070352 14.170855 14.271357 14.37186 14.472362 14.572865 14.673367 14.7738695 14.874372 14.9748745 15.0753765 15.1758795 15.2763815 15.376884 15.477386 15.577889 15.678392 15.778894 15.879397 15.979899 16.080402 16.180904 16.281406 16.38191 16.482412 16.582914 16.683416 16.78392 16.884422 16.984924 17.085426 17.18593 17.286432 17.386934 17.487436 17.58794 17.688442 17.788944 17.889448 17.98995 18.090452 18.190954 18.291458 18.39196 18.492462 18.592964 18.693468 18.79397 18.894472 18.994974 19.095478 19.19598 19.296482 19.396984 19.497488 19.59799 19.698492 19.798994 19.899498 20.0</dv:statistics>
+                <dv:probabilities>0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 1.6749837E-20 4.76048E-20 1.0578844E-20 2.1157689E-20 2.1157689E-20 1.0578844E-20 1.0578844E-20 4.187459E-20 4.881696E-20 4.2094985E-20 7.934133E-21 4.7164013E-20 1.5868266E-20 7.934133E-21 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 7.493348E-21 1.78518E-20 0.0 0.0 0.0 0.0 0.0 2.3361615E-20 3.217732E-20 3.8844195E-20 1.415678E-19 1.4788343E-19 1.5713991E-19 2.440848E-19 2.8364527E-19 9.971874E-9 4.3211454E-8 6.647916E-8 1.06366656E-7 2.6924062E-7 5.717208E-7 9.705958E-7 1.8049093E-6 2.5228842E-6 4.4009207E-6 6.890565E-6 1.0919202E-5 1.6058042E-5 2.480005E-5 3.8993352E-5 5.5343902E-5 8.093838E-5 1.13739196E-4 1.6041753E-4 2.1769931E-4 2.919532E-4 3.9643186E-4 5.3601485E-4 7.18663E-4 9.585198E-4 0.0012387527 0.0016005789 0.0020173334 0.0024958006 0.0030940664 0.0038309714 0.0047568697 0.005813739 0.0070537813 0.008445559 0.009936667 0.011519257 0.013325282 0.015279793 0.017496435 0.019888455 0.022417763 0.024891248 0.027369767 0.029721454 0.032073945 0.03416675 0.03619879 0.03790291 0.039245024 0.040228218 0.040969558 0.04095061 0.04042629 0.039492436 0.038226817 0.036623057 0.034845117 0.032714535 0.03045955 0.028014243 0.025578639 0.023149727 0.020675598 0.018296376 0.015997147 0.013871242 0.011902047 0.010130886 0.008489393 0.007068543 0.0057827462 0.0047128373 0.0037720143 0.0029947134 0.0023278277 0.0018074454 0.0013815234 0.0010429883 7.7282026E-4 5.605058E-4 4.0661645E-4 2.9096266E-4 2.045464E-4 1.3982563E-4 9.694989E-5 6.4810534E-5 4.1303505E-5 2.6904117E-5 1.7739965E-5 1.0965738E-5 6.5714653E-6 3.4668883E-6 2.300179E-6 1.1334697E-6 6.681156E-7 3.1245207E-7 2.1938123E-7 8.974687E-8 1.9943748E-8 5.3335006E-20 1.1791003E-19 3.3058887E-20 2.6447111E-20 1.7631406E-20 3.5262813E-20 3.7025955E-20 2.6447111E-20 2.8210252E-20 2.5179853E-20 4.815578E-20 3.834831E-20 4.16542E-20 2.6006326E-20 2.6447111E-20 2.3361615E-20 7.493348E-21 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 7.934133E-21 0.0 1.4986697E-20 1.575807E-20 2.2920829E-20 2.556554E-20 3.658517E-20 5.553893E-20 1.2982501E-19 2.5644054E-19 1.8358702E-19 2.2964907E-19 1.6264973E-19 2.0143882E-19 1.3488026E-19 8.815703E-21 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0</dv:probabilities>
+            </dv:histogram>
+        </dv:bootstrapResults>
+        <dv:centroidResults>
+            <dv:differenceImageMotionResults>
+                <dv:msTicCentroidOffsets>
+                    <dv:meanRaOffset value="2.8953798" uncertainty="2.954822"/>
+                    <dv:meanDecOffset value="33.05986" uncertainty="3.2200882"/>
+                    <dv:meanSkyOffset value="33.186405" uncertainty="3.2181516"/>
+                </dv:msTicCentroidOffsets>
+                <dv:msControlCentroidOffsets>
+                    <dv:meanRaOffset value="3.0684965" uncertainty="2.9548337"/>
+                    <dv:meanDecOffset value="33.4332" uncertainty="3.2200894"/>
+                    <dv:meanSkyOffset value="33.57372" uncertainty="3.2179644"/>
+                </dv:msControlCentroidOffsets>
+                <dv:summaryQualityMetric qualityThreshold="0.7" numberOfAttempts="1" numberOfMetrics="1" numberOfGoodMetrics="0" fractionOfGoodMetrics="0.0"/>
+                <dv:summaryOverlapMetric imageCount="1" imageCountNoOverlap="1" imageCountFractionNoOverlap="1.0"/>
+            </dv:differenceImageMotionResults>
+        </dv:centroidResults>
+        <dv:differenceImageResults numberOfCadenceGapsInTransit="1" numberOfCadenceGapsOutOfTransit="0" numberOfCadencesInTransit="102" numberOfCadencesOutOfTransit="268" numberOfTransits="2" overlappedTransits="false" endCadence="90519" sector="1" startCadence="70444" targetTableId="128">
+            <dv:ccd ccdNumber="1" cameraNumber="1"/>
+            <dv:controlCentroidOffsets>
+                <dv:rowOffset value="1.5784515" uncertainty="0.09738557"/>
+                <dv:columnOffset value="0.6337252" uncertainty="0.107246384"/>
+                <dv:focalPlaneOffset value="1.7009165" uncertainty="0.10025827"/>
+                <dv:raOffset value="3.0684965" uncertainty="1.5751326"/>
+                <dv:decOffset value="33.4332" uncertainty="2.029526"/>
+                <dv:skyOffset value="33.57372" uncertainty="2.035778"/>
+            </dv:controlCentroidOffsets>
+            <dv:controlImageCentroid>
+                <dv:row value="638.65643" uncertainty="8.16248E-5"/>
+                <dv:column value="686.35565" uncertainty="7.8398494E-5"/>
+                <dv:raDegrees value="317.57923023604866" uncertainty="8.2075877E-7"/>
+                <dv:decDegrees value="-43.767889049192185" uncertainty="8.075334E-7"/>
+            </dv:controlImageCentroid>
+            <dv:differenceImageCentroid>
+                <dv:row value="640.23486" uncertainty="0.09738553"/>
+                <dv:column value="686.9894" uncertainty="0.107246354"/>
+                <dv:raDegrees value="317.5804105482493" uncertainty="6.05873E-4"/>
+                <dv:decDegrees value="-43.75860204909031" uncertainty="5.637567E-4"/>
+            </dv:differenceImageCentroid>
+            <dv:differenceImagePixelData ccdRow="634" ccdColumn="682">
+                <dv:meanFluxInTransit value="-86.2112" uncertainty="12.759938"/>
+                <dv:meanFluxOutOfTransit value="-15.333835" uncertainty="7.88998"/>
+                <dv:meanFluxDifference value="70.87736" uncertainty="15.00226"/>
+                <dv:meanFluxForTargetTable value="-24.764238" uncertainty="0.97215486"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="634" ccdColumn="683">
+                <dv:meanFluxInTransit value="-62.8279" uncertainty="12.6978245"/>
+                <dv:meanFluxOutOfTransit value="-10.51749" uncertainty="7.8450265"/>
+                <dv:meanFluxDifference value="52.31041" uncertainty="14.92579"/>
+                <dv:meanFluxForTargetTable value="-19.441534" uncertainty="0.96658117"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="634" ccdColumn="684">
+                <dv:meanFluxInTransit value="-246.16003" uncertainty="12.823784"/>
+                <dv:meanFluxOutOfTransit value="-330.70547" uncertainty="7.8893175"/>
+                <dv:meanFluxDifference value="-84.54544" uncertainty="15.056253"/>
+                <dv:meanFluxForTargetTable value="-326.83957" uncertainty="0.9723646"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="634" ccdColumn="685">
+                <dv:meanFluxInTransit value="-241.32443" uncertainty="12.866008"/>
+                <dv:meanFluxOutOfTransit value="-486.024" uncertainty="7.8774014"/>
+                <dv:meanFluxDifference value="-244.69957" uncertainty="15.086007"/>
+                <dv:meanFluxForTargetTable value="-481.15817" uncertainty="0.9709814"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="634" ccdColumn="686">
+                <dv:meanFluxInTransit value="-345.12897" uncertainty="12.618283"/>
+                <dv:meanFluxOutOfTransit value="-595.4537" uncertainty="7.7179136"/>
+                <dv:meanFluxDifference value="-250.3247" uncertainty="14.791459"/>
+                <dv:meanFluxForTargetTable value="-578.4008" uncertainty="0.95296675"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="634" ccdColumn="687">
+                <dv:meanFluxInTransit value="-493.09488" uncertainty="12.4976635"/>
+                <dv:meanFluxOutOfTransit value="-525.75586" uncertainty="7.6993732"/>
+                <dv:meanFluxDifference value="-32.66101" uncertainty="14.678963"/>
+                <dv:meanFluxForTargetTable value="-532.79205" uncertainty="0.9500918"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="634" ccdColumn="688">
+                <dv:meanFluxInTransit value="-610.1865" uncertainty="12.401741"/>
+                <dv:meanFluxOutOfTransit value="-546.0476" uncertainty="7.665044"/>
+                <dv:meanFluxDifference value="64.138954" uncertainty="14.579303"/>
+                <dv:meanFluxForTargetTable value="-565.4956" uncertainty="0.94560605"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="634" ccdColumn="689">
+                <dv:meanFluxInTransit value="-650.1055" uncertainty="12.485261"/>
+                <dv:meanFluxOutOfTransit value="-548.8325" uncertainty="7.7247047"/>
+                <dv:meanFluxDifference value="101.27304" uncertainty="14.681717"/>
+                <dv:meanFluxForTargetTable value="-577.7174" uncertainty="0.9525636"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="634" ccdColumn="690">
+                <dv:meanFluxInTransit value="-610.46533" uncertainty="12.487549"/>
+                <dv:meanFluxOutOfTransit value="-547.0692" uncertainty="7.7167926"/>
+                <dv:meanFluxDifference value="63.39609" uncertainty="14.679502"/>
+                <dv:meanFluxForTargetTable value="-551.5021" uncertainty="0.9522833"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="634" ccdColumn="691">
+                <dv:meanFluxInTransit value="-263.6594" uncertainty="12.740789"/>
+                <dv:meanFluxOutOfTransit value="-202.56682" uncertainty="7.872882"/>
+                <dv:meanFluxDifference value="61.092587" uncertainty="14.976982"/>
+                <dv:meanFluxForTargetTable value="-191.4398" uncertainty="0.9706133"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="634" ccdColumn="692">
+                <dv:meanFluxInTransit value="289.81604" uncertainty="12.955236"/>
+                <dv:meanFluxOutOfTransit value="349.96265" uncertainty="8.003913"/>
+                <dv:meanFluxDifference value="60.14661" uncertainty="15.228289"/>
+                <dv:meanFluxForTargetTable value="357.9556" uncertainty="0.9870614"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="635" ccdColumn="682">
+                <dv:meanFluxInTransit value="3623.1404" uncertainty="14.1287365"/>
+                <dv:meanFluxOutOfTransit value="3749.28" uncertainty="8.7409525"/>
+                <dv:meanFluxDifference value="126.139626" uncertainty="16.614014"/>
+                <dv:meanFluxForTargetTable value="3661.7668" uncertainty="1.0732375"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="635" ccdColumn="683">
+                <dv:meanFluxInTransit value="6610.8984" uncertainty="15.198211"/>
+                <dv:meanFluxOutOfTransit value="6717.6553" uncertainty="9.394361"/>
+                <dv:meanFluxDifference value="106.75707" uncertainty="17.86728"/>
+                <dv:meanFluxForTargetTable value="6612.779" uncertainty="1.1514993"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="635" ccdColumn="684">
+                <dv:meanFluxInTransit value="2345.59" uncertainty="13.794473"/>
+                <dv:meanFluxOutOfTransit value="2255.5571" uncertainty="8.485831"/>
+                <dv:meanFluxDifference value="-90.03295" uncertainty="16.19558"/>
+                <dv:meanFluxForTargetTable value="2269.7803" uncertainty="1.044644"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="635" ccdColumn="685">
+                <dv:meanFluxInTransit value="514.1353" uncertainty="13.150622"/>
+                <dv:meanFluxOutOfTransit value="357.24698" uncertainty="8.07081"/>
+                <dv:meanFluxDifference value="-156.88832" uncertainty="15.429739"/>
+                <dv:meanFluxForTargetTable value="362.35248" uncertainty="0.9951934"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="635" ccdColumn="686">
+                <dv:meanFluxInTransit value="-230.17021" uncertainty="12.6687"/>
+                <dv:meanFluxOutOfTransit value="-302.76614" uncertainty="7.793981"/>
+                <dv:meanFluxDifference value="-72.59592" uncertainty="14.874209"/>
+                <dv:meanFluxForTargetTable value="-302.25833" uncertainty="0.96086943"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="635" ccdColumn="687">
+                <dv:meanFluxInTransit value="-517.87885" uncertainty="12.455739"/>
+                <dv:meanFluxOutOfTransit value="-490.48962" uncertainty="7.689612"/>
+                <dv:meanFluxDifference value="27.389212" uncertainty="14.638155"/>
+                <dv:meanFluxForTargetTable value="-499.88055" uncertainty="0.9485284"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="635" ccdColumn="688">
+                <dv:meanFluxInTransit value="-501.3911" uncertainty="12.45777"/>
+                <dv:meanFluxOutOfTransit value="-471.06436" uncertainty="7.6898317"/>
+                <dv:meanFluxDifference value="30.326752" uncertainty="14.639998"/>
+                <dv:meanFluxForTargetTable value="-468.68085" uncertainty="0.9490716"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="635" ccdColumn="689">
+                <dv:meanFluxInTransit value="-521.0352" uncertainty="12.571264"/>
+                <dv:meanFluxOutOfTransit value="-460.4734" uncertainty="7.767933"/>
+                <dv:meanFluxDifference value="60.561863" uncertainty="14.7776"/>
+                <dv:meanFluxForTargetTable value="-452.0322" uncertainty="0.9589701"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="635" ccdColumn="690">
+                <dv:meanFluxInTransit value="-464.52005" uncertainty="12.605091"/>
+                <dv:meanFluxOutOfTransit value="-423.92947" uncertainty="7.783255"/>
+                <dv:meanFluxDifference value="40.590553" uncertainty="14.814431"/>
+                <dv:meanFluxForTargetTable value="-403.0358" uncertainty="0.9609937"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="635" ccdColumn="691">
+                <dv:meanFluxInTransit value="835.23566" uncertainty="13.150888"/>
+                <dv:meanFluxOutOfTransit value="887.6826" uncertainty="8.125371"/>
+                <dv:meanFluxDifference value="52.446987" uncertainty="15.458574"/>
+                <dv:meanFluxForTargetTable value="907.11346" uncertainty="1.0010831"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="635" ccdColumn="692">
+                <dv:meanFluxInTransit value="9167.1455" uncertainty="16.163143"/>
+                <dv:meanFluxOutOfTransit value="9254.076" uncertainty="9.98546"/>
+                <dv:meanFluxDifference value="86.93052" uncertainty="18.998857"/>
+                <dv:meanFluxForTargetTable value="9228.801" uncertainty="1.2247155"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="636" ccdColumn="682">
+                <dv:meanFluxInTransit value="13384.272" uncertainty="17.274712"/>
+                <dv:meanFluxOutOfTransit value="13599.9375" uncertainty="10.6908245"/>
+                <dv:meanFluxDifference value="215.6647" uncertainty="20.31525"/>
+                <dv:meanFluxForTargetTable value="13399.016" uncertainty="1.3059127"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="636" ccdColumn="683">
+                <dv:meanFluxInTransit value="10808.541" uncertainty="16.498798"/>
+                <dv:meanFluxOutOfTransit value="10931.07" uncertainty="10.201344"/>
+                <dv:meanFluxDifference value="122.529076" uncertainty="19.39788"/>
+                <dv:meanFluxForTargetTable value="10857.105" uncertainty="1.2486632"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="636" ccdColumn="684">
+                <dv:meanFluxInTransit value="3628.8604" uncertainty="14.193366"/>
+                <dv:meanFluxOutOfTransit value="3680.473" uncertainty="8.7658"/>
+                <dv:meanFluxDifference value="51.612495" uncertainty="16.682055"/>
+                <dv:meanFluxForTargetTable value="3693.2441" uncertainty="1.0782232"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="636" ccdColumn="685">
+                <dv:meanFluxInTransit value="1916.133" uncertainty="13.75982"/>
+                <dv:meanFluxOutOfTransit value="1910.7356" uncertainty="8.485498"/>
+                <dv:meanFluxDifference value="-5.3974814" uncertainty="16.1659"/>
+                <dv:meanFluxForTargetTable value="1933.5806" uncertainty="1.0453563"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="636" ccdColumn="686">
+                <dv:meanFluxInTransit value="1337.2266" uncertainty="13.312104"/>
+                <dv:meanFluxOutOfTransit value="1365.0201" uncertainty="8.216892"/>
+                <dv:meanFluxDifference value="27.793497" uncertainty="15.64383"/>
+                <dv:meanFluxForTargetTable value="1366.856" uncertainty="1.01179"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="636" ccdColumn="687">
+                <dv:meanFluxInTransit value="371.53555" uncertainty="12.892756"/>
+                <dv:meanFluxOutOfTransit value="395.28885" uncertainty="7.9570456"/>
+                <dv:meanFluxDifference value="23.753298" uncertainty="15.150503"/>
+                <dv:meanFluxForTargetTable value="392.42838" uncertainty="0.9807699"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="636" ccdColumn="688">
+                <dv:meanFluxInTransit value="162.36479" uncertainty="12.740806"/>
+                <dv:meanFluxOutOfTransit value="212.12068" uncertainty="7.8691506"/>
+                <dv:meanFluxDifference value="49.755898" uncertainty="14.975035"/>
+                <dv:meanFluxForTargetTable value="200.48157" uncertainty="0.96968395"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="636" ccdColumn="689">
+                <dv:meanFluxInTransit value="-28.121092" uncertainty="12.791194"/>
+                <dv:meanFluxOutOfTransit value="19.050297" uncertainty="7.901688"/>
+                <dv:meanFluxDifference value="47.17139" uncertainty="15.035003"/>
+                <dv:meanFluxForTargetTable value="21.61854" uncertainty="0.974004"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="636" ccdColumn="690">
+                <dv:meanFluxInTransit value="-37.5664" uncertainty="12.819345"/>
+                <dv:meanFluxOutOfTransit value="56.343437" uncertainty="7.9302135"/>
+                <dv:meanFluxDifference value="93.909836" uncertainty="15.073948"/>
+                <dv:meanFluxForTargetTable value="55.06883" uncertainty="0.97719747"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="636" ccdColumn="691">
+                <dv:meanFluxInTransit value="2924.7446" uncertainty="13.992978"/>
+                <dv:meanFluxOutOfTransit value="2981.2422" uncertainty="8.643209"/>
+                <dv:meanFluxDifference value="56.49742" uncertainty="16.447144"/>
+                <dv:meanFluxForTargetTable value="2975.9832" uncertainty="1.0631342"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="636" ccdColumn="692">
+                <dv:meanFluxInTransit value="36931.805" uncertainty="23.488743"/>
+                <dv:meanFluxOutOfTransit value="37064.605" uncertainty="14.505884"/>
+                <dv:meanFluxDifference value="132.80188" uncertainty="27.606915"/>
+                <dv:meanFluxForTargetTable value="36795.184" uncertainty="1.7674112"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="637" ccdColumn="682">
+                <dv:meanFluxInTransit value="18429.156" uncertainty="18.870584"/>
+                <dv:meanFluxOutOfTransit value="18487.502" uncertainty="11.647214"/>
+                <dv:meanFluxDifference value="58.345406" uncertainty="22.175585"/>
+                <dv:meanFluxForTargetTable value="18525.406" uncertainty="1.4270734"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="637" ccdColumn="683">
+                <dv:meanFluxInTransit value="6094.071" uncertainty="15.125549"/>
+                <dv:meanFluxOutOfTransit value="6207.0273" uncertainty="9.352701"/>
+                <dv:meanFluxDifference value="112.956474" uncertainty="17.783567"/>
+                <dv:meanFluxForTargetTable value="6222.011" uncertainty="1.1487103"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="637" ccdColumn="684">
+                <dv:meanFluxInTransit value="3042.3135" uncertainty="14.138823"/>
+                <dv:meanFluxOutOfTransit value="3108.8267" uncertainty="8.7347355"/>
+                <dv:meanFluxDifference value="66.51312" uncertainty="16.619324"/>
+                <dv:meanFluxForTargetTable value="3129.6045" uncertainty="1.0749662"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="637" ccdColumn="685">
+                <dv:meanFluxInTransit value="10128.308" uncertainty="16.513704"/>
+                <dv:meanFluxOutOfTransit value="10196.994" uncertainty="10.197314"/>
+                <dv:meanFluxDifference value="68.68589" uncertainty="19.408442"/>
+                <dv:meanFluxForTargetTable value="10170.854" uncertainty="1.2500639"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="637" ccdColumn="686">
+                <dv:meanFluxInTransit value="16774.658" uncertainty="18.437262"/>
+                <dv:meanFluxOutOfTransit value="16849.414" uncertainty="11.381351"/>
+                <dv:meanFluxDifference value="74.7554" uncertainty="21.667206"/>
+                <dv:meanFluxForTargetTable value="16888.521" uncertainty="1.3945576"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="637" ccdColumn="687">
+                <dv:meanFluxInTransit value="10426.244" uncertainty="16.404308"/>
+                <dv:meanFluxOutOfTransit value="10483.475" uncertainty="10.124871"/>
+                <dv:meanFluxDifference value="57.23033" uncertainty="19.277302"/>
+                <dv:meanFluxForTargetTable value="10572.553" uncertainty="1.2436838"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="637" ccdColumn="688">
+                <dv:meanFluxInTransit value="3393.9565" uncertainty="14.061451"/>
+                <dv:meanFluxOutOfTransit value="3454.6897" uncertainty="8.6835785"/>
+                <dv:meanFluxDifference value="60.73337" uncertainty="16.526613"/>
+                <dv:meanFluxForTargetTable value="3480.3008" uncertainty="1.0692363"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="637" ccdColumn="689">
+                <dv:meanFluxInTransit value="1349.3326" uncertainty="13.236501"/>
+                <dv:meanFluxOutOfTransit value="1398.0281" uncertainty="8.176167"/>
+                <dv:meanFluxDifference value="48.69533" uncertainty="15.558105"/>
+                <dv:meanFluxForTargetTable value="1412.3397" uncertainty="1.0071495"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="637" ccdColumn="690">
+                <dv:meanFluxInTransit value="633.58203" uncertainty="12.9954195"/>
+                <dv:meanFluxOutOfTransit value="690.9791" uncertainty="8.027692"/>
+                <dv:meanFluxDifference value="57.39706" uncertainty="15.274972"/>
+                <dv:meanFluxForTargetTable value="678.9243" uncertainty="0.98950326"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="637" ccdColumn="691">
+                <dv:meanFluxInTransit value="2616.3467" uncertainty="13.811217"/>
+                <dv:meanFluxOutOfTransit value="2676.3547" uncertainty="8.531977"/>
+                <dv:meanFluxDifference value="60.00795" uncertainty="16.234049"/>
+                <dv:meanFluxForTargetTable value="2692.225" uncertainty="1.0499976"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="637" ccdColumn="692">
+                <dv:meanFluxInTransit value="53751.773" uncertainty="26.914927"/>
+                <dv:meanFluxOutOfTransit value="53824.383" uncertainty="16.615725"/>
+                <dv:meanFluxDifference value="72.606346" uncertainty="31.630611"/>
+                <dv:meanFluxForTargetTable value="53220.066" uncertainty="2.0190136"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="638" ccdColumn="682">
+                <dv:meanFluxInTransit value="11215.154" uncertainty="16.570137"/>
+                <dv:meanFluxOutOfTransit value="11302.144" uncertainty="10.23551"/>
+                <dv:meanFluxDifference value="86.98941" uncertainty="19.476526"/>
+                <dv:meanFluxForTargetTable value="11394.775" uncertainty="1.2571758"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="638" ccdColumn="683">
+                <dv:meanFluxInTransit value="2131.506" uncertainty="13.649033"/>
+                <dv:meanFluxOutOfTransit value="2164.4016" uncertainty="8.425706"/>
+                <dv:meanFluxDifference value="32.895546" uncertainty="16.040218"/>
+                <dv:meanFluxForTargetTable value="2204.4785" uncertainty="1.0387393"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="638" ccdColumn="684">
+                <dv:meanFluxInTransit value="2507.5317" uncertainty="13.923242"/>
+                <dv:meanFluxOutOfTransit value="2602.9673" uncertainty="8.609567"/>
+                <dv:meanFluxDifference value="95.4357" uncertainty="16.370134"/>
+                <dv:meanFluxForTargetTable value="2589.9375" uncertainty="1.0583475"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="638" ccdColumn="685">
+                <dv:meanFluxInTransit value="27229.135" uncertainty="21.355988"/>
+                <dv:meanFluxOutOfTransit value="27324.79" uncertainty="13.187582"/>
+                <dv:meanFluxDifference value="95.65368" uncertainty="25.099611"/>
+                <dv:meanFluxForTargetTable value="27108.006" uncertainty="1.6085756"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="638" ccdColumn="686">
+                <dv:meanFluxInTransit value="108311.56" uncertainty="36.061905"/>
+                <dv:meanFluxOutOfTransit value="108423.94" uncertainty="22.25011"/>
+                <dv:meanFluxDifference value="112.37385" uncertainty="42.373676"/>
+                <dv:meanFluxForTargetTable value="107821.3" uncertainty="2.7049372"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="638" ccdColumn="687">
+                <dv:meanFluxInTransit value="103804.31" uncertainty="35.116024"/>
+                <dv:meanFluxOutOfTransit value="103883.17" uncertainty="21.660213"/>
+                <dv:meanFluxDifference value="78.862076" uncertainty="41.25894"/>
+                <dv:meanFluxForTargetTable value="103814.28" uncertainty="2.6391478"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="638" ccdColumn="688">
+                <dv:meanFluxInTransit value="22951.93" uncertainty="20.03855"/>
+                <dv:meanFluxOutOfTransit value="23032.762" uncertainty="12.368728"/>
+                <dv:meanFluxDifference value="80.83053" uncertainty="23.548437"/>
+                <dv:meanFluxForTargetTable value="23108.137" uncertainty="1.5140996"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="638" ccdColumn="689">
+                <dv:meanFluxInTransit value="6372.5283" uncertainty="15.163587"/>
+                <dv:meanFluxOutOfTransit value="6419.409" uncertainty="9.360763"/>
+                <dv:meanFluxDifference value="46.880905" uncertainty="17.820164"/>
+                <dv:meanFluxForTargetTable value="6451.9434" uncertainty="1.150517"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="638" ccdColumn="690">
+                <dv:meanFluxInTransit value="1462.1598" uncertainty="13.363985"/>
+                <dv:meanFluxOutOfTransit value="1508.3333" uncertainty="8.25222"/>
+                <dv:meanFluxDifference value="46.17353" uncertainty="15.706534"/>
+                <dv:meanFluxForTargetTable value="1528.0929" uncertainty="1.0165284"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="638" ccdColumn="691">
+                <dv:meanFluxInTransit value="1855.6791" uncertainty="13.639982"/>
+                <dv:meanFluxOutOfTransit value="1923.983" uncertainty="8.428319"/>
+                <dv:meanFluxDifference value="68.3039" uncertainty="16.033892"/>
+                <dv:meanFluxForTargetTable value="1933.388" uncertainty="1.0382884"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="638" ccdColumn="692">
+                <dv:meanFluxInTransit value="15263.311" uncertainty="17.98607"/>
+                <dv:meanFluxOutOfTransit value="15330.31" uncertainty="11.10884"/>
+                <dv:meanFluxDifference value="66.99899" uncertainty="21.14013"/>
+                <dv:meanFluxForTargetTable value="15288.874" uncertainty="1.3603098"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="639" ccdColumn="682">
+                <dv:meanFluxInTransit value="3610.814" uncertainty="14.08343"/>
+                <dv:meanFluxOutOfTransit value="3688.1863" uncertainty="8.703273"/>
+                <dv:meanFluxDifference value="77.3724" uncertainty="16.555662"/>
+                <dv:meanFluxForTargetTable value="3719.5996" uncertainty="1.0719918"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="639" ccdColumn="683">
+                <dv:meanFluxInTransit value="1066.4459" uncertainty="13.165522"/>
+                <dv:meanFluxOutOfTransit value="1120.7528" uncertainty="8.134777"/>
+                <dv:meanFluxDifference value="54.306915" uncertainty="15.475967"/>
+                <dv:meanFluxForTargetTable value="1130.0883" uncertainty="1.0023472"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="639" ccdColumn="684">
+                <dv:meanFluxInTransit value="1652.7689" uncertainty="13.543075"/>
+                <dv:meanFluxOutOfTransit value="1694.8748" uncertainty="8.362453"/>
+                <dv:meanFluxDifference value="42.105846" uncertainty="15.916831"/>
+                <dv:meanFluxForTargetTable value="1683.6259" uncertainty="1.0294278"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="639" ccdColumn="685">
+                <dv:meanFluxInTransit value="35169.78" uncertainty="23.13906"/>
+                <dv:meanFluxOutOfTransit value="35223.0" uncertainty="14.2844515"/>
+                <dv:meanFluxDifference value="53.22066" uncertainty="27.193043"/>
+                <dv:meanFluxForTargetTable value="34819.176" uncertainty="1.7384129"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="639" ccdColumn="686">
+                <dv:meanFluxInTransit value="152978.22" uncertainty="41.918106"/>
+                <dv:meanFluxOutOfTransit value="153030.5" uncertainty="25.864305"/>
+                <dv:meanFluxDifference value="52.280704" uncertainty="49.255356"/>
+                <dv:meanFluxForTargetTable value="152465.55" uncertainty="3.1452832"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="639" ccdColumn="687">
+                <dv:meanFluxInTransit value="104897.62" uncertainty="35.296505"/>
+                <dv:meanFluxOutOfTransit value="104991.055" uncertainty="21.778667"/>
+                <dv:meanFluxDifference value="93.43368" uncertainty="41.47473"/>
+                <dv:meanFluxForTargetTable value="105744.4" uncertainty="2.6626303"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="639" ccdColumn="688">
+                <dv:meanFluxInTransit value="26047.03" uncertainty="20.702816"/>
+                <dv:meanFluxOutOfTransit value="26089.672" uncertainty="12.774569"/>
+                <dv:meanFluxDifference value="42.64343" uncertainty="24.326862"/>
+                <dv:meanFluxForTargetTable value="26284.385" uncertainty="1.565708"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="639" ccdColumn="689">
+                <dv:meanFluxInTransit value="5323.4937" uncertainty="14.691519"/>
+                <dv:meanFluxOutOfTransit value="5404.4136" uncertainty="9.078355"/>
+                <dv:meanFluxDifference value="80.92018" uncertainty="17.270126"/>
+                <dv:meanFluxForTargetTable value="5474.7407" uncertainty="1.1175265"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="639" ccdColumn="690">
+                <dv:meanFluxInTransit value="1057.355" uncertainty="13.259567"/>
+                <dv:meanFluxOutOfTransit value="1117.4714" uncertainty="8.19168"/>
+                <dv:meanFluxDifference value="60.11646" uncertainty="15.585883"/>
+                <dv:meanFluxForTargetTable value="1111.3665" uncertainty="1.0092189"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="639" ccdColumn="691">
+                <dv:meanFluxInTransit value="1465.0653" uncertainty="13.479286"/>
+                <dv:meanFluxOutOfTransit value="1529.0527" uncertainty="8.327989"/>
+                <dv:meanFluxDifference value="63.987335" uncertainty="15.844449"/>
+                <dv:meanFluxForTargetTable value="1532.0793" uncertainty="1.025434"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="639" ccdColumn="692">
+                <dv:meanFluxInTransit value="5211.7773" uncertainty="14.777821"/>
+                <dv:meanFluxOutOfTransit value="5271.3936" uncertainty="9.129877"/>
+                <dv:meanFluxDifference value="59.61599" uncertainty="17.370626"/>
+                <dv:meanFluxForTargetTable value="5267.9727" uncertainty="1.1220102"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="640" ccdColumn="682">
+                <dv:meanFluxInTransit value="648.22345" uncertainty="13.0028105"/>
+                <dv:meanFluxOutOfTransit value="731.45087" uncertainty="8.038854"/>
+                <dv:meanFluxDifference value="83.22745" uncertainty="15.2871275"/>
+                <dv:meanFluxForTargetTable value="726.26544" uncertainty="0.9910105"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="640" ccdColumn="683">
+                <dv:meanFluxInTransit value="355.77847" uncertainty="12.844131"/>
+                <dv:meanFluxOutOfTransit value="419.5609" uncertainty="7.9366746"/>
+                <dv:meanFluxDifference value="63.78244" uncertainty="15.098428"/>
+                <dv:meanFluxForTargetTable value="421.50604" uncertainty="0.9785208"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="640" ccdColumn="684">
+                <dv:meanFluxInTransit value="863.3955" uncertainty="13.1961355"/>
+                <dv:meanFluxOutOfTransit value="927.62585" uncertainty="8.156364"/>
+                <dv:meanFluxDifference value="64.23033" uncertainty="15.513358"/>
+                <dv:meanFluxForTargetTable value="938.5932" uncertainty="1.0045602"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="640" ccdColumn="685">
+                <dv:meanFluxInTransit value="9980.329" uncertainty="16.473976"/>
+                <dv:meanFluxOutOfTransit value="10029.12" uncertainty="10.173869"/>
+                <dv:meanFluxDifference value="48.791058" uncertainty="19.362322"/>
+                <dv:meanFluxForTargetTable value="9996.938" uncertainty="1.2467983"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="640" ccdColumn="686">
+                <dv:meanFluxInTransit value="37060.145" uncertainty="23.431087"/>
+                <dv:meanFluxOutOfTransit value="37151.49" uncertainty="14.469484"/>
+                <dv:meanFluxDifference value="91.34161" uncertainty="27.538733"/>
+                <dv:meanFluxForTargetTable value="37411.848" uncertainty="1.7719942"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="640" ccdColumn="687">
+                <dv:meanFluxInTransit value="32664.03" uncertainty="22.37931"/>
+                <dv:meanFluxOutOfTransit value="32770.887" uncertainty="13.821863"/>
+                <dv:meanFluxDifference value="106.856316" uncertainty="26.303564"/>
+                <dv:meanFluxForTargetTable value="33051.37" uncertainty="1.6938615"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="640" ccdColumn="688">
+                <dv:meanFluxInTransit value="12804.409" uncertainty="17.150225"/>
+                <dv:meanFluxOutOfTransit value="12859.815" uncertainty="10.588331"/>
+                <dv:meanFluxDifference value="55.406395" uncertainty="20.15547"/>
+                <dv:meanFluxForTargetTable value="13006.835" uncertainty="1.301034"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="640" ccdColumn="689">
+                <dv:meanFluxInTransit value="3429.5542" uncertainty="14.07174"/>
+                <dv:meanFluxOutOfTransit value="3498.9192" uncertainty="8.693061"/>
+                <dv:meanFluxDifference value="69.364944" uncertainty="16.54035"/>
+                <dv:meanFluxForTargetTable value="3526.8958" uncertainty="1.0703804"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="640" ccdColumn="690">
+                <dv:meanFluxInTransit value="2332.548" uncertainty="13.761335"/>
+                <dv:meanFluxOutOfTransit value="2387.6833" uncertainty="8.499937"/>
+                <dv:meanFluxDifference value="55.135227" uncertainty="16.174774"/>
+                <dv:meanFluxForTargetTable value="2417.0898" uncertainty="1.0470651"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="640" ccdColumn="691">
+                <dv:meanFluxInTransit value="1828.7487" uncertainty="13.500438"/>
+                <dv:meanFluxOutOfTransit value="1883.9994" uncertainty="8.339284"/>
+                <dv:meanFluxDifference value="55.25075" uncertainty="15.868381"/>
+                <dv:meanFluxForTargetTable value="1893.3416" uncertainty="1.0272182"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="640" ccdColumn="692">
+                <dv:meanFluxInTransit value="3332.5876" uncertainty="14.093316"/>
+                <dv:meanFluxOutOfTransit value="3378.593" uncertainty="8.7020445"/>
+                <dv:meanFluxDifference value="46.00533" uncertainty="16.563427"/>
+                <dv:meanFluxForTargetTable value="3376.9353" uncertainty="1.0709276"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="641" ccdColumn="682">
+                <dv:meanFluxInTransit value="-123.705055" uncertainty="12.742783"/>
+                <dv:meanFluxOutOfTransit value="-78.76016" uncertainty="7.872218"/>
+                <dv:meanFluxDifference value="44.944897" uncertainty="14.978329"/>
+                <dv:meanFluxForTargetTable value="-87.328384" uncertainty="0.97008973"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="641" ccdColumn="683">
+                <dv:meanFluxInTransit value="-153.5114" uncertainty="12.703079"/>
+                <dv:meanFluxOutOfTransit value="-94.07213" uncertainty="7.8512797"/>
+                <dv:meanFluxDifference value="59.439266" uncertainty="14.933546"/>
+                <dv:meanFluxForTargetTable value="-103.72958" uncertainty="0.9673147"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="641" ccdColumn="684">
+                <dv:meanFluxInTransit value="379.74854" uncertainty="12.953229"/>
+                <dv:meanFluxOutOfTransit value="445.4277" uncertainty="8.004702"/>
+                <dv:meanFluxDifference value="65.67917" uncertainty="15.226995"/>
+                <dv:meanFluxForTargetTable value="456.33893" uncertainty="0.9873725"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="641" ccdColumn="685">
+                <dv:meanFluxInTransit value="3386.0315" uncertainty="14.309327"/>
+                <dv:meanFluxOutOfTransit value="3447.89" uncertainty="8.839937"/>
+                <dv:meanFluxDifference value="61.85839" uncertainty="16.819672"/>
+                <dv:meanFluxForTargetTable value="3427.2783" uncertainty="1.0872947"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="641" ccdColumn="686">
+                <dv:meanFluxInTransit value="9248.221" uncertainty="16.153986"/>
+                <dv:meanFluxOutOfTransit value="9309.954" uncertainty="9.977268"/>
+                <dv:meanFluxDifference value="61.73298" uncertainty="18.986763"/>
+                <dv:meanFluxForTargetTable value="9325.853" uncertainty="1.2241253"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="641" ccdColumn="687">
+                <dv:meanFluxInTransit value="6734.746" uncertainty="15.208183"/>
+                <dv:meanFluxOutOfTransit value="6804.7866" uncertainty="9.39409"/>
+                <dv:meanFluxDifference value="70.04084" uncertainty="17.87562"/>
+                <dv:meanFluxForTargetTable value="6900.7456" uncertainty="1.1567435"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="641" ccdColumn="688">
+                <dv:meanFluxInTransit value="4217.7925" uncertainty="14.30531"/>
+                <dv:meanFluxOutOfTransit value="4283.1606" uncertainty="8.837328"/>
+                <dv:meanFluxDifference value="65.36782" uncertainty="16.814882"/>
+                <dv:meanFluxForTargetTable value="4306.5176" uncertainty="1.0867382"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="641" ccdColumn="689">
+                <dv:meanFluxInTransit value="9302.754" uncertainty="16.116995"/>
+                <dv:meanFluxOutOfTransit value="9367.225" uncertainty="9.954117"/>
+                <dv:meanFluxDifference value="64.4701" uncertainty="18.943125"/>
+                <dv:meanFluxForTargetTable value="9324.134" uncertainty="1.2200515"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="641" ccdColumn="690">
+                <dv:meanFluxInTransit value="12693.809" uncertainty="17.095217"/>
+                <dv:meanFluxOutOfTransit value="12776.997" uncertainty="10.557684"/>
+                <dv:meanFluxDifference value="83.18879" uncertainty="20.092564"/>
+                <dv:meanFluxForTargetTable value="12723.827" uncertainty="1.2930306"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="641" ccdColumn="691">
+                <dv:meanFluxInTransit value="4484.801" uncertainty="14.601652"/>
+                <dv:meanFluxOutOfTransit value="4547.0625" uncertainty="9.018428"/>
+                <dv:meanFluxDifference value="62.26168" uncertainty="17.162176"/>
+                <dv:meanFluxForTargetTable value="4550.738" uncertainty="1.1086367"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="641" ccdColumn="692">
+                <dv:meanFluxInTransit value="3165.5005" uncertainty="14.100114"/>
+                <dv:meanFluxOutOfTransit value="3209.0771" uncertainty="8.705688"/>
+                <dv:meanFluxDifference value="43.576614" uncertainty="16.571125"/>
+                <dv:meanFluxForTargetTable value="3208.3772" uncertainty="1.0711213"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="642" ccdColumn="682">
+                <dv:meanFluxInTransit value="-78.4232" uncertainty="12.69863"/>
+                <dv:meanFluxOutOfTransit value="-15.425876" uncertainty="7.8491454"/>
+                <dv:meanFluxDifference value="62.997322" uncertainty="14.92864"/>
+                <dv:meanFluxForTargetTable value="-1.3830004" uncertainty="0.9677976"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="642" ccdColumn="683">
+                <dv:meanFluxInTransit value="-343.6636" uncertainty="12.530399"/>
+                <dv:meanFluxOutOfTransit value="-288.32498" uncertainty="7.7448726"/>
+                <dv:meanFluxDifference value="55.33862" uncertainty="14.730715"/>
+                <dv:meanFluxForTargetTable value="-281.161" uncertainty="0.95500064"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="642" ccdColumn="684">
+                <dv:meanFluxInTransit value="-31.846695" uncertainty="12.81036"/>
+                <dv:meanFluxOutOfTransit value="24.382185" uncertainty="7.91376"/>
+                <dv:meanFluxDifference value="56.22888" uncertainty="15.057653"/>
+                <dv:meanFluxForTargetTable value="30.50966" uncertainty="0.97567326"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="642" ccdColumn="685">
+                <dv:meanFluxInTransit value="1313.0795" uncertainty="13.49247"/>
+                <dv:meanFluxOutOfTransit value="1372.4753" uncertainty="8.334933"/>
+                <dv:meanFluxDifference value="59.395863" uncertainty="15.859315"/>
+                <dv:meanFluxForTargetTable value="1375.124" uncertainty="1.0263768"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="642" ccdColumn="686">
+                <dv:meanFluxInTransit value="6615.354" uncertainty="15.253757"/>
+                <dv:meanFluxOutOfTransit value="6655.1655" uncertainty="9.416266"/>
+                <dv:meanFluxDifference value="39.811543" uncertainty="17.926048"/>
+                <dv:meanFluxForTargetTable value="6648.404" uncertainty="1.1568016"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="642" ccdColumn="687">
+                <dv:meanFluxInTransit value="12301.029" uncertainty="17.115297"/>
+                <dv:meanFluxOutOfTransit value="12372.33" uncertainty="10.567928"/>
+                <dv:meanFluxDifference value="71.300385" uncertainty="20.115032"/>
+                <dv:meanFluxForTargetTable value="12324.022" uncertainty="1.2945896"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="642" ccdColumn="688">
+                <dv:meanFluxInTransit value="7206.959" uncertainty="15.400538"/>
+                <dv:meanFluxOutOfTransit value="7273.9375" uncertainty="9.510651"/>
+                <dv:meanFluxDifference value="66.97828" uncertainty="18.100527"/>
+                <dv:meanFluxForTargetTable value="7251.505" uncertainty="1.1672152"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="642" ccdColumn="689">
+                <dv:meanFluxInTransit value="12505.338" uncertainty="17.055473"/>
+                <dv:meanFluxOutOfTransit value="12565.975" uncertainty="10.532642"/>
+                <dv:meanFluxDifference value="60.63721" uncertainty="20.045591"/>
+                <dv:meanFluxForTargetTable value="12486.151" uncertainty="1.289843"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="642" ccdColumn="690">
+                <dv:meanFluxInTransit value="12129.434" uncertainty="17.03038"/>
+                <dv:meanFluxOutOfTransit value="12196.858" uncertainty="10.515686"/>
+                <dv:meanFluxDifference value="67.4249" uncertainty="20.015331"/>
+                <dv:meanFluxForTargetTable value="12213.466" uncertainty="1.2900248"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="642" ccdColumn="691">
+                <dv:meanFluxInTransit value="3790.9648" uncertainty="14.234508"/>
+                <dv:meanFluxOutOfTransit value="3864.883" uncertainty="8.796723"/>
+                <dv:meanFluxDifference value="73.91827" uncertainty="16.733307"/>
+                <dv:meanFluxForTargetTable value="3890.0667" uncertainty="1.0819035"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="642" ccdColumn="692">
+                <dv:meanFluxInTransit value="1279.8038" uncertainty="13.341132"/>
+                <dv:meanFluxOutOfTransit value="1337.1478" uncertainty="8.2411785"/>
+                <dv:meanFluxDifference value="57.34406" uncertainty="15.68129"/>
+                <dv:meanFluxForTargetTable value="1354.9144" uncertainty="1.0151938"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="643" ccdColumn="682">
+                <dv:meanFluxInTransit value="527.57306" uncertainty="12.985658"/>
+                <dv:meanFluxOutOfTransit value="592.9539" uncertainty="8.023956"/>
+                <dv:meanFluxDifference value="65.38089" uncertainty="15.264704"/>
+                <dv:meanFluxForTargetTable value="600.8134" uncertainty="0.98941207"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="643" ccdColumn="683">
+                <dv:meanFluxInTransit value="-172.8362" uncertainty="12.709059"/>
+                <dv:meanFluxOutOfTransit value="-127.74035" uncertainty="7.850826"/>
+                <dv:meanFluxDifference value="45.09585" uncertainty="14.938395"/>
+                <dv:meanFluxForTargetTable value="-126.55654" uncertainty="0.96781313"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="643" ccdColumn="684">
+                <dv:meanFluxInTransit value="-173.59013" uncertainty="12.76948"/>
+                <dv:meanFluxOutOfTransit value="-127.995155" uncertainty="7.886384"/>
+                <dv:meanFluxDifference value="45.594986" uncertainty="15.008486"/>
+                <dv:meanFluxForTargetTable value="-134.43893" uncertainty="0.9717938"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="643" ccdColumn="685">
+                <dv:meanFluxInTransit value="599.811" uncertainty="13.250206"/>
+                <dv:meanFluxOutOfTransit value="666.272" uncertainty="8.188865"/>
+                <dv:meanFluxDifference value="66.460976" uncertainty="15.57644"/>
+                <dv:meanFluxForTargetTable value="665.6434" uncertainty="1.009174"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="643" ccdColumn="686">
+                <dv:meanFluxInTransit value="10877.419" uncertainty="16.665667"/>
+                <dv:meanFluxOutOfTransit value="10931.386" uncertainty="10.290423"/>
+                <dv:meanFluxDifference value="53.966488" uncertainty="19.58666"/>
+                <dv:meanFluxForTargetTable value="10837.019" uncertainty="1.2595501"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="643" ccdColumn="687">
+                <dv:meanFluxInTransit value="22676.371" uncertainty="19.979883"/>
+                <dv:meanFluxOutOfTransit value="22727.193" uncertainty="12.331148"/>
+                <dv:meanFluxDifference value="50.822723" uncertainty="23.478777"/>
+                <dv:meanFluxForTargetTable value="22689.344" uncertainty="1.5083493"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="643" ccdColumn="688">
+                <dv:meanFluxInTransit value="10718.24" uncertainty="16.593895"/>
+                <dv:meanFluxOutOfTransit value="10798.52" uncertainty="10.248745"/>
+                <dv:meanFluxDifference value="80.279785" uncertainty="19.503695"/>
+                <dv:meanFluxForTargetTable value="10850.461" uncertainty="1.2581515"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="643" ccdColumn="689">
+                <dv:meanFluxInTransit value="5664.9727" uncertainty="14.948529"/>
+                <dv:meanFluxOutOfTransit value="5705.4688" uncertainty="9.228497"/>
+                <dv:meanFluxDifference value="40.496243" uncertainty="17.567688"/>
+                <dv:meanFluxForTargetTable value="5731.186" uncertainty="1.1348972"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="643" ccdColumn="690">
+                <dv:meanFluxInTransit value="3394.7065" uncertainty="14.09445"/>
+                <dv:meanFluxOutOfTransit value="3444.151" uncertainty="8.703354"/>
+                <dv:meanFluxDifference value="49.44436" uncertainty="16.56508"/>
+                <dv:meanFluxForTargetTable value="3460.838" uncertainty="1.071403"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="643" ccdColumn="691">
+                <dv:meanFluxInTransit value="1512.5522" uncertainty="13.346092"/>
+                <dv:meanFluxOutOfTransit value="1575.0819" uncertainty="8.245592"/>
+                <dv:meanFluxDifference value="62.52969" uncertainty="15.687829"/>
+                <dv:meanFluxForTargetTable value="1592.1515" uncertainty="1.0162019"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="643" ccdColumn="692">
+                <dv:meanFluxInTransit value="117.59303" uncertainty="12.835561"/>
+                <dv:meanFluxOutOfTransit value="176.1751" uncertainty="7.9298515"/>
+                <dv:meanFluxDifference value="58.58206" uncertainty="15.08755"/>
+                <dv:meanFluxForTargetTable value="174.60524" uncertainty="0.9776292"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="644" ccdColumn="682">
+                <dv:meanFluxInTransit value="3085.5486" uncertainty="14.0066"/>
+                <dv:meanFluxOutOfTransit value="3128.8901" uncertainty="8.647947"/>
+                <dv:meanFluxDifference value="43.341354" uncertainty="16.461224"/>
+                <dv:meanFluxForTargetTable value="3134.4338" uncertainty="1.0638013"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="644" ccdColumn="683">
+                <dv:meanFluxInTransit value="163.46773" uncertainty="12.796745"/>
+                <dv:meanFluxOutOfTransit value="220.4037" uncertainty="7.9057684"/>
+                <dv:meanFluxDifference value="56.935966" uncertainty="15.041871"/>
+                <dv:meanFluxForTargetTable value="214.88269" uncertainty="0.9742359"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="644" ccdColumn="684">
+                <dv:meanFluxInTransit value="-291.60202" uncertainty="12.749266"/>
+                <dv:meanFluxOutOfTransit value="-235.30533" uncertainty="7.876202"/>
+                <dv:meanFluxDifference value="56.296703" uncertainty="14.985938"/>
+                <dv:meanFluxForTargetTable value="-242.13498" uncertainty="0.9704416"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="644" ccdColumn="685">
+                <dv:meanFluxInTransit value="-151.24878" uncertainty="12.818645"/>
+                <dv:meanFluxOutOfTransit value="-99.360016" uncertainty="7.9178715"/>
+                <dv:meanFluxDifference value="51.88877" uncertainty="15.066862"/>
+                <dv:meanFluxForTargetTable value="-94.09962" uncertainty="0.97635525"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="644" ccdColumn="686">
+                <dv:meanFluxInTransit value="4134.6406" uncertainty="14.442902"/>
+                <dv:meanFluxOutOfTransit value="4208.006" uncertainty="8.926395"/>
+                <dv:meanFluxDifference value="73.36531" uncertainty="16.97875"/>
+                <dv:meanFluxForTargetTable value="4185.9785" uncertainty="1.0967189"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="644" ccdColumn="687">
+                <dv:meanFluxInTransit value="8929.857" uncertainty="15.99316"/>
+                <dv:meanFluxOutOfTransit value="8996.498" uncertainty="9.880215"/>
+                <dv:meanFluxDifference value="66.6408" uncertainty="18.798931"/>
+                <dv:meanFluxForTargetTable value="9042.802" uncertainty="1.2138898"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="644" ccdColumn="688">
+                <dv:meanFluxInTransit value="8924.626" uncertainty="15.928166"/>
+                <dv:meanFluxOutOfTransit value="9005.11" uncertainty="9.841699"/>
+                <dv:meanFluxDifference value="80.48443" uncertainty="18.723394"/>
+                <dv:meanFluxForTargetTable value="8992.855" uncertainty="1.2077055"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="644" ccdColumn="689">
+                <dv:meanFluxInTransit value="3286.3428" uncertainty="14.051508"/>
+                <dv:meanFluxOutOfTransit value="3379.5613" uncertainty="8.686182"/>
+                <dv:meanFluxDifference value="93.218544" uncertainty="16.519524"/>
+                <dv:meanFluxForTargetTable value="3407.249" uncertainty="1.0693643"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="644" ccdColumn="690">
+                <dv:meanFluxInTransit value="931.455" uncertainty="13.091497"/>
+                <dv:meanFluxOutOfTransit value="981.1517" uncertainty="8.086017"/>
+                <dv:meanFluxDifference value="49.6966" uncertainty="15.387364"/>
+                <dv:meanFluxForTargetTable value="981.0566" uncertainty="0.996305"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="644" ccdColumn="691">
+                <dv:meanFluxInTransit value="95.02848" uncertainty="12.943971"/>
+                <dv:meanFluxOutOfTransit value="162.04317" uncertainty="7.9991975"/>
+                <dv:meanFluxDifference value="67.014694" uncertainty="15.216226"/>
+                <dv:meanFluxForTargetTable value="150.45639" uncertainty="0.98556876"/>
+            </dv:differenceImagePixelData>
+            <dv:differenceImagePixelData ccdRow="644" ccdColumn="692">
+                <dv:meanFluxInTransit value="-195.05336" uncertainty="12.828333"/>
+                <dv:meanFluxOutOfTransit value="-125.207054" uncertainty="7.9297915"/>
+                <dv:meanFluxDifference value="69.846306" uncertainty="15.081369"/>
+                <dv:meanFluxForTargetTable value="-139.0417" uncertainty="0.9768139"/>
+            </dv:differenceImagePixelData>
+            <dv:qualityMetric attempted="true" valid="true" value="0.121023975"/>
+            <dv:ticCentroidOffsets>
+                <dv:rowOffset value="1.5625421" uncertainty="0.0973856"/>
+                <dv:columnOffset value="0.6200209" uncertainty="0.10724642"/>
+                <dv:focalPlaneOffset value="1.6810603" uncertainty="0.100218154"/>
+                <dv:raOffset value="2.8953798" uncertainty="1.5751108"/>
+                <dv:decOffset value="33.05986" uncertainty="2.029524"/>
+                <dv:skyOffset value="33.186405" uncertainty="2.0356424"/>
+            </dv:ticCentroidOffsets>
+            <dv:ticReferenceCentroid>
+                <dv:row value="638.67236" uncertainty="1.1583495E-4"/>
+                <dv:column value="686.3694" uncertainty="1.1987526E-4"/>
+                <dv:raDegrees value="317.5792968281422" uncertainty="0.0"/>
+                <dv:decDegrees value="-43.76778534326027" uncertainty="0.0"/>
+            </dv:ticReferenceCentroid>
+        </dv:differenceImageResults>
+        <dv:evenTransitsFit type="EVEN" fullConvergence="true" limbDarkeningModelName="claret_tess_nonlinear_limb_darkening_model" modelChiSquare="494.65964" modelDegreesOfFreedom="621.6838" modelFitSnr="9.841792" planetNumber="1" transitModelName="mandel-agol_geometric_transit_model">
+            <dv:modelParameterCovariance>4.583925E-6 0.0 0.0 -4.1627072E-4 0.0 -0.0034679526 0.0 -8.8356435E-5 -9.848358E-5 -0.008261525 0.0 -4.2475995E-6 0.017317096 0.0053891307 0.0 0.0 0.008007688 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 -4.1627072E-4 0.0 0.0 29.564238 0.25496525 104.02808 3.6978803 2.6116529 2.9550402 359.1455 0.0 0.128525 -518.79614 -161.65404 484.47412 160.93399 -239.89923 0.0 0.0 0.0 0.25496525 0.024215959 0.0 0.055563252 0.0 0.0 0.0 0.0 0.0 0.0 0.0 -70.18958 -23.315775 0.0 -0.0034679526 0.0 0.0 104.02808 0.0 862.17 0.0 21.681189 24.484362 2605.2688 0.0 1.0614958 -4300.4263 -1339.7697 0.0 0.0 -1988.5825 0.0 0.0 0.0 3.6978803 0.055563252 0.0 0.80585986 0.0 0.0 0.0 0.0 0.0 0.0 0.0 105.578926 35.07151 0.0 -8.8356435E-5 0.0 0.0 2.6116529 0.0 21.681189 0.0 0.5583524 0.6161557 61.05178 0.0 0.026649136 -108.35667 -33.69264 0.0 0.0 -50.105774 -9.848358E-5 0.0 0.0 2.9550402 0.0 24.484362 0.0 0.6161557 0.6953558 74.80038 0.0 0.03015304 -122.1326 -38.047527 0.0 0.0 -56.47597 -0.008261525 0.0 0.0 359.1455 0.0 2605.2688 0.0 61.05178 74.80038 53727.23 0.0 3.6646976 -12906.316 -4047.9836 0.0 0.0 -5968.077 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 -4.2475995E-6 0.0 0.0 0.128525 0.0 1.0614958 0.0 0.026649136 0.03015304 3.6646976 0.0 0.0013114607 -5.293762 -1.6495074 0.0 0.0 -2.447916 0.017317096 0.0 0.0 -518.79614 0.0 -4300.4263 0.0 -108.35667 -122.1326 -12906.316 0.0 -5.293762 21453.594 6682.6685 0.0 0.0 9920.469 0.0053891307 0.0 0.0 -161.65404 0.0 -1339.7697 0.0 -33.69264 -38.047527 -4047.9836 0.0 -1.6495074 6682.6685 2081.936 0.0 0.0 3090.1677 0.0 0.0 0.0 484.47412 -70.18958 0.0 105.578926 0.0 0.0 0.0 0.0 0.0 0.0 0.0 308863.06 102599.016 0.0 0.0 0.0 0.0 160.93399 -23.315775 0.0 35.07151 0.0 0.0 0.0 0.0 0.0 0.0 0.0 102599.016 34081.633 0.0 0.008007688 0.0 0.0 -239.89923 0.0 -1988.5825 0.0 -50.105774 -56.47597 -5968.077 0.0 -2.447916 9920.469 3090.1677 0.0 0.0 4587.3755</dv:modelParameterCovariance>
+            <dv:modelParameters>
+                <dv:modelParameter fitted="true" name="transitEpochBtjd" uncertainty="0.0021410102" value="1345.04935582069"/>
+                <dv:modelParameter fitted="false" name="eccentricity" uncertainty="0.0" value="0.0"/>
+                <dv:modelParameter fitted="false" name="longitudeOfPeriDegrees" uncertainty="0.0" value="0.0"/>
+                <dv:modelParameter fitted="false" name="planetRadiusEarthRadii" uncertainty="5.4373007" value="4.119296935368363"/>
+                <dv:modelParameter fitted="false" name="semiMajorAxisAu" uncertainty="0.15561478" value="0.09284299771727832"/>
+                <dv:modelParameter fitted="true" name="minImpactParameter" uncertainty="29.362732" value="0.13190978487666266"/>
+                <dv:modelParameter fitted="false" name="starRadiusSolarRadii" uncertainty="0.897697" value="0.8976969718933105"/>
+                <dv:modelParameter fitted="false" name="transitDurationHours" uncertainty="0.7472298" value="2.3316074669943583"/>
+                <dv:modelParameter fitted="false" name="transitIngressTimeHours" uncertainty="0.83387995" value="0.09567269434197914"/>
+                <dv:modelParameter fitted="false" name="transitDepthPpm" uncertainty="231.79135" value="2119.34218133324"/>
+                <dv:modelParameter fitted="false" name="orbitalPeriodDays" uncertainty="0.0" value="11.076465149790057"/>
+                <dv:modelParameter fitted="true" name="ratioPlanetRadiusToStarRadius" uncertainty="0.036214095" value="0.04203303862306136"/>
+                <dv:modelParameter fitted="true" name="ratioSemiMajorAxisToStarRadius" uncertainty="146.47046" value="37.51788407337431"/>
+                <dv:modelParameter fitted="false" name="inclinationDegrees" uncertainty="45.628235" value="89.7985523515519"/>
+                <dv:modelParameter fitted="false" name="equilibriumTempKelvin" uncertainty="555.7545" value="705.6652611975845"/>
+                <dv:modelParameter fitted="false" name="effectiveStellarFlux" uncertainty="184.61212" value="58.60247455959669"/>
+                <dv:modelParameter fitted="false" name="starDensitySolarDensity" uncertainty="67.73017" value="5.782946919165336"/>
+            </dv:modelParameters>
+        </dv:evenTransitsFit>
+        <dv:ghostDiagnosticResults>
+            <dv:coreApertureCorrelationStatistic value="0.8480307" significance="0.8017896"/>
+            <dv:haloApertureCorrelationStatistic value="5.9135575" significance="1.0"/>
+        </dv:ghostDiagnosticResults>
+        <dv:oddTransitsFit type="ODD" fullConvergence="true" limbDarkeningModelName="claret_tess_nonlinear_limb_darkening_model" modelChiSquare="494.65964" modelDegreesOfFreedom="621.6838" modelFitSnr="3.862991" planetNumber="1" transitModelName="mandel-agol_geometric_transit_model">
+            <dv:modelParameterCovariance>2.1161137E-5 0.0 0.0 8.117721E-4 0.0 0.0018098359 0.0 1.8912663E-4 2.2258802E-4 0.009311749 0.0 8.283269E-6 -0.049602225 -0.0038061754 0.0 0.0 -0.023189064 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 8.117721E-4 0.0 0.0 40.268616 0.17370248 72.52191 2.5192883 7.562709 8.915191 284.68445 0.0 0.3305339 -1987.3784 -152.51227 330.06207 109.64096 -929.10034 0.0 0.0 0.0 0.17370248 0.024215959 0.0 0.055563252 0.0 0.0 0.0 0.0 0.0 0.0 0.0 -70.18958 -23.315775 0.0 0.0018098359 0.0 0.0 72.52191 0.0 163.00565 0.0 17.033918 20.032358 453.17474 0.0 0.74000883 -4467.8003 -342.8154 0.0 0.0 -2088.6987 0.0 0.0 0.0 2.5192883 0.055563252 0.0 0.80585986 0.0 0.0 0.0 0.0 0.0 0.0 0.0 105.578926 35.07151 0.0 1.8912663E-4 0.0 0.0 7.562709 0.0 17.033918 0.0 1.8360406 2.0950959 37.10536 0.0 0.07716939 -467.95584 -35.846767 0.0 0.0 -218.76959 2.2258802E-4 0.0 0.0 8.915191 0.0 20.032358 0.0 2.0950959 2.4619865 57.457916 0.0 0.09097003 -549.09595 -42.130512 0.0 0.0 -256.70264 0.009311749 0.0 0.0 284.68445 0.0 453.17474 0.0 37.10536 57.457916 55385.684 0.0 2.9049015 -12183.398 -948.00323 0.0 0.0 -5695.7446 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 8.283269E-6 0.0 0.0 0.3305339 0.0 0.74000883 0.0 0.07716939 0.09097003 2.9049015 0.0 0.0033727463 -20.27908 -1.5562252 0.0 0.0 -9.48048 -0.049602225 0.0 0.0 -1987.3784 0.0 -4467.8003 0.0 -467.95584 -549.09595 -12183.398 0.0 -20.27908 122478.03 9396.623 0.0 0.0 57258.54 -0.0038061754 0.0 0.0 -152.51227 0.0 -342.8154 0.0 -35.846767 -42.130512 -948.00323 0.0 -1.5562252 9396.623 720.9808 0.0 0.0 4392.926 0.0 0.0 0.0 330.06207 -70.18958 0.0 105.578926 0.0 0.0 0.0 0.0 0.0 0.0 0.0 308863.06 102599.016 0.0 0.0 0.0 0.0 109.64096 -23.315775 0.0 35.07151 0.0 0.0 0.0 0.0 0.0 0.0 0.0 102599.016 34081.633 0.0 -0.023189064 0.0 0.0 -929.10034 0.0 -2088.6987 0.0 -218.76959 -256.70264 -5695.7446 0.0 -9.48048 57258.54 4392.926 0.0 0.0 26768.395</dv:modelParameterCovariance>
+            <dv:modelParameters>
+                <dv:modelParameter fitted="true" name="transitEpochBtjd" uncertainty="0.0046001235" value="1333.9715625330846"/>
+                <dv:modelParameter fitted="false" name="eccentricity" uncertainty="0.0" value="0.0"/>
+                <dv:modelParameter fitted="false" name="longitudeOfPeriDegrees" uncertainty="0.0" value="0.0"/>
+                <dv:modelParameter fitted="false" name="planetRadiusEarthRadii" uncertainty="6.3457556" value="2.806390673400141"/>
+                <dv:modelParameter fitted="false" name="semiMajorAxisAu" uncertainty="0.15561478" value="0.09284299771727832"/>
+                <dv:modelParameter fitted="true" name="minImpactParameter" uncertainty="12.767366" value="0.5292539894865674"/>
+                <dv:modelParameter fitted="false" name="starRadiusSolarRadii" uncertainty="0.897697" value="0.8976969718933105"/>
+                <dv:modelParameter fitted="false" name="transitDurationHours" uncertainty="1.3550057" value="1.97886674408468"/>
+                <dv:modelParameter fitted="false" name="transitIngressTimeHours" uncertainty="1.5690719" value="0.07574971452043948"/>
+                <dv:modelParameter fitted="false" name="transitDepthPpm" uncertainty="235.34163" value="919.1302937364295"/>
+                <dv:modelParameter fitted="false" name="orbitalPeriodDays" uncertainty="0.0" value="11.076465149790057"/>
+                <dv:modelParameter fitted="true" name="ratioPlanetRadiusToStarRadius" uncertainty="0.05807535" value="0.028636228321782496"/>
+                <dv:modelParameter fitted="true" name="ratioSemiMajorAxisToStarRadius" uncertainty="349.9686" value="37.72361540931633"/>
+                <dv:modelParameter fitted="false" name="inclinationDegrees" uncertainty="26.851086" value="89.19612649926692"/>
+                <dv:modelParameter fitted="false" name="equilibriumTempKelvin" uncertainty="555.7545" value="705.6652611975845"/>
+                <dv:modelParameter fitted="false" name="effectiveStellarFlux" uncertainty="184.61212" value="58.60247455959669"/>
+                <dv:modelParameter fitted="false" name="starDensitySolarDensity" uncertainty="163.61049" value="5.87860284301354"/>
+            </dv:modelParameters>
+        </dv:oddTransitsFit>
+        <dv:planetCandidate expectedTransitCount="2" modelChiSquare2="10.556431" modelChiSquareDof2="1" modelChiSquareGof="76.95215" modelChiSquareGofDof="132" observedTransitCount="2" planetNumber="1" suspectedEclipsingBinary="false" chiSquare2="16.656008" chiSquareDof2="9.067292" chiSquareGof="109.85072" chiSquareGofDof="118.0" epochTjd="1333.9658750812741" maxMultipleEventSigma="9.647419" maxSesInMes="9.702639" maxSingleEventSigma="9.702639" orbitalPeriodInDays="11.074996" robustStatistic="9.751309" thresholdForDesiredPfa="-1.0" trialTransitPulseDurationInHours="2.0">
+            <dv:weakSecondary maxMes="2.5694788" maxMesPhaseInDays="2.526388" minMes="-2.3192616" mesMad="0.6317624" minMesPhaseInDays="8.2430525" medianMes="-0.004676526" nValidPhases="7407" robustStatistic="1.878371">
+                <dv:depthPpm value="345.5958" uncertainty="128.15582"/>
+            </dv:weakSecondary>
+        </dv:planetCandidate>
+        <dv:reducedParameterFits>
+            <dv:reducedParameterFit type="REDUCED_PARAMETER" fullConvergence="true" limbDarkeningModelName="claret_tess_nonlinear_limb_darkening_model" modelChiSquare="621.7493" modelDegreesOfFreedom="642.0" modelFitSnr="9.389602" planetNumber="1" transitModelName="mandel-agol_geometric_transit_model">
+                <dv:modelParameterCovariance>8.027418E-6 0.0 0.0 4.0376453E-6 0.0 -7.968967E-6 0.0 7.9821507E-7 -3.834842E-9 0.0039633703 0.0 4.1199872E-8 1.700441E-5 1.1314613E-5 0.0 0.0 9.191052E-6 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 4.0376453E-6 0.0 0.0 11.876075 0.21300955 -3.059001E-6 3.0891848 -0.0034861406 5.829119E-4 29.112898 0.0 3.4680817E-4 0.079508245 2.8114644E-4 404.71387 134.42644 0.042974997 0.0 0.0 0.0 0.21300955 0.024218976 0.0 0.055566713 0.0 0.0 0.0 0.0 0.0 0.0 0.0 -70.191765 -23.314323 0.0 -7.968967E-6 0.0 0.0 -3.059001E-6 0.0 1.626608E-5 0.0 -5.749284E-6 -2.6271106E-8 -0.0036519573 0.0 -3.1213848E-8 4.51196E-5 -2.2817198E-5 0.0 0.0 2.4387595E-5 0.0 0.0 0.0 3.0891848 0.055566713 0.0 0.80585986 0.0 0.0 0.0 0.0 0.0 0.0 0.0 105.57564 35.06714 0.0 7.9821507E-7 0.0 0.0 -0.0034861406 0.0 -5.749284E-6 0.0 0.011445934 3.2016737E-4 -2.982001 0.0 -3.5572353E-5 -0.21734926 -7.4863015E-4 0.0 0.0 -0.11747944 -3.834842E-9 0.0 0.0 5.829119E-4 0.0 -2.6271106E-8 0.0 3.2016737E-4 2.3020422E-5 0.49943256 0.0 5.947995E-6 -0.00580558 -2.017633E-5 0.0 0.0 -0.0031379738 0.0039633703 0.0 0.0 29.112898 0.0 -0.0036519573 0.0 -2.982001 0.49943256 24937.355 0.0 0.29706612 68.03056 0.24202178 0.0 0.0 36.7712 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 4.1199872E-8 0.0 0.0 3.4680817E-4 0.0 -3.1213848E-8 0.0 -3.5572353E-5 5.947995E-6 0.29706612 0.0 3.5388082E-6 8.11297E-4 2.8688E-6 0.0 0.0 4.385141E-4 1.700441E-5 0.0 0.0 0.079508245 0.0 4.51196E-5 0.0 -0.21734926 -0.00580558 68.03056 0.0 8.11297E-4 4.132908 0.014325924 0.0 0.0 2.2338781 1.1314613E-5 0.0 0.0 2.8114644E-4 0.0 -2.2817198E-5 0.0 -7.4863015E-4 -2.017633E-5 0.24202178 0.0 2.8688E-6 0.014325924 8.210606E-5 0.0 0.0 0.007743305 0.0 0.0 0.0 404.71387 -70.191765 0.0 105.57564 0.0 0.0 0.0 0.0 0.0 0.0 0.0 308843.8 102583.04 0.0 0.0 0.0 0.0 134.42644 -23.314323 0.0 35.06714 0.0 0.0 0.0 0.0 0.0 0.0 0.0 102583.04 34073.14 0.0 9.191052E-6 0.0 0.0 0.042974997 0.0 2.4387595E-5 0.0 -0.11747944 -0.0031379738 36.7712 0.0 4.385141E-4 2.2338781 0.007743305 0.0 0.0 1.2074333</dv:modelParameterCovariance>
+                <dv:modelParameters>
+                    <dv:modelParameter fitted="true" name="transitEpochBtjd" uncertainty="0.0028332698" value="1333.9690584880632"/>
+                    <dv:modelParameter fitted="false" name="eccentricity" uncertainty="0.0" value="0.0"/>
+                    <dv:modelParameter fitted="false" name="longitudeOfPeriDegrees" uncertainty="0.0" value="0.0"/>
+                    <dv:modelParameter fitted="false" name="planetRadiusEarthRadii" uncertainty="3.4461682" value="3.4412333413112064"/>
+                    <dv:modelParameter fitted="false" name="semiMajorAxisAu" uncertainty="0.15562448" value="0.09284878118425416"/>
+                    <dv:modelParameter fitted="false" name="minImpactParameter" uncertainty="0.0040331227" value="0.10000000149011612"/>
+                    <dv:modelParameter fitted="false" name="starRadiusSolarRadii" uncertainty="0.897697" value="0.8976969718933105"/>
+                    <dv:modelParameter fitted="false" name="transitDurationHours" uncertainty="0.10698567" value="2.1495052548323486"/>
+                    <dv:modelParameter fitted="false" name="transitIngressTimeHours" uncertainty="0.00479796" value="0.07364400811062972"/>
+                    <dv:modelParameter fitted="false" name="transitDepthPpm" uncertainty="157.91566" value="1481.4983905228466"/>
+                    <dv:modelParameter fitted="true" name="orbitalPeriodDays" uncertainty="0.0" value="11.077500144936629"/>
+                    <dv:modelParameter fitted="true" name="ratioPlanetRadiusToStarRadius" uncertainty="0.0018811721" value="0.03511412170954986"/>
+                    <dv:modelParameter fitted="true" name="ratioSemiMajorAxisToStarRadius" uncertainty="2.0329554" value="40.56623595896195"/>
+                    <dv:modelParameter fitted="false" name="inclinationDegrees" uncertainty="0.00906124" value="89.85875978620851"/>
+                    <dv:modelParameter fitted="false" name="equilibriumTempKelvin" uncertainty="555.7372" value="705.6432832284744"/>
+                    <dv:modelParameter fitted="false" name="effectiveStellarFlux" uncertainty="184.58911" value="58.5951741962249"/>
+                    <dv:modelParameter fitted="false" name="starDensitySolarDensity" uncertainty="1.0988327" value="7.308818446434861"/>
+                </dv:modelParameters>
+            </dv:reducedParameterFit>
+            <dv:reducedParameterFit type="REDUCED_PARAMETER" fullConvergence="true" limbDarkeningModelName="claret_tess_nonlinear_limb_darkening_model" modelChiSquare="621.35974" modelDegreesOfFreedom="642.0" modelFitSnr="9.333864" planetNumber="1" transitModelName="mandel-agol_geometric_transit_model">
+                <dv:modelParameterCovariance>8.192478E-6 0.0 0.0 4.00225E-6 0.0 -8.165134E-6 0.0 4.1227286E-6 -1.69942E-7 0.0050949943 0.0 4.08387E-8 2.341486E-5 1.2085575E-5 0.0 0.0 1.2029682E-5 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 4.00225E-6 0.0 0.0 12.103161 0.21505171 -3.750324E-6 3.1186483 -0.0032496094 6.296805E-4 28.95582 0.0 3.4800306E-4 0.07514349 8.310821E-4 408.56387 135.69525 0.038605925 0.0 0.0 0.0 0.21505171 0.024221353 0.0 0.05556944 0.0 0.0 0.0 0.0 0.0 0.0 0.0 -70.19349 -23.313179 0.0 -8.165134E-6 0.0 0.0 -3.750324E-6 0.0 1.669844E-5 0.0 -9.729111E-6 3.9661046E-7 -0.0066550174 0.0 -3.8268062E-8 -2.1802505E-5 -2.4429504E-5 0.0 0.0 -1.1201314E-5 0.0 0.0 0.0 3.1186483 0.05556944 0.0 0.80585986 0.0 0.0 0.0 0.0 0.0 0.0 0.0 105.57305 35.0637 0.0 4.1227286E-6 0.0 0.0 -0.0032496094 0.0 -9.729111E-6 0.0 0.010418134 3.1876602E-4 -2.7533038 0.0 -3.31588E-5 -0.19550717 -0.0021340675 0.0 0.0 -0.100444295 -1.69942E-7 0.0 0.0 6.296805E-4 0.0 3.9661046E-7 0.0 3.1876602E-4 2.586075E-5 0.53465277 0.0 6.4252195E-6 -0.005680147 -6.298593E-5 0.0 0.0 -0.0029182476 0.0050949943 0.0 0.0 28.95582 0.0 -0.0066550174 0.0 -2.7533038 0.53465277 24584.94 0.0 0.29546332 63.734413 0.7099312 0.0 0.0 32.744366 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 4.08387E-8 0.0 0.0 3.4800306E-4 0.0 -3.8268062E-8 0.0 -3.31588E-5 6.4252195E-6 0.29546332 0.0 3.5510006E-6 7.6675933E-4 8.480309E-6 0.0 0.0 3.9393234E-4 2.341486E-5 0.0 0.0 0.07514349 0.0 -2.1802505E-5 0.0 -0.19550717 -0.005680147 63.734413 0.0 7.6675933E-4 3.6773891 0.040437397 0.0 0.0 1.8893054 1.2085575E-5 0.0 0.0 8.310821E-4 0.0 -2.4429504E-5 0.0 -0.0021340675 -6.298593E-5 0.7099312 0.0 8.480309E-6 0.040437397 4.797008E-4 0.0 0.0 0.020775225 0.0 0.0 0.0 408.56387 -70.19349 0.0 105.57305 0.0 0.0 0.0 0.0 0.0 0.0 0.0 308828.7 102570.46 0.0 0.0 0.0 0.0 135.69525 -23.313179 0.0 35.0637 0.0 0.0 0.0 0.0 0.0 0.0 0.0 102570.46 34066.457 0.0 1.2029682E-5 0.0 0.0 0.038605925 0.0 -1.1201314E-5 0.0 -0.100444295 -0.0029182476 32.744366 0.0 3.9393234E-4 1.8893054 0.020775225 0.0 0.0 0.9706546</dv:modelParameterCovariance>
+                <dv:modelParameters>
+                    <dv:modelParameter fitted="true" name="transitEpochBtjd" uncertainty="0.0028622504" value="1333.9691992059422"/>
+                    <dv:modelParameter fitted="false" name="eccentricity" uncertainty="0.0" value="0.0"/>
+                    <dv:modelParameter fitted="false" name="longitudeOfPeriDegrees" uncertainty="0.0" value="0.0"/>
+                    <dv:modelParameter fitted="false" name="planetRadiusEarthRadii" uncertainty="3.4789598" value="3.4740547215937125"/>
+                    <dv:modelParameter fitted="false" name="semiMajorAxisAu" uncertainty="0.15563211" value="0.09285333493977825"/>
+                    <dv:modelParameter fitted="false" name="minImpactParameter" uncertainty="0.0040863724" value="0.30000001192092896"/>
+                    <dv:modelParameter fitted="false" name="starRadiusSolarRadii" uncertainty="0.897697" value="0.8976969718933105"/>
+                    <dv:modelParameter fitted="false" name="transitDurationHours" uncertainty="0.10206926" value="2.1208350590429927"/>
+                    <dv:modelParameter fitted="false" name="transitIngressTimeHours" uncertainty="0.0050853468" value="0.07954469982094395"/>
+                    <dv:modelParameter fitted="false" name="transitDepthPpm" uncertainty="156.79585" value="1482.457778525908"/>
+                    <dv:modelParameter fitted="true" name="orbitalPeriodDays" uncertainty="0.0" value="11.078315096603262"/>
+                    <dv:modelParameter fitted="true" name="ratioPlanetRadiusToStarRadius" uncertainty="0.0018844099" value="0.03544902894413926"/>
+                    <dv:modelParameter fitted="true" name="ratioSemiMajorAxisToStarRadius" uncertainty="1.917652" value="39.55269522499846"/>
+                    <dv:modelParameter fitted="false" name="inclinationDegrees" uncertainty="0.021902073" value="89.56541774831702"/>
+                    <dv:modelParameter fitted="false" name="equilibriumTempKelvin" uncertainty="555.7236" value="705.6259797767489"/>
+                    <dv:modelParameter fitted="false" name="effectiveStellarFlux" uncertainty="184.57101" value="58.589427034738414"/>
+                    <dv:modelParameter fitted="false" name="starDensitySolarDensity" uncertainty="0.98521805" value="6.773566312941421"/>
+                </dv:modelParameters>
+            </dv:reducedParameterFit>
+            <dv:reducedParameterFit type="REDUCED_PARAMETER" fullConvergence="true" limbDarkeningModelName="claret_tess_nonlinear_limb_darkening_model" modelChiSquare="621.00586" modelDegreesOfFreedom="642.0" modelFitSnr="9.368069" planetNumber="1" transitModelName="mandel-agol_geometric_transit_model">
+                <dv:modelParameterCovariance>8.188342E-6 0.0 0.0 3.6806541E-6 0.0 -8.166894E-6 0.0 1.1313327E-5 -4.0680027E-7 0.006539138 0.0 3.7557154E-8 -1.0940425E-5 1.2749633E-5 0.0 0.0 -4.6637415E-6 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 3.6806541E-6 0.0 0.0 12.72791 0.2205017 -2.4317226E-6 3.1980395 -0.0035630586 8.01398E-4 30.502338 0.0 3.72957E-4 0.0771014 0.0017062303 418.98798 139.18062 0.032867186 0.0 0.0 0.0 0.2205017 0.024215959 0.0 0.055563252 0.0 0.0 0.0 0.0 0.0 0.0 0.0 -70.18958 -23.315775 0.0 -8.166894E-6 0.0 0.0 -2.4317226E-6 0.0 1.6535172E-5 0.0 -2.6086323E-5 8.0919745E-7 -0.009051005 0.0 -2.4813138E-8 7.8170626E-5 -2.4576757E-5 0.0 0.0 3.332298E-5 0.0 0.0 0.0 3.1980395 0.055563252 0.0 0.80585986 0.0 0.0 0.0 0.0 0.0 0.0 0.0 105.578926 35.07151 0.0 1.1313327E-5 0.0 0.0 -0.0035630586 0.0 -2.6086323E-5 0.0 0.011849882 4.508951E-4 -2.9581654 0.0 -3.6357218E-5 -0.20113826 -0.004399541 0.0 0.0 -0.08574226 -4.0680027E-7 0.0 0.0 8.01398E-4 0.0 8.0919745E-7 0.0 4.508951E-4 4.2162555E-5 0.66861594 0.0 8.177413E-6 -0.007259718 -1.6157833E-4 0.0 0.0 -0.0030947102 0.006539138 0.0 0.0 30.502338 0.0 -0.009051005 0.0 -2.9581654 0.66861594 25458.104 0.0 0.31124386 64.23824 1.4327474 0.0 0.0 27.383812 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 3.7557154E-8 0.0 0.0 3.72957E-4 0.0 -2.4813138E-8 0.0 -3.6357218E-5 8.177413E-6 0.31124386 0.0 3.8056291E-6 7.867377E-4 1.7410264E-5 0.0 0.0 3.353746E-4 -1.0940425E-5 0.0 0.0 0.0771014 0.0 7.8170626E-5 0.0 -0.20113826 -0.007259718 64.23824 0.0 7.867377E-4 3.4297385 0.07560264 0.0 0.0 1.4620467 1.2749633E-5 0.0 0.0 0.0017062303 0.0 -2.4576757E-5 0.0 -0.004399541 -1.6157833E-4 1.4327474 0.0 1.7410264E-5 0.07560264 0.001708365 0.0 0.0 0.032228287 0.0 0.0 0.0 418.98798 -70.18958 0.0 105.578926 0.0 0.0 0.0 0.0 0.0 0.0 0.0 308863.06 102599.016 0.0 0.0 0.0 0.0 139.18062 -23.315775 0.0 35.07151 0.0 0.0 0.0 0.0 0.0 0.0 0.0 102599.016 34081.633 0.0 -4.6637415E-6 0.0 0.0 0.032867186 0.0 3.332298E-5 0.0 -0.08574226 -0.0030947102 27.383812 0.0 3.353746E-4 1.4620467 0.032228287 0.0 0.0 0.6232489</dv:modelParameterCovariance>
+                <dv:modelParameters>
+                    <dv:modelParameter fitted="true" name="transitEpochBtjd" uncertainty="0.002861528" value="1333.9695863240684"/>
+                    <dv:modelParameter fitted="false" name="eccentricity" uncertainty="0.0" value="0.0"/>
+                    <dv:modelParameter fitted="false" name="longitudeOfPeriDegrees" uncertainty="0.0" value="0.0"/>
+                    <dv:modelParameter fitted="false" name="planetRadiusEarthRadii" uncertainty="3.5676196" value="3.5624934333097285"/>
+                    <dv:modelParameter fitted="false" name="semiMajorAxisAu" uncertainty="0.15561478" value="0.09284299771727832"/>
+                    <dv:modelParameter fitted="false" name="minImpactParameter" uncertainty="0.004066346" value="0.5"/>
+                    <dv:modelParameter fitted="false" name="starRadiusSolarRadii" uncertainty="0.897697" value="0.8976969718933105"/>
+                    <dv:modelParameter fitted="false" name="transitDurationHours" uncertainty="0.10885716" value="2.1327895558573675"/>
+                    <dv:modelParameter fitted="false" name="transitIngressTimeHours" uncertainty="0.00649327" value="0.09866806100530383"/>
+                    <dv:modelParameter fitted="false" name="transitDepthPpm" uncertainty="159.55595" value="1494.3585930874817"/>
+                    <dv:modelParameter fitted="true" name="orbitalPeriodDays" uncertainty="0.0" value="11.076465149790057"/>
+                    <dv:modelParameter fitted="true" name="ratioPlanetRadiusToStarRadius" uncertainty="0.0019508022" value="0.03635145181961004"/>
+                    <dv:modelParameter fitted="true" name="ratioSemiMajorAxisToStarRadius" uncertainty="1.8519553" value="36.02237902679464"/>
+                    <dv:modelParameter fitted="false" name="inclinationDegrees" uncertainty="0.04133237" value="89.20469412343628"/>
+                    <dv:modelParameter fitted="false" name="equilibriumTempKelvin" uncertainty="555.7545" value="705.6652611975845"/>
+                    <dv:modelParameter fitted="false" name="effectiveStellarFlux" uncertainty="184.61212" value="58.60247455959669"/>
+                    <dv:modelParameter fitted="false" name="starDensitySolarDensity" uncertainty="0.78946114" value="5.118602084865452"/>
+                </dv:modelParameters>
+            </dv:reducedParameterFit>
+            <dv:reducedParameterFit type="REDUCED_PARAMETER" fullConvergence="true" limbDarkeningModelName="claret_tess_nonlinear_limb_darkening_model" modelChiSquare="621.27844" modelDegreesOfFreedom="642.0" modelFitSnr="9.345837" planetNumber="1" transitModelName="mandel-agol_geometric_transit_model">
+                <dv:modelParameterCovariance>8.991058E-6 0.0 0.0 3.7679877E-6 0.0 -9.010739E-6 0.0 2.4772418E-5 -1.6831799E-6 0.010626154 0.0 3.8448302E-8 -1.1992436E-5 1.7023534E-5 0.0 0.0 -3.398463E-6 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 3.7679877E-6 0.0 0.0 13.706502 0.22883472 -3.1915442E-6 3.3186457 -0.0037813843 0.001275716 31.724503 0.0 4.0657612E-4 0.07148257 0.0033299583 434.77264 144.40762 0.020257007 0.0 0.0 0.0 0.22883472 0.024219627 0.0 0.05556746 0.0 0.0 0.0 0.0 0.0 0.0 0.0 -70.19224 -23.31401 0.0 -9.010739E-6 0.0 0.0 -3.1915442E-6 0.0 1.852909E-5 0.0 -5.2448726E-5 3.5328885E-6 -0.01822356 0.0 -3.2566312E-8 4.7124435E-5 -3.3961565E-5 0.0 0.0 1.3354304E-5 0.0 0.0 0.0 3.3186457 0.05556746 0.0 0.80585986 0.0 0.0 0.0 0.0 0.0 0.0 0.0 105.574936 35.0662 0.0 2.4772418E-5 0.0 0.0 -0.0037813843 0.0 -5.2448726E-5 0.0 0.0140137095 8.0151623E-4 -2.9616067 0.0 -3.8585E-5 -0.18644992 -0.008567044 0.0 0.0 -0.0528369 -1.6831799E-6 0.0 0.0 0.001275716 0.0 3.5328885E-6 0.0 8.0151623E-4 1.060069E-4 1.0129539 0.0 1.3017323E-5 -0.010102334 -4.7662223E-4 0.0 0.0 -0.0028628386 0.010626154 0.0 0.0 31.724503 0.0 -0.01822356 0.0 -2.9616067 1.0129539 25272.234 0.0 0.32371476 56.810036 2.6770577 0.0 0.0 16.099047 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 3.8448302E-8 0.0 0.0 4.0657612E-4 0.0 -3.2566312E-8 0.0 -3.8585E-5 1.3017323E-5 0.32371476 0.0 4.1486765E-6 7.294035E-4 3.397868E-5 0.0 0.0 2.067012E-4 -1.1992436E-5 0.0 0.0 0.07148257 0.0 4.7124435E-5 0.0 -0.18644992 -0.010102334 56.810036 0.0 7.294035E-4 2.5146673 0.11683275 0.0 0.0 0.71261615 1.7023534E-5 0.0 0.0 0.0033299583 0.0 -3.3961565E-5 0.0 -0.008567044 -4.7662223E-4 2.6770577 0.0 3.397868E-5 0.11683275 0.005498646 0.0 0.0 0.033108518 0.0 0.0 0.0 434.77264 -70.19224 0.0 105.574936 0.0 0.0 0.0 0.0 0.0 0.0 0.0 308839.7 102579.6 0.0 0.0 0.0 0.0 144.40762 -23.31401 0.0 35.0662 0.0 0.0 0.0 0.0 0.0 0.0 0.0 102579.6 34071.316 0.0 -3.398463E-6 0.0 0.0 0.020257007 0.0 1.3354304E-5 0.0 -0.0528369 -0.0028628386 16.099047 0.0 2.067012E-4 0.71261615 0.033108518 0.0 0.0 0.2019439</dv:modelParameterCovariance>
+                <dv:modelParameters>
+                    <dv:modelParameter fitted="true" name="transitEpochBtjd" uncertainty="0.0029985092" value="1333.9691322885412"/>
+                    <dv:modelParameter fitted="false" name="eccentricity" uncertainty="0.0" value="0.0"/>
+                    <dv:modelParameter fitted="false" name="longitudeOfPeriDegrees" uncertainty="0.0" value="0.0"/>
+                    <dv:modelParameter fitted="false" name="planetRadiusEarthRadii" uncertainty="3.7022293" value="3.696844183780445"/>
+                    <dv:modelParameter fitted="false" name="semiMajorAxisAu" uncertainty="0.15562657" value="0.09285002531908534"/>
+                    <dv:modelParameter fitted="false" name="minImpactParameter" uncertainty="0.0043045427" value="0.699999988079071"/>
+                    <dv:modelParameter fitted="false" name="starRadiusSolarRadii" uncertainty="0.897697" value="0.8976969718933105"/>
+                    <dv:modelParameter fitted="false" name="transitDurationHours" uncertainty="0.11837951" value="2.207981615431959"/>
+                    <dv:modelParameter fitted="false" name="transitIngressTimeHours" uncertainty="0.010295965" value="0.15247697921172668"/>
+                    <dv:modelParameter fitted="false" name="transitDepthPpm" uncertainty="158.97243" value="1479.7895943714198"/>
+                    <dv:modelParameter fitted="true" name="orbitalPeriodDays" uncertainty="0.0" value="11.07772279648517"/>
+                    <dv:modelParameter fitted="true" name="ratioPlanetRadiusToStarRadius" uncertainty="0.00203683" value="0.037722358159254114"/>
+                    <dv:modelParameter fitted="true" name="ratioSemiMajorAxisToStarRadius" uncertainty="1.5857702" value="29.373733098217272"/>
+                    <dv:modelParameter fitted="false" name="inclinationDegrees" uncertainty="0.07415286" value="88.6344656296855"/>
+                    <dv:modelParameter fitted="false" name="equilibriumTempKelvin" uncertainty="555.73346" value="705.6385556135657"/>
+                    <dv:modelParameter fitted="false" name="effectiveStellarFlux" uncertainty="184.58417" value="58.593603926136204"/>
+                    <dv:modelParameter fitted="false" name="starDensitySolarDensity" uncertainty="0.4493817" value="2.7746806900026573"/>
+                </dv:modelParameters>
+            </dv:reducedParameterFit>
+            <dv:reducedParameterFit type="REDUCED_PARAMETER" fullConvergence="true" limbDarkeningModelName="claret_tess_nonlinear_limb_darkening_model" modelChiSquare="622.2343" modelDegreesOfFreedom="642.0" modelFitSnr="9.347246" planetNumber="1" transitModelName="mandel-agol_geometric_transit_model">
+                <dv:modelParameterCovariance>1.66457E-5 0.0 0.0 4.1736826E-6 0.0 -1.6641037E-5 0.0 1.39042E-4 -4.0634815E-5 0.04447512 0.0 4.258799E-8 5.827416E-6 5.6004294E-5 0.0 0.0 5.767555E-7 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 4.1736826E-6 0.0 0.0 16.497 0.25100225 -2.6379037E-6 3.640397 -0.0080040945 0.003876244 36.94371 0.0 5.2901806E-4 0.0890462 0.015270407 476.94257 158.43172 0.008813149 0.0 0.0 0.0 0.25100225 0.024216045 0.0 0.05556335 0.0 0.0 0.0 0.0 0.0 0.0 0.0 -70.189644 -23.315733 0.0 -1.6641037E-5 0.0 0.0 -2.6379037E-6 0.0 3.3814908E-5 0.0 -2.905323E-4 8.169589E-5 -0.08621298 0.0 -2.6916997E-8 4.6173365E-5 -1.03858605E-4 0.0 0.0 4.5699057E-6 0.0 0.0 0.0 3.640397 0.05556335 0.0 0.80585986 0.0 0.0 0.0 0.0 0.0 0.0 0.0 105.578835 35.071384 0.0 1.39042E-4 0.0 0.0 -0.0080040945 0.0 -2.905323E-4 0.0 0.03603924 0.004674604 -4.9704823 0.0 -8.167326E-5 -0.23271045 -0.03892407 0.0 0.0 -0.023031998 -4.0634815E-5 0.0 0.0 0.003876244 0.0 8.169589E-5 0.0 0.004674604 0.0015943955 2.5593145 0.0 3.9552942E-5 -0.03366109 -0.0060392353 0.0 0.0 -0.0033315313 0.04447512 0.0 0.0 36.94371 0.0 -0.08621298 0.0 -4.9704823 2.5593145 26535.926 0.0 0.37697122 63.275726 11.129838 0.0 0.0 6.262574 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 4.258799E-8 0.0 0.0 5.2901806E-4 0.0 -2.6916997E-8 0.0 -8.167326E-5 3.9552942E-5 0.37697122 0.0 5.3980657E-6 9.086217E-4 1.5581824E-4 0.0 0.0 8.9928806E-5 5.827416E-6 0.0 0.0 0.0890462 0.0 4.6173365E-5 0.0 -0.23271045 -0.03366109 63.275726 0.0 9.086217E-4 1.6314539 0.27946332 0.0 0.0 0.1614695 5.6004294E-5 0.0 0.0 0.015270407 0.0 -1.03858605E-4 0.0 -0.03892407 -0.0060392353 11.129838 0.0 1.5581824E-4 0.27946332 0.0482407 0.0 0.0 0.02765926 0.0 0.0 0.0 476.94257 -70.189644 0.0 105.578835 0.0 0.0 0.0 0.0 0.0 0.0 0.0 308862.53 102598.56 0.0 0.0 0.0 0.0 158.43172 -23.315733 0.0 35.071384 0.0 0.0 0.0 0.0 0.0 0.0 0.0 102598.56 34081.395 0.0 5.767555E-7 0.0 0.0 0.008813149 0.0 4.5699057E-6 0.0 -0.023031998 -0.0033315313 6.262574 0.0 8.9928806E-5 0.1614695 0.02765926 0.0 0.0 0.015981086</dv:modelParameterCovariance>
+                <dv:modelParameters>
+                    <dv:modelParameter fitted="true" name="transitEpochBtjd" uncertainty="0.004079914" value="1333.9700865341033"/>
+                    <dv:modelParameter fitted="false" name="eccentricity" uncertainty="0.0" value="0.0"/>
+                    <dv:modelParameter fitted="false" name="longitudeOfPeriDegrees" uncertainty="0.0" value="0.0"/>
+                    <dv:modelParameter fitted="false" name="planetRadiusEarthRadii" uncertainty="4.06165" value="4.055262600788134"/>
+                    <dv:modelParameter fitted="false" name="semiMajorAxisAu" uncertainty="0.15561505" value="0.09284316115423126"/>
+                    <dv:modelParameter fitted="false" name="minImpactParameter" uncertainty="0.0058150585" value="0.8999999761581421"/>
+                    <dv:modelParameter fitted="false" name="starRadiusSolarRadii" uncertainty="0.897697" value="0.8976969718933105"/>
+                    <dv:modelParameter fitted="false" name="transitDurationHours" uncertainty="0.18984003" value="2.557889950233248"/>
+                    <dv:modelParameter fitted="false" name="transitIngressTimeHours" uncertainty="0.03992988" value="0.4732271841515686"/>
+                    <dv:modelParameter fitted="false" name="transitDepthPpm" uncertainty="162.89851" value="1456.6263173905293"/>
+                    <dv:modelParameter fitted="true" name="orbitalPeriodDays" uncertainty="0.0" value="11.076494397625998"/>
+                    <dv:modelParameter fitted="true" name="ratioPlanetRadiusToStarRadius" uncertainty="0.0023233737" value="0.0413796364282589"/>
+                    <dv:modelParameter fitted="true" name="ratioSemiMajorAxisToStarRadius" uncertainty="1.2772838" value="17.35726486798385"/>
+                    <dv:modelParameter fitted="false" name="inclinationDegrees" uncertainty="0.21963766" value="87.02779584215102"/>
+                    <dv:modelParameter fitted="false" name="equilibriumTempKelvin" uncertainty="555.754" value="705.6646400865118"/>
+                    <dv:modelParameter fitted="false" name="effectiveStellarFlux" uncertainty="184.61147" value="58.60226823742223"/>
+                    <dv:modelParameter fitted="false" name="starDensitySolarDensity" uncertainty="0.12641631" value="0.5726322103777811"/>
+                </dv:modelParameters>
+            </dv:reducedParameterFit>
+        </dv:reducedParameterFits>
+        <dv:secondaryEventResults>
+            <dv:comparisonTests>
+                <dv:albedoComparisonStatistic value="0.26829827" significance="0.39423487"/>
+                <dv:tempComparisonStatistic value="1.5847014" significance="0.05651709"/>
+            </dv:comparisonTests>
+            <dv:planetParameters>
+                <dv:geometricAlbedo value="128.57779" uncertainty="475.50732"/>
+                <dv:planetEffectiveTemp value="3673.9998" uncertainty="1788.7615"/>
+            </dv:planetParameters>
+        </dv:secondaryEventResults>
+        <dv:trapezoidalFit type="TRAPEZOIDAL" fullConvergence="true" limbDarkeningModelName="" modelChiSquare="18092.254" modelDegreesOfFreedom="955.0" modelFitSnr="7.1979146" planetNumber="1" transitModelName="trapezoidal_model">
+            <dv:modelParameterCovariance></dv:modelParameterCovariance>
+            <dv:modelParameters>
+                <dv:modelParameter fitted="true" name="transitEpochBtjd" uncertainty="-1.0" value="1333.9733254149712"/>
+                <dv:modelParameter fitted="false" name="eccentricity" uncertainty="-1.0" value="0.0"/>
+                <dv:modelParameter fitted="false" name="longitudeOfPeriDegrees" uncertainty="-1.0" value="0.0"/>
+                <dv:modelParameter fitted="false" name="planetRadiusEarthRadii" uncertainty="-1.0" value="0.0"/>
+                <dv:modelParameter fitted="false" name="semiMajorAxisAu" uncertainty="-1.0" value="0.0"/>
+                <dv:modelParameter fitted="false" name="minImpactParameter" uncertainty="-1.0" value="0.9"/>
+                <dv:modelParameter fitted="false" name="starRadiusSolarRadii" uncertainty="-1.0" value="0.8976969718933105"/>
+                <dv:modelParameter fitted="true" name="transitDurationHours" uncertainty="-1.0" value="3.726003029544642"/>
+                <dv:modelParameter fitted="true" name="transitIngressTimeHours" uncertainty="-1.0" value="1.3632648540210208"/>
+                <dv:modelParameter fitted="true" name="transitDepthPpm" uncertainty="-1.0" value="1111.066400030855"/>
+                <dv:modelParameter fitted="false" name="orbitalPeriodDays" uncertainty="-1.0" value="11.074995994567871"/>
+                <dv:modelParameter fitted="false" name="ratioPlanetRadiusToStarRadius" uncertainty="-1.0" value="0.033332662660382456"/>
+                <dv:modelParameter fitted="false" name="ratioSemiMajorAxisToStarRadius" uncertainty="-1.0" value="11.567571203614602"/>
+                <dv:modelParameter fitted="false" name="inclinationDegrees" uncertainty="-1.0" value="0.0"/>
+                <dv:modelParameter fitted="false" name="equilibriumTempKelvin" uncertainty="-1.0" value="0.0"/>
+                <dv:modelParameter fitted="false" name="effectiveStellarFlux" uncertainty="-1.0" value="0.0"/>
+                <dv:modelParameter fitted="false" name="starDensitySolarDensity" uncertainty="-1.0" value="0.0"/>
+            </dv:modelParameters>
+        </dv:trapezoidalFit>
+    </dv:planetResults>
+    <dv:pmDec provenance="TIC7" value="-52.32" uncertainty="2.0"/>
+    <dv:pmRa provenance="TIC7" value="15.07" uncertainty="2.0"/>
+    <dv:raDegrees provenance="TIC7" value="317.579189" uncertainty="0.0"/>
+    <dv:radius provenance="TIC7" value="0.897697" uncertainty="0.897697"/>
+    <dv:stellarDensity provenance="TIC7-Derived" value="1.2011296" uncertainty="5.670045"/>
+    <dv:tessMag provenance="TIC7" value="10.703" uncertainty="0.019"/>
+</dv:dvTargetResults>

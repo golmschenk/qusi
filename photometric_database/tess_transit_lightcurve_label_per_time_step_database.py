@@ -2,6 +2,8 @@
 Code for a database of TESS transit lightcurves with a label per time step.
 """
 from pathlib import Path
+from typing import List
+
 from astropy.table import Table
 from astroquery.mast import Observations
 from astroquery.exceptions import TimeoutError as AstroQueryTimeoutError
@@ -18,8 +20,18 @@ class TessTransitLightcurveLabelPerTimeStepDatabase(LightcurveLabelPerTimeStepDa
         super().__init__()
         self.data_directory = Path(data_directory)
         self.data_directory.mkdir(parents=True, exist_ok=True)
-        self.lightcurves_directory_name = 'lightcurves'
-        self.data_validations_directory_name = 'data_validations'
+        self.lightcurve_directory = self.data_directory.joinpath('lightcurves')
+        self.lightcurve_directory.mkdir(parents=True, exist_ok=True)
+        self.data_validation_directory = self.data_directory.joinpath('data_validations')
+        self.data_validation_directory.mkdir(parents=True, exist_ok=True)
+
+    def collect_lightcurve_file_paths(self) -> List[Path]:
+        """
+        Gets all the file paths for the available lightcurves.
+        """
+        return list(self.lightcurve_directory.glob('*.fits'))
+
+
 
     def download_database(self):
         """
@@ -34,10 +46,6 @@ class TessTransitLightcurveLabelPerTimeStepDatabase(LightcurveLabelPerTimeStepDa
                                                                 calib_level=3)  # Science data product level.U
             except (AstroQueryTimeoutError, RemoteDisconnected):
                 print('Error connecting to MAST. They have occasional downtime. Trying again...')
-        lightcurve_directory = self.data_directory.joinpath(self.lightcurves_directory_name)
-        lightcurve_directory.mkdir(parents=True, exist_ok=True)
-        data_validation_directory = self.data_directory.joinpath(self.data_validations_directory_name)
-        data_validation_directory.mkdir(parents=True, exist_ok=True)
         for tess_observation in tess_observations:
             download_manifest = None
             while download_manifest is None:
@@ -56,9 +64,9 @@ class TessTransitLightcurveLabelPerTimeStepDatabase(LightcurveLabelPerTimeStepDa
                                                                        download_dir=str(self.data_directory.absolute()))
                     for file_path_string in download_manifest['Local Path']:
                         if file_path_string.endswith('lc.fits'):
-                            type_directory = lightcurve_directory
+                            type_directory = self.lightcurve_directory
                         else:
-                            type_directory = data_validation_directory
+                            type_directory = self.data_validation_directory
                         file_path = Path(file_path_string)
                         file_path.rename(type_directory.joinpath(file_path.name))
                 except (AstroQueryTimeoutError, RemoteDisconnected):
