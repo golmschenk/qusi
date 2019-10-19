@@ -168,6 +168,7 @@ class TestMicrolensingLabelPerTimeStepDatabase:
 
     def test_examples_of_generated_datasets_have_appropriate_sizes(self, database, data_directory_path):
         database.time_steps_per_example = 4
+        database.length_multiple_base = None
         datasets = database.generate_datasets(
             positive_data_directory=f'{data_directory_path}/positive',
             negative_data_directory=f'{data_directory_path}/negative',
