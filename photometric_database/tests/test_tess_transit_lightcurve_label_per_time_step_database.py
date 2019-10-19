@@ -35,3 +35,9 @@ class TestTessTransitLightcurveLabelPerTimeStepDatabase:
         assert len(lightcurve_paths) == 5
         assert any(path.name == 'tess2018206045859-s0001-0000000117544915-0120-s_lc.fits' for path in lightcurve_paths)
 
+    def test_can_collect_data_validations_by_tic_id(self, database):
+        data_validation_dictionary = database.collect_data_validation_dictionary()
+        assert len(data_validation_dictionary) == 3
+        assert any(path.name == 'tess2018206190142-s0001-s0001-0000000117544915-00106_dvr.xml'
+                   for path in data_validation_dictionary.values())
+

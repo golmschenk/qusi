@@ -2,7 +2,7 @@
 Code for a database of TESS transit lightcurves with a label per time step.
 """
 from pathlib import Path
-from typing import List
+from typing import List, Dict
 
 from astropy.table import Table
 from astroquery.mast import Observations
@@ -31,7 +31,15 @@ class TessTransitLightcurveLabelPerTimeStepDatabase(LightcurveLabelPerTimeStepDa
         """
         return list(self.lightcurve_directory.glob('*.fits'))
 
-
+    def collect_data_validation_dictionary(self) -> Dict[str, Path]:
+        """
+        Collects all the data validation files into a dictionary for fast TIC ID lookup.
+        """
+        data_validation_dictionary = {}
+        for path in self.data_validation_directory.glob('*.xml'):
+            tic_id = path.name.split('-')[3]  # The TIC ID is just in the middle of the file name.
+            data_validation_dictionary[tic_id] = path
+        return data_validation_dictionary
 
     def download_database(self):
         """
