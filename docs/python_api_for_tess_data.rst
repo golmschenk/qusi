@@ -88,6 +88,9 @@ downloading a couple of the PDFs to see what they look like. One PDF is a full s
 summary. The remainder consists of one summary for each planet candidate, however, this information was already included
 in the full summary.
 
+A full description of all the data products of TESS can be found in the `TESS Science Data Products Description
+Document <https://archive.stsci.edu/missions/tess/doc/EXP-TESS-ARC-ICD-TM-0014.pdf>`_.
+
 The :code:`get_product_list` method can also be passed filters. The available filters can be listed using
 :code:`Observations.get_metadata('products')`. And as before, you can explore the product table result (such as by
 converting the AstroPy :code:`Table` to a Pandas :code:`DataFrame` and using PyCharm to view it as above).
