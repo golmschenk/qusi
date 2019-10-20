@@ -24,14 +24,15 @@ class TessTransitLightcurveLabelPerTimeStepDatabase(LightcurveLabelPerTimeStepDa
         self.lightcurve_directory.mkdir(parents=True, exist_ok=True)
         self.data_validation_directory = self.data_directory.joinpath('data_validations')
         self.data_validation_directory.mkdir(parents=True, exist_ok=True)
+        self.data_validation_dictionary = None
 
-    def collect_lightcurve_file_paths(self) -> List[Path]:
+    def get_lightcurve_file_paths(self) -> List[Path]:
         """
         Gets all the file paths for the available lightcurves.
         """
         return list(self.lightcurve_directory.glob('*.fits'))
 
-    def collect_data_validation_dictionary(self) -> Dict[str, Path]:
+    def obtain_data_validation_dictionary(self):
         """
         Collects all the data validation files into a dictionary for fast TIC ID lookup.
         """
@@ -39,7 +40,17 @@ class TessTransitLightcurveLabelPerTimeStepDatabase(LightcurveLabelPerTimeStepDa
         for path in self.data_validation_directory.glob('*.xml'):
             tic_id = path.name.split('-')[3]  # The TIC ID is just in the middle of the file name.
             data_validation_dictionary[tic_id] = path
-        return data_validation_dictionary
+        self.data_validation_dictionary = data_validation_dictionary
+
+    def is_positive(self, example_path: str) -> bool:
+        """
+        Checks if an example contains a transit event or not.
+
+        :param example_path: The path to the example to check.
+        :return: Whether or not the example contains a transit event.
+        """
+        tic_id = str(Path(example_path).name).split('-')[2]  # The TIC ID is just in the middle of the file name.
+        return tic_id in self.data_validation_dictionary
 
     def download_database(self):
         """

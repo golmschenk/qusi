@@ -31,13 +31,23 @@ class TestTessTransitLightcurveLabelPerTimeStepDatabase:
         return TessTransitLightcurveLabelPerTimeStepDatabase(data_directory_path)
 
     def test_can_collect_lightcurve_paths(self, database):
-        lightcurve_paths = database.collect_lightcurve_file_paths()
+        lightcurve_paths = database.get_lightcurve_file_paths()
         assert len(lightcurve_paths) == 5
         assert any(path.name == 'tess2018206045859-s0001-0000000117544915-0120-s_lc.fits' for path in lightcurve_paths)
 
     def test_can_collect_data_validations_by_tic_id(self, database):
-        data_validation_dictionary = database.collect_data_validation_dictionary()
-        assert len(data_validation_dictionary) == 3
+        database.obtain_data_validation_dictionary()
+        assert len(database.data_validation_dictionary) == 3
         assert any(path.name == 'tess2018206190142-s0001-s0001-0000000117544915-00106_dvr.xml'
-                   for path in data_validation_dictionary.values())
+                   for path in database.data_validation_dictionary.values())
 
+    def test_can_determine_if_file_is_positive_based_on_file_path(self, database):
+        database.obtain_data_validation_dictionary()  # The positive detection is done based on the data validations.
+        example_path0 = str(
+            database.lightcurve_directory.joinpath('tess2018206045859-s0001-0000000117544915-0120-s_lc.fits')
+        )
+        assert database.is_positive(example_path0)
+        example_path1 = str(
+            database.lightcurve_directory.joinpath('tess2018206045859-s0001-0000000150065151-0120-s_lc.fits')
+        )
+        assert not database.is_positive(example_path1)
