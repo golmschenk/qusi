@@ -1,6 +1,6 @@
 .. image:: ramjet_engine.png
 
-RAMjET RApid MachinE-learned Triage
+RAMjET: RApid MachinE-learned Triage
 ====================================
 
 **RAMjET is currently under development. This documentation is currently oriented toward the RAMjET development team.**
