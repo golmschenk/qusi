@@ -31,7 +31,7 @@ This package provides the API to access the TESS data stored at the Mikulski Arc
 The first thing to do with this package is get the available :code:`Observation`'s (which is a class of the
 :code:`astroquery.mast` package. What "observation" means here is a bit vague, but basically each :code:`Observation` is
 a collection of related measurements from TESS. There are two main types of :code:`Observations` for TESS: time-series
-and full frame images (FFIs). Time-series include the lightcurves and related transit detection information, as well as
+and full-frame images (FFIs). Time-series include the lightcurves and related transit detection information, as well as
 the original target pixel files (TPFs) those lightcurves are generated from.
 
 To get a single :code:`Observation` we can use something like:
@@ -49,7 +49,7 @@ We can get the full list of filter parameters using :code:`Observations.get_meta
 filtering though, as some of the parameter names are not particularly clear. For example, there is both a :code:`obs_id`
 and a separate :code:`obsid` parameter which have very different values.
 
-If instead of getting the just a single, we wanted to get all TESS observations, we could run:
+If instead of getting just a single observation, we wanted to get all TESS observations, we could run:
 
 .. code-block:: python
 
@@ -85,7 +85,7 @@ anything, the lightcurve gets processed by the data validation (DV) pipeline. Th
 algorithms to try to determine the properties of the candidate planet transit. The results of these algorithms are
 stored in the DV files we see in the product list we just got from our code. From the product list, it's worth
 downloading a couple of the PDFs to see what they look like. One PDF is a full summary of the DV and one is a one-page
-summary. The remainder consist of one summary for each planet candidate, however, this information was already included
+summary. The remainder consists of one summary for each planet candidate, however, this information was already included
 in the full summary.
 
 The :code:`get_product_list` method can also be passed filters. The available filters can be listed using
@@ -105,4 +105,4 @@ above and request the download:
 This will download all the files in the table. Note that this method does not return the downloaded data. Instead, it
 returns a table explaining which data it downloaded and where it put it (hence the name "manifest"). Of course, you can
 filter this product list before passing it to the download method. However, note that :code:`download_products` expects
-a AstroPy :code:`Table`, not an individual :code:`Row` object.
+an AstroPy :code:`Table`, not an individual :code:`Row` object.
