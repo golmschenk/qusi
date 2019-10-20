@@ -21,6 +21,12 @@ an appropriate training system needs to be designed. The main development focus 
 to easily complete these two tasks, and to demonstrate the framework on specific examples.
 
 .. toctree::
+    :caption: Understanding RAMjET
 
     data_types
+    python_api_for_tess_data
+
+.. toctree::
+    :hidden:
+
     autoapi/index
