@@ -31,25 +31,31 @@ This package provides the API to access the TESS data stored at the Mikulski Arc
 The first thing to do with this package is get the available :code:`Observation`'s (which is a class of the
 :code:`astroquery.mast` package. What "observation" means here is a bit vague, but basically each :code:`Observation` is
 a collection of related measurements from TESS. There are two main types of :code:`Observations` for TESS: time-series
-and full-frame images (FFIs). Time-series include the lightcurves and related transit detection information, as well as
-the original target pixel files (TPFs) those lightcurves are generated from.
+and full-frame images (FFIs).
 
-To get a single :code:`Observation` we can use something like:
+To get the :code:`Observation`s for a single TESS input catalog (TIC) ID target we can use something like:
 
 .. code-block:: python
 
     from astroquery.mast import Observations
-    observation = Observations.query_criteria(obs_collection='TESS', target_name='121420805')
+    observations = Observations.query_criteria(obs_collection='TESS', target_name='25132999')
 
 This returns an :code:`astropy` :code:`Table` object where each row is an :code:`Observation`.
 The :code:`query_criteria` command is used for all missions MAST stores data for. To specify we want TESS data, we are
-filtering using :code:`obs_collection`. For TESS data, the :code:`target_name` refers to the TESS input catalog (TIC)
+filtering using :code:`obs_collection`. For TESS data, the :code:`target_name` refers to the TIC
 number of the target (note that it needs to be passed as a string). There are lots of other things we could filter on.
 We can get the full list of filter parameters using :code:`Observations.get_metadata('observations')`. Be careful when
 filtering though, as some of the parameter names are not particularly clear. For example, there is both a :code:`obs_id`
 and a separate :code:`obsid` parameter which have very different values.
 
-If instead of getting just a single observation, we wanted to get all TESS observations, we could run:
+Looking at the results of this query, there are many :code:`Observation`s for this single target, all of which are of
+the time-series type. Of the time-series type observations, 2 subcategory types exists for TESS: single-sector
+observations and multi-sector observations. The :code:`dataURL` column of the :code:`Observation` will end in
+:code:`lc.fits` for a single-sector observation (as the main data product is a lightcurve), and will end in
+:code:`dvt.fits` for a multi-sector observation (as the main data product is a data validation time-series). For either,
+the sector or sector range can be seen in the :code:`dataURL` or :code:`obs_id` column (e.g., `s0001-s0003`).
+
+If instead of getting observations for a single target, we wanted to get all TESS observations, we could run:
 
 .. code-block:: python
 
@@ -58,35 +64,43 @@ If instead of getting just a single observation, we wanted to get all TESS obser
 This will give all TESS mission observations. We can then go through these observations to examine what data is
 available for each.
 
-With these observations we can use :code:`observation['dataproduct_type']` to view if the data is a time-series or full
+With these observations we can use :code:`observations['dataproduct_type']` to view if the data is a time-series or full
 frame image. If you are using PyCharm, you can convert the AstroPy :code:`Table` to a Pandas :code:`DataFrame` using
-:code:`observation.to_pandas()`, then you can stop at a breakpoint to use the :code:`View as DataFrame` button in the
+:code:`observations.to_pandas()`, then you can stop at a breakpoint to use the :code:`View as DataFrame` button in the
 debugger "Variables" window to view all the table contents at once in an organized way.
 
 Finding observation data products
 ---------------------------------
 
-Assuming you've got an observation in a variable called :code:`observation` (or a bunch of them in a table), we can
+Assuming you've got an observation in a variable called :code:`observations` (or a bunch of them in a table), we can
 find out what data is actually available for that observation. To do so, we can use:
 
 .. code-block:: python
 
-    product_list = Observations.get_product_list(observation)
+    product_list = Observations.get_product_list(observations)
 
 These are data products which can be downloaded.
-If you used the observation of TIC target 121420805 from above, you will get back a list of 8 entries (as of 20 October
-2019). There's a TPF time-series in a FITS file, the lightcurve data in a FITS file, the data validation (DV) in a FITS
-file, the DV in an XML file, and several PDFs describing the DV results in a human understandable
-format.
+If you used an observation from the TIC target 25132999 from above, you will get back a list of entries.
 
-First, an explanation of what the DV is. When the lightcurve is first produced, a Transit Planet Search (TPS) module
-checks for threshold crossing events (things that might suggest a planet transit). If this turns up any sign of
+If you passed an observation for a single-sector observation, you will get back a table containing a row for the
+lightcurve data product and a row for the target pixel file (TPF) data product which that lightcurve was generated
+from. For each of these lightcurves, a Transit Planet Search (TPS) module has been applied to search for threshold
+crossing events (TCE), that is, things that might suggest a planet transit. If this turns up any sign of
 anything, the lightcurve gets processed by the data validation (DV) pipeline. This process runs several fitting
 algorithms to try to determine the properties of the candidate planet transit. The results of these algorithms are
 stored in the DV files we see in the product list we just got from our code. From the product list, it's worth
 downloading a couple of the PDFs to see what they look like. One PDF is a full summary of the DV and one is a one-page
 summary. The remainder consists of one summary for each planet candidate, however, this information was already included
-in the full summary.
+in the full summary. When listing the data products for this observation, these data products will be also be listed
+if a TCE was triggered. If not, just the TPF and lightcurve data products will be listed.
+
+If you tried to get the data products for a multi-sector observation, no lightcurves or TPFs will be listed. Instead,
+you will get just the DV files for the range of sectors. These files are useful because they include the DV search
+over multiple sectors, which gives the DV pipeline more lightcurve information to combine when searching for TCEs, but
+you need to link this information back to the original lightcurves/TPFs from the other observations. Also note, the
+observation list includes older multi-sector DV runs. That is, if the target was included in sectors 1 - 5, a DV run
+may have earlier been performed for sectors 1 - 3. However, a newer DV run which includes all sectors 1 - 5 might now
+exist, and the older 1 - 3 one is probably obsolete.
 
 A full description of all the data products of TESS can be found in the `TESS Science Data Products Description
 Document <https://archive.stsci.edu/missions/tess/doc/EXP-TESS-ARC-ICD-TM-0014.pdf>`_.
