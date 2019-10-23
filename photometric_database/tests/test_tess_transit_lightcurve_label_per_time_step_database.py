@@ -51,3 +51,21 @@ class TestTessTransitLightcurveLabelPerTimeStepDatabase:
             database.lightcurve_directory.joinpath('tess2018206045859-s0001-0000000150065151-0120-s_lc.fits')
         )
         assert not database.is_positive(example_path1)
+
+    def test_can_get_sector_from_single_sector_obs_id(self, database):
+        sector0 = database.get_sector_from_single_sector_obs_id('tess2019112060037-s0011-0000000025132999-0143-s')
+        assert sector0 == 11
+        sector1 = database.get_sector_from_single_sector_obs_id('tess2018319095959-s0005-0000000025132999-0125-s')
+        assert sector1 == 5
+
+    def test_can_get_sectors_from_multi_sector_obs_id(self, database):
+        start0, end0 = database.get_sectors_from_multi_sector_obs_id(
+            'tess2018206190142-s0001-s0009-0000000025132999-00205'
+        )
+        assert start0 == 1
+        assert end0 == 9
+        start1, end1 = database.get_sectors_from_multi_sector_obs_id(
+            'tess2018206190142-s0002-s0003-0000000025132999-00129'
+        )
+        assert start1 == 2
+        assert end1 == 3
