@@ -91,50 +91,6 @@ class TessTransitLightcurveLabelPerTimeStepDatabase(LightcurveLabelPerTimeStepDa
             file_path.rename(self.lightcurve_directory.joinpath(file_path.name))
         print('Database ready.')
 
-    def download_full_tce_database(self, highest_sector=None):
-        """
-        Downloads the lightcurve transit database. This includes the lightcurve files and the data validation files
-        (which contain the planet threshold crossing event information).
-        """
-        print('Downloading TESS observation list...')
-        tess_observations = self.get_all_tess_time_series_observations()
-        if highest_sector is not None:
-            print(f'Limiting to sector {highest_sector} or earlier.')
-        # Download lightcurves.
-        single_sector_observations = self.get_single_sector_observations(tess_observations)
-        single_sector_observations = self.add_sector_column_based_on_single_sector_obs_id(single_sector_observations)
-        if highest_sector is not None:
-            single_sector_observations = single_sector_observations[
-                single_sector_observations['sector'] <= highest_sector
-                ]
-        single_sector_data_products = self.get_data_products(single_sector_observations)
-        lightcurve_data_products = single_sector_data_products[
-            single_sector_data_products['productFilename'].str.endswith('lc.fits')
-        ]
-        lightcurves_manifest = self.download_products(lightcurve_data_products)
-        # Download data validations.
-        multi_sector_observations = self.get_multi_sector_observations(tess_observations)
-        multi_sector_observations = self.add_sector_columns_based_on_multi_sector_obs_id(multi_sector_observations)
-        multi_sector_observations = self.get_largest_sector_range(multi_sector_observations)
-        if highest_sector is not None:
-            multi_sector_observations = multi_sector_observations[
-                multi_sector_observations['end_sector'] <= highest_sector
-            ]
-        multi_sector_data_products = self.get_data_products(multi_sector_observations)
-        data_validation_data_products = multi_sector_data_products[
-            multi_sector_data_products['productFilename'].str.endswith('dvr.xml')
-        ]
-        data_validations_manifest = self.download_products(data_validation_data_products)
-        # Move downloaded files to data directory.
-        for manifest in [lightcurves_manifest, data_validations_manifest]:
-            for file_path_string in manifest['Local Path']:
-                if file_path_string.endswith('lc.fits'):
-                    type_directory = self.lightcurve_directory
-                else:
-                    type_directory = self.data_validation_directory
-                file_path = Path(file_path_string)
-                file_path.rename(type_directory.joinpath(file_path.name))
-
     @staticmethod
     def get_all_tess_time_series_observations() -> pd.DataFrame:
         """
