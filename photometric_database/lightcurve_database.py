@@ -86,7 +86,8 @@ class LightcurveDatabase(ABC):
         """
         return 'positive' in example_path
 
-    def make_uniform_length(self, example: np.ndarray, length: int) -> np.ndarray:
+    @staticmethod
+    def make_uniform_length(example: np.ndarray, length: int) -> np.ndarray:
         """Makes the example a specific length, by clipping those too large and repeating those too small."""
         if example.shape[0] > length:
             start_slice = np.random.randint(0, example.shape[0] - length)

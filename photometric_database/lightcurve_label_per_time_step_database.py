@@ -267,17 +267,30 @@ class LightcurveLabelPerTimeStepDatabase(LightcurveDatabase):
         if length == label.shape[0]:
             return example, label
         if any(label):
-            positive_indexes = np.where(label)[0]
-            start_positive = positive_indexes[0]
-            end_positive = positive_indexes[-1]
-            valid_range_start = max(0, start_positive + 1 - length)
-            valid_range_end = min(label.shape[0], end_positive + length)
-            example = example[valid_range_start:valid_range_end]
-            label = label[valid_range_start:valid_range_end]
+            valid_start_indexes = self.valid_start_indexes_for_segment_including_positive(label.astype(np.bool), length)
+            start_index = np.random.choice(valid_start_indexes)
+            end_index = start_index + length
+            example = example[start_index:end_index]
+            label = label[start_index:end_index]
         example_and_label = np.concatenate([example, np.expand_dims(label, axis=-1)], axis=1)
         example_and_label = self.make_uniform_length(example_and_label, length)
         extracted_example, extracted_label = example_and_label[:, :2], example_and_label[:, 2]
         return extracted_example, extracted_label
+
+    @staticmethod
+    def valid_start_indexes_for_segment_including_positive(boolean_array: np.bool, segment_length: int):
+        """
+        Gets all indexes of an array where a segment started at that index will include at least one True entry.
+        In other words, an
+
+        :param boolean_array: The array indicating which positions are positive.
+        :param segment_length: The length of the segments to consider.
+        :return: The valid start indexes.
+        """
+        for _ in range(segment_length - 1):
+            boolean_array = boolean_array | np.roll(boolean_array, -1)
+        boolean_array = boolean_array[:segment_length - 1]  # Segments extending off the end of the array are invalid.
+        return np.where(boolean_array)[0]
 
     def calculate_magnifications_for_lightcurve_meta_data(self, times: np.float32,
                                                           lightcurve_microlensing_meta_data: pd.Series) -> np.float32:
