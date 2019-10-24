@@ -6,14 +6,14 @@ from tensorflow.python.keras import callbacks
 
 from losses import PerTimeStepBinaryCrossEntropy
 from models import ConvolutionalLstm
-from photometric_database.microlensing_label_per_time_step_database import MicrolensingLabelPerTimeStepDatabase
+from photometric_database.liang_yu_lightcurve_database import LiangYuLightcurveDatabase
 
 
 def train():
     """Runs the training."""
     # Basic training settings.
     model = ConvolutionalLstm()
-    database = MicrolensingLabelPerTimeStepDatabase()
+    database = LiangYuLightcurveDatabase()
     epochs_to_run = 1000
     trial_name = 'baseline'
     logs_directory = 'logs'

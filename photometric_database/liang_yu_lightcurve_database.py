@@ -73,6 +73,11 @@ class LiangYuLightcurveDatabase(TessTransitLightcurveLabelPerTimeStepDatabase):
         lightcurve = hdu_list[1].data  # Lightcurve information is in first extension table.
         fluxes = lightcurve['SAP_FLUX']
         times = lightcurve['TIME']
+        assert times.shape == fluxes.shape
+        # noinspection PyUnresolvedReferences
+        nan_indexes = np.union1d(np.argwhere(np.isnan(fluxes)), np.argwhere(np.isnan(times)))
+        fluxes = np.delete(fluxes, nan_indexes)
+        times = np.delete(times, nan_indexes)
         fluxes = self.normalize(fluxes)
         time_differences = np.diff(times, prepend=times[0])
         example = np.stack([fluxes, time_differences], axis=-1)
