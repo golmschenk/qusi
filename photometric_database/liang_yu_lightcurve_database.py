@@ -1,10 +1,13 @@
 """
 Code to represent the database of TESS data based on `Liang Yu's work <https://arxiv.org/pdf/1904.02726.pdf>`_.
 """
-
+from typing import Union
+import numpy as np
 import pandas as pd
+import tensorflow as tf
 import requests
 from pathlib import Path
+from astropy.io import fits
 
 from photometric_database.tess_transit_lightcurve_label_per_time_step_database import \
     TessTransitLightcurveLabelPerTimeStepDatabase
@@ -18,8 +21,92 @@ class LiangYuLightcurveDatabase(TessTransitLightcurveLabelPerTimeStepDatabase):
     def __init__(self, data_directory='data/tess'):
         super().__init__(data_directory=data_directory)
         self.liang_yu_dispositions_path = self.data_directory.joinpath('liang_yu_dispositions.csv')
+        self.meta_data_frame: Union[pd.DataFrame, None] = None
 
-    def get_meta_data_frame_for_available_lightcurves(self) -> pd.DataFrame:
+    def generate_datasets(self, positive_data_directory: str, negative_data_directory: str,
+                          meta_data_file_path: str) -> (tf.data.Dataset, tf.data.Dataset):
+        """
+        Generates the training and validation datasets.
+
+        :param positive_data_directory: The path to the directory containing the positive example files.
+        :param negative_data_directory: The path to the directory containing the negative example files.
+        :param meta_data_file_path: The path to the microlensing meta data file.
+        :return: The training and validation datasets.
+        """
+        self.obtain_meta_data_frame_for_available_lightcurves()
+        positive_example_paths = self.meta_data_frame[self.meta_data_frame['disposition'] == 'PC']['lightcurve_path']
+        print(f'{len(positive_example_paths)} positive examples.')
+        negative_example_paths = self.meta_data_frame[self.meta_data_frame['disposition'] != 'PC']['lightcurve_path']
+        print(f'{len(negative_example_paths)} negative examples.')
+        positive_datasets = self.get_training_and_validation_datasets_for_file_paths(positive_example_paths)
+        positive_training_dataset, positive_validation_dataset = positive_datasets
+        negative_datasets = self.get_training_and_validation_datasets_for_file_paths(negative_example_paths)
+        negative_training_dataset, negative_validation_dataset = negative_datasets
+        training_dataset = self.get_ratio_enforced_dataset(positive_training_dataset, negative_training_dataset,
+                                                           positive_to_negative_data_ratio=1)
+        validation_dataset = positive_validation_dataset.concatenate(negative_validation_dataset)
+        if self.trial_directory is not None:
+            self.log_dataset_file_names(training_dataset, dataset_name='training')
+            self.log_dataset_file_names(validation_dataset, dataset_name='validation')
+        training_dataset = training_dataset.shuffle(buffer_size=len(list(training_dataset)))
+        training_preprocessor = lambda file_path: tuple(tf.py_function(self.training_preprocessing,
+                                                                       [file_path], [tf.float32, tf.float32]))
+        training_dataset = training_dataset.map(training_preprocessor, num_parallel_calls=16)
+        training_dataset = training_dataset.padded_batch(self.batch_size, padded_shapes=([None, 2], [None])).prefetch(
+            buffer_size=tf.data.experimental.AUTOTUNE)
+        validation_preprocessor = lambda file_path: tuple(tf.py_function(self.evaluation_preprocessing,
+                                                                         [file_path], [tf.float32, tf.float32]))
+        validation_dataset = validation_dataset.map(validation_preprocessor, num_parallel_calls=4)
+        validation_dataset = validation_dataset.padded_batch(1, padded_shapes=([None, 2], [None])).prefetch(
+            buffer_size=tf.data.experimental.AUTOTUNE)
+        return training_dataset, validation_dataset
+
+    def general_preprocessing(self, example_path_tensor: tf.Tensor) -> (tf.Tensor, tf.Tensor):
+        """
+        Loads and preprocesses the data.
+
+        :param example_path_tensor: The tensor containing the path to the example to load.
+        :return: The example and its corresponding label.
+        """
+        example_path = example_path_tensor.numpy().decode('utf-8')
+        hdu_list = fits.open(example_path)
+        lightcurve = hdu_list[1].data  # Lightcurve information is in first extension table.
+        fluxes = lightcurve['SAP_FLUX']
+        times = lightcurve['TIME']
+        fluxes = self.normalize(fluxes)
+        time_differences = np.diff(times, prepend=times[0])
+        example = np.stack([fluxes, time_differences], axis=-1)
+        if self.is_positive(example_path):
+            label = self.generate_label(example_path, times)
+        else:
+            label = np.zeros_like(fluxes)
+        return tf.convert_to_tensor(example, dtype=tf.float32), tf.convert_to_tensor(label, dtype=tf.float32)
+
+    def generate_label(self, example_path: str, times: np.float32) -> np.bool:
+        """
+        Generates a label for each time step defining whether or not a transit is occurring.
+
+        :param example_path: The path of the lightcurve file (to determine which row of the meta data to use).
+        :param times: The times of the measurements in the lightcurve.
+        :return: A boolean label for each time step specifying if transiting is occurring at that time step.
+        """
+        example_meta_data = self.meta_data_frame[self.meta_data_frame['lightcurve_path'] == example_path].iloc[0]
+        epoch_times = times - example_meta_data['transit_epoch']
+        transit_duration = example_meta_data['transit_duration'] / 24  # Convert from hours to days.
+        transit_period = example_meta_data['transit_period']
+        is_transiting = ((epoch_times + (transit_duration / 2)) % transit_period) < transit_duration
+        return is_transiting
+
+    def is_positive(self, example_path):
+        """
+        Checks if an example contains a transit event or not.
+
+        :param example_path: The path to the example to check.
+        :return: Whether or not the example contains a transit event.
+        """
+        return example_path in self.meta_data_frame['lightcurve_path'].values
+
+    def obtain_meta_data_frame_for_available_lightcurves(self):
         """
         Gets the available meta disposition data from Liang Yu's work and combines it with the available lightcurve
         data, throwing out any data that doesn't have its counterpart.
@@ -36,13 +123,14 @@ class LiangYuLightcurveDatabase(TessTransitLightcurveLabelPerTimeStepDatabase):
         lightcurve_paths = list(self.lightcurve_directory.glob('*lc.fits'))
         tic_ids = [int(self.get_tic_id_from_single_sector_obs_id(path.name)) for path in lightcurve_paths]
         sectors = [self.get_sector_from_single_sector_obs_id(path.name) for path in lightcurve_paths]
-        lightcurve_meta_data = pd.DataFrame({'lightcurve_path': lightcurve_paths, 'tic_id': tic_ids, 'sector': sectors})
-        meta_data = pd.merge(liang_yu_dispositions, lightcurve_meta_data, how='inner', on=['tic_id', 'sector'])
-        return meta_data
+        lightcurve_meta_data = pd.DataFrame({'lightcurve_path': map(str, lightcurve_paths), 'tic_id': tic_ids,
+                                             'sector': sectors})
+        self.meta_data_frame = pd.merge(liang_yu_dispositions, lightcurve_meta_data,
+                                        how='inner', on=['tic_id', 'sector'])
 
     def download_liang_yu_database(self):
         """
-        Downloads the database used by https://arxiv.org/pdf/1904.02726.pdf.
+        Downloads the database used in `Liang Yu's work <https://arxiv.org/pdf/1904.02726.pdf>`_.
         """
         print("Downloading Liang Yu's disposition CSV...")
         liang_yu_csv_url = 'https://raw.githubusercontent.com/yuliang419/Astronet-Triage/master/astronet/tces.csv'
@@ -77,4 +165,4 @@ class LiangYuLightcurveDatabase(TessTransitLightcurveLabelPerTimeStepDatabase):
 
 
 if __name__ == '__main__':
-    LiangYuLightcurveDatabase().download_liang_yu_database()
+    LiangYuLightcurveDatabase().general_preprocessing(tf.convert_to_tensor('data/tess/lightcurves/tess2018206045859-s0001-0000000025078924-0120-s_lc.fits'))

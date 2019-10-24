@@ -87,7 +87,7 @@ class LightcurveLabelPerTimeStepDatabase(LightcurveDatabase):
 
     def general_preprocessing(self, example_path_tensor: tf.Tensor) -> (tf.Tensor, tf.Tensor):
         """
-        Loads and preprocesses the data =.
+        Loads and preprocesses the data.
 
         :param example_path_tensor: The tensor containing the path to the example to load.
         :return: The example and its corresponding label.
