@@ -109,7 +109,8 @@ class LiangYuLightcurveDatabase(TessTransitLightcurveLabelPerTimeStepDatabase):
         :param example_path: The path to the example to check.
         :return: Whether or not the example contains a transit event.
         """
-        return example_path in self.meta_data_frame['lightcurve_path'].values
+        candidate_planets = self.meta_data_frame[self.meta_data_frame['disposition'] == 'PC']
+        return example_path in candidate_planets['lightcurve_path'].values
 
     def obtain_meta_data_frame_for_available_lightcurves(self):
         """
@@ -128,7 +129,7 @@ class LiangYuLightcurveDatabase(TessTransitLightcurveLabelPerTimeStepDatabase):
         lightcurve_paths = list(self.lightcurve_directory.glob('*lc.fits'))
         tic_ids = [int(self.get_tic_id_from_single_sector_obs_id(path.name)) for path in lightcurve_paths]
         sectors = [self.get_sector_from_single_sector_obs_id(path.name) for path in lightcurve_paths]
-        lightcurve_meta_data = pd.DataFrame({'lightcurve_path': map(str, lightcurve_paths), 'tic_id': tic_ids,
+        lightcurve_meta_data = pd.DataFrame({'lightcurve_path': list(map(str, lightcurve_paths)), 'tic_id': tic_ids,
                                              'sector': sectors})
         self.meta_data_frame = pd.merge(liang_yu_dispositions, lightcurve_meta_data,
                                         how='inner', on=['tic_id', 'sector'])

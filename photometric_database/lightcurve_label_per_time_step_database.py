@@ -1,10 +1,9 @@
 """Code for representing a database of lightcurves for binary classification with a single label per time step."""
-from typing import Union, List
-
 import numpy as np
 import pandas as pd
 import tensorflow as tf
 from pathlib import Path
+from typing import Union, List
 
 from photometric_database.lightcurve_database import LightcurveDatabase
 
@@ -80,6 +79,7 @@ class LightcurveLabelPerTimeStepDatabase(LightcurveDatabase):
         :return: The example and its corresponding label.
         """
         example, label = self.general_preprocessing(example_path_tensor)
+        example, label = example.numpy(), label.numpy()
         example, label = self.make_uniform_length_requiring_positive(
             example, label, required_length_multiple_base=self.length_multiple_base
         )
@@ -266,7 +266,7 @@ class LightcurveLabelPerTimeStepDatabase(LightcurveDatabase):
             length = self.round_to_base(length, base=required_length_multiple_base)
         if length == label.shape[0]:
             return example, label
-        if any(label):
+        if label.shape[0] > length and any(label):
             valid_start_indexes = self.valid_start_indexes_for_segment_including_positive(label.astype(np.bool), length)
             start_index = np.random.choice(valid_start_indexes)
             end_index = start_index + length
@@ -289,7 +289,8 @@ class LightcurveLabelPerTimeStepDatabase(LightcurveDatabase):
         """
         for _ in range(segment_length - 1):
             boolean_array = boolean_array | np.roll(boolean_array, -1)
-        boolean_array = boolean_array[:segment_length - 1]  # Segments extending off the end of the array are invalid.
+        assert boolean_array.shape[0] >= segment_length
+        boolean_array = boolean_array[:-(segment_length - 1)]  # Segments extending beyond the array are invalid.
         return np.where(boolean_array)[0]
 
     def calculate_magnifications_for_lightcurve_meta_data(self, times: np.float32,
