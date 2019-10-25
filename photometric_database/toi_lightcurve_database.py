@@ -1,5 +1,8 @@
 """
-Code to represent the database of TESS data based on `Liang Yu's work <https://arxiv.org/pdf/1904.02726.pdf>`_.
+Code to represent the database of TESS transit data based on disposition tables.
+The primary source for dispositions is from the `ExoFOP TOI table
+<https://exofop.ipac.caltech.edu/tess/download_toi.php?sort=toi&output=csv>`_.
+Another option for disposition source data is given by `Liang Yu's work <https://arxiv.org/pdf/1904.02726.pdf>`_.
 """
 from typing import Union
 import numpy as np
@@ -13,9 +16,9 @@ from photometric_database.tess_transit_lightcurve_label_per_time_step_database i
     TessTransitLightcurveLabelPerTimeStepDatabase
 
 
-class LiangYuLightcurveDatabase(TessTransitLightcurveLabelPerTimeStepDatabase):
+class ToiLightcurveDatabase(TessTransitLightcurveLabelPerTimeStepDatabase):
     """
-    A class to represent the database of TESS data based on `Liang Yu's work <https://arxiv.org/pdf/1904.02726.pdf>`_.
+    A class to represent the database of TESS transit data based on disposition tables.
     """
 
     def __init__(self, data_directory='data/tess'):
@@ -95,11 +98,17 @@ class LiangYuLightcurveDatabase(TessTransitLightcurveLabelPerTimeStepDatabase):
         :param times: The times of the measurements in the lightcurve.
         :return: A boolean label for each time step specifying if transiting is occurring at that time step.
         """
-        example_meta_data = self.meta_data_frame[self.meta_data_frame['lightcurve_path'] == example_path].iloc[0]
-        epoch_times = times - example_meta_data['transit_epoch']
-        transit_duration = example_meta_data['transit_duration'] / 24  # Convert from hours to days.
-        transit_period = example_meta_data['transit_period']
-        is_transiting = ((epoch_times + (transit_duration / 2)) % transit_period) < transit_duration
+        with np.errstate(all='raise'):
+            try:
+                example_meta_data = self.meta_data_frame[self.meta_data_frame['lightcurve_path'] == example_path].iloc[
+                    0]
+                epoch_times = times - example_meta_data['transit_epoch']
+                transit_duration = example_meta_data['transit_duration'] / 24  # Convert from hours to days.
+                transit_period = example_meta_data['transit_period']
+                is_transiting = ((epoch_times + (transit_duration / 2)) % transit_period) < transit_duration
+            except FloatingPointError as error:
+                print(example_path)
+                raise error
         return is_transiting
 
     def is_positive(self, example_path):
@@ -126,18 +135,25 @@ class LiangYuLightcurveDatabase(TessTransitLightcurveLabelPerTimeStepDatabase):
         liang_yu_dispositions.rename(columns={'Disposition': 'disposition', 'Epoc': 'transit_epoch',
                                               'Period': 'transit_period', 'Duration': 'transit_duration',
                                               'Sectors': 'sector'}, inplace=True)
+        liang_yu_dispositions = liang_yu_dispositions[(liang_yu_dispositions['disposition'] != 'PC') |
+                                                      (liang_yu_dispositions['transit_epoch'].notna() &
+                                                       liang_yu_dispositions['transit_period'].notna() &
+                                                       liang_yu_dispositions['transit_duration'].notna())]
         lightcurve_paths = list(self.lightcurve_directory.glob('*lc.fits'))
         tic_ids = [int(self.get_tic_id_from_single_sector_obs_id(path.name)) for path in lightcurve_paths]
         sectors = [self.get_sector_from_single_sector_obs_id(path.name) for path in lightcurve_paths]
         lightcurve_meta_data = pd.DataFrame({'lightcurve_path': list(map(str, lightcurve_paths)), 'tic_id': tic_ids,
                                              'sector': sectors})
-        self.meta_data_frame = pd.merge(liang_yu_dispositions, lightcurve_meta_data,
-                                        how='inner', on=['tic_id', 'sector'])
+        meta_data_frame_with_candidate_nans = pd.merge(liang_yu_dispositions, lightcurve_meta_data,
+                                                       how='inner', on=['tic_id', 'sector'])
+        self.meta_data_frame = meta_data_frame_with_candidate_nans.dropna()
 
     def download_liang_yu_database(self):
         """
         Downloads the database used in `Liang Yu's work <https://arxiv.org/pdf/1904.02726.pdf>`_.
         """
+        print('Clearing data directory...')
+        self.clear_data_directory()
         print("Downloading Liang Yu's disposition CSV...")
         liang_yu_csv_url = 'https://raw.githubusercontent.com/yuliang419/Astronet-Triage/master/astronet/tces.csv'
         response = requests.get(liang_yu_csv_url)
@@ -171,4 +187,5 @@ class LiangYuLightcurveDatabase(TessTransitLightcurveLabelPerTimeStepDatabase):
 
 
 if __name__ == '__main__':
-    LiangYuLightcurveDatabase().general_preprocessing(tf.convert_to_tensor('data/tess/lightcurves/tess2018206045859-s0001-0000000025078924-0120-s_lc.fits'))
+    ToiLightcurveDatabase().general_preprocessing(
+        tf.convert_to_tensor('data/tess/lightcurves/tess2018206045859-s0001-0000000025078924-0120-s_lc.fits'))

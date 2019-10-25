@@ -1,6 +1,7 @@
 """
 Code for a database of TESS transit lightcurves with a label per time step.
 """
+import shutil
 from pathlib import Path
 from typing import List
 import pandas as pd
@@ -27,6 +28,14 @@ class TessTransitLightcurveLabelPerTimeStepDatabase(LightcurveLabelPerTimeStepDa
         self.data_validation_directory = self.data_directory.joinpath('data_validations')
         self.data_validation_directory.mkdir(parents=True, exist_ok=True)
         self.data_validation_dictionary = None
+
+    def clear_data_directory(self):
+        """
+        Empties the data directory.
+        """
+        if self.data_directory.exists():
+            shutil.rmtree(self.data_directory)
+        self.data_directory.mkdir(parents=True, exist_ok=True)
 
     def get_lightcurve_file_paths(self) -> List[Path]:
         """
