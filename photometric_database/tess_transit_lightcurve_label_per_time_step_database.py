@@ -22,12 +22,14 @@ class TessTransitLightcurveLabelPerTimeStepDatabase(LightcurveLabelPerTimeStepDa
     def __init__(self, data_directory='data/tess'):
         super().__init__()
         self.data_directory = Path(data_directory)
-        self.data_directory.mkdir(parents=True, exist_ok=True)
         self.lightcurve_directory = self.data_directory.joinpath('lightcurves')
-        self.lightcurve_directory.mkdir(parents=True, exist_ok=True)
         self.data_validation_directory = self.data_directory.joinpath('data_validations')
-        self.data_validation_directory.mkdir(parents=True, exist_ok=True)
         self.data_validation_dictionary = None
+
+    def create_data_directories(self):
+        self.data_directory.mkdir(parents=True, exist_ok=True)
+        self.lightcurve_directory.mkdir(parents=True, exist_ok=True)
+        self.data_validation_directory.mkdir(parents=True, exist_ok=True)
 
     def clear_data_directory(self):
         """
@@ -35,7 +37,7 @@ class TessTransitLightcurveLabelPerTimeStepDatabase(LightcurveLabelPerTimeStepDa
         """
         if self.data_directory.exists():
             shutil.rmtree(self.data_directory)
-        self.data_directory.mkdir(parents=True, exist_ok=True)
+        self.create_data_directories()
 
     def get_lightcurve_file_paths(self) -> List[Path]:
         """
@@ -80,9 +82,9 @@ class TessTransitLightcurveLabelPerTimeStepDatabase(LightcurveLabelPerTimeStepDa
         return tess_observations.to_pandas()
 
     @staticmethod
-    def get_data_products(observations: pd.DataFrame) -> pd.DataFrame:
+    def get_product_list(observations: pd.DataFrame) -> pd.DataFrame:
         """
-        A wrapper for MAST's `get_data_products`, allowing the use of Pandas DataFrames instead of AstroPy Tables.
+        A wrapper for MAST's `get_product_list`, allowing the use of Pandas DataFrames instead of AstroPy Tables.
         Retries on error when communicating with the MAST server.
 
         :param observations: The data frame of observations to get. Will be converted from DataFrame to Table for query.
@@ -163,14 +165,14 @@ class TessTransitLightcurveLabelPerTimeStepDatabase(LightcurveLabelPerTimeStepDa
         return data_frame
 
     @staticmethod
-    def get_tic_id_from_single_sector_obs_id(obs_id: str) -> str:
+    def get_tic_id_from_single_sector_obs_id(obs_id: str) -> int:
         """
         Extracts the TIC ID from a single-sector obs_id string.
 
         :param obs_id: The obs_id to extract from.
         :return: The extracted TIC ID.
         """
-        return obs_id.split('-')[2].lstrip('0')
+        return int(obs_id.split('-')[2].lstrip('0'))
 
     def add_sector_columns_based_on_multi_sector_obs_id(self, observations: pd.DataFrame) -> pd.DataFrame:
         """
