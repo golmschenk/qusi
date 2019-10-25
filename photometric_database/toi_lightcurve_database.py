@@ -122,8 +122,7 @@ class ToiLightcurveDatabase(TessTransitLightcurveLabelPerTimeStepDatabase):
         :param example_path: The path to the example to check.
         :return: Whether or not the example contains a transit event.
         """
-        candidate_planets = self.meta_data_frame[self.meta_data_frame['disposition'] == 'PC']
-        return example_path in candidate_planets['lightcurve_path'].values
+        return example_path in self.meta_data_frame['lightcurve_path'].values
 
     def obtain_meta_data_frame_for_available_lightcurves(self):
         dispositions = self.load_toi_dispositions_in_project_format()
