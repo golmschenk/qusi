@@ -108,8 +108,12 @@ class ToiLightcurveDatabase(TessTransitLightcurveLabelPerTimeStepDatabase):
                     epoch_times = times - transit_tess_epoch
                     transit_duration = planet_meta_data['transit_duration'] / 24  # Convert from hours to days.
                     transit_period = planet_meta_data['transit_period']
-                    planet_is_transiting = ((epoch_times + (transit_duration / 2)) % transit_period) < transit_duration
-                    any_planet_is_transiting = any_planet_is_transiting & planet_is_transiting
+                    half_duration = transit_duration / 2
+                    if transit_period == 0:  # Single transit known, no repeating signal.
+                        planet_is_transiting = (-half_duration < epoch_times) & (epoch_times < half_duration)
+                    else:  # Period known, signal should repeat every period.
+                        planet_is_transiting = ((epoch_times + half_duration) % transit_period) < transit_duration
+                    any_planet_is_transiting = any_planet_is_transiting | planet_is_transiting
             except FloatingPointError as error:
                 print(example_path)
                 raise error
