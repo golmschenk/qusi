@@ -43,3 +43,19 @@ class TestRocCalculator:
                                                      [0, 0, 0, 0, 0, 0]], dtype=np.bool)
         thresholded_predictions = roc_calculator.threshold_predictions(probability_predictions, thresholds)
         assert np.array_equal(thresholded_predictions, expected_thresholded_predictions)
+
+    def test_can_calculate_confusion_matrix_counts_for_each_prediction_threshold(self, roc_calculator):
+        label = np.array([1, 0, 0, 0, 1, 1], dtype=np.bool)
+        thresholded_predictions = np.array([[1, 1, 1, 1, 1, 1],
+                                            [1, 0, 0, 1, 0, 1],
+                                            [0, 0, 0, 0, 0, 0]], dtype=np.bool)
+        expected_true_positive_counts = np.array([3, 2, 0], dtype=np.int32)
+        expected_false_positive_counts = np.array([3, 1, 0], dtype=np.int32)
+        expected_true_negative_counts = np.array([0, 2, 3], dtype=np.int32)
+        expected_false_negative_counts = np.array([0, 1, 3], dtype=np.int32)
+        confusion_counts = roc_calculator.calculate_confusion_matrix_counts(label, thresholded_predictions)
+        true_positive_counts, false_positive_counts, true_negative_counts, false_negative_counts = confusion_counts
+        assert np.array_equal(true_positive_counts, expected_true_positive_counts)
+        assert np.array_equal(false_positive_counts, expected_false_positive_counts)
+        assert np.array_equal(true_negative_counts, expected_true_negative_counts)
+        assert np.array_equal(false_negative_counts, expected_false_negative_counts)
