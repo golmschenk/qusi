@@ -73,6 +73,24 @@ class ToiLightcurveDatabase(TessTransitLightcurveLabelPerTimeStepDatabase):
         :return: The example and its corresponding label.
         """
         example_path = example_path_tensor.numpy().decode('utf-8')
+        fluxes, times = self.load_fluxes_and_times_from_fits_file(example_path)
+        fluxes = self.normalize(fluxes)
+        time_differences = np.diff(times, prepend=times[0])
+        example = np.stack([fluxes, time_differences], axis=-1)
+        if self.is_positive(example_path):
+            label = self.generate_label(example_path, times)
+        else:
+            label = np.zeros_like(fluxes)
+        return tf.convert_to_tensor(example, dtype=tf.float32), tf.convert_to_tensor(label, dtype=tf.float32)
+
+    @staticmethod
+    def load_fluxes_and_times_from_fits_file(example_path: Union[str, Path]) -> (np.ndarray, np.ndarray):
+        """
+        Extract the flux and time values from a TESS FITS file.
+
+        :param example_path: The path to the FITS file.
+        :return: The flux and times values from the FITS file.
+        """
         hdu_list = fits.open(example_path)
         lightcurve = hdu_list[1].data  # Lightcurve information is in first extension table.
         fluxes = lightcurve['SAP_FLUX']
@@ -82,14 +100,7 @@ class ToiLightcurveDatabase(TessTransitLightcurveLabelPerTimeStepDatabase):
         nan_indexes = np.union1d(np.argwhere(np.isnan(fluxes)), np.argwhere(np.isnan(times)))
         fluxes = np.delete(fluxes, nan_indexes)
         times = np.delete(times, nan_indexes)
-        fluxes = self.normalize(fluxes)
-        time_differences = np.diff(times, prepend=times[0])
-        example = np.stack([fluxes, time_differences], axis=-1)
-        if self.is_positive(example_path):
-            label = self.generate_label(example_path, times)
-        else:
-            label = np.zeros_like(fluxes)
-        return tf.convert_to_tensor(example, dtype=tf.float32), tf.convert_to_tensor(label, dtype=tf.float32)
+        return fluxes, times
 
     def generate_label(self, example_path: str, times: np.float32) -> np.bool:
         """
