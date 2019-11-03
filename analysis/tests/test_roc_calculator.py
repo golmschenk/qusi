@@ -59,3 +59,21 @@ class TestRocCalculator:
         assert np.array_equal(false_positive_counts, expected_false_positive_counts)
         assert np.array_equal(true_negative_counts, expected_true_negative_counts)
         assert np.array_equal(false_negative_counts, expected_false_negative_counts)
+
+    def test_can_accumulate_counts_from_multiple_examples(self, roc_calculator):
+        label0 = np.array([1, 0], dtype=np.bool)
+        prediction0 = np.array([0.8, 0.4])
+        label1 = np.array([0, 1], dtype=np.bool)
+        prediction1 = np.array([0.6, 0.6])
+        thresholds = np.array([0.5, 1.0])
+        expected_total_true_positive_counts = np.array([2, 0])
+        expected_total_false_positive_counts = np.array([1, 0])
+        expected_total_true_negative_counts = np.array([1, 2])
+        expected_total_false_negative_counts = np.array([0, 2])
+        roc_calculator.thresholds = thresholds
+        roc_calculator.accumulate_confusion_matrix_counts(label0, prediction0)
+        roc_calculator.accumulate_confusion_matrix_counts(label1, prediction1)
+        assert np.array_equal(roc_calculator.true_positive_counts, expected_total_true_positive_counts)
+        assert np.array_equal(roc_calculator.false_positive_counts, expected_total_false_positive_counts)
+        assert np.array_equal(roc_calculator.true_negative_counts, expected_total_true_negative_counts)
+        assert np.array_equal(roc_calculator.false_negative_counts, expected_total_false_negative_counts)
