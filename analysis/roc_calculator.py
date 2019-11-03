@@ -16,6 +16,24 @@ class RocCalculator:
         self.false_negative_counts: int = 0
         self.thresholds: np.ndarray = np.linspace(0, 1, 1000)
 
+    @property
+    def true_positive_rates(self) -> np.ndarray:
+        """
+        Calculates the true positive rates for the accumulated confusion matrix counts for each threshold.
+
+        :return: The true positive rates for each threshold.
+        """
+        return self.true_positive_counts / (self.true_positive_counts + self.false_negative_counts)
+
+    @property
+    def false_positive_rates(self) -> np.ndarray:
+        """
+        Calculates the false positive rates for the accumulated confusion matrix counts for each threshold.
+
+        :return: The false positive rates for each threshold.
+        """
+        return self.false_positive_counts / (self.true_negative_counts + self.false_positive_counts)
+
     @staticmethod
     def threshold_predictions(probability_predictions: np.ndarray, thresholds: np.ndarray):
         """
