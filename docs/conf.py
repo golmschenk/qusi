@@ -9,7 +9,7 @@ from typing import Dict
 from importlib import import_module
 from autoapi.mappers.python.objects import PythonPythonMapper
 from sphinx.application import Sphinx
-from git import Repo
+from git import Repo, Head, Tag, RemoteReference
 
 # Path setup
 
@@ -88,11 +88,19 @@ def linkcode_resolve(domain, info):
     else:
         line_range_jump_option = ''
     repository = Repo('..')
-    ref_name = None
-    for ref in repository.refs:  # Manually iterate over refs, because ReadTheDocs uses a detached head.
+    matching_refs = []
+    for ref in list(repository.refs):  # Manually iterate over refs, because ReadTheDocs uses a detached head.
         if ref.commit == repository.head.commit:
-            ref_name = ref.name
-    if ref_name is None:
+            matching_refs.append(ref)
+    local_head_refs = [ref for ref in matching_refs if isinstance(ref, Head) and not isinstance(ref, RemoteReference)]
+    tag_refs = [ref for ref in matching_refs if isinstance(ref, Tag)]
+    if 'master' in [ref.name for ref in local_head_refs]:  # First check if the commit matches the master branch.
+        ref_name = 'master'
+    elif tag_refs:  # Second, check if the commit matches a tag.
+        ref_name = tag_refs[0].name
+    elif local_head_refs:  # Third, check if the commit matches a branch.
+        ref_name = local_head_refs[0].name
+    else:  # If none of the above are true, have the doc refer to the specific commit.
         ref_name = repository.head.commit
     return f'http://github.com/golmschenk/ramjet/blob/{ref_name}/{file_name}{line_range_jump_option}'
 
