@@ -1,7 +1,7 @@
 pandas==0.24.2
 tensorflow==2.0.0
 astropy==3.2.2
-astroquery==0.3.9
+astroquery==0.3.10
 requests==2.22.0
 numpy==1.16.3
 pytest==5.0.1

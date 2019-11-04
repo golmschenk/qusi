@@ -6,14 +6,14 @@ from tensorflow.python.keras import callbacks
 
 from losses import PerTimeStepBinaryCrossEntropy
 from models import ConvolutionalLstm
-from photometric_database.microlensing_label_per_time_step_database import MicrolensingLabelPerTimeStepDatabase
+from photometric_database.toi_lightcurve_database import ToiLightcurveDatabase
 
 
 def train():
     """Runs the training."""
     # Basic training settings.
     model = ConvolutionalLstm()
-    database = MicrolensingLabelPerTimeStepDatabase()
+    database = ToiLightcurveDatabase()
     epochs_to_run = 1000
     trial_name = 'baseline'
     logs_directory = 'logs'
