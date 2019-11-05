@@ -30,10 +30,10 @@ This package provides the API to access the TESS data stored at the Mikulski Arc
 
 The first thing to do with this package is get the available :code:`Observation`'s (which is a class of the
 :code:`astroquery.mast` package. What "observation" means here is a bit vague, but basically each :code:`Observation` is
-a collection of related measurements from TESS. There are two main types of :code:`Observations` for TESS: time-series
+a collection of related measurements from TESS. There are two main types of :code:`Observation`\s for TESS: time-series
 and full-frame images (FFIs).
 
-To get the :code:`Observation`s for a single TESS input catalog (TIC) ID target we can use something like:
+To get the :code:`Observation`\s for a single TESS input catalog (TIC) ID target we can use something like:
 
 .. code-block:: python
 
