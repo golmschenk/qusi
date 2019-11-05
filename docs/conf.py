@@ -9,7 +9,7 @@ from typing import Dict
 from importlib import import_module
 from autoapi.mappers.python.objects import PythonPythonMapper
 from sphinx.application import Sphinx
-from git import Repo, Head, Tag, RemoteReference
+from git import Repo, Head, Tag
 
 # Path setup
 
