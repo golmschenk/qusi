@@ -5,7 +5,7 @@ import pytest
 import numpy as np
 import pandas as pd
 
-from photometric_database.microlensing_label_per_time_step_database import MicrolensingLabelPerTimeStepDatabase
+from ramjet.photometric_database.microlensing_label_per_time_step_database import MicrolensingLabelPerTimeStepDatabase
 
 
 class TestMicrolensingLabelPerTimeStepDatabase:
@@ -27,16 +27,16 @@ class TestMicrolensingLabelPerTimeStepDatabase:
 
         :return: The data directory path.
         """
-        return 'photometric_database/tests/resources/test_data_directory'
+        return str(Path(__file__).parent.joinpath('resources/test_data_directory'))
 
     @pytest.fixture
-    def positive_directory_path(self) -> str:
+    def positive_directory_path(self, data_directory_path: str) -> str:
         """
         Provides a path to a positive data directory.
 
         :return: The positive data directory path.
         """
-        return 'photometric_database/tests/resources/test_data_directory/positive'
+        return str(Path(data_directory_path).joinpath('positive'))
 
     @pytest.fixture
     def lightcurve_file_path(self, positive_directory_path) -> str:
@@ -54,7 +54,7 @@ class TestMicrolensingLabelPerTimeStepDatabase:
 
         :return: The meta data file path.
         """
-        return 'photometric_database/tests/resources/test_candlist_RADec.dat.txt'
+        return str(Path(__file__).parent.joinpath('resources/test_candlist_RADec.dat.txt'))
 
     def test_can_read_microlensing_meta_data_file(self, database, meta_data_file_path):
         meta_data_frame = database.load_microlensing_meta_data(meta_data_file_path)

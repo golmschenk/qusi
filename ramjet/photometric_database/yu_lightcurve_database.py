@@ -9,7 +9,7 @@ import tensorflow as tf
 import requests
 from pathlib import Path
 
-from photometric_database.toi_lightcurve_database import ToiLightcurveDatabase
+from ramjet.photometric_database.toi_lightcurve_database import ToiLightcurveDatabase
 
 
 class YuLightcurveDatabase(ToiLightcurveDatabase):

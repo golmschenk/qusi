@@ -3,7 +3,7 @@ Code for representing a database for microlensing with lightcurves for binary cl
 time step.
 """
 
-from photometric_database.lightcurve_label_per_time_step_database import LightcurveLabelPerTimeStepDatabase
+from ramjet.photometric_database.lightcurve_label_per_time_step_database import LightcurveLabelPerTimeStepDatabase
 
 
 class MicrolensingLabelPerTimeStepDatabase(LightcurveLabelPerTimeStepDatabase):
