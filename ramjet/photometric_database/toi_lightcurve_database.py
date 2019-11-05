@@ -11,7 +11,7 @@ import requests
 from pathlib import Path
 from astropy.io import fits
 
-from photometric_database.tess_transit_lightcurve_label_per_time_step_database import \
+from ramjet.photometric_database.tess_transit_lightcurve_label_per_time_step_database import \
     TessTransitLightcurveLabelPerTimeStepDatabase
 
 

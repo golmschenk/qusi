@@ -5,7 +5,7 @@ import tensorflow as tf
 from pathlib import Path
 from typing import Union, List
 
-from photometric_database.lightcurve_database import LightcurveDatabase
+from ramjet.photometric_database.lightcurve_database import LightcurveDatabase
 
 
 class LightcurveLabelPerTimeStepDatabase(LightcurveDatabase):

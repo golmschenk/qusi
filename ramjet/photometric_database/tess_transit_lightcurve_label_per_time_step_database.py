@@ -5,13 +5,12 @@ import shutil
 from pathlib import Path
 from typing import List
 import pandas as pd
-import requests
 from astropy.table import Table
 from astroquery.mast import Observations
 from astroquery.exceptions import TimeoutError as AstroQueryTimeoutError
 from requests.exceptions import ConnectionError
 
-from photometric_database.lightcurve_label_per_time_step_database import LightcurveLabelPerTimeStepDatabase
+from ramjet.photometric_database.lightcurve_label_per_time_step_database import LightcurveLabelPerTimeStepDatabase
 
 
 class TessTransitLightcurveLabelPerTimeStepDatabase(LightcurveLabelPerTimeStepDatabase):

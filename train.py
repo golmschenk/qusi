@@ -4,9 +4,9 @@ import os
 import tensorflow as tf
 from tensorflow.python.keras import callbacks
 
-from losses import PerTimeStepBinaryCrossEntropy
-from models import ConvolutionalLstm
-from photometric_database.toi_lightcurve_database import ToiLightcurveDatabase
+from ramjet.losses import PerTimeStepBinaryCrossEntropy
+from ramjet.models import ConvolutionalLstm
+from ramjet.photometric_database.toi_lightcurve_database import ToiLightcurveDatabase
 
 
 def train():

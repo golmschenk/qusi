@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 
-from photometric_database.lightcurve_database import LightcurveDatabase
+from ramjet.photometric_database.lightcurve_database import LightcurveDatabase
 
 
 class MicrolensingLabelPerExampleDatabase(LightcurveDatabase):

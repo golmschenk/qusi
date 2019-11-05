@@ -2,7 +2,7 @@
 import pytest
 import numpy as np
 
-from analysis.roc_calculator import RocCalculator
+from ramjet.analysis.roc_calculator import RocCalculator
 
 
 class TestRocCalculator:

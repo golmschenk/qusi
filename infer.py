@@ -1,11 +1,10 @@
 """Code for inference on the contents of a directory."""
-import numpy as np
 import pandas as pd
 import tensorflow as tf
 from pathlib import Path
 
-from models import ConvolutionalLstm
-from photometric_database.microlensing_label_per_time_step_database import MicrolensingLabelPerTimeStepDatabase
+from ramjet.models import ConvolutionalLstm
+from ramjet.photometric_database.microlensing_label_per_time_step_database import MicrolensingLabelPerTimeStepDatabase
 
 # Set these paths to the correct paths.
 saved_log_directory = Path('logs/baseline YYYY-MM-DD-hh-mm-ss')
