@@ -32,9 +32,7 @@ exclude_patterns = ['_build', '_templates', 'Thumbs.db', '.DS_Store']
 
 # AutoAPI configuration.
 
-autoapi_dirs = ['..']
-autoapi_ignore = ['*envs/*', '*venv/*', '*.pytest_cache/*', '*logs/*', '*data/*', '*docs/conf.py', '*docs/build.py',
-                  '*tests/*', '*conftest.py', '*train.py', '*infer.py']
+autoapi_dirs = ['../ramjet']
 autoapi_template_dir = '_templates/autoapi'
 
 
