@@ -52,11 +52,6 @@ def linkcode_resolve(domain, info):
     """
     Determine the URL corresponding to a Python object.
     """
-
-    class PlaceholderException(Exception):
-        """A placeholder exception meant to show where to add specific exceptions in the future for the code linking."""
-        pass
-
     if domain != 'py':
         return None
     module_name = info['module']
@@ -73,14 +68,14 @@ def linkcode_resolve(domain, info):
             return None
     try:
         file_name = inspect.getsourcefile(object_)
-    except PlaceholderException:
+    except TypeError:
         file_name = None
     if not file_name:
         return None
     file_name = os.path.relpath(file_name, start=os.path.abspath('..'))
     try:
         source, line_number = inspect.getsourcelines(object_)
-    except PlaceholderException:
+    except TypeError:
         line_number = None
         source = None
     if line_number is not None and source is not None:
