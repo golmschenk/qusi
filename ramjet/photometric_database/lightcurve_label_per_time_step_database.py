@@ -12,8 +12,8 @@ from ramjet.photometric_database.lightcurve_database import LightcurveDatabase
 class LightcurveLabelPerTimeStepDatabase(LightcurveDatabase):
     """A representation of a database of lightcurves for binary classification with a single label per time step."""
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, data_directory='data'):
+        super().__init__(data_directory=data_directory)
         self.meta_data_frame: Union[pd.DataFrame, None] = None
         self.time_steps_per_example = 6400
         self.length_multiple_base = 32

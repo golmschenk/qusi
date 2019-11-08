@@ -25,8 +25,7 @@ def train():
     database.trial_directory = trial_directory
 
     # Prepare training data and metrics.
-    training_dataset, validation_dataset = database.generate_datasets('data/positive', 'data/negative',
-                                                                      'data/candlist_RADec.dat.feather')
+    training_dataset, validation_dataset = database.generate_datasets()
     optimizer = tf.optimizers.Adam(learning_rate=1e-4)
     loss_metric = PerTimeStepBinaryCrossEntropy(name='Loss', positive_weight=20)
     metrics = [tf.metrics.BinaryAccuracy(name='Accuracy'), tf.metrics.Precision(name='Precision'),

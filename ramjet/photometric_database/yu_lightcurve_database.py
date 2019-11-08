@@ -18,12 +18,11 @@ class YuLightcurveDatabase(TessTransitLightcurveLabelPerTimeStepDatabase):
     A class to represent the database of TESS transit data based on disposition tables.
     """
 
-    def __init__(self, data_directory='data/tess'):
+    def __init__(self, data_directory='data/tess_yu'):
         super().__init__(data_directory=data_directory)
         self.liang_yu_dispositions_path = self.data_directory.joinpath('liang_yu_dispositions.csv')
 
-    def generate_datasets(self, positive_data_directory: str, negative_data_directory: str,
-                          meta_data_file_path: str) -> (tf.data.Dataset, tf.data.Dataset):
+    def generate_datasets(self) -> (tf.data.Dataset, tf.data.Dataset):
         """
         Generates the training and validation datasets.
 

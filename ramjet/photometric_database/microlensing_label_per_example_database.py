@@ -10,26 +10,30 @@ from ramjet.photometric_database.lightcurve_database import LightcurveDatabase
 
 class MicrolensingLabelPerExampleDatabase(LightcurveDatabase):
     """A representation of a dataset of lightcurves for binary classification with a single label per example."""
-    def __init__(self):
-        super().__init__()
+    def __init__(self, data_directory='data/moa_microlensing'):
+        super().__init__(data_directory=data_directory)
         self.time_steps_per_example = 30000
 
-    def generate_datasets(self, positive_data_directory, negative_data_directory,
-                          positive_to_negative_data_ratio: float = None) -> (tf.data.Dataset, tf.data.Dataset):
-        """Generates the training and validation datasets."""
-        data_format_suffixes = ('.npy', '.pkl', '.feather')
-        positive_example_paths = [os.path.join(positive_data_directory, file_name) for file_name in
-                                  os.listdir(positive_data_directory) if file_name.endswith(data_format_suffixes)]
+    def generate_datasets(self, positive_data_directory: str = 'positive', negative_data_directory: str = 'negative'
+                          ) -> (tf.data.Dataset, tf.data.Dataset):
+        """
+        Generates the training and validation datasets.
+
+        :param positive_data_directory: The relative path from the data directory to the directory containing the
+                                        positive example files.
+        :param negative_data_directory: The relative path from the data directory to the directory containing the
+                                        negative example files.
+        """
+        positive_example_paths = list(self.data_directory.joinpath(positive_data_directory).glob('*.feather'))
         print(f'{len(positive_example_paths)} positive examples.')
-        negative_example_paths = [os.path.join(negative_data_directory, file_name) for file_name in
-                                  os.listdir(negative_data_directory) if file_name.endswith(data_format_suffixes)]
+        negative_example_paths = list(self.data_directory.joinpath(negative_data_directory).glob('*.feather'))
         print(f'{len(negative_example_paths)} negative examples.')
         positive_datasets = self.get_training_and_validation_datasets_for_file_paths(positive_example_paths)
         positive_training_dataset, positive_validation_dataset = positive_datasets
         negative_datasets = self.get_training_and_validation_datasets_for_file_paths(negative_example_paths)
         negative_training_dataset, negative_validation_dataset = negative_datasets
         training_dataset = self.get_ratio_enforced_dataset(positive_training_dataset, negative_training_dataset,
-                                                           positive_to_negative_data_ratio)
+                                                           positive_to_negative_data_ratio=1)
         validation_dataset = positive_validation_dataset.concatenate(negative_validation_dataset)
         if self.trial_directory is not None:
             self.log_dataset_file_names(training_dataset, dataset_name='training')

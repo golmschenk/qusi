@@ -17,6 +17,8 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveLabelPerTimeStepDatabase):
     A representation of a database for microlensing of lightcurves for binary classification with a single label per
     time step.
     """
+    def __init__(self, data_directory='data/moa_microlensing'):
+        super().__init__(data_directory=data_directory)
 
     @staticmethod
     def load_microlensing_meta_data(meta_data_file_path: str) -> pd.DataFrame:
@@ -176,21 +178,24 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveLabelPerTimeStepDatabase):
                 filtered_file_paths.append(file_path)
         return filtered_file_paths
 
-    def generate_datasets(self, positive_data_directory: str, negative_data_directory: str,
-                          meta_data_file_path: str) -> (tf.data.Dataset, tf.data.Dataset):
+    def generate_datasets(self, positive_data_directory: str = 'positive', negative_data_directory: str = 'negative',
+                          meta_data_file_path: str = 'candlist_RADec.dat.feather'
+                          ) -> (tf.data.Dataset, tf.data.Dataset):
         """
         Generates the training and validation datasets.
 
-        :param positive_data_directory: The path to the directory containing the positive example files.
-        :param negative_data_directory: The path to the directory containing the negative example files.
-        :param meta_data_file_path: The path to the microlensing meta data file.
+        :param positive_data_directory: The relative path from the data directory to the directory containing the
+                                        positive example files.
+        :param negative_data_directory: The relative path from the data directory to the directory containing the
+                                        negative example files.
+        :param meta_data_file_path: The relative path from the data directory to the microlensing meta data file.
         :return: The training and validation datasets.
         """
-        self.meta_data_frame = pd.read_feather(meta_data_file_path)
-        positive_example_paths = list(Path(positive_data_directory).glob('*.feather'))
+        self.meta_data_frame = pd.read_feather(self.data_directory.joinpath(meta_data_file_path))
+        positive_example_paths = list(self.data_directory.joinpath(positive_data_directory).glob('*.feather'))
         positive_example_paths = self.remove_file_paths_with_no_meta_data(positive_example_paths, self.meta_data_frame)
         print(f'{len(positive_example_paths)} positive examples.')
-        negative_example_paths = list(Path(negative_data_directory).glob('*.feather'))
+        negative_example_paths = list(self.data_directory.joinpath(negative_data_directory).glob('*.feather'))
         print(f'{len(negative_example_paths)} negative examples.')
         positive_datasets = self.get_training_and_validation_datasets_for_file_paths(positive_example_paths)
         positive_training_dataset, positive_validation_dataset = positive_datasets

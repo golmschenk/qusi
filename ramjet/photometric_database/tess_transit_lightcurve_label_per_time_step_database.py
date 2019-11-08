@@ -23,9 +23,8 @@ class TessTransitLightcurveLabelPerTimeStepDatabase(LightcurveLabelPerTimeStepDa
     """
 
     def __init__(self, data_directory='data/tess'):
-        super().__init__()
+        super().__init__(data_directory=data_directory)
         self.meta_data_frame: Union[pd.DataFrame, None] = None
-        self.data_directory = Path(data_directory)
         self.lightcurve_directory = self.data_directory.joinpath('lightcurves')
         self.data_validation_directory = self.data_directory.joinpath('data_validations')
         self.data_validation_dictionary = None
