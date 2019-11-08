@@ -9,10 +9,11 @@ import tensorflow as tf
 import requests
 from pathlib import Path
 
-from ramjet.photometric_database.toi_lightcurve_database import ToiLightcurveDatabase
+from ramjet.photometric_database.tess_transit_lightcurve_label_per_time_step_database import \
+    TessTransitLightcurveLabelPerTimeStepDatabase
 
 
-class YuLightcurveDatabase(ToiLightcurveDatabase):
+class YuLightcurveDatabase(TessTransitLightcurveLabelPerTimeStepDatabase):
     """
     A class to represent the database of TESS transit data based on disposition tables.
     """
