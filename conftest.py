@@ -1,7 +1,10 @@
 """Configuration for the pytest tests."""
 
 import pytest
+import matplotlib
 
+
+matplotlib.use('Agg')  # Use non-interactive backend to prevent loss of focus during test.
 
 collect_ignore = ['envs/', 'venv/', 'data/', 'logs/']
 
