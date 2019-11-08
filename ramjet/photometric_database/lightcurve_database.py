@@ -13,7 +13,8 @@ import tensorflow as tf
 
 class LightcurveDatabase(ABC):
     """A base generalized database for photometric data to be subclassed."""
-    def __init__(self):
+    def __init__(self, data_directory='data'):
+        self.data_directory = Path(data_directory)
         self.validation_ratio = 0.2
         self.batch_size = 100
         self.trial_directory = None
