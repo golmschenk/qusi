@@ -29,8 +29,8 @@ def plot_lightcurve(times: np.ndarray, fluxes: np.ndarray, labels: np.ndarray = 
     """
     with plt.style.context('seaborn-whitegrid'):
         figure, axes = plt.subplots()
-        axes.set_xlabel('Days')
-        axes.set_ylabel('Flux')
+        axes.set_xlabel(x_label)
+        axes.set_ylabel(y_label)
         color_map = plt.get_cmap('tab10')
         data_point_color = color_map(0)
         positive_data_point_color = color_map(2)
