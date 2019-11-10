@@ -117,3 +117,29 @@ class LightcurveLabelPerTimeStepDatabase(LightcurveDatabase):
         :return: The rounded number.
         """
         return base * round(number / base)
+
+    @staticmethod
+    def inference_postprocessing(label: Union[tf.Tensor, np.ndarray], prediction: Union[tf.Tensor, np.ndarray],
+                                 length: int) -> (np.ndarray, np.ndarray):
+        """
+        Prepares the label and prediction for use alongside the original data. In particular, as the network may
+        require a specific multiple size, the label and prediction may need to be slightly clipped or padded. Also
+        ensures NumPy types for easy use.
+
+        :param label: The ground truth label (preprocessed for use by the network).
+        :param prediction: The prediction from the network.
+        :param length: The length of the original example before preprocessing.
+        :return: The label and prediction prepared for comparison to the original unpreprocessed example.
+        """
+        if isinstance(label, tf.Tensor):
+            label = label.numpy()
+        if isinstance(prediction, tf.Tensor):
+            prediction = label.numpy()
+        if label.shape[0] > length:
+            label = label[:length]
+            prediction = prediction[:length]
+        elif label.shape[0] < length:
+            elements_to_repeat = length - label.shape[0]
+            label = np.pad(label, (0, elements_to_repeat), mode='constant')
+            prediction = np.pad(prediction, (0, elements_to_repeat), mode='constant')
+        return label, prediction
