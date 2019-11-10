@@ -10,8 +10,8 @@ class TestModelLoader:
     """Tests for the model loader code."""
 
     def test_can_get_most_recent_log_directory(self):
-        logs_directory = Path(__file__).parent.joinpath('test_model_loader_resources/logs')
+        logs_directory = Path(__file__).parent.joinpath('test_model_loader_resources/test_logs')
         latest_log_directory = get_latest_log_directory(logs_directory)
         expected_latest_log_directory = Path(__file__).parent.joinpath(
-            'test_model_loader_resources/logs/baseline 2019-11-08-13-54-37')
+            'test_model_loader_resources/test_logs/baseline 2019-11-08-13-54-37')
         assert latest_log_directory == expected_latest_log_directory
