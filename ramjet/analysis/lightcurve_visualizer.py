@@ -54,6 +54,6 @@ def plot_lightcurve(times: np.ndarray, fluxes: np.ndarray, labels: np.ndarray = 
         axes.set_xlim(x_limits[0], x_limits[1])
         axes.set_ylim(y_limits[0], y_limits[1])
         if save_path is not None:
-            plt.savefig(save_path, facecolor=figure.get_facecolor())
+            plt.savefig(save_path, facecolor=figure.get_facecolor(), dpi=400)
         else:
             plt.show()
