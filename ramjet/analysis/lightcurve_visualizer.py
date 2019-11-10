@@ -1,0 +1,59 @@
+"""
+Code for visualizing lightcurves.
+"""
+
+from pathlib import Path
+from typing import Union
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+def plot_lightcurve(times: np.ndarray, fluxes: np.ndarray, labels: np.ndarray = None, predictions: np.ndarray = None,
+                    title: str = None, x_label: str = 'Days', y_label: str = 'Flux',
+                    x_limits: (float, float) = (None, None), y_limits: (float, float) = (None, None),
+                    save_path: Union[Path, str] = None):
+    """
+    Plots a lightcurve with a consistent styling. If true labels and/or predictions are included, these will
+    additionally be plotted.
+
+    :param times: The times of the measurements.
+    :param fluxes: The fluxes of the measurements.
+    :param labels: The binary labels for each time step.
+    :param predictions: The probability prediction for each time step.
+    :param title: The title of the plot.
+    :param x_label: The label for the x axis.
+    :param y_label: The label for the y axis.
+    :param x_limits: Optional axis limiting for the x axis.
+    :param y_limits: Optional axis limiting for the y axis.
+    :param save_path: The path to save the plot to. If `None`, the plot will be shown instead.
+    """
+    with plt.style.context('seaborn-whitegrid'):
+        figure, axes = plt.subplots()
+        axes.set_xlabel(x_label)
+        axes.set_ylabel(y_label)
+        color_map = plt.get_cmap('tab10')
+        data_point_color = color_map(0)
+        positive_data_point_color = color_map(2)
+        prediction_color = color_map(3)
+        if predictions is not None:
+            for index in range(times.shape[0] - 1):
+                axes.axvspan(times[index], times[index + 1], facecolor=prediction_color, alpha=predictions[index],
+                             zorder=2)
+        if labels is not None:
+            edge_colors = np.where(labels.reshape(-1, 1), [positive_data_point_color], [data_point_color])
+            face_colors = np.copy(edge_colors)
+            face_colors[:, 3] = 0.2
+        else:
+            edge_colors = [data_point_color]
+            face_colors = [(*data_point_color[:3], 0.2)]
+        axes.scatter(times, fluxes, c=face_colors, marker='o', edgecolors=edge_colors, linewidths=0.3, s=3, zorder=3)
+        if title is not None:
+            axes.set_title(title)
+        figure.patch.set_alpha(0)  # Transparent figure background while keeping grid background.
+        # Need to explicitly state face color or the save will override it.
+        axes.set_xlim(x_limits[0], x_limits[1])
+        axes.set_ylim(y_limits[0], y_limits[1])
+        if save_path is not None:
+            plt.savefig(save_path, facecolor=figure.get_facecolor())
+        else:
+            plt.show()
