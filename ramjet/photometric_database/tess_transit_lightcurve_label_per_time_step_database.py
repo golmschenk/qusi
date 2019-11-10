@@ -10,7 +10,8 @@ import pandas as pd
 import tensorflow as tf
 from astropy.io import fits
 from astropy.table import Table
-from astroquery.mast import Observations
+from astropy import config as _config
+from astroquery.mast import Observations, conf
 from astroquery.exceptions import TimeoutError as AstroQueryTimeoutError
 from requests.exceptions import ConnectionError
 
@@ -28,6 +29,8 @@ class TessTransitLightcurveLabelPerTimeStepDatabase(LightcurveLabelPerTimeStepDa
         self.lightcurve_directory = self.data_directory.joinpath('lightcurves')
         self.data_validation_directory = self.data_directory.joinpath('data_validations')
         self.data_validation_dictionary = None
+        conf.timeout = _config.ConfigItem(1200, 'Time limit for requests from the STScI server.')
+        conf.pagesize = _config.ConfigItem(10000, 'Number of results to request at once from the STScI server.')
 
     def create_data_directories(self):
         self.data_directory.mkdir(parents=True, exist_ok=True)
