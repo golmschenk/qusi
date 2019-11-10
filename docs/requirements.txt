@@ -10,3 +10,4 @@ Sphinx
 sphinx-autoapi
 sphinx-press-theme
 GitPython
+matplotlib
