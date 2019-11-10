@@ -23,6 +23,7 @@ to easily complete these two tasks, and to demonstrate the framework on specific
 .. toctree::
     :caption: Understanding RAMjET
 
+    quick-start-tutorial
     data_types
     python_api_for_tess_data
 
