@@ -63,6 +63,7 @@ class MicrolensingLabelPerTimeStepDatabase(LightcurveLabelPerTimeStepDatabase):
         Calculates the magnification of a microlensing event for a given time step. Broadcasts for arrays of times.
         Allows an infinite magnification in cases where the separation is zero.
         With :math:`u` as the einstein normalized separation, does
+
         .. math::
 
             u_v = 2 \dfrac{t-t_0}{t_E}
