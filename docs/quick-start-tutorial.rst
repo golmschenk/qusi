@@ -84,7 +84,8 @@ To make a prediction for a lightcurve like shown above, run:
 
     python infer.py
 
-This script will display a plot of a lightcurve with the network's predictions.
+This script will generate a plot of a lightcurve with the network's predictions and save the image to a file in
+the current directory.
 
 Although the network makes predictions extremely quickly, this version of the inference script is slow. The process
 plotting the vertical red predictions bars is particularly slow (hopefully, this will be improved soon). From there,
