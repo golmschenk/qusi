@@ -134,7 +134,7 @@ class LightcurveLabelPerTimeStepDatabase(LightcurveDatabase):
         if isinstance(label, tf.Tensor):
             label = label.numpy()
         if isinstance(prediction, tf.Tensor):
-            prediction = label.numpy()
+            prediction = prediction.numpy()
         if label.shape[0] > length:
             label = label[:length]
             prediction = prediction[:length]
