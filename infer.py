@@ -1,5 +1,4 @@
 """Code for inference on the contents of a directory."""
-import pandas as pd
 import tensorflow as tf
 from pathlib import Path
 
@@ -22,7 +21,7 @@ print('Loading model...')
 model = ConvolutionalLstm()
 model.load_weights(str(saved_log_directory.joinpath('model.ckpt')))
 
-print('Inferring...')
+print('Inferring and plotting...')
 for example_path in example_paths:
     example, label = database.evaluation_preprocessing(tf.convert_to_tensor(example_path))
     prediction = model.predict(tf.expand_dims(example, axis=0))[0]
