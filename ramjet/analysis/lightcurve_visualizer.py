@@ -58,6 +58,7 @@ def plot_lightcurve(times: np.ndarray, fluxes: np.ndarray, labels: np.ndarray = 
                                                    cmap=prediction_color_map, vmin=0, vmax=1)
             transformation = axes.get_xaxis_transform()
             prediction_quad_mesh.set_transform(transformation)
+            axes.grid(True)  # Re-enable the grid since pcolormesh disables it.
         if title is not None:
             axes.set_title(title)
         figure.patch.set_alpha(0)  # Transparent figure background while keeping grid background.
