@@ -87,7 +87,9 @@ To make a prediction for a lightcurve like shown above, run:
 This script will generate a plot of a lightcurve with the network's predictions and save the image to a file in
 the current directory.
 
-Although the network makes predictions extremely quickly, this version of the inference script is slow. The process
-plotting the vertical red predictions bars is particularly slow (hopefully, this will be improved soon). From there,
-the slowest portions of the script, in order, are the network initialization (only needs to be done once for many
-predictions), the data loading and preprocessing, and finally the network prediction speed.
+Although the network can make very predictions very quickly, this particular inference script is slowed by several
+factors. In particular, the network initialization (required only once for any number of predictions) and result image
+generation are relatively slow. Additionally, to keep the code simple, the data preprocessing is done synchronously
+with predictions, and the network processes a single lightcurve at a time. Asynchronous data preprocessing and
+predictions on batches of lightcurves leads to significantly faster inference speeds (but less understandable code,
+hence is excluded from this example script).

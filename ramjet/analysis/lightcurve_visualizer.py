@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Union
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.colors import LinearSegmentedColormap
 
 
 def plot_lightcurve(times: np.ndarray, fluxes: np.ndarray, labels: np.ndarray = None, predictions: np.ndarray = None,
@@ -35,10 +36,6 @@ def plot_lightcurve(times: np.ndarray, fluxes: np.ndarray, labels: np.ndarray = 
         data_point_color = color_map(0)
         positive_data_point_color = color_map(2)
         prediction_color = color_map(3)
-        if predictions is not None:
-            for index in range(times.shape[0] - 1):
-                axes.axvspan(times[index], times[index + 1], facecolor=prediction_color, alpha=predictions[index],
-                             zorder=2)
         if labels is not None:
             edge_colors = np.where(labels.reshape(-1, 1), [positive_data_point_color], [data_point_color])
             face_colors = np.copy(edge_colors)
@@ -47,6 +44,21 @@ def plot_lightcurve(times: np.ndarray, fluxes: np.ndarray, labels: np.ndarray = 
             edge_colors = [data_point_color]
             face_colors = [(*data_point_color[:3], 0.2)]
         axes.scatter(times, fluxes, c=face_colors, marker='o', edgecolors=edge_colors, linewidths=0.3, s=3, zorder=3)
+        if predictions is not None:
+            axes.autoscale(False)
+            transparent_prediction_color = (*prediction_color[:3], 0)
+            prediction_color_map = LinearSegmentedColormap.from_list('prediction-color-map',
+                                                                     [transparent_prediction_color, prediction_color])
+            midpoints_between_times = (times[1:] + times[:-1]) / 2
+            average_midpoint_distance = np.mean(np.diff(midpoints_between_times))
+            extra_start_point = times[0] - average_midpoint_distance
+            extra_end_point = times[-1] + average_midpoint_distance
+            midpoints_between_times = np.concatenate([[extra_start_point], midpoints_between_times, [extra_end_point]])
+            prediction_quad_mesh = axes.pcolormesh(midpoints_between_times, [0, 1], predictions[np.newaxis, :],
+                                                   cmap=prediction_color_map, vmin=0, vmax=1)
+            transformation = axes.get_xaxis_transform()
+            prediction_quad_mesh.set_transform(transformation)
+            axes.grid(True)  # Re-enable the grid since pcolormesh disables it.
         if title is not None:
             axes.set_title(title)
         figure.patch.set_alpha(0)  # Transparent figure background while keeping grid background.
@@ -57,3 +69,4 @@ def plot_lightcurve(times: np.ndarray, fluxes: np.ndarray, labels: np.ndarray = 
             plt.savefig(save_path, facecolor=figure.get_facecolor(), dpi=400)
         else:
             plt.show()
+        plt.close(figure)
