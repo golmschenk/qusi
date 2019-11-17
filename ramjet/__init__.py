@@ -1,0 +1,3 @@
+"""
+The ramjet package.
+"""

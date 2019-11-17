@@ -17,6 +17,7 @@ def pytest_addoption(parser):
 
 
 def pytest_configure(config):
+    """Additional configuration options for pytest."""
     config.addinivalue_line(
         "markers", "functional: Mark a test as a functional test."
     )

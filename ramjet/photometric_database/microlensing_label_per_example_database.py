@@ -80,7 +80,8 @@ class MicrolensingLabelPerExampleDatabase(LightcurveDatabase):
         """Prepares the lightcurves for training with several preprocessing and augmenting steps."""
         lightcurve = self.remove_random_values(lightcurve)  # Helps prevent overfitting.
         lightcurve = self.roll_lightcurve(lightcurve)  # Helps prevent overfitting.
-        lightcurve = self.make_uniform_length(lightcurve, self.time_steps_per_example)  # Current network expects a fixed length.
+        # Current network expects a fixed length.
+        lightcurve = self.make_uniform_length(lightcurve, self.time_steps_per_example)
         lightcurve = self.normalize(lightcurve)
         lightcurve = np.expand_dims(lightcurve, axis=-1)  # Network uses a "channel" dimension.
         return lightcurve

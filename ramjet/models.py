@@ -2,9 +2,9 @@
 from tensorflow import sigmoid
 from tensorflow.python.keras import Sequential, Model
 from tensorflow.python.keras.layers import Conv3D, MaxPool3D, Flatten, Dense, Reshape, LeakyReLU, Conv1D, \
-    BatchNormalization, LSTM_v2 as LSTM, AveragePooling1D, AveragePooling1D
+    BatchNormalization, LSTM_v2 as Lstm, AveragePooling1D
 from tensorflow.python.keras.regularizers import l2
-import tensorflow.keras.backend as K
+from tensorflow.keras import backend
 from tensorflow_core.python.keras.engine import Layer
 from tensorflow_core.python.keras.layers import Bidirectional, Lambda, Conv2DTranspose
 
@@ -98,6 +98,14 @@ class SimpleLightcurveCnn(Model):
         self.reshape = Reshape([1])
 
     def call(self, inputs, training=False, mask=None):
+        """
+        The forward pass of the layer.
+
+        :param inputs: The input tensor.
+        :param training: A boolean specifying if the layer should be in training mode.
+        :param mask: A mask for the input tensor.
+        :return: The output tensor of the layer.
+        """
         x = inputs
         x = self.convolution0(x)
         x = self.convolution1(x)
@@ -127,14 +135,23 @@ class SimpleLightcurveCnn(Model):
 
 
 class SimpleLightcurveLstm(Model):
+    """A simple LSTM model for lightcurves."""
     def __init__(self):
         super().__init__()
-        self.lstm0 = LSTM(10, return_sequences=True)
-        self.lstm1 = LSTM(20, return_sequences=True)
-        self.lstm2 = LSTM(30, return_sequences=True)
+        self.lstm0 = Lstm(10, return_sequences=True)
+        self.lstm1 = Lstm(20, return_sequences=True)
+        self.lstm2 = Lstm(30, return_sequences=True)
         self.convolution0 = Conv1D(1, kernel_size=1, activation=sigmoid)
 
     def call(self, inputs, training=False, mask=None):
+        """
+        The forward pass of the layer.
+
+        :param inputs: The input tensor.
+        :param training: A boolean specifying if the layer should be in training mode.
+        :param mask: A mask for the input tensor.
+        :return: The output tensor of the layer.
+        """
         x = inputs
         x = self.lstm0(x)
         x = self.lstm1(x)
@@ -191,6 +208,14 @@ class SimpleLightcurveCnnPerTimeStepLabel(Model):
         self.reshape = Reshape([-1])
 
     def call(self, inputs, training=False, mask=None):
+        """
+        The forward pass of the layer.
+
+        :param inputs: The input tensor.
+        :param training: A boolean specifying if the layer should be in training mode.
+        :param mask: A mask for the input tensor.
+        :return: The output tensor of the layer.
+        """
         x = inputs
         x = self.convolution0(x)
         x = self.convolution1(x)
@@ -225,16 +250,24 @@ class SimpleLightcurveCnnPerTimeStepLabel(Model):
 
 
 class Conv1DTranspose(Layer):
+    """
+    A 1D transposed convolutional layer.
+    """
     def __init__(self, filters, kernel_size, strides=1, *args, **kwargs):
+        super().__init__()
         self._filters = filters
         self._kernel_size = (1, kernel_size)
         self._strides = (1, strides)
         self._args, self._kwargs = args, kwargs
-        super().__init__()
+        self._model = Sequential()
 
     def build(self, input_shape):
-        self._model = Sequential()
-        self._model.add(Lambda(lambda x: K.expand_dims(x, axis=1), batch_input_shape=input_shape))
+        """
+        Builds the layer.
+
+        :param input_shape: The input tensor shape.
+        """
+        self._model.add(Lambda(lambda x: backend.expand_dims(x, axis=1), batch_input_shape=input_shape))
         self._model.add(Conv2DTranspose(self._filters,
                                         kernel_size=self._kernel_size,
                                         strides=self._strides,
@@ -243,13 +276,30 @@ class Conv1DTranspose(Layer):
         super().build(input_shape)
 
     def call(self, x, training=False, mask=None):
+        """
+        The forward pass of the layer.
+
+        :param x: The input tensor.
+        :param training: A boolean specifying if the layer should be in training mode.
+        :param mask: A mask for the input tensor.
+        :return: The output tensor of the layer.
+        """
         return self._model(x)
 
     def compute_output_shape(self, input_shape):
+        """
+        The output shape of the layer.
+
+        :param input_shape:
+        :return:
+        """
         return self._model.compute_output_shape(input_shape)
 
 
 class ConvolutionalLstm(Model):
+    """
+    A convolutional LSTM network.
+    """
     def __init__(self):
         super().__init__()
         leaky_relu = LeakyReLU(alpha=0.01)
@@ -267,9 +317,9 @@ class ConvolutionalLstm(Model):
         self.batch_norm_c3 = BatchNormalization(renorm=True)
         self.convolution4 = Conv1D(64, kernel_size=4, strides=2, activation=leaky_relu,
                                    kernel_regularizer=l2_regularizer, padding='same')
-        self.lstm0 = Bidirectional(LSTM(64, return_sequences=True))
-        self.lstm1 = Bidirectional(LSTM(64, return_sequences=True))
-        self.lstm2 = Bidirectional(LSTM(64, return_sequences=True))
+        self.lstm0 = Bidirectional(Lstm(64, return_sequences=True))
+        self.lstm1 = Bidirectional(Lstm(64, return_sequences=True))
+        self.lstm2 = Bidirectional(Lstm(64, return_sequences=True))
         self.transposed_convolution0 = Conv1DTranspose(64, kernel_size=4, strides=2, activation=leaky_relu,
                                                        kernel_regularizer=l2_regularizer, padding='same')
         self.batch_norm_t0 = BatchNormalization(renorm=True)
@@ -287,6 +337,14 @@ class ConvolutionalLstm(Model):
         self.reshape = Reshape([-1])
 
     def call(self, inputs, training=False, mask=None):
+        """
+        The forward pass of the layer.
+
+        :param inputs: The input tensor.
+        :param training: A boolean specifying if the layer should be in training mode.
+        :param mask: A mask for the input tensor.
+        :return: The output tensor of the layer.
+        """
         x = inputs
         x = self.convolution0(x)
         x = self.convolution1(x)

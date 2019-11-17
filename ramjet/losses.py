@@ -1,7 +1,10 @@
+"""
+Code for custom losses for the ramjet package.
+"""
 import tensorflow as tf
 from tensorflow.python.keras.losses import LossFunctionWrapper
 from tensorflow.python.framework import ops
-from tensorflow.python.keras import backend as K
+from tensorflow.python.keras import backend
 from tensorflow.python.ops import math_ops
 
 
@@ -31,7 +34,7 @@ class PerTimeStepBinaryCrossEntropy(LossFunctionWrapper):
         """
         y_pred = ops.convert_to_tensor(y_pred)
         y_true = math_ops.cast(y_true, y_pred.dtype)
-        binary_cross_entropy = K.binary_crossentropy(y_true, y_pred)
+        binary_cross_entropy = backend.binary_crossentropy(y_true, y_pred)
         weights = tf.where(tf.cast(y_true, dtype=tf.bool), tf.cast(positive_weight, dtype=tf.float32),
                            tf.cast(1, dtype=tf.float32))
         return binary_cross_entropy * weights

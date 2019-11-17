@@ -7,6 +7,7 @@ import os
 import datetime
 from typing import Dict
 from importlib import import_module
+# noinspection PyPackageRequirements
 from autoapi.mappers.python.objects import PythonPythonMapper
 from sphinx.application import Sphinx
 from git import Repo, Head, Tag
@@ -18,6 +19,7 @@ sys.path.insert(0, os.path.abspath('..'))
 # Project information
 
 project = 'RAMjET'
+# noinspection PyShadowingBuiltins
 copyright = f'{datetime.datetime.now().year}, Greg Olmschenk'
 author = 'Greg Olmschenk'
 master_doc = 'index'
@@ -82,6 +84,7 @@ def linkcode_resolve(domain, info):
         line_range_jump_option = ''
     repository = Repo('..')
     matching_refs = []
+    # noinspection PyTypeChecker
     for ref in list(repository.refs):  # Manually iterate over refs, because ReadTheDocs uses a detached head.
         if ref.commit == repository.head.commit:
             matching_refs.append(ref)

@@ -10,7 +10,6 @@ import pandas as pd
 import tensorflow as tf
 from astropy.io import fits
 from astropy.table import Table
-from astropy import config as _config
 from astroquery.mast import Observations, conf
 from astroquery.exceptions import TimeoutError as AstroQueryTimeoutError
 from requests.exceptions import ConnectionError
@@ -33,6 +32,9 @@ class TessTransitLightcurveLabelPerTimeStepDatabase(LightcurveLabelPerTimeStepDa
         conf.pagesize = 10000
 
     def create_data_directories(self):
+        """
+        Creates the data directories to be used by the database.
+        """
         self.data_directory.mkdir(parents=True, exist_ok=True)
         self.lightcurve_directory.mkdir(parents=True, exist_ok=True)
         self.data_validation_directory.mkdir(parents=True, exist_ok=True)
@@ -214,7 +216,8 @@ class TessTransitLightcurveLabelPerTimeStepDatabase(LightcurveLabelPerTimeStepDa
         string_split = obs_id.split('-')
         return pd.Series([int(string_split[1][1:]), int(string_split[2][1:])])
 
-    def get_largest_sector_range(self, multi_sector_observations: pd.DataFrame) -> pd.DataFrame:
+    @staticmethod
+    def get_largest_sector_range(multi_sector_observations: pd.DataFrame) -> pd.DataFrame:
         """
         Returns only the rows with the largest sector range for each TIC ID.
 
