@@ -1,8 +1,6 @@
 """Tests for the model loader code."""
 from pathlib import Path
 
-import pytest
-
 from ramjet.analysis.model_loader import get_latest_log_directory
 
 

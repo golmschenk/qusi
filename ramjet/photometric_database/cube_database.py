@@ -9,6 +9,7 @@ import tensorflow as tf
 
 class CubeDatabase:
     """A representing a dataset of TESS data cubes for binary classification."""
+
     def __init__(self, positive_data_directory: str, negative_data_directory: str,
                  positive_to_negative_data_ratio: float = None):
         self.positive_data_directory = positive_data_directory

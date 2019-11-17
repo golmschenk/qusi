@@ -26,9 +26,6 @@ class YuLightcurveDatabase(TessTransitLightcurveLabelPerTimeStepDatabase):
         """
         Generates the training and validation datasets.
 
-        :param positive_data_directory: The path to the directory containing the positive example files.
-        :param negative_data_directory: The path to the directory containing the negative example files.
-        :param meta_data_file_path: The path to the microlensing meta data file.
         :return: The training and validation datasets.
         """
         self.obtain_meta_data_frame_for_available_lightcurves()
