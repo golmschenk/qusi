@@ -161,10 +161,10 @@ class TestMicrolensingLabelPerTimeStepDatabase:
                                                                                  meta_data_file_path):
         positive_file_paths = list(Path(positive_directory_path).glob('**/*.feather'))
         meta_data_frame = database.load_microlensing_meta_data(meta_data_file_path)
-        assert len(positive_file_paths) == 2
+        assert len(positive_file_paths) == 6
         filtered_positive_file_paths = database.remove_file_paths_with_no_meta_data(file_paths=positive_file_paths,
                                                                                     meta_data_frame=meta_data_frame)
-        assert len(filtered_positive_file_paths) == 1
+        assert len(filtered_positive_file_paths) == 5
 
     def test_examples_of_generated_datasets_have_appropriate_sizes(self, database, data_directory_path):
         database.time_steps_per_example = 4
