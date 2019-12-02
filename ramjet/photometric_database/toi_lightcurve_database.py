@@ -30,6 +30,7 @@ class ToiLightcurveDatabase(TessTransitLightcurveLabelPerTimeStepDatabase):
         """
         self.obtain_meta_data_frame_for_available_lightcurves()
         positive_example_paths = self.meta_data_frame['lightcurve_path'].tolist()
+        positive_example_paths = list(set(positive_example_paths))  # Remove duplicates from multi-planet targets.
         print(f'{len(positive_example_paths)} positive examples.')
         all_lightcurve_paths = list(map(str, self.lightcurve_directory.glob('*lc.fits')))
         negative_example_paths = list(set(all_lightcurve_paths) - set(self.meta_data_frame['lightcurve_path'].tolist()))
