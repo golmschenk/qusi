@@ -8,6 +8,9 @@ from ramjet.losses import PerTimeStepBinaryCrossEntropy
 from ramjet.models import ConvolutionalLstm
 from ramjet.photometric_database.toi_lightcurve_database import ToiLightcurveDatabase
 
+#Tells the  infer script not to use the GPU:
+import os
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
 def train():
     """Runs the training."""
