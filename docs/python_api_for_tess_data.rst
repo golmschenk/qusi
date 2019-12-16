@@ -48,7 +48,7 @@ We can get the full list of filter parameters using :code:`Observations.get_meta
 filtering though, as some of the parameter names are not particularly clear. For example, there is both a :code:`obs_id`
 and a separate :code:`obsid` parameter which have very different values.
 
-Looking at the results of this query, there are many :code:`Observation`s for this single target, all of which are of
+Looking at the results of this query, there are many :code:`Observation`\s for this single target, all of which are of
 the time-series type. Of the time-series type observations, 2 subcategory types exists for TESS: single-sector
 observations and multi-sector observations. The :code:`dataURL` column of the :code:`Observation` will end in
 :code:`lc.fits` for a single-sector observation (as the main data product is a lightcurve), and will end in
