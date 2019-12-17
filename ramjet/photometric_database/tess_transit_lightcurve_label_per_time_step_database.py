@@ -28,8 +28,8 @@ class TessTransitLightcurveLabelPerTimeStepDatabase(LightcurveLabelPerTimeStepDa
         self.lightcurve_directory = self.data_directory.joinpath('lightcurves')
         self.data_validation_directory = self.data_directory.joinpath('data_validations')
         self.data_validation_dictionary = None
-        conf.timeout = 1200
-        conf.pagesize = 10000
+        Observations.TIMEOUT = 1200  # Set Astroquery API limits to give less connection errors.
+        Observations.PAGESIZE = 10000
 
     def create_data_directories(self):
         """
