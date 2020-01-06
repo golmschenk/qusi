@@ -6,28 +6,34 @@ import matplotlib
 
 matplotlib.use('Agg')  # Use non-interactive backend to prevent loss of focus during test.
 
-collect_ignore = ['envs/', 'venv/', 'data/', 'logs/']
 
 
 def pytest_addoption(parser):
     """Adds additional options to the pytest commandline."""
     parser.addoption(
-        "--include-functional", action="store_true", default=False, help="Run functional tests"
+        '--exclude-functional', action='store_true', default=False, help='Run functional tests'
+    )
+    parser.addoption(
+        '--exclude-slow', action='store_true', default=False, help='Run slow tests'
     )
 
 
 def pytest_configure(config):
     """Additional configuration options for pytest."""
     config.addinivalue_line(
-        "markers", "functional: Mark a test as a functional test."
+        'markers', 'functional: Mark a test as a functional test.'
+    )
+    config.addinivalue_line(
+        'markers', 'slow: Mark a test as a slow test.'
     )
 
 
 def pytest_collection_modifyitems(config, items):
     """Updates the collections based on the passed arguments to pytest."""
-    if config.getoption("--include-functional"):
-        return  # If options is passed, don't skip the functional tests.
-    functional_skip_mark = pytest.mark.skip(reason="Needs `--include-functional` to run functional tests.")
+    functional_skip_mark = pytest.mark.skip(reason='Options to exclude functional tests were passed.')
+    slow_skip_mark = pytest.mark.skip(reason='Options to exclude slow tests were passed.')
     for item in items:
-        if "functional" in item.keywords:
+        if 'functional' in item.keywords and config.getoption('--exclude-functional'):
             item.add_marker(functional_skip_mark)
+        if 'slow' in item.keywords and config.getoption('--exclude-slow'):
+            item.add_marker(slow_skip_mark)
