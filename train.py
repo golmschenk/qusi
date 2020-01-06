@@ -24,6 +24,8 @@ def train():
     trial_directory = os.path.join(logs_directory, f'{trial_name} {datetime_string}')
     tensorboard_callback = callbacks.TensorBoard(log_dir=trial_directory)
     database.trial_directory = trial_directory
+    model_save_path = os.path.join(trial_directory, 'model.ckpt')
+    model_checkpoint_callback = callbacks.ModelCheckpoint(model_save_path, save_weights_only=True)
 
     # Prepare training data and metrics.
     training_dataset, validation_dataset = database.generate_datasets()
@@ -38,11 +40,11 @@ def train():
     model.compile(optimizer=optimizer, loss=loss_metric, metrics=metrics)
     try:
         model.fit(training_dataset, epochs=epochs_to_run, validation_data=validation_dataset,
-                  callbacks=[tensorboard_callback])
+                  callbacks=[tensorboard_callback, model_checkpoint_callback])
     except KeyboardInterrupt:
         print('Interrupted. Saving model before quitting...')
     finally:
-        model.save_weights(os.path.join(trial_directory, 'model.ckpt'))
+        model.save_weights(model_save_path)
 
 
 if __name__ == '__main__':
