@@ -8,6 +8,7 @@ import tensorflow as tf
 import requests
 from pathlib import Path
 
+from ramjet.photometric_database.py_mapper import map_py_function_to_dataset
 from ramjet.photometric_database.tess_transit_lightcurve_label_per_time_step_database import \
     TessTransitLightcurveLabelPerTimeStepDatabase
 
@@ -46,14 +47,14 @@ class ToiLightcurveDatabase(TessTransitLightcurveLabelPerTimeStepDatabase):
             self.log_dataset_file_names(training_dataset, dataset_name='training')
             self.log_dataset_file_names(validation_dataset, dataset_name='validation')
         training_dataset = training_dataset.shuffle(buffer_size=len(list(training_dataset)))
-        training_preprocessor = lambda file_path: tuple(tf.py_function(self.training_preprocessing,
-                                                                       [file_path], [tf.float32, tf.float32]))
-        training_dataset = training_dataset.map(training_preprocessor, num_parallel_calls=16)
+        training_dataset = map_py_function_to_dataset(training_dataset, self.training_preprocessing,
+                                                      number_of_parallel_calls=16,
+                                                      output_types=[tf.float32, tf.float32])
         training_dataset = training_dataset.padded_batch(self.batch_size, padded_shapes=([None, 2], [None])).prefetch(
             buffer_size=tf.data.experimental.AUTOTUNE)
-        validation_preprocessor = lambda file_path: tuple(tf.py_function(self.evaluation_preprocessing,
-                                                                         [file_path], [tf.float32, tf.float32]))
-        validation_dataset = validation_dataset.map(validation_preprocessor, num_parallel_calls=4)
+        validation_dataset = map_py_function_to_dataset(validation_dataset, self.evaluation_preprocessing,
+                                                        number_of_parallel_calls=4,
+                                                        output_types=[tf.float32, tf.float32])
         validation_dataset = validation_dataset.padded_batch(1, padded_shapes=([None, 2], [None])).prefetch(
             buffer_size=tf.data.experimental.AUTOTUNE)
         return training_dataset, validation_dataset
