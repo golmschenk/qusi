@@ -57,31 +57,34 @@ class TestPyMapper:
         assert np.array_equal(batch_array, np.array([1, 11, 21, 31]))
 
 
-def sleep_and_get_pid(element) -> int:
+def sleep_and_get_pid(element_tensor: tf.Tensor) -> int:
     """
     A simple sleep and get pid function to test multiprocessing.
 
+    :param element_tensor: Input value.
     :return: The pid of the process that ran this function.
     """
     time.sleep(0.1)
     return os.getpid()
 
 
-def add_one(element: float) -> float:
+def add_one(element_tensor: tf.Tensor) -> float:
     """
     Adds 1
 
-    :param element: Input value.
+    :param element_tensor: Input value.
     :return: Input plus 1.
     """
+    element = element_tensor.numpy()
     return element + 1
 
 
-def add_one_and_add_two(element: float) -> (float, float):
+def add_one_and_add_two(element_tensor: tf.Tensor) -> (float, float):
     """
     Adds 1 and adds 2 returning both.
 
-    :param element: Input value.
+    :param element_tensor: Input value.
     :return: Input plus 1 and input plus 2.
     """
+    element = element_tensor.numpy()
     return element + 1, element + 2
