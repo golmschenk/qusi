@@ -23,8 +23,7 @@ class PyMapper:
         :param element_tensor: The element to be processed by the pool.
         :return: The output of the map function on the element.
         """
-        element = element_tensor.numpy()
-        result = self.pool.apply_async(self.map_function, (element,))
+        result = self.pool.apply_async(self.map_function, (element_tensor,))
         mapped_element = result.get()
         return mapped_element
 
