@@ -2,10 +2,10 @@
 from tensorflow import sigmoid
 from tensorflow.python.keras import Sequential, Model
 from tensorflow.python.keras.layers import Conv3D, MaxPool3D, Flatten, Dense, Reshape, LeakyReLU, Conv1D, \
-    BatchNormalization, LSTM_v2 as Lstm, AveragePooling1D
+    BatchNormalization, LSTMV2 as Lstm, AveragePooling1D
 from tensorflow.python.keras.regularizers import l2
 from tensorflow.keras import backend
-from tensorflow_core.python.keras.engine import Layer
+from tensorflow.keras.layers import Layer
 from tensorflow_core.python.keras.layers import Bidirectional, Lambda, Conv2DTranspose
 
 
