@@ -3,7 +3,7 @@ Code for TensorFlow's `Dataset` class which allows for multiprocessing in CPU ma
 """
 import multiprocessing
 from typing import Callable, Union, List
-
+import signal
 import tensorflow as tf
 
 
@@ -14,7 +14,15 @@ class PyMapper:
     def __init__(self, map_function: Callable, number_of_parallel_calls: int):
         self.map_function = map_function
         self.number_of_parallel_calls = number_of_parallel_calls
-        self.pool = multiprocessing.Pool(self.number_of_parallel_calls)
+        self.pool = multiprocessing.Pool(self.number_of_parallel_calls, self.pool_worker_initializer)
+
+    @staticmethod
+    def pool_worker_initializer():
+        """
+        Used to initialize each worker process.
+        """
+        # Corrects bug where worker instances catch and throw away keyboard interrupts.
+        signal.signal(signal.SIGINT, signal.SIG_IGN)
 
     def send_to_map_pool(self, element_tensor):
         """
