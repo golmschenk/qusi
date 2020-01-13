@@ -33,14 +33,9 @@ Then, you'll need to install all the required Python packages:
 
     pip install -r requirements.txt
 
-After this, **only if you will be using a GPU** replace the installed TensorFlow package with the GPU version:
-
-.. code-block:: bash
-
-    pip install tensorflow-gpu
-
 This installation assumes you already have your GPU properly setup and installed, and the GPU is compatible with
-TensorFlow. Note that without a GPU, the training code will take significantly longer to run.
+TensorFlow (if you intend to use a GPU). Note that without a GPU, the training code will take significantly longer to
+run.
 
 Download the data
 -----------------
