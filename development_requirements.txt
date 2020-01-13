@@ -11,3 +11,4 @@ sphinx-autoapi
 sphinx-press-theme
 GitPython
 matplotlib
+pipreqs
