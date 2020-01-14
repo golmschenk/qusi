@@ -1,0 +1,14 @@
+numpy
+pandas
+tensorflow
+astropy
+astroquery
+requests
+pytest
+pyarrow
+Sphinx
+sphinx-autoapi
+sphinx-press-theme
+GitPython
+matplotlib
+pipreqs

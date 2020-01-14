@@ -1,6 +1,6 @@
 numpy
 pandas
-tensorflow
+tensorflow-cpu
 astropy
 astroquery
 requests
@@ -11,3 +11,4 @@ sphinx-autoapi
 sphinx-press-theme
 GitPython
 matplotlib
+pipreqs
