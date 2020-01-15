@@ -53,16 +53,6 @@ class TessTransitLightcurveLabelPerTimeStepDatabase(LightcurveLabelPerTimeStepDa
         """
         return list(self.lightcurve_directory.glob('*.fits'))
 
-    def obtain_data_validation_dictionary(self):
-        """
-        Collects all the data validation files into a dictionary for fast TIC ID lookup.
-        """
-        data_validation_dictionary = {}
-        for path in self.data_validation_directory.glob('*.xml'):
-            tic_id = path.name.split('-')[3]  # The TIC ID is just in the middle of the file name.
-            data_validation_dictionary[tic_id] = path
-        self.data_validation_dictionary = data_validation_dictionary
-
     def is_positive(self, example_path):
         """
         Checks if an example contains a transit event or not.
