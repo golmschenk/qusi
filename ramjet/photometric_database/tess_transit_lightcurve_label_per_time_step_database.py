@@ -10,7 +10,7 @@ import pandas as pd
 import tensorflow as tf
 from astropy.io import fits
 from astropy.table import Table
-from astroquery.mast import Observations, conf
+from astroquery.mast import Observations
 from astroquery.exceptions import TimeoutError as AstroQueryTimeoutError
 from requests.exceptions import ConnectionError
 
