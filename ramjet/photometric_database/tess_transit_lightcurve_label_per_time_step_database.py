@@ -62,25 +62,6 @@ class TessTransitLightcurveLabelPerTimeStepDatabase(LightcurveLabelPerTimeStepDa
         """
         return example_path in self.meta_data_frame['lightcurve_path'].values
 
-    def download_products(self, data_products: pd.DataFrame) -> pd.DataFrame:
-        """
-         A wrapper for MAST's `download_products`, allowing the use of Pandas DataFrames instead of AstroPy Tables.
-        Retries on error when communicating with the MAST server.
-
-        :param data_products: The data frame of data products to download. Will be converted from DataFrame to Table
-                              for sending the request to MAST.
-        :return: The manifest of the download. Will be converted from Table to DataFrame for use.
-        """
-        manifest = None
-        while manifest is None:
-            try:
-                # noinspection SpellCheckingInspection
-                manifest = Observations.download_products(Table.from_pandas(data_products),
-                                                          download_dir=str(self.data_directory))
-            except (AstroQueryTimeoutError, ConnectionError):
-                print('Error connecting to MAST. They have occasional downtime. Trying again...')
-        return manifest.to_pandas()
-
     @staticmethod
     def get_single_sector_observations(time_series_observations: pd.DataFrame) -> pd.DataFrame:
         """

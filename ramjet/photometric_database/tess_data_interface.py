@@ -1,6 +1,8 @@
 """
 Code for a class for common interfacing with TESS data, such as downloading, sorting, and manipulating.
 """
+from pathlib import Path
+
 import pandas as pd
 from astropy.table import Table
 from astroquery.mast import Observations
@@ -48,3 +50,24 @@ class TessDataInterface:
             except (AstroQueryTimeoutError, ConnectionError):
                 print('Error connecting to MAST. They have occasional downtime. Trying again...')
         return data_products.to_pandas()
+
+    @staticmethod
+    def download_products(data_products: pd.DataFrame, data_directory: Path) -> pd.DataFrame:
+        """
+         A wrapper for MAST's `download_products`, allowing the use of Pandas DataFrames instead of AstroPy Tables.
+        Retries on error when communicating with the MAST server.
+
+        :param data_products: The data frame of data products to download. Will be converted from DataFrame to Table
+                              for sending the request to MAST.
+        :param data_directory: The path to download the data to.
+        :return: The manifest of the download. Will be converted from Table to DataFrame for use.
+        """
+        manifest = None
+        while manifest is None:
+            try:
+                # noinspection SpellCheckingInspection
+                manifest = Observations.download_products(Table.from_pandas(data_products),
+                                                          download_dir=str(data_directory))
+            except (AstroQueryTimeoutError, ConnectionError):
+                print('Error connecting to MAST. They have occasional downtime. Trying again...')
+        return manifest.to_pandas()

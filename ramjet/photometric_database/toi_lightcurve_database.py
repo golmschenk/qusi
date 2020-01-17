@@ -108,7 +108,8 @@ class ToiLightcurveDatabase(TessTransitLightcurveLabelPerTimeStepDatabase):
         confirmed_planet_lightcurve_data_products = confirmed_planet_data_products[
             confirmed_planet_data_products['productFilename'].str.endswith('lc.fits')
         ]
-        confirmed_planet_download_manifest = self.download_products(confirmed_planet_lightcurve_data_products)
+        confirmed_planet_download_manifest = tess_data_interface.download_products(
+            confirmed_planet_lightcurve_data_products, data_directory=self.data_directory)
         print(f'Moving lightcurves to {self.lightcurve_directory}...')
         for file_path_string in confirmed_planet_download_manifest['Local Path']:
             file_path = Path(file_path_string)
@@ -137,8 +138,9 @@ class ToiLightcurveDatabase(TessTransitLightcurveLabelPerTimeStepDatabase):
         ]
         # Shuffle rows.
         not_planet_lightcurve_data_products = not_planet_lightcurve_data_products.sample(frac=1, random_state=0)
-        not_planet_download_manifest = self.download_products(
-            not_planet_lightcurve_data_products.head(number_of_negative_lightcurves_to_download)
+        not_planet_download_manifest = tess_data_interface.download_products(
+            not_planet_lightcurve_data_products.head(number_of_negative_lightcurves_to_download),
+            data_directory=self.data_directory
         )
         print(f'Moving lightcurves to {self.lightcurve_directory}...')
         for file_path_string in not_planet_download_manifest['Local Path']:

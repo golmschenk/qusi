@@ -125,7 +125,8 @@ class YuLightcurveDatabase(TessTransitLightcurveLabelPerTimeStepDatabase):
         liang_yu_lightcurve_data_products = liang_yu_data_products[
             liang_yu_data_products['productFilename'].str.endswith('lc.fits')
         ]
-        download_manifest = self.download_products(liang_yu_lightcurve_data_products)
+        download_manifest = tess_data_interface.download_products(liang_yu_lightcurve_data_products,
+                                                                  data_directory=self.data_directory)
         print(f'Moving lightcurves to {self.lightcurve_directory}...')
         for file_path_string in download_manifest['Local Path']:
             file_path = Path(file_path_string)
