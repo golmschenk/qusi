@@ -104,7 +104,7 @@ class ToiLightcurveDatabase(TessTransitLightcurveLabelPerTimeStepDatabase):
         observations_not_found = confirmed_planet_dispositions.shape[0] - confirmed_planet_observations.shape[0]
         print(f"{confirmed_planet_observations.shape[0]} observations found that match the TOI dispositions.")
         print(f"No observations found for {observations_not_found} entries in TOI dispositions.")
-        confirmed_planet_data_products = self.get_product_list(confirmed_planet_observations)
+        confirmed_planet_data_products = tess_data_interface.get_product_list(confirmed_planet_observations)
         confirmed_planet_lightcurve_data_products = confirmed_planet_data_products[
             confirmed_planet_data_products['productFilename'].str.endswith('lc.fits')
         ]
@@ -123,7 +123,7 @@ class ToiLightcurveDatabase(TessTransitLightcurveLabelPerTimeStepDatabase):
         not_toi_observations = not_toi_observations.sample(frac=1, random_state=0)
         # Shorten product list obtaining.
         not_toi_observations = not_toi_observations.head(number_of_negative_lightcurves_to_download * 2)
-        not_toi_data_products = self.get_product_list(not_toi_observations)
+        not_toi_data_products = tess_data_interface.get_product_list(not_toi_observations)
         not_toi_data_products = self.add_tic_id_column_based_on_single_sector_obs_id(not_toi_data_products)
         not_toi_lightcurve_data_products = not_toi_data_products[
             not_toi_data_products['productFilename'].str.endswith('lc.fits')

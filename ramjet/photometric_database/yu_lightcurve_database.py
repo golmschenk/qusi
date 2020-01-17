@@ -121,7 +121,7 @@ class YuLightcurveDatabase(TessTransitLightcurveLabelPerTimeStepDatabase):
         print(f"{liang_yu_observations.shape[0]} observations found that match Liang Yu's entries.")
         print(f'Liang Yu used the FFIs, not the lightcurve products, so many will be missing.')
         print(f"No observations found for {number_of_observations_not_found} entries in Liang Yu's disposition.")
-        liang_yu_data_products = self.get_product_list(liang_yu_observations)
+        liang_yu_data_products = tess_data_interface.get_product_list(liang_yu_observations)
         liang_yu_lightcurve_data_products = liang_yu_data_products[
             liang_yu_data_products['productFilename'].str.endswith('lc.fits')
         ]

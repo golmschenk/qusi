@@ -31,10 +31,19 @@ class TestTessDataInterface:
         assert Observations.TIMEOUT == 1200
         assert Observations.PAGESIZE == 10000
 
-    def test_can_getting_time_series_observations_as_pandas_data_frame(self, tess_data_interface,
-                                                                       tess_data_interface_module):
+    def test_can_request_time_series_observations_from_mast_as_pandas_data_frame(self, tess_data_interface,
+                                                                                 tess_data_interface_module):
         mock_query_result = Table({'a': [1, 2], 'b': [3, 4]})
         tess_data_interface_module.Observations.query_criteria = Mock(return_value=mock_query_result)
         query_result = tess_data_interface.get_all_tess_time_series_observations()
+        assert isinstance(query_result, pd.DataFrame)
+        assert np.array_equal(query_result['a'].values, [1, 2])
+
+    def test_can_request_data_products_from_mast_as_pandas_data_frame(self, tess_data_interface,
+                                                                      tess_data_interface_module):
+        mock_query_result = Table({'a': [1, 2], 'b': [3, 4]})
+        tess_data_interface_module.Observations.get_product_list = Mock(return_value=mock_query_result)
+        fake_observations_data_frame = pd.DataFrame()
+        query_result = tess_data_interface.get_product_list(fake_observations_data_frame)
         assert isinstance(query_result, pd.DataFrame)
         assert np.array_equal(query_result['a'].values, [1, 2])
