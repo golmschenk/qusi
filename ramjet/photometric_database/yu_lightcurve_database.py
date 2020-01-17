@@ -9,6 +9,7 @@ import tensorflow as tf
 import requests
 from pathlib import Path
 
+from ramjet.photometric_database.tess_data_interface import TessDataInterface
 from ramjet.photometric_database.tess_transit_lightcurve_label_per_time_step_database import \
     TessTransitLightcurveLabelPerTimeStepDatabase
 
@@ -105,7 +106,8 @@ class YuLightcurveDatabase(TessTransitLightcurveLabelPerTimeStepDatabase):
         with open(self.liang_yu_dispositions_path, 'wb') as csv_file:
             csv_file.write(response.content)
         print('Downloading TESS observation list...')
-        tess_observations = self.get_all_tess_time_series_observations()
+        tess_data_interface = TessDataInterface()
+        tess_observations = tess_data_interface.get_all_tess_time_series_observations()
         single_sector_observations = self.get_single_sector_observations(tess_observations)
         single_sector_observations = self.add_sector_column_based_on_single_sector_obs_id(single_sector_observations)
         single_sector_observations['tic_id'] = single_sector_observations['target_name'].astype(int)
