@@ -117,3 +117,13 @@ class TessDataInterface:
         :return: The extracted sector number.
         """
         return int(obs_id.split('-')[1][1:])
+
+    def add_tic_id_column_to_single_sector_observations(self, data_frame: pd.DataFrame) -> pd.DataFrame:
+        """
+        Adds a column with the TIC ID the row is related to.
+
+        :param data_frame: The data frame of single-sector entries.
+        :return: The table with the added TIC ID column.
+        """
+        data_frame['TIC ID'] = data_frame['obs_id'].map(self.get_tic_id_from_single_sector_obs_id)
+        return data_frame

@@ -21,7 +21,7 @@ class TestTessDataInterface:
         return tess_data_interface_module
 
     @pytest.fixture
-    def tess_data_interface(self) ->TessDataInterface:
+    def tess_data_interface(self) -> TessDataInterface:
         return TessDataInterface()
 
     def test_new_tess_data_interface_sets_astroquery_api_limits(self):
@@ -92,3 +92,12 @@ class TestTessDataInterface:
         sector1 = tess_data_interface.get_sector_from_single_sector_obs_id(
             'tess2018319095959-s0005-0000000025132999-0125-s')
         assert sector1 == 5
+
+    def test_can_add_tic_id_column_to_single_sector_observations(self, tess_data_interface):
+        single_sector_observations = pd.DataFrame({'obs_id': ['tess2018319095959-s0005-0000000025132999-0125-s',
+                                                              'tess2018206045859-s0001-0000000117544915-0120-s']})
+        single_sector_observations = tess_data_interface.add_tic_id_column_to_single_sector_observations(
+            single_sector_observations)
+        assert 'TIC ID' in single_sector_observations.columns
+        assert 25132999 in single_sector_observations['TIC ID'].values
+        assert 117544915 in single_sector_observations['TIC ID'].values

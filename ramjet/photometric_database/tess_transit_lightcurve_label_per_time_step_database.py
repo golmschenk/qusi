@@ -63,7 +63,8 @@ class TessTransitLightcurveLabelPerTimeStepDatabase(LightcurveLabelPerTimeStepDa
         """
         return example_path in self.meta_data_frame['lightcurve_path'].values
 
-    def add_sector_column_based_on_single_sector_obs_id(self, observations: pd.DataFrame) -> pd.DataFrame:
+    @staticmethod
+    def add_sector_column_based_on_single_sector_obs_id(observations: pd.DataFrame) -> pd.DataFrame:
         """
         Adds a column with the sector the data was taken from.
 
@@ -73,17 +74,6 @@ class TessTransitLightcurveLabelPerTimeStepDatabase(LightcurveLabelPerTimeStepDa
         tess_data_interface = TessDataInterface()
         observations['sector'] = observations['obs_id'].map(tess_data_interface.get_sector_from_single_sector_obs_id)
         return observations
-
-    def add_tic_id_column_based_on_single_sector_obs_id(self, data_frame: pd.DataFrame) -> pd.DataFrame:
-        """
-        Adds a (string) column with the TIC ID the row is related to.
-
-        :param data_frame: The data frame of single-sector entries.
-        :return: The table with the added TIC ID column.
-        """
-        tess_data_interface = TessDataInterface()
-        data_frame['tic_id'] = data_frame['obs_id'].map(tess_data_interface.get_tic_id_from_single_sector_obs_id)
-        return data_frame
 
     def add_sector_columns_based_on_multi_sector_obs_id(self, observations: pd.DataFrame) -> pd.DataFrame:
         """
