@@ -203,7 +203,7 @@ class TessDataInterface:
             lightcurve_path = save_path
         return lightcurve_path
 
-    def plot_lightcurve_from_mast(self, tic_id: int, sector: int = None):
+    def plot_lightcurve_from_mast(self, tic_id: int, sector: int = None, exclude_flux_outliers: bool = False):
         """
         Downloads and plots a lightcurve from MAST.
 
@@ -212,4 +212,9 @@ class TessDataInterface:
         """
         lightcurve_path = self.download_lightcurve(tic_id, sector)
         fluxes, times = self.load_fluxes_and_times_from_fits_file(lightcurve_path)
-        plot_lightcurve(times=times, fluxes=fluxes)
+        if sector is None:
+            sector = self.get_sector_from_single_sector_obs_id(str(lightcurve_path.stem))
+        title = f'TIC {tic_id} sector {sector}'
+        if exclude_flux_outliers:
+            title += ' (outliers removed)'
+        plot_lightcurve(times=times, fluxes=fluxes, exclude_flux_outliers=exclude_flux_outliers, title=title)
