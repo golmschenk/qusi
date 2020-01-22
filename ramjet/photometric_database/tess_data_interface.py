@@ -127,3 +127,13 @@ class TessDataInterface:
         """
         data_frame['TIC ID'] = data_frame['obs_id'].map(self.get_tic_id_from_single_sector_obs_id)
         return data_frame
+
+    def add_sector_column_to_single_sector_observations(self, observations: pd.DataFrame) -> pd.DataFrame:
+        """
+        Adds a column with the sector the data was taken from.
+
+        :param observations: The table of single-sector observations.
+        :return: The table with the added sector column.
+        """
+        observations['Sector'] = observations['obs_id'].map(self.get_sector_from_single_sector_obs_id)
+        return observations

@@ -74,9 +74,9 @@ class ToiLightcurveDatabase(TessTransitLightcurveLabelPerTimeStepDatabase):
         tic_ids = [tess_data_interface.get_tic_id_from_single_sector_obs_id(path.name) for path in lightcurve_paths]
         sectors = [tess_data_interface.get_sector_from_single_sector_obs_id(path.name) for path in lightcurve_paths]
         lightcurve_meta_data = pd.DataFrame({'lightcurve_path': list(map(str, lightcurve_paths)), 'TIC ID': tic_ids,
-                                             'sector': sectors})
+                                             'Sector': sectors})
         meta_data_frame_with_candidate_nans = pd.merge(confirmed_planet_dispositions, lightcurve_meta_data,
-                                                       how='inner', on=['TIC ID', 'sector'])
+                                                       how='inner', on=['TIC ID', 'Sector'])
         self.meta_data_frame = meta_data_frame_with_candidate_nans.dropna()
 
     def download_exofop_toi_database(self, number_of_negative_lightcurves_to_download=10000):
@@ -96,13 +96,14 @@ class ToiLightcurveDatabase(TessTransitLightcurveLabelPerTimeStepDatabase):
         single_sector_observations = tess_data_interface.filter_for_single_sector_observations(tess_observations)
         single_sector_observations = tess_data_interface.add_tic_id_column_to_single_sector_observations(
             single_sector_observations)
-        single_sector_observations['TIC ID'] = single_sector_observations['target_name'].astype(int)
+        single_sector_observations = tess_data_interface.add_sector_column_to_single_sector_observations(
+            single_sector_observations)
         print("Downloading lightcurves which are confirmed planets in TOI dispositions...")
         # noinspection SpellCheckingInspection
         toi_dispositions = self.load_toi_dispositions_in_project_format()
         confirmed_planet_dispositions = toi_dispositions[toi_dispositions['disposition'].isin(['CP', 'KP'])]
         confirmed_planet_observations = pd.merge(single_sector_observations, confirmed_planet_dispositions, how='inner',
-                                                 on=['TIC ID', 'sector'])
+                                                 on=['TIC ID', 'Sector'])
         observations_not_found = confirmed_planet_dispositions.shape[0] - confirmed_planet_observations.shape[0]
         print(f"{confirmed_planet_observations.shape[0]} observations found that match the TOI dispositions.")
         print(f"No observations found for {observations_not_found} entries in TOI dispositions.")
@@ -163,10 +164,10 @@ class ToiLightcurveDatabase(TessTransitLightcurveLabelPerTimeStepDatabase):
         dispositions.rename(columns={'TFOPWG Disposition': 'disposition',
                                      'Planet Num': 'planet_number', 'Epoch (BJD)': 'transit_epoch',
                                      'Period (days)': 'transit_period', 'Duration (hours)': 'transit_duration',
-                                     'Sectors': 'sector'}, inplace=True)
-        dispositions['sector'] = dispositions['sector'].str.split(',')
-        dispositions = dispositions.explode('sector')
-        dispositions['sector'] = pd.to_numeric(dispositions['sector']).astype(pd.Int64Dtype())
+                                     'Sectors': 'Sector'}, inplace=True)
+        dispositions['Sector'] = dispositions['Sector'].str.split(',')
+        dispositions = dispositions.explode('Sector')
+        dispositions['Sector'] = pd.to_numeric(dispositions['Sector']).astype(pd.Int64Dtype())
         return dispositions
 
 

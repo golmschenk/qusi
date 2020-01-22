@@ -101,3 +101,12 @@ class TestTessDataInterface:
         assert 'TIC ID' in single_sector_observations.columns
         assert 25132999 in single_sector_observations['TIC ID'].values
         assert 117544915 in single_sector_observations['TIC ID'].values
+
+    def test_can_add_sector_column_to_single_sector_observations(self, tess_data_interface):
+        single_sector_observations = pd.DataFrame({'obs_id': ['tess2018319095959-s0005-0000000025132999-0125-s',
+                                                              'tess2018206045859-s0001-0000000117544915-0120-s']})
+        single_sector_observations = tess_data_interface.add_sector_column_to_single_sector_observations(
+            single_sector_observations)
+        assert 'Sector' in single_sector_observations.columns
+        assert 5 in single_sector_observations['Sector'].values
+        assert 1 in single_sector_observations['Sector'].values
