@@ -2,8 +2,10 @@
 Code for a class for common interfacing with TESS data, such as downloading, sorting, and manipulating.
 """
 from pathlib import Path
-
+from typing import Union
+import numpy as np
 import pandas as pd
+from astropy.io import fits
 from astropy.table import Table
 from astroquery.mast import Observations
 from astroquery.exceptions import TimeoutError as AstroQueryTimeoutError
@@ -137,3 +139,22 @@ class TessDataInterface:
         """
         observations['Sector'] = observations['obs_id'].map(self.get_sector_from_single_sector_obs_id)
         return observations
+
+    @staticmethod
+    def load_fluxes_and_times_from_fits_file(example_path: Union[str, Path]) -> (np.ndarray, np.ndarray):
+        """
+        Extract the flux and time values from a TESS FITS file.
+
+        :param example_path: The path to the FITS file.
+        :return: The flux and times values from the FITS file.
+        """
+        hdu_list = fits.open(example_path)
+        lightcurve = hdu_list[1].data  # Lightcurve information is in first extension table.
+        fluxes = lightcurve['SAP_FLUX']
+        times = lightcurve['TIME']
+        assert times.shape == fluxes.shape
+        # noinspection PyUnresolvedReferences
+        nan_indexes = np.union1d(np.argwhere(np.isnan(fluxes)), np.argwhere(np.isnan(times)))
+        fluxes = np.delete(fluxes, nan_indexes)
+        times = np.delete(times, nan_indexes)
+        return fluxes, times

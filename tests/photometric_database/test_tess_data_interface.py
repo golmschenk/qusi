@@ -110,3 +110,26 @@ class TestTessDataInterface:
         assert 'Sector' in single_sector_observations.columns
         assert 5 in single_sector_observations['Sector'].values
         assert 1 in single_sector_observations['Sector'].values
+
+    def test_can_load_fluxes_and_times_from_tess_fits(self, tess_data_interface, tess_data_interface_module):
+        expected_fluxes = np.array([1, 2, 3], dtype=np.float32)
+        expected_times = np.array([4, 5, 6], dtype=np.float32)
+        hdu = Mock(data={'SAP_FLUX': expected_fluxes, 'TIME': expected_times})
+        hdu_list = [None, hdu]  # Lightcurve information is in first extension table in TESS data.
+        tess_data_interface_module.fits.open = Mock(return_value=hdu_list)
+        lightcurve_path = 'path/to/lightcurve'
+        fluxes, times = tess_data_interface.load_fluxes_and_times_from_fits_file(lightcurve_path)
+        tess_data_interface_module.fits.open.assert_called_with(lightcurve_path)
+        assert np.array_equal(fluxes, expected_fluxes)
+        assert np.array_equal(times, expected_times)
+
+    def test_loading_fluxes_and_times_from_fits_drops_nans(self, tess_data_interface, tess_data_interface_module):
+        fits_fluxes = np.array([np.nan, 2, 3], dtype=np.float32)
+        fits_times = np.array([4, 5, np.nan], dtype=np.float32)
+        hdu = Mock(data={'SAP_FLUX': fits_fluxes, 'TIME': fits_times})
+        hdu_list = [None, hdu]  # Lightcurve information is in first extension table in TESS data.
+        tess_data_interface_module.fits.open = Mock(return_value=hdu_list)
+        lightcurve_path = 'path/to/lightcurve'
+        fluxes, times = tess_data_interface.load_fluxes_and_times_from_fits_file(lightcurve_path)
+        assert np.array_equal(fluxes, np.array([2], dtype=np.float32))
+        assert np.array_equal(times, np.array([5], dtype=np.float32))

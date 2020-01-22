@@ -26,9 +26,9 @@ print('Inferring and plotting...')
 for example_path in example_paths:
     example, label = database.evaluation_preprocessing(tf.convert_to_tensor(example_path))
     prediction = model.predict(tf.expand_dims(example, axis=0))[0]
-    fluxes, times = database.load_fluxes_and_times_from_fits_file(example_path)
-    label, prediction = database.inference_postprocessing(label, prediction, times.shape[0])
     tess_data_interface = TessDataInterface()
+    fluxes, times = tess_data_interface.load_fluxes_and_times_from_fits_file(example_path)
+    label, prediction = database.inference_postprocessing(label, prediction, times.shape[0])
     tic_id = tess_data_interface.get_tic_id_from_single_sector_obs_id(Path(example_path).stem)
     sector = tess_data_interface.get_sector_from_single_sector_obs_id(Path(example_path).stem)
     plot_title = f'TIC {tic_id} sector {sector}'

@@ -4,15 +4,10 @@ Code for a database of TESS transit lightcurves with a label per time step.
 import shutil
 from pathlib import Path
 from typing import List, Union
-
 import numpy as np
 import pandas as pd
 import tensorflow as tf
 from astropy.io import fits
-from astropy.table import Table
-from astroquery.mast import Observations
-from astroquery.exceptions import TimeoutError as AstroQueryTimeoutError
-from requests.exceptions import ConnectionError
 
 from ramjet.photometric_database.lightcurve_label_per_time_step_database import LightcurveLabelPerTimeStepDatabase
 from ramjet.photometric_database.tess_data_interface import TessDataInterface
@@ -29,8 +24,6 @@ class TessTransitLightcurveLabelPerTimeStepDatabase(LightcurveLabelPerTimeStepDa
         self.lightcurve_directory = self.data_directory.joinpath('lightcurves')
         self.data_validation_directory = self.data_directory.joinpath('data_validations')
         self.data_validation_dictionary = None
-        Observations.TIMEOUT = 1200  # Set Astroquery API limits to give less connection errors.
-        Observations.PAGESIZE = 10000
 
     def create_data_directories(self):
         """
@@ -118,7 +111,8 @@ class TessTransitLightcurveLabelPerTimeStepDatabase(LightcurveLabelPerTimeStepDa
         :return: The example and its corresponding label.
         """
         example_path = example_path_tensor.numpy().decode('utf-8')
-        fluxes, times = self.load_fluxes_and_times_from_fits_file(example_path)
+        tess_data_interface = TessDataInterface()
+        fluxes, times = tess_data_interface.load_fluxes_and_times_from_fits_file(example_path)
         fluxes = self.normalize(fluxes)
         time_differences = np.diff(times, prepend=times[0])
         example = np.stack([fluxes, time_differences], axis=-1)
