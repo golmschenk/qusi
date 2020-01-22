@@ -56,25 +56,6 @@ class TransitLightcurveLabelPerTimeStepDatabase(LightcurveLabelPerTimeStepDataba
         """
         return example_path in self.meta_data_frame['lightcurve_path'].values
 
-    @staticmethod
-    def load_fluxes_and_times_from_fits_file(example_path: Union[str, Path]) -> (np.ndarray, np.ndarray):
-        """
-        Extract the flux and time values from a TESS FITS file.
-
-        :param example_path: The path to the FITS file.
-        :return: The flux and times values from the FITS file.
-        """
-        hdu_list = fits.open(example_path)
-        lightcurve = hdu_list[1].data  # Lightcurve information is in first extension table.
-        fluxes = lightcurve['SAP_FLUX']
-        times = lightcurve['TIME']
-        assert times.shape == fluxes.shape
-        # noinspection PyUnresolvedReferences
-        nan_indexes = np.union1d(np.argwhere(np.isnan(fluxes)), np.argwhere(np.isnan(times)))
-        fluxes = np.delete(fluxes, nan_indexes)
-        times = np.delete(times, nan_indexes)
-        return fluxes, times
-
     def generate_label(self, example_path: str, times: np.float32) -> np.bool:
         """
         Generates a label for each time step defining whether or not a transit is occurring.
