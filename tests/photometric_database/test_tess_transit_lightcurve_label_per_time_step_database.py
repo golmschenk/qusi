@@ -1,15 +1,15 @@
-"""Tests for the TessTransitLightcurveLabelPerTimeStepDatabase class."""
+"""Tests for the TransitLightcurveLabelPerTimeStepDatabase class."""
 
 import pytest
 import pandas as pd
 from pathlib import Path
 
 from ramjet.photometric_database.tess_transit_lightcurve_label_per_time_step_database import \
-    TessTransitLightcurveLabelPerTimeStepDatabase
+    TransitLightcurveLabelPerTimeStepDatabase
 
 
-class TestTessTransitLightcurveLabelPerTimeStepDatabase:
-    """Tests for the TessTransitLightcurveLabelPerTimeStepDatabase class."""
+class TestTransitLightcurveLabelPerTimeStepDatabase:
+    """Tests for the TransitLightcurveLabelPerTimeStepDatabase class."""
 
     @pytest.fixture
     def data_directory_path(self) -> str:
@@ -21,13 +21,13 @@ class TestTessTransitLightcurveLabelPerTimeStepDatabase:
         return str(Path(__file__).parent.joinpath('resources/test_data_directory/tess'))
 
     @pytest.fixture
-    def database(self, data_directory_path) -> TessTransitLightcurveLabelPerTimeStepDatabase:
+    def database(self, data_directory_path) -> TransitLightcurveLabelPerTimeStepDatabase:
         """
         Sets up the database for use in a test.
 
         :return: The database.
         """
-        return TessTransitLightcurveLabelPerTimeStepDatabase(data_directory_path)
+        return TransitLightcurveLabelPerTimeStepDatabase(data_directory_path)
 
     def test_can_collect_lightcurve_paths(self, database):
         lightcurve_paths = database.get_lightcurve_file_paths()

@@ -11,10 +11,10 @@ from pathlib import Path
 
 from ramjet.photometric_database.tess_data_interface import TessDataInterface
 from ramjet.photometric_database.tess_transit_lightcurve_label_per_time_step_database import \
-    TessTransitLightcurveLabelPerTimeStepDatabase
+    TransitLightcurveLabelPerTimeStepDatabase
 
 
-class YuLightcurveDatabase(TessTransitLightcurveLabelPerTimeStepDatabase):
+class YuLightcurveDatabase(TransitLightcurveLabelPerTimeStepDatabase):
     """
     A class to represent the database of TESS transit data based on disposition tables.
     """

@@ -1,5 +1,5 @@
 """
-Code for a database of TESS transit lightcurves with a label per time step.
+Code for a database of transit lightcurves with a label per time step.
 """
 import shutil
 from pathlib import Path
@@ -13,9 +13,9 @@ from ramjet.photometric_database.lightcurve_label_per_time_step_database import 
 from ramjet.photometric_database.tess_data_interface import TessDataInterface
 
 
-class TessTransitLightcurveLabelPerTimeStepDatabase(LightcurveLabelPerTimeStepDatabase):
+class TransitLightcurveLabelPerTimeStepDatabase(LightcurveLabelPerTimeStepDatabase):
     """
-    A class for a database of TESS transit lightcurves with a label per time step.
+    A class for a database of transit lightcurves with a label per time step.
     """
 
     def __init__(self, data_directory='data/tess'):
