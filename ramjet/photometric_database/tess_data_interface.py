@@ -71,3 +71,16 @@ class TessDataInterface:
             except (AstroQueryTimeoutError, ConnectionError):
                 print('Error connecting to MAST. They have occasional downtime. Trying again...')
         return manifest.to_pandas()
+
+    @staticmethod
+    def filter_for_single_sector_observations(time_series_observations: pd.DataFrame) -> pd.DataFrame:
+        """
+        Filters a data frame of observations to get only the single sector observations.
+
+        :param time_series_observations: A data frame of observations to filter for single sector observations.
+        :return: The data frame of single sector observations.
+        """
+        single_sector_observations = time_series_observations[
+            time_series_observations['dataURL'].str.endswith('lc.fits')
+        ]
+        return single_sector_observations.copy()

@@ -92,7 +92,7 @@ class ToiLightcurveDatabase(TessTransitLightcurveLabelPerTimeStepDatabase):
         print('Downloading TESS observation list...')
         tess_data_interface = TessDataInterface()
         tess_observations = tess_data_interface.get_all_tess_time_series_observations()
-        single_sector_observations = self.get_single_sector_observations(tess_observations)
+        single_sector_observations = tess_data_interface.filter_for_single_sector_observations(tess_observations)
         single_sector_observations = self.add_sector_column_based_on_single_sector_obs_id(single_sector_observations)
         single_sector_observations['tic_id'] = single_sector_observations['target_name'].astype(int)
         print("Downloading lightcurves which are confirmed planets in TOI dispositions...")

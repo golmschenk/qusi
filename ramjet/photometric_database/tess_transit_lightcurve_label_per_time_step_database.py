@@ -63,19 +63,6 @@ class TessTransitLightcurveLabelPerTimeStepDatabase(LightcurveLabelPerTimeStepDa
         return example_path in self.meta_data_frame['lightcurve_path'].values
 
     @staticmethod
-    def get_single_sector_observations(time_series_observations: pd.DataFrame) -> pd.DataFrame:
-        """
-        Filters a data frame of observations to get only the single sector observations.
-
-        :param time_series_observations: A data frame of observations to filter for single sector observations.
-        :return: The data frame of single sector observations.
-        """
-        single_sector_observations = time_series_observations[
-            time_series_observations['dataURL'].str.endswith('lc.fits')
-        ]
-        return single_sector_observations.copy()
-
-    @staticmethod
     def get_multi_sector_observations(time_series_observations: pd.DataFrame) -> pd.DataFrame:
         """
         Filters a data frame of observations to get only the multi sector observations.

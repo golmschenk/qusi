@@ -61,3 +61,11 @@ class TestTessDataInterface:
                                                                                      download_dir=str(data_directory))
         assert isinstance(query_result, pd.DataFrame)
         assert np.array_equal(query_result['a'].values, [1, 2])
+
+    def test_can_filter_observations_to_get_only_single_sector_observations(self, tess_data_interface):
+        observations = pd.DataFrame({'dataURL': ['a_lc.fits', 'b_dvt.fits', 'c_dvr.pdf', 'd_lc.fits']})
+        single_sector_observations = tess_data_interface.filter_for_single_sector_observations(observations)
+        assert single_sector_observations.shape[0] == 2
+        assert 'a_lc.fits' in single_sector_observations['dataURL'].values
+        assert 'd_lc.fits' in single_sector_observations['dataURL'].values
+        assert 'b_dvt.fits' not in single_sector_observations['dataURL'].values
