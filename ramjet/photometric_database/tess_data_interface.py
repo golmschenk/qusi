@@ -84,3 +84,16 @@ class TessDataInterface:
             time_series_observations['dataURL'].str.endswith('lc.fits')
         ]
         return single_sector_observations.copy()
+
+    @staticmethod
+    def filter_for_multi_sector_observations(time_series_observations: pd.DataFrame) -> pd.DataFrame:
+        """
+        Filters a data frame of observations to get only the multi sector observations.
+
+        :param time_series_observations: A data frame of observations to filter for multi sector observations.
+        :return: The data frame of multi sector observations.
+        """
+        multi_sector_observations = time_series_observations[
+            time_series_observations['dataURL'].str.endswith('dvt.fits')
+        ]
+        return multi_sector_observations.copy()

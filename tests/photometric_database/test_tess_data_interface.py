@@ -69,3 +69,10 @@ class TestTessDataInterface:
         assert 'a_lc.fits' in single_sector_observations['dataURL'].values
         assert 'd_lc.fits' in single_sector_observations['dataURL'].values
         assert 'b_dvt.fits' not in single_sector_observations['dataURL'].values
+
+    def test_can_filter_observations_to_get_only_multi_sector_observations(self, tess_data_interface):
+        observations = pd.DataFrame({'dataURL': ['a_lc.fits', 'b_dvt.fits', 'c_dvr.pdf', 'd_lc.fits']})
+        multi_sector_observations = tess_data_interface.filter_for_multi_sector_observations(observations)
+        assert multi_sector_observations.shape[0] == 1
+        assert 'b_dvt.fits' in multi_sector_observations['dataURL'].values
+        assert 'a_lc.fits' not in multi_sector_observations['dataURL'].values
