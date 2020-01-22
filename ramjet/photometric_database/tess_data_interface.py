@@ -1,6 +1,7 @@
 """
 Code for a class for common interfacing with TESS data, such as downloading, sorting, and manipulating.
 """
+import tempfile
 from enum import Enum
 from pathlib import Path
 from typing import Union, List
@@ -48,7 +49,7 @@ class TessDataInterface:
         return tess_observations.to_pandas()
 
     @staticmethod
-    def get_product_list(observations: pd.DataFrame) -> pd.DataFrame:
+    def get_product_list(observations: pd.DataFrame, limit_to_lightcurves: bool = False) -> pd.DataFrame:
         """
         A wrapper for MAST's `get_product_list`, allowing the use of Pandas DataFrames instead of AstroPy Tables.
         Retries on error when communicating with the MAST server.
@@ -57,6 +58,7 @@ class TessDataInterface:
         :return: The data frame of the product list. Will be converted from Table to DataFrame for use.
         """
         data_products = None
+
         while data_products is None:
             try:
                 # noinspection SpellCheckingInspection
@@ -172,3 +174,21 @@ class TessDataInterface:
         fluxes = np.delete(fluxes, nan_indexes)
         times = np.delete(times, nan_indexes)
         return fluxes, times
+
+    def download_lightcurve(self, tic_id: int, sector: int = None, save_path: Path = None):
+        observations = self.get_all_tess_time_series_observations(tic_id=tic_id)
+        single_sector_observations = self.filter_for_single_sector_observations(observations)
+        observations_with_sectors = self.add_sector_column_to_single_sector_observations(single_sector_observations)
+        if sector is not None:
+            observations_with_sectors = observations_with_sectors[observations_with_sectors['Sector'] == sector]
+        else:
+            observations_with_sectors.head(1)
+        product_list = self.get_product_list(observations_with_sectors)
+        lightcurves_product_list = product_list[product_list['productSubGroupDescription'] == 'LC']
+        manifest = self.download_products(lightcurves_product_list, data_directory=tempfile.gettempdir())
+        lightcurve_path = Path(manifest['Local Path'].iloc[0])
+        if save_path is not None:
+            save_path.parent.mkdir(parents=True, exist_ok=True)
+            lightcurve_path.rename(save_path)
+            lightcurve_path = save_path
+        return lightcurve_path
