@@ -12,7 +12,7 @@ from matplotlib.colors import LinearSegmentedColormap
 def plot_lightcurve(times: np.ndarray, fluxes: np.ndarray, labels: np.ndarray = None, predictions: np.ndarray = None,
                     title: str = None, x_label: str = 'Days', y_label: str = 'Flux',
                     x_limits: (float, float) = (None, None), y_limits: (float, float) = (None, None),
-                    save_path: Union[Path, str] = None):
+                    save_path: Union[Path, str] = None, exclude_flux_outliers: bool = False):
     """
     Plots a lightcurve with a consistent styling. If true labels and/or predictions are included, these will
     additionally be plotted.
@@ -27,6 +27,7 @@ def plot_lightcurve(times: np.ndarray, fluxes: np.ndarray, labels: np.ndarray = 
     :param x_limits: Optional axis limiting for the x axis.
     :param y_limits: Optional axis limiting for the y axis.
     :param save_path: The path to save the plot to. If `None`, the plot will be shown instead.
+    :param exclude_flux_outliers: Whether or not to exclude flux outlier data points when plotting.
     """
     with plt.style.context('seaborn-whitegrid'):
         figure, axes = plt.subplots()
@@ -36,6 +37,14 @@ def plot_lightcurve(times: np.ndarray, fluxes: np.ndarray, labels: np.ndarray = 
         data_point_color = color_map(0)
         positive_data_point_color = color_map(2)
         prediction_color = color_map(3)
+        if exclude_flux_outliers:
+            outlier_indices = is_outlier(fluxes)
+            fluxes = fluxes[~outlier_indices]
+            times = times[~outlier_indices]
+            if labels is not None:
+                labels = labels[~outlier_indices]
+            if predictions is not None:
+                predictions = predictions[~outlier_indices]
         if labels is not None:
             edge_colors = np.where(labels.reshape(-1, 1), [positive_data_point_color], [data_point_color])
             face_colors = np.copy(edge_colors)
@@ -70,3 +79,20 @@ def plot_lightcurve(times: np.ndarray, fluxes: np.ndarray, labels: np.ndarray = 
         else:
             plt.show()
         plt.close(figure)
+
+
+def is_outlier(points: np.ndarray, threshold: float = 5):
+    """
+    Uses the median absolute deviation to determine if the input data points are "outliers" for the purpose of
+    plotting.
+
+    :param points: The observations to search for outliers in.
+    :param threshold: The modified z-score to use as a threshold. Observations with a modified z-score based on the
+    median absolute deviation greater than this value will be classified as outliers.
+    """
+    assert len(points.shape) == 1  # Only designed to work with 1D data.
+    median = np.median(points, axis=0)
+    absolute_deviation_from_median = np.abs(points - median)
+    median_absolute_deviation_from_median = np.median(absolute_deviation_from_median)
+    modified_z_score = 0.6745 * absolute_deviation_from_median / median_absolute_deviation_from_median
+    return modified_z_score > threshold
