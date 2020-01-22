@@ -97,3 +97,13 @@ class TessDataInterface:
             time_series_observations['dataURL'].str.endswith('dvt.fits')
         ]
         return multi_sector_observations.copy()
+
+    @staticmethod
+    def get_tic_id_from_single_sector_obs_id(obs_id: str) -> int:
+        """
+        Extracts the TIC ID from a single-sector obs_id string.
+
+        :param obs_id: The obs_id to extract from.
+        :return: The extracted TIC ID.
+        """
+        return int(obs_id.split('-')[2].lstrip('0'))

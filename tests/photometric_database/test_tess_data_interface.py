@@ -76,3 +76,11 @@ class TestTessDataInterface:
         assert multi_sector_observations.shape[0] == 1
         assert 'b_dvt.fits' in multi_sector_observations['dataURL'].values
         assert 'a_lc.fits' not in multi_sector_observations['dataURL'].values
+
+    def test_can_get_tic_from_single_sector_obs_id(self, tess_data_interface):
+        tic_id0 = tess_data_interface.get_tic_id_from_single_sector_obs_id(
+            'tess2018206045859-s0001-0000000117544915-0120-s')
+        assert tic_id0 == 117544915
+        tic_id1 = tess_data_interface.get_tic_id_from_single_sector_obs_id(
+            'tess2018319095959-s0005-0000000025132999-0125-s')
+        assert tic_id1 == 25132999

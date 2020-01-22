@@ -70,7 +70,9 @@ class ToiLightcurveDatabase(TessTransitLightcurveLabelPerTimeStepDatabase):
                                                      dispositions['transit_period'].notna() &
                                                      dispositions['transit_duration'].notna()]
         lightcurve_paths = list(self.lightcurve_directory.glob('*lc.fits'))
-        tic_ids = [int(self.get_tic_id_from_single_sector_obs_id(path.name)) for path in lightcurve_paths]
+        tess_data_interface = TessDataInterface()
+        tic_ids = [int(tess_data_interface.get_tic_id_from_single_sector_obs_id(path.name))
+                   for path in lightcurve_paths]
         sectors = [self.get_sector_from_single_sector_obs_id(path.name) for path in lightcurve_paths]
         lightcurve_meta_data = pd.DataFrame({'lightcurve_path': list(map(str, lightcurve_paths)), 'tic_id': tic_ids,
                                              'sector': sectors})
