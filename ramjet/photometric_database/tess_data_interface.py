@@ -12,6 +12,8 @@ from astropy.table import Table
 from astroquery.mast import Observations
 from astroquery.exceptions import TimeoutError as AstroQueryTimeoutError
 
+from ramjet.analysis.lightcurve_visualizer import plot_lightcurve
+
 
 class TessFluxType(Enum):
     SAP = 'SAP_FLUX'
@@ -175,7 +177,15 @@ class TessDataInterface:
         times = np.delete(times, nan_indexes)
         return fluxes, times
 
-    def download_lightcurve(self, tic_id: int, sector: int = None, save_path: Path = None):
+    def download_lightcurve(self, tic_id: int, sector: int = None, save_path: Path = None) -> Path:
+        """
+        Downloads a lightcurve from MAST.
+
+        :param tic_id: The TIC ID of the lightcurve target to download.
+        :param sector: The sector to download. If not specified, downloads first available sector.
+        :param save_path: The path to save the FITS file to. If not specified, uses the system temporary directory.
+        :return: The path to the downloaded file.
+        """
         observations = self.get_all_tess_time_series_observations(tic_id=tic_id)
         single_sector_observations = self.filter_for_single_sector_observations(observations)
         observations_with_sectors = self.add_sector_column_to_single_sector_observations(single_sector_observations)
@@ -192,3 +202,14 @@ class TessDataInterface:
             lightcurve_path.rename(save_path)
             lightcurve_path = save_path
         return lightcurve_path
+
+    def plot_lightcurve_from_mast(self, tic_id: int, sector: int = None):
+        """
+        Downloads and plots a lightcurve from MAST.
+
+        :param tic_id: The TIC ID of the lightcurve target to download.
+        :param sector: The sector to download. If not specified, downloads first available sector.
+        """
+        lightcurve_path = self.download_lightcurve(tic_id, sector)
+        fluxes, times = self.load_fluxes_and_times_from_fits_file(lightcurve_path)
+        plot_lightcurve(times=times, fluxes=fluxes)
