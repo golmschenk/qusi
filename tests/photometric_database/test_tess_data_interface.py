@@ -11,7 +11,7 @@ from astropy.table import Table
 
 import pytest
 
-from ramjet.photometric_database.tess_data_interface import TessDataInterface
+from ramjet.photometric_database.tess_data_interface import TessDataInterface, TessFluxType
 
 
 class TestTessDataInterface:
@@ -133,3 +133,17 @@ class TestTessDataInterface:
         fluxes, times = tess_data_interface.load_fluxes_and_times_from_fits_file(lightcurve_path)
         assert np.array_equal(fluxes, np.array([2], dtype=np.float32))
         assert np.array_equal(times, np.array([5], dtype=np.float32))
+
+    def test_can_extract_different_flux_types_from_fits(self, tess_data_interface, tess_data_interface_module):
+        fits_sap_fluxes = np.array([1, 2, 3], dtype=np.float32)
+        fits_pdcsap_fluxes = np.array([4, 5, 6], dtype=np.float32)
+        fits_times = np.array([7, 8, 9], dtype=np.float32)
+        hdu = Mock(data={'SAP_FLUX': fits_sap_fluxes, 'PDCSAP_FLUX': fits_pdcsap_fluxes, 'TIME': fits_times})
+        hdu_list = [None, hdu]  # Lightcurve information is in first extension table in TESS data.
+        tess_data_interface_module.fits.open = Mock(return_value=hdu_list)
+        lightcurve_path = 'path/to/lightcurve'
+        sap_fluxes, _ = tess_data_interface.load_fluxes_and_times_from_fits_file(lightcurve_path, TessFluxType.SAP)
+        pdcsap_fluxes, _ = tess_data_interface.load_fluxes_and_times_from_fits_file(lightcurve_path,
+                                                                                    TessFluxType.PDCSAP)
+        assert np.array_equal(sap_fluxes, fits_sap_fluxes)
+        assert np.array_equal(pdcsap_fluxes, fits_pdcsap_fluxes)

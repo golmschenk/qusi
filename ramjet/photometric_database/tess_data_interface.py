@@ -1,6 +1,7 @@
 """
 Code for a class for common interfacing with TESS data, such as downloading, sorting, and manipulating.
 """
+from enum import Enum
 from pathlib import Path
 from typing import Union
 import numpy as np
@@ -9,6 +10,11 @@ from astropy.io import fits
 from astropy.table import Table
 from astroquery.mast import Observations
 from astroquery.exceptions import TimeoutError as AstroQueryTimeoutError
+
+
+class TessFluxType(Enum):
+    SAP = 'SAP_FLUX'
+    PDCSAP = 'PDCSAP_FLUX'
 
 
 class TessDataInterface:
@@ -141,16 +147,18 @@ class TessDataInterface:
         return observations
 
     @staticmethod
-    def load_fluxes_and_times_from_fits_file(example_path: Union[str, Path]) -> (np.ndarray, np.ndarray):
+    def load_fluxes_and_times_from_fits_file(example_path: Union[str, Path],
+                                             flux_type: TessFluxType = TessFluxType.SAP) -> (np.ndarray, np.ndarray):
         """
         Extract the flux and time values from a TESS FITS file.
 
         :param example_path: The path to the FITS file.
+        :param flux_type: The flux type to extract from the FITS file.
         :return: The flux and times values from the FITS file.
         """
         hdu_list = fits.open(example_path)
         lightcurve = hdu_list[1].data  # Lightcurve information is in first extension table.
-        fluxes = lightcurve['SAP_FLUX']
+        fluxes = lightcurve[flux_type.value]
         times = lightcurve['TIME']
         assert times.shape == fluxes.shape
         # noinspection PyUnresolvedReferences
