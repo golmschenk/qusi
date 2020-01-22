@@ -63,42 +63,6 @@ class TessTransitLightcurveLabelPerTimeStepDatabase(LightcurveLabelPerTimeStepDa
         """
         return example_path in self.meta_data_frame['lightcurve_path'].values
 
-    def add_sector_columns_based_on_multi_sector_obs_id(self, observations: pd.DataFrame) -> pd.DataFrame:
-        """
-        Adds columns with sector information the data was taken from. In particular, adds the start and end
-        sectors, as well as the total length of the sector range.
-
-        :param observations: The data frame of multi-sector observations.
-        :return: The data frame with the added sector information columns.
-        """
-        sectors_data_frame = observations['obs_id'].apply(self.get_sectors_from_multi_sector_obs_id)
-        observations['start_sector'] = sectors_data_frame[0]
-        observations['end_sector'] = sectors_data_frame[1]
-        observations['sector_range_length'] = observations['end_sector'] - observations['start_sector'] + 1
-        return observations
-
-    @staticmethod
-    def get_sectors_from_multi_sector_obs_id(obs_id: str) -> pd.Series:
-        """
-        Extracts the sectors from a multi-sector obs_id string.
-
-        :param obs_id: The obs_id to extract from.
-        :return: The extracted sector numbers: a start and an end sector.
-        """
-        string_split = obs_id.split('-')
-        return pd.Series([int(string_split[1][1:]), int(string_split[2][1:])])
-
-    @staticmethod
-    def get_largest_sector_range(multi_sector_observations: pd.DataFrame) -> pd.DataFrame:
-        """
-        Returns only the rows with the largest sector range for each TIC ID.
-
-        :param multi_sector_observations: The observations with sector range information included.
-        :return: A data frame containing only the rows for each TIC ID that have the largest sector range.
-        """
-        range_sorted_observations = multi_sector_observations.sort_values('sector_range_length', ascending=False)
-        return range_sorted_observations.drop_duplicates(['target_name'])
-
     @staticmethod
     def load_fluxes_and_times_from_fits_file(example_path: Union[str, Path]) -> (np.ndarray, np.ndarray):
         """
