@@ -147,3 +147,9 @@ class TestTessDataInterface:
                                                                                     TessFluxType.PDCSAP)
         assert np.array_equal(sap_fluxes, fits_sap_fluxes)
         assert np.array_equal(pdcsap_fluxes, fits_pdcsap_fluxes)
+
+    def test_can_limit_an_observations_query_by_tic_id(self, tess_data_interface, tess_data_interface_module):
+        mock_query_result = Table({'a': [1, 2], 'b': [3, 4]})
+        tess_data_interface_module.Observations.query_criteria = Mock(return_value=mock_query_result)
+        _ = tess_data_interface.get_all_tess_time_series_observations(tic_id=0)
+        assert tess_data_interface_module.Observations.query_criteria.call_args[1]['target_name'] == 0
