@@ -84,3 +84,11 @@ class TestTessDataInterface:
         tic_id1 = tess_data_interface.get_tic_id_from_single_sector_obs_id(
             'tess2018319095959-s0005-0000000025132999-0125-s')
         assert tic_id1 == 25132999
+
+    def test_can_get_sector_from_single_sector_obs_id(self, tess_data_interface):
+        sector0 = tess_data_interface.get_sector_from_single_sector_obs_id(
+            'tess2019112060037-s0011-0000000025132999-0143-s')
+        assert sector0 == 11
+        sector1 = tess_data_interface.get_sector_from_single_sector_obs_id(
+            'tess2018319095959-s0005-0000000025132999-0125-s')
+        assert sector1 == 5

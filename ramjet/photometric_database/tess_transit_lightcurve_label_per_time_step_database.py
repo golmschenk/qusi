@@ -15,6 +15,7 @@ from astroquery.exceptions import TimeoutError as AstroQueryTimeoutError
 from requests.exceptions import ConnectionError
 
 from ramjet.photometric_database.lightcurve_label_per_time_step_database import LightcurveLabelPerTimeStepDatabase
+from ramjet.photometric_database.tess_data_interface import TessDataInterface
 
 
 class TessTransitLightcurveLabelPerTimeStepDatabase(LightcurveLabelPerTimeStepDatabase):
@@ -69,7 +70,8 @@ class TessTransitLightcurveLabelPerTimeStepDatabase(LightcurveLabelPerTimeStepDa
         :param observations: The table of single-sector observations.
         :return: The table with the added sector column.
         """
-        observations['sector'] = observations['obs_id'].map(self.get_sector_from_single_sector_obs_id)
+        tess_data_interface = TessDataInterface()
+        observations['sector'] = observations['obs_id'].map(tess_data_interface.get_sector_from_single_sector_obs_id)
         return observations
 
     def add_tic_id_column_based_on_single_sector_obs_id(self, data_frame: pd.DataFrame) -> pd.DataFrame:
@@ -79,18 +81,9 @@ class TessTransitLightcurveLabelPerTimeStepDatabase(LightcurveLabelPerTimeStepDa
         :param data_frame: The data frame of single-sector entries.
         :return: The table with the added TIC ID column.
         """
-        data_frame['tic_id'] = data_frame['obs_id'].map(self.get_tic_id_from_single_sector_obs_id)
+        tess_data_interface = TessDataInterface()
+        data_frame['tic_id'] = data_frame['obs_id'].map(tess_data_interface.get_tic_id_from_single_sector_obs_id)
         return data_frame
-
-    @staticmethod
-    def get_tic_id_from_single_sector_obs_id(obs_id: str) -> int:
-        """
-        Extracts the TIC ID from a single-sector obs_id string.
-
-        :param obs_id: The obs_id to extract from.
-        :return: The extracted TIC ID.
-        """
-        return int(obs_id.split('-')[2].lstrip('0'))
 
     def add_sector_columns_based_on_multi_sector_obs_id(self, observations: pd.DataFrame) -> pd.DataFrame:
         """
@@ -105,16 +98,6 @@ class TessTransitLightcurveLabelPerTimeStepDatabase(LightcurveLabelPerTimeStepDa
         observations['end_sector'] = sectors_data_frame[1]
         observations['sector_range_length'] = observations['end_sector'] - observations['start_sector'] + 1
         return observations
-
-    @staticmethod
-    def get_sector_from_single_sector_obs_id(obs_id: str) -> int:
-        """
-        Extracts the sector from a single-sector obs_id string.
-
-        :param obs_id: The obs_id to extract from.
-        :return: The extracted sector number.
-        """
-        return int(obs_id.split('-')[1][1:])
 
     @staticmethod
     def get_sectors_from_multi_sector_obs_id(obs_id: str) -> pd.Series:

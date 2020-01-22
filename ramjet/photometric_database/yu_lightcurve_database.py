@@ -87,9 +87,8 @@ class YuLightcurveDatabase(TessTransitLightcurveLabelPerTimeStepDatabase):
                                                        liang_yu_dispositions['transit_duration'].notna())]
         lightcurve_paths = list(self.lightcurve_directory.glob('*lc.fits'))
         tess_data_interface = TessDataInterface()
-        tic_ids = [int(tess_data_interface.get_tic_id_from_single_sector_obs_id(path.name))
-                   for path in lightcurve_paths]
-        sectors = [self.get_sector_from_single_sector_obs_id(path.name) for path in lightcurve_paths]
+        tic_ids = [tess_data_interface.get_tic_id_from_single_sector_obs_id(path.name) for path in lightcurve_paths]
+        sectors = [tess_data_interface.get_sector_from_single_sector_obs_id(path.name) for path in lightcurve_paths]
         lightcurve_meta_data = pd.DataFrame({'lightcurve_path': list(map(str, lightcurve_paths)), 'tic_id': tic_ids,
                                              'sector': sectors})
         meta_data_frame_with_candidate_nans = pd.merge(liang_yu_dispositions, lightcurve_meta_data,

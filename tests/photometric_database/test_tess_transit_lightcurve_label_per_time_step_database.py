@@ -48,12 +48,6 @@ class TestTessTransitLightcurveLabelPerTimeStepDatabase:
         )
         assert not database.is_positive(example_path1)
 
-    def test_can_get_sector_from_single_sector_obs_id(self, database):
-        sector0 = database.get_sector_from_single_sector_obs_id('tess2019112060037-s0011-0000000025132999-0143-s')
-        assert sector0 == 11
-        sector1 = database.get_sector_from_single_sector_obs_id('tess2018319095959-s0005-0000000025132999-0125-s')
-        assert sector1 == 5
-
     def test_can_get_sectors_from_multi_sector_obs_id(self, database):
         start0, end0 = database.get_sectors_from_multi_sector_obs_id(
             'tess2018206190142-s0001-s0009-0000000025132999-00205'

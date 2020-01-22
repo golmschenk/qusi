@@ -107,3 +107,13 @@ class TessDataInterface:
         :return: The extracted TIC ID.
         """
         return int(obs_id.split('-')[2].lstrip('0'))
+
+    @staticmethod
+    def get_sector_from_single_sector_obs_id(obs_id: str) -> int:
+        """
+        Extracts the sector from a single-sector obs_id string.
+
+        :param obs_id: The obs_id to extract from.
+        :return: The extracted sector number.
+        """
+        return int(obs_id.split('-')[1][1:])
