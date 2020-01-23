@@ -158,7 +158,7 @@ class TessDataInterface:
 
     @staticmethod
     def load_fluxes_and_times_from_fits_file(example_path: Union[str, Path],
-                                             flux_type: TessFluxType = TessFluxType.SAP) -> (np.ndarray, np.ndarray):
+                                             flux_type: TessFluxType = TessFluxType.PDCSAP) -> (np.ndarray, np.ndarray):
         """
         Extract the flux and time values from a TESS FITS file.
 
