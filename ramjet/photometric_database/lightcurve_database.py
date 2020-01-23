@@ -28,13 +28,22 @@ class LightcurveDatabase(ABC):
         series.to_csv(os.path.join(self.trial_directory, f'{dataset_name}.csv'), header=False, index=False)
 
     @staticmethod
-    def normalize(lightcurve: np.ndarray) -> np.ndarray:
+    def normalize_log_0_to_1(lightcurve: np.ndarray) -> np.ndarray:
         """Normalizes from 0 to 1 on the logarithm of the lightcurve."""
         lightcurve -= np.min(lightcurve)
         lightcurve = np.log1p(lightcurve)
         array_max = np.max(lightcurve)
         if array_max != 0:
             lightcurve /= array_max
+        return lightcurve
+
+    @staticmethod
+    def normalize(lightcurve: np.ndarray) -> np.ndarray:
+        """Normalizes light curve using quantile. Quantile_10 (10%) at -1 and Quantile_90 (90%) at 1.
+        """
+        Quantile_10 = np.percentile(lightcurve, 10)
+        Quantile_90 = np.percentile(lightcurve, 90)
+        lightcurve = ((lightcurve - Quantile_10) / ((Quantile_90 - Quantile_10) / 2)) - 1
         return lightcurve
 
     @staticmethod
