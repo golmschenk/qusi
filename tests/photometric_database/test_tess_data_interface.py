@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import Mock, ANY
 import numpy as np
 import pandas as pd
+from astropy.coordinates import SkyCoord
 
 from astropy.table import Table
 
@@ -114,7 +115,7 @@ class TestTessDataInterface:
     def test_can_load_fluxes_and_times_from_tess_fits(self, tess_data_interface, tess_data_interface_module):
         expected_fluxes = np.array([1, 2, 3], dtype=np.float32)
         expected_times = np.array([4, 5, 6], dtype=np.float32)
-        hdu = Mock(data={'SAP_FLUX': expected_fluxes, 'TIME': expected_times})
+        hdu = Mock(data={'PDCSAP_FLUX': expected_fluxes, 'TIME': expected_times})
         hdu_list = [None, hdu]  # Lightcurve information is in first extension table in TESS data.
         tess_data_interface_module.fits.open = Mock(return_value=hdu_list)
         lightcurve_path = 'path/to/lightcurve'
@@ -126,7 +127,7 @@ class TestTessDataInterface:
     def test_loading_fluxes_and_times_from_fits_drops_nans(self, tess_data_interface, tess_data_interface_module):
         fits_fluxes = np.array([np.nan, 2, 3], dtype=np.float32)
         fits_times = np.array([4, 5, np.nan], dtype=np.float32)
-        hdu = Mock(data={'SAP_FLUX': fits_fluxes, 'TIME': fits_times})
+        hdu = Mock(data={'PDCSAP_FLUX': fits_fluxes, 'TIME': fits_times})
         hdu_list = [None, hdu]  # Lightcurve information is in first extension table in TESS data.
         tess_data_interface_module.fits.open = Mock(return_value=hdu_list)
         lightcurve_path = 'path/to/lightcurve'
@@ -153,3 +154,11 @@ class TestTessDataInterface:
         tess_data_interface_module.Observations.query_criteria = Mock(return_value=mock_query_result)
         _ = tess_data_interface.get_all_tess_time_series_observations(tic_id=0)
         assert tess_data_interface_module.Observations.query_criteria.call_args[1]['target_name'] == 0
+
+    def test_can_get_the_coordinates_of_a_target_based_on_tic_id(self, tess_data_interface, tess_data_interface_module):
+        mock_query_result = Table({'s_ra': [62.2, 62.2], 's_dec': [-71.4, -71.4]})
+        SkyCoord(62.2, -71.4, unit="deg")
+        tess_data_interface_module.Observations.query_criteria = Mock(return_value=mock_query_result)
+        coordinates = tess_data_interface.get_target_coordinates(tic_id=0)
+        assert coordinates.ra.deg == 62.2
+        assert coordinates.dec.deg == -71.4

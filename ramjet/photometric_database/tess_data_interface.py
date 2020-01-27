@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Union, List
 import numpy as np
 import pandas as pd
+from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.table import Table
 from astroquery.mast import Observations
@@ -218,3 +219,15 @@ class TessDataInterface:
         if exclude_flux_outliers:
             title += ' (outliers removed)'
         plot_lightcurve(times=times, fluxes=fluxes, exclude_flux_outliers=exclude_flux_outliers, title=title)
+
+    def get_target_coordinates(self, tic_id: int) -> SkyCoord:
+        """
+        Get the sky coordinates of the target by a TIC ID.
+
+        :param tic_id: The target's TIC ID.
+        :return: The coordinates of the target.
+        """
+        target_observations = self.get_all_tess_time_series_observations(tic_id=tic_id)
+        ra = target_observations['s_ra'].iloc[0]
+        dec = target_observations['s_dec'].iloc[0]
+        return SkyCoord(ra, dec, unit='deg')
