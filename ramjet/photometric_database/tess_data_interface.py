@@ -10,7 +10,7 @@ import pandas as pd
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.table import Table
-from astroquery.mast import Observations
+from astroquery.mast import Observations, Catalogs
 from astroquery.exceptions import TimeoutError as AstroQueryTimeoutError
 
 from ramjet.analysis.lightcurve_visualizer import plot_lightcurve
@@ -28,6 +28,8 @@ class TessDataInterface:
     def __init__(self):
         Observations.TIMEOUT = 1200
         Observations.PAGESIZE = 10000
+        Catalogs.TIMEOUT = 1200
+        Catalogs.PAGESIZE = 10000
 
     @staticmethod
     def get_all_tess_time_series_observations(tic_id: Union[int, List[int]] = None) -> pd.DataFrame:
@@ -52,7 +54,7 @@ class TessDataInterface:
         return tess_observations.to_pandas()
 
     @staticmethod
-    def get_product_list(observations: pd.DataFrame, limit_to_lightcurves: bool = False) -> pd.DataFrame:
+    def get_product_list(observations: pd.DataFrame) -> pd.DataFrame:
         """
         A wrapper for MAST's `get_product_list`, allowing the use of Pandas DataFrames instead of AstroPy Tables.
         Retries on error when communicating with the MAST server.
@@ -220,14 +222,15 @@ class TessDataInterface:
             title += ' (outliers removed)'
         plot_lightcurve(times=times, fluxes=fluxes, exclude_flux_outliers=exclude_flux_outliers, title=title)
 
-    def get_target_coordinates(self, tic_id: int) -> SkyCoord:
+    @staticmethod
+    def get_target_coordinates(tic_id: int) -> SkyCoord:
         """
         Get the sky coordinates of the target by a TIC ID.
 
         :param tic_id: The target's TIC ID.
         :return: The coordinates of the target.
         """
-        target_observations = self.get_all_tess_time_series_observations(tic_id=tic_id)
-        ra = target_observations['s_ra'].iloc[0]
-        dec = target_observations['s_dec'].iloc[0]
+        target_observations = Catalogs.query_criteria(catalog='TIC', ID=tic_id).to_pandas()
+        ra = target_observations['ra'].iloc[0]
+        dec = target_observations['dec'].iloc[0]
         return SkyCoord(ra, dec, unit='deg')

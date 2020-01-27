@@ -156,9 +156,10 @@ class TestTessDataInterface:
         assert tess_data_interface_module.Observations.query_criteria.call_args[1]['target_name'] == 0
 
     def test_can_get_the_coordinates_of_a_target_based_on_tic_id(self, tess_data_interface, tess_data_interface_module):
-        mock_query_result = Table({'s_ra': [62.2, 62.2], 's_dec': [-71.4, -71.4]})
+        mock_query_result = Table({'ra': [62.2, 62.2], 'dec': [-71.4, -71.4]})
         SkyCoord(62.2, -71.4, unit="deg")
-        tess_data_interface_module.Observations.query_criteria = Mock(return_value=mock_query_result)
+        tess_data_interface_module.Catalogs.query_criteria = Mock(return_value=mock_query_result)
         coordinates = tess_data_interface.get_target_coordinates(tic_id=0)
         assert coordinates.ra.deg == 62.2
         assert coordinates.dec.deg == -71.4
+

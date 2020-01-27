@@ -7,7 +7,6 @@ import matplotlib
 matplotlib.use('Agg')  # Use non-interactive backend to prevent loss of focus during test.
 
 
-
 def pytest_addoption(parser):
     """Adds additional options to the pytest commandline."""
     parser.addoption(
