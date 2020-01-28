@@ -14,7 +14,7 @@ import tensorflow as tf
 class LightcurveDatabase(ABC):
     """A base generalized database for photometric data to be subclassed."""
     def __init__(self, data_directory='data'):
-        self.data_directory = Path(data_directory)
+        self.data_directory: Path = Path(data_directory)
         self.validation_ratio = 0.2
         self.batch_size = 100
         self.trial_directory = None
@@ -113,17 +113,25 @@ class LightcurveDatabase(ABC):
         return example
 
     def get_training_and_validation_datasets_for_file_paths(self, example_paths: List[Union[str, Path]]) -> (
-                                                            tf.data.Dataset, tf.data.Dataset):
+            tf.data.Dataset, tf.data.Dataset):
         """Creates a TensorFlow Dataset from a list of file names and desired label for those files."""
         example_paths = [str(example_path) for example_path in example_paths]
-        np.random.seed(0)
-        np.random.shuffle(example_paths)
-        number_of_chunks = int(1 / self.validation_ratio)  # In this example, 5 chunks.
-        chunks = np.array_split(example_paths, number_of_chunks)
-        validation_chunk_index = 0  # This value should be changeable to select different validation sets.
-        validation_paths = chunks[validation_chunk_index]
-        training_chunks = np.delete(chunks, validation_chunk_index, axis=0)
-        training_paths = np.concatenate(training_chunks)
+        chunk_ratio = self.validation_ratio
+        validation_chunk_index = 0
+        validation_paths, training_paths = self.extract_shuffled_chunk_and_remainder(example_paths, chunk_ratio,
+                                                                                     validation_chunk_index)
         validation_dataset = tf.data.Dataset.from_tensor_slices(validation_paths)
         training_dataset = tf.data.Dataset.from_tensor_slices(training_paths)
         return training_dataset, validation_dataset
+
+    @staticmethod
+    def extract_shuffled_chunk_and_remainder(array_to_extract_from: Union[List, np.ndarray], chunk_ratio: float,
+                                             chunk_to_extract_index: int = 0) -> (np.ndarray, np.ndarray):
+        np.random.seed(0)
+        np.random.shuffle(array_to_extract_from)
+        number_of_chunks = int(1 / chunk_ratio)
+        chunks = np.array_split(array_to_extract_from, number_of_chunks)
+        extracted_chunk = chunks[chunk_to_extract_index]
+        remaining_chunks = np.delete(chunks, chunk_to_extract_index, axis=0)
+        remainder = np.concatenate(remaining_chunks)
+        return extracted_chunk, remainder

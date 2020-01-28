@@ -9,11 +9,12 @@ import tensorflow as tf
 import requests
 from pathlib import Path
 
+from ramjet.photometric_database.tess_data_interface import TessDataInterface
 from ramjet.photometric_database.tess_transit_lightcurve_label_per_time_step_database import \
-    TessTransitLightcurveLabelPerTimeStepDatabase
+    TransitLightcurveLabelPerTimeStepDatabase
 
 
-class YuLightcurveDatabase(TessTransitLightcurveLabelPerTimeStepDatabase):
+class YuLightcurveDatabase(TransitLightcurveLabelPerTimeStepDatabase):
     """
     A class to represent the database of TESS transit data based on disposition tables.
     """
@@ -77,20 +78,21 @@ class YuLightcurveDatabase(TessTransitLightcurveLabelPerTimeStepDatabase):
         columns_to_use = ['tic_id', 'Disposition', 'Epoc', 'Period', 'Duration', 'Sectors']
         liang_yu_dispositions = pd.read_csv(self.liang_yu_dispositions_path, usecols=columns_to_use)
         # noinspection SpellCheckingInspection
-        liang_yu_dispositions.rename(columns={'Disposition': 'disposition', 'Epoc': 'transit_epoch',
+        liang_yu_dispositions.rename(columns={'tic_id': 'TIC ID', 'Disposition': 'disposition', 'Epoc': 'transit_epoch',
                                               'Period': 'transit_period', 'Duration': 'transit_duration',
-                                              'Sectors': 'sector'}, inplace=True)
+                                              'Sectors': 'Sector'}, inplace=True)
         liang_yu_dispositions = liang_yu_dispositions[(liang_yu_dispositions['disposition'] != 'PC') |
                                                       (liang_yu_dispositions['transit_epoch'].notna() &
                                                        liang_yu_dispositions['transit_period'].notna() &
                                                        liang_yu_dispositions['transit_duration'].notna())]
         lightcurve_paths = list(self.lightcurve_directory.glob('*lc.fits'))
-        tic_ids = [int(self.get_tic_id_from_single_sector_obs_id(path.name)) for path in lightcurve_paths]
-        sectors = [self.get_sector_from_single_sector_obs_id(path.name) for path in lightcurve_paths]
-        lightcurve_meta_data = pd.DataFrame({'lightcurve_path': list(map(str, lightcurve_paths)), 'tic_id': tic_ids,
-                                             'sector': sectors})
+        tess_data_interface = TessDataInterface()
+        tic_ids = [tess_data_interface.get_tic_id_from_single_sector_obs_id(path.name) for path in lightcurve_paths]
+        sectors = [tess_data_interface.get_sector_from_single_sector_obs_id(path.name) for path in lightcurve_paths]
+        lightcurve_meta_data = pd.DataFrame({'lightcurve_path': list(map(str, lightcurve_paths)), 'TIC ID': tic_ids,
+                                             'Sector': sectors})
         meta_data_frame_with_candidate_nans = pd.merge(liang_yu_dispositions, lightcurve_meta_data,
-                                                       how='inner', on=['tic_id', 'sector'])
+                                                       how='inner', on=['TIC ID', 'Sector'])
         self.meta_data_frame = meta_data_frame_with_candidate_nans.dropna()
 
     def download_liang_yu_database(self):
@@ -105,25 +107,29 @@ class YuLightcurveDatabase(TessTransitLightcurveLabelPerTimeStepDatabase):
         with open(self.liang_yu_dispositions_path, 'wb') as csv_file:
             csv_file.write(response.content)
         print('Downloading TESS observation list...')
-        tess_observations = self.get_all_tess_time_series_observations()
-        single_sector_observations = self.get_single_sector_observations(tess_observations)
-        single_sector_observations = self.add_sector_column_based_on_single_sector_obs_id(single_sector_observations)
-        single_sector_observations['tic_id'] = single_sector_observations['target_name'].astype(int)
+        tess_data_interface = TessDataInterface()
+        tess_observations = tess_data_interface.get_all_tess_time_series_observations()
+        single_sector_observations = tess_data_interface.filter_for_single_sector_observations(tess_observations)
+        single_sector_observations = tess_data_interface.add_tic_id_column_to_single_sector_observations(
+            single_sector_observations)
+        single_sector_observations = tess_data_interface.add_sector_column_to_single_sector_observations(
+            single_sector_observations)
         print("Downloading lightcurves which appear in Liang Yu's disposition...")
         # noinspection SpellCheckingInspection
         columns_to_use = ['tic_id', 'Disposition', 'Epoc', 'Period', 'Duration', 'Sectors']
         liang_yu_dispositions = pd.read_csv(self.liang_yu_dispositions_path, usecols=columns_to_use)
         liang_yu_observations = pd.merge(single_sector_observations, liang_yu_dispositions, how='inner',
-                                         left_on=['tic_id', 'sector'], right_on=['tic_id', 'Sectors'])
+                                         left_on=['TIC ID', 'Sector'], right_on=['tic_id', 'Sectors'])
         number_of_observations_not_found = liang_yu_dispositions.shape[0] - liang_yu_observations.shape[0]
         print(f"{liang_yu_observations.shape[0]} observations found that match Liang Yu's entries.")
         print(f'Liang Yu used the FFIs, not the lightcurve products, so many will be missing.')
         print(f"No observations found for {number_of_observations_not_found} entries in Liang Yu's disposition.")
-        liang_yu_data_products = self.get_product_list(liang_yu_observations)
+        liang_yu_data_products = tess_data_interface.get_product_list(liang_yu_observations)
         liang_yu_lightcurve_data_products = liang_yu_data_products[
             liang_yu_data_products['productFilename'].str.endswith('lc.fits')
         ]
-        download_manifest = self.download_products(liang_yu_lightcurve_data_products)
+        download_manifest = tess_data_interface.download_products(liang_yu_lightcurve_data_products,
+                                                                  data_directory=self.data_directory)
         print(f'Moving lightcurves to {self.lightcurve_directory}...')
         for file_path_string in download_manifest['Local Path']:
             file_path = Path(file_path_string)

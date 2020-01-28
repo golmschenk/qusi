@@ -9,11 +9,12 @@ import requests
 from pathlib import Path
 
 from ramjet.photometric_database.py_mapper import map_py_function_to_dataset
+from ramjet.photometric_database.tess_data_interface import TessDataInterface
 from ramjet.photometric_database.tess_transit_lightcurve_label_per_time_step_database import \
-    TessTransitLightcurveLabelPerTimeStepDatabase
+    TransitLightcurveLabelPerTimeStepDatabase
 
 
-class ToiLightcurveDatabase(TessTransitLightcurveLabelPerTimeStepDatabase):
+class ToiLightcurveDatabase(TransitLightcurveLabelPerTimeStepDatabase):
     """
     A class to represent the database of TESS transit data based on disposition tables.
     """
@@ -69,12 +70,13 @@ class ToiLightcurveDatabase(TessTransitLightcurveLabelPerTimeStepDatabase):
                                                      dispositions['transit_period'].notna() &
                                                      dispositions['transit_duration'].notna()]
         lightcurve_paths = list(self.lightcurve_directory.glob('*lc.fits'))
-        tic_ids = [int(self.get_tic_id_from_single_sector_obs_id(path.name)) for path in lightcurve_paths]
-        sectors = [self.get_sector_from_single_sector_obs_id(path.name) for path in lightcurve_paths]
-        lightcurve_meta_data = pd.DataFrame({'lightcurve_path': list(map(str, lightcurve_paths)), 'tic_id': tic_ids,
-                                             'sector': sectors})
+        tess_data_interface = TessDataInterface()
+        tic_ids = [tess_data_interface.get_tic_id_from_single_sector_obs_id(path.name) for path in lightcurve_paths]
+        sectors = [tess_data_interface.get_sector_from_single_sector_obs_id(path.name) for path in lightcurve_paths]
+        lightcurve_meta_data = pd.DataFrame({'lightcurve_path': list(map(str, lightcurve_paths)), 'TIC ID': tic_ids,
+                                             'Sector': sectors})
         meta_data_frame_with_candidate_nans = pd.merge(confirmed_planet_dispositions, lightcurve_meta_data,
-                                                       how='inner', on=['tic_id', 'sector'])
+                                                       how='inner', on=['TIC ID', 'Sector'])
         self.meta_data_frame = meta_data_frame_with_candidate_nans.dropna()
 
     def download_exofop_toi_database(self, number_of_negative_lightcurves_to_download=10000):
@@ -89,24 +91,28 @@ class ToiLightcurveDatabase(TessTransitLightcurveLabelPerTimeStepDatabase):
         with open(self.toi_dispositions_path, 'wb') as csv_file:
             csv_file.write(response.content)
         print('Downloading TESS observation list...')
-        tess_observations = self.get_all_tess_time_series_observations()
-        single_sector_observations = self.get_single_sector_observations(tess_observations)
-        single_sector_observations = self.add_sector_column_based_on_single_sector_obs_id(single_sector_observations)
-        single_sector_observations['tic_id'] = single_sector_observations['target_name'].astype(int)
+        tess_data_interface = TessDataInterface()
+        tess_observations = tess_data_interface.get_all_tess_time_series_observations()
+        single_sector_observations = tess_data_interface.filter_for_single_sector_observations(tess_observations)
+        single_sector_observations = tess_data_interface.add_tic_id_column_to_single_sector_observations(
+            single_sector_observations)
+        single_sector_observations = tess_data_interface.add_sector_column_to_single_sector_observations(
+            single_sector_observations)
         print("Downloading lightcurves which are confirmed planets in TOI dispositions...")
         # noinspection SpellCheckingInspection
         toi_dispositions = self.load_toi_dispositions_in_project_format()
         confirmed_planet_dispositions = toi_dispositions[toi_dispositions['disposition'].isin(['CP', 'KP'])]
         confirmed_planet_observations = pd.merge(single_sector_observations, confirmed_planet_dispositions, how='inner',
-                                                 on=['tic_id', 'sector'])
+                                                 on=['TIC ID', 'Sector'])
         observations_not_found = confirmed_planet_dispositions.shape[0] - confirmed_planet_observations.shape[0]
         print(f"{confirmed_planet_observations.shape[0]} observations found that match the TOI dispositions.")
         print(f"No observations found for {observations_not_found} entries in TOI dispositions.")
-        confirmed_planet_data_products = self.get_product_list(confirmed_planet_observations)
+        confirmed_planet_data_products = tess_data_interface.get_product_list(confirmed_planet_observations)
         confirmed_planet_lightcurve_data_products = confirmed_planet_data_products[
             confirmed_planet_data_products['productFilename'].str.endswith('lc.fits')
         ]
-        confirmed_planet_download_manifest = self.download_products(confirmed_planet_lightcurve_data_products)
+        confirmed_planet_download_manifest = tess_data_interface.download_products(
+            confirmed_planet_lightcurve_data_products, data_directory=self.data_directory)
         print(f'Moving lightcurves to {self.lightcurve_directory}...')
         for file_path_string in confirmed_planet_download_manifest['Local Path']:
             file_path = Path(file_path_string)
@@ -114,29 +120,31 @@ class ToiLightcurveDatabase(TessTransitLightcurveLabelPerTimeStepDatabase):
         print("Downloading lightcurves which are not in TOI dispositions and do not have TCEs (not planets)...")
         print(f'Download limited to {number_of_negative_lightcurves_to_download} lightcurves...')
         # noinspection SpellCheckingInspection
-        toi_tic_ids = toi_dispositions['tic_id'].values
+        toi_tic_ids = toi_dispositions['TIC ID'].values
         not_toi_observations = single_sector_observations[
-            ~single_sector_observations['tic_id'].isin(toi_tic_ids)  # Don't include even false positives.
+            ~single_sector_observations['TIC ID'].isin(toi_tic_ids)  # Don't include even false positives.
         ]
         not_toi_observations = not_toi_observations.sample(frac=1, random_state=0)
         # Shorten product list obtaining.
         not_toi_observations = not_toi_observations.head(number_of_negative_lightcurves_to_download * 2)
-        not_toi_data_products = self.get_product_list(not_toi_observations)
-        not_toi_data_products = self.add_tic_id_column_based_on_single_sector_obs_id(not_toi_data_products)
+        not_toi_data_products = tess_data_interface.get_product_list(not_toi_observations)
+        not_toi_data_products = tess_data_interface.add_tic_id_column_to_single_sector_observations(
+            not_toi_data_products)
         not_toi_lightcurve_data_products = not_toi_data_products[
             not_toi_data_products['productFilename'].str.endswith('lc.fits')
         ]
         not_toi_data_validation_data_products = not_toi_data_products[
             not_toi_data_products['productFilename'].str.endswith('dvr.xml')
         ]
-        tic_ids_with_dv = not_toi_data_validation_data_products['tic_id'].values
+        tic_ids_with_dv = not_toi_data_validation_data_products['TIC ID'].values
         not_planet_lightcurve_data_products = not_toi_lightcurve_data_products[
-            ~not_toi_lightcurve_data_products['tic_id'].isin(tic_ids_with_dv)  # Remove any lightcurves with TCEs.
+            ~not_toi_lightcurve_data_products['TIC ID'].isin(tic_ids_with_dv)  # Remove any lightcurves with TCEs.
         ]
         # Shuffle rows.
         not_planet_lightcurve_data_products = not_planet_lightcurve_data_products.sample(frac=1, random_state=0)
-        not_planet_download_manifest = self.download_products(
-            not_planet_lightcurve_data_products.head(number_of_negative_lightcurves_to_download)
+        not_planet_download_manifest = tess_data_interface.download_products(
+            not_planet_lightcurve_data_products.head(number_of_negative_lightcurves_to_download),
+            data_directory=self.data_directory
         )
         print(f'Moving lightcurves to {self.lightcurve_directory}...')
         for file_path_string in not_planet_download_manifest['Local Path']:
@@ -153,13 +161,13 @@ class ToiLightcurveDatabase(TessTransitLightcurveLabelPerTimeStepDatabase):
         columns_to_use = ['TIC ID', 'TFOPWG Disposition', 'Planet Num', 'Epoch (BJD)', 'Period (days)',
                           'Duration (hours)', 'Sectors']
         dispositions = pd.read_csv(self.toi_dispositions_path, usecols=columns_to_use)
-        dispositions.rename(columns={'TIC ID': 'tic_id', 'TFOPWG Disposition': 'disposition',
+        dispositions.rename(columns={'TFOPWG Disposition': 'disposition',
                                      'Planet Num': 'planet_number', 'Epoch (BJD)': 'transit_epoch',
                                      'Period (days)': 'transit_period', 'Duration (hours)': 'transit_duration',
-                                     'Sectors': 'sector'}, inplace=True)
-        dispositions['sector'] = dispositions['sector'].str.split(',')
-        dispositions = dispositions.explode('sector')
-        dispositions['sector'] = pd.to_numeric(dispositions['sector']).astype(pd.Int64Dtype())
+                                     'Sectors': 'Sector'}, inplace=True)
+        dispositions['Sector'] = dispositions['Sector'].str.split(',')
+        dispositions = dispositions.explode('Sector')
+        dispositions['Sector'] = pd.to_numeric(dispositions['Sector']).astype(pd.Int64Dtype())
         return dispositions
 
 
