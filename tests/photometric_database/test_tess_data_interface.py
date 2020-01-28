@@ -11,6 +11,7 @@ from astropy.coordinates import SkyCoord
 from astropy.table import Table
 
 import pytest
+from astroquery.utils import TableList
 
 from ramjet.photometric_database.tess_data_interface import TessDataInterface, TessFluxType
 
@@ -163,7 +164,7 @@ class TestTessDataInterface:
         assert coordinates.dec.deg == -71.4
 
     def test_can_get_variable_stars_by_coordinate(self, tess_data_interface, tess_data_interface_module):
-        mock_query_result = Table({'VarType': [b'RR', b'SNI']})
+        mock_query_result = TableList({0: Table({'VarType': [b'RR', b'SNI']})})
         tess_data_interface_module.Vizier.query_region = Mock(return_value=mock_query_result)
         coordinates = SkyCoord(1, 1, unit="deg")
         variable_data_frame = tess_data_interface.get_variable_data_frame_for_coordinates(coordinates)
