@@ -1,6 +1,7 @@
 """
 Code for a class for common interfacing with TESS data, such as downloading, sorting, and manipulating.
 """
+import shutil
 import tempfile
 from enum import Enum
 from pathlib import Path
@@ -181,13 +182,14 @@ class TessDataInterface:
         times = np.delete(times, nan_indexes)
         return fluxes, times
 
-    def download_lightcurve(self, tic_id: int, sector: int = None, save_path: Path = None) -> Path:
+    def download_lightcurve(self, tic_id: int, sector: int = None, save_directory: Path = None) -> Path:
         """
         Downloads a lightcurve from MAST.
 
         :param tic_id: The TIC ID of the lightcurve target to download.
         :param sector: The sector to download. If not specified, downloads first available sector.
-        :param save_path: The path to save the FITS file to. If not specified, uses the system temporary directory.
+        :param save_directory: The directory to save the FITS file to. If not specified, uses the system temporary
+                               directory.
         :return: The path to the downloaded file.
         """
         observations = self.get_all_tess_time_series_observations(tic_id=tic_id)
@@ -201,10 +203,10 @@ class TessDataInterface:
         lightcurves_product_list = product_list[product_list['productSubGroupDescription'] == 'LC']
         manifest = self.download_products(lightcurves_product_list, data_directory=tempfile.gettempdir())
         lightcurve_path = Path(manifest['Local Path'].iloc[0])
-        if save_path is not None:
-            save_path.parent.mkdir(parents=True, exist_ok=True)
-            lightcurve_path.rename(save_path)
-            lightcurve_path = save_path
+        if save_directory is not None:
+            save_directory.parent.mkdir(parents=True, exist_ok=True)
+            shutil.move(str(lightcurve_path), str(save_directory))
+            lightcurve_path = save_directory
         return lightcurve_path
 
     def plot_lightcurve_from_mast(self, tic_id: int, sector: int = None, exclude_flux_outliers: bool = False,
@@ -214,6 +216,7 @@ class TessDataInterface:
 
         :param tic_id: The TIC ID of the lightcurve target to download.
         :param sector: The sector to download. If not specified, downloads first available sector.
+        :param exclude_flux_outliers: Whether or not to exclude flux outlier data points when plotting.
         :param base_data_point_size: The size of the data points to use when plotting (and related sizes).
         """
         lightcurve_path = self.download_lightcurve(tic_id, sector)
