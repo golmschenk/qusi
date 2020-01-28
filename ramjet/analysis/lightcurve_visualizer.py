@@ -12,7 +12,8 @@ from matplotlib.colors import LinearSegmentedColormap
 def plot_lightcurve(times: np.ndarray, fluxes: np.ndarray, labels: np.ndarray = None, predictions: np.ndarray = None,
                     title: str = None, x_label: str = 'Days', y_label: str = 'Flux',
                     x_limits: (float, float) = (None, None), y_limits: (float, float) = (None, None),
-                    save_path: Union[Path, str] = None, exclude_flux_outliers: bool = False):
+                    save_path: Union[Path, str] = None, exclude_flux_outliers: bool = False,
+                    base_data_point_size: float = 3):
     """
     Plots a lightcurve with a consistent styling. If true labels and/or predictions are included, these will
     additionally be plotted.
@@ -28,6 +29,7 @@ def plot_lightcurve(times: np.ndarray, fluxes: np.ndarray, labels: np.ndarray = 
     :param y_limits: Optional axis limiting for the y axis.
     :param save_path: The path to save the plot to. If `None`, the plot will be shown instead.
     :param exclude_flux_outliers: Whether or not to exclude flux outlier data points when plotting.
+    :param base_data_point_size: The size of the data points to use when plotting (and related sizes).
     """
     with plt.style.context('seaborn-whitegrid'):
         figure, axes = plt.subplots()
@@ -52,7 +54,8 @@ def plot_lightcurve(times: np.ndarray, fluxes: np.ndarray, labels: np.ndarray = 
         else:
             edge_colors = [data_point_color]
             face_colors = [(*data_point_color[:3], 0.2)]
-        axes.scatter(times, fluxes, c=face_colors, marker='o', edgecolors=edge_colors, linewidths=0.3, s=3, zorder=3)
+        axes.scatter(times, fluxes, c=face_colors, marker='o', edgecolors=edge_colors,
+                     linewidths=base_data_point_size/10, s=base_data_point_size, zorder=3)
         if predictions is not None:
             axes.autoscale(False)
             transparent_prediction_color = (*prediction_color[:3], 0)

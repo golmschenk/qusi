@@ -207,12 +207,14 @@ class TessDataInterface:
             lightcurve_path = save_path
         return lightcurve_path
 
-    def plot_lightcurve_from_mast(self, tic_id: int, sector: int = None, exclude_flux_outliers: bool = False):
+    def plot_lightcurve_from_mast(self, tic_id: int, sector: int = None, exclude_flux_outliers: bool = False,
+                                  base_data_point_size=3):
         """
         Downloads and plots a lightcurve from MAST.
 
         :param tic_id: The TIC ID of the lightcurve target to download.
         :param sector: The sector to download. If not specified, downloads first available sector.
+        :param base_data_point_size: The size of the data points to use when plotting (and related sizes).
         """
         lightcurve_path = self.download_lightcurve(tic_id, sector)
         fluxes, times = self.load_fluxes_and_times_from_fits_file(lightcurve_path)
@@ -221,7 +223,8 @@ class TessDataInterface:
         title = f'TIC {tic_id} sector {sector}'
         if exclude_flux_outliers:
             title += ' (outliers removed)'
-        plot_lightcurve(times=times, fluxes=fluxes, exclude_flux_outliers=exclude_flux_outliers, title=title)
+        plot_lightcurve(times=times, fluxes=fluxes, exclude_flux_outliers=exclude_flux_outliers, title=title,
+                        base_data_point_size=base_data_point_size)
 
     @staticmethod
     def get_target_coordinates(tic_id: int) -> SkyCoord:
