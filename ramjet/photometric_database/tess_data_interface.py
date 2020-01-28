@@ -12,6 +12,7 @@ from astropy.io import fits
 from astropy.table import Table
 from astroquery.mast import Observations, Catalogs
 from astroquery.exceptions import TimeoutError as AstroQueryTimeoutError
+from astroquery.vizier import Vizier
 
 from ramjet.analysis.lightcurve_visualizer import plot_lightcurve
 
@@ -234,3 +235,24 @@ class TessDataInterface:
         ra = target_observations['ra'].iloc[0]
         dec = target_observations['dec'].iloc[0]
         return SkyCoord(ra, dec, unit='deg')
+
+    @staticmethod
+    def get_variable_data_frame_for_coordinates(coordinates, radius='21s') -> pd.DataFrame:
+        """
+        Gets a data frame containing all known variables within a radius of the given coordinates.
+
+        :param coordinates: The coordinates to search.
+        :param radius: The radius to search. TESS has a pixel size of 21 arcseconds across.
+        :return: The data frame of the variables.
+        """
+        return Vizier.query_region(coordinates, radius=radius, catalog='B/gcvs/gcvs_cat').to_pandas()
+
+    def get_variable_data_frame_for_tic_id(self, tic_id):
+        """
+        Gets a data frame containing all known variables near a TIC target (including the target if applicable).
+
+        :param tic_id: The TIC target to search for variables near.
+        :return: A data frame of the variables near the target (including the target if applicable).
+        """
+        coordinates = self.get_target_coordinates(tic_id)
+        return self.get_variable_data_frame_for_coordinates(coordinates)

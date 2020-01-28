@@ -157,9 +157,25 @@ class TestTessDataInterface:
 
     def test_can_get_the_coordinates_of_a_target_based_on_tic_id(self, tess_data_interface, tess_data_interface_module):
         mock_query_result = Table({'ra': [62.2, 62.2], 'dec': [-71.4, -71.4]})
-        SkyCoord(62.2, -71.4, unit="deg")
         tess_data_interface_module.Catalogs.query_criteria = Mock(return_value=mock_query_result)
         coordinates = tess_data_interface.get_target_coordinates(tic_id=0)
         assert coordinates.ra.deg == 62.2
         assert coordinates.dec.deg == -71.4
 
+    def test_can_get_variable_stars_by_coordinate(self, tess_data_interface, tess_data_interface_module):
+        mock_query_result = Table({'VarType': [b'RR', b'SNI']})
+        tess_data_interface_module.Vizier.query_region = Mock(return_value=mock_query_result)
+        coordinates = SkyCoord(1, 1, unit="deg")
+        variable_data_frame = tess_data_interface.get_variable_data_frame_for_coordinates(coordinates)
+        assert variable_data_frame['VarType'].iloc[0] == b'RR'
+        assert variable_data_frame['VarType'].iloc[1] == b'SNI'
+
+    def test_can_get_variable_stars_by_tic_id(self, tess_data_interface, tess_data_interface_module):
+        tic_id_coordinates_result = SkyCoord(62.2, -71.4, unit="deg")
+        variables_for_coordinates_result = pd.DataFrame({'VarType': [b'RR', b'SNI']})
+        tess_data_interface.get_target_coordinates = Mock(return_value=tic_id_coordinates_result)
+        tess_data_interface.get_variable_data_frame_for_coordinates = Mock(
+            return_value=variables_for_coordinates_result)
+        variable_data_frame = tess_data_interface.get_variable_data_frame_for_tic_id(tic_id=0)
+        assert variable_data_frame['VarType'].iloc[0] == b'RR'
+        assert variable_data_frame['VarType'].iloc[1] == b'SNI'
