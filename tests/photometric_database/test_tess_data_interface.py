@@ -171,6 +171,14 @@ class TestTessDataInterface:
         assert variable_data_frame['VarType'].iloc[0] == b'RR'
         assert variable_data_frame['VarType'].iloc[1] == b'SNI'
 
+    def test_returns_empty_data_frame_when_no_variable_stars_exist(self, tess_data_interface,
+                                                                   tess_data_interface_module):
+        mock_query_result = TableList({})
+        tess_data_interface_module.Vizier.query_region = Mock(return_value=mock_query_result)
+        coordinates = SkyCoord(1, 1, unit="deg")
+        variable_data_frame = tess_data_interface.get_variable_data_frame_for_coordinates(coordinates)
+        assert isinstance(variable_data_frame, pd.DataFrame)
+
     def test_can_get_variable_stars_by_tic_id(self, tess_data_interface, tess_data_interface_module):
         tic_id_coordinates_result = SkyCoord(62.2, -71.4, unit="deg")
         variables_for_coordinates_result = pd.DataFrame({'VarType': [b'RR', b'SNI']})

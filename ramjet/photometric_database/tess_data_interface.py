@@ -243,9 +243,13 @@ class TessDataInterface:
 
         :param coordinates: The coordinates to search.
         :param radius: The radius to search. TESS has a pixel size of 21 arcseconds across.
-        :return: The data frame of the variables.
+        :return: The data frame of the variables. Returns an empty data frame if none exist.
         """
-        return Vizier.query_region(coordinates, radius=radius, catalog='B/gcvs/gcvs_cat')[0].to_pandas()
+        variable_table_list = Vizier.query_region(coordinates, radius=radius, catalog='B/gcvs/gcvs_cat')
+        if len(variable_table_list) > 0:
+            return variable_table_list[0].to_pandas()
+        else:
+            return pd.DataFrame()
 
     def get_variable_data_frame_for_tic_id(self, tic_id):
         """
@@ -264,6 +268,9 @@ class TessDataInterface:
         :param tic_id: The TIC target to search for variables near.
         """
         variable_data_frame = self.get_variable_data_frame_for_tic_id(tic_id)
+        if variable_data_frame.shape[0] == 0:
+            print('No known variables found.')
+            return
         print_data_frame = pd.DataFrame()
         print_data_frame['Variable Type'] = variable_data_frame['VarType'].str.decode('utf-8')
         print_data_frame['Max magnitude'] = variable_data_frame['magMax']
