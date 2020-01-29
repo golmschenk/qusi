@@ -28,10 +28,10 @@ class TessDataInterface:
     A class for common interfacing with TESS data, such as downloading, sorting, and manipulating.
     """
     def __init__(self):
-        Observations.TIMEOUT = 1200
-        Observations.PAGESIZE = 10000
-        Catalogs.TIMEOUT = 1200
-        Catalogs.PAGESIZE = 10000
+        Observations.TIMEOUT = 2000
+        Observations.PAGESIZE = 3000
+        Catalogs.TIMEOUT = 2000
+        Catalogs.PAGESIZE = 3000
 
     @staticmethod
     def get_all_tess_time_series_observations(tic_id: Union[int, List[int]] = None) -> pd.DataFrame:
