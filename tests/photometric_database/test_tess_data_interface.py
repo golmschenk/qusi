@@ -31,8 +31,8 @@ class TestTessDataInterface:
         assert Observations.TIMEOUT == 600
         assert Observations.PAGESIZE == 50000
         tess_data_interface = TessDataInterface()
-        assert Observations.TIMEOUT == 1200
-        assert Observations.PAGESIZE == 10000
+        assert Observations.TIMEOUT == 2000
+        assert Observations.PAGESIZE == 3000
 
     def test_can_request_time_series_observations_from_mast_as_pandas_data_frame(self, tess_data_interface,
                                                                                  tess_data_interface_module):
