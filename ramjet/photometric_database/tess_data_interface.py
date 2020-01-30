@@ -277,6 +277,7 @@ class TessDataInterface:
         if variable_data_frame.shape[0] == 0:
             print('No known variables found.')
             return
+        print('Variable type abbreviation explanations: http://www.sai.msu.su/gcvs/gcvs/vartype.htm')
         print_data_frame = pd.DataFrame()
         print_data_frame['Variable Type'] = variable_data_frame['VarType'].str.decode('utf-8')
         print_data_frame['Max magnitude'] = variable_data_frame['magMax']
