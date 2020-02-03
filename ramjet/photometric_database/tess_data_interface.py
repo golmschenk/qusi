@@ -285,3 +285,25 @@ class TessDataInterface:
         print_data_frame.sort_values('Max magnitude', inplace=True)
         print_data_frame.reset_index(drop=True, inplace=True)
         print(print_data_frame)
+
+    def retrieve_toi_dispositions_from_exofop(self) -> pd.DataFrame:
+        """
+        Downloads and loads the ExoFOP TOI table information from CSV to a data frame using a project consistent format.
+        The source for the dispositions is from the `ExoFOP TOI table
+        <https://exofop.ipac.caltech.edu/tess/download_toi.php?sort=toi&output=csv>`_.
+
+        :return: The data frame containing the dispositions.
+        """
+        toi_csv_url = 'https://exofop.ipac.caltech.edu/tess/download_toi.php?sort=toi&output=csv'
+        columns_to_use = ['TIC ID', 'TFOPWG Disposition', 'Planet Num', 'Epoch (BJD)', 'Period (days)',
+                          'Duration (hours)', 'Sectors']
+        dispositions = pd.read_csv(toi_csv_url, usecols=columns_to_use)
+        dispositions['Sectors'] = dispositions['Sectors'].astype(str)
+        dispositions.rename(columns={'Planet Num': 'Planet number', 'Epoch (BJD)': 'Transit epoch (BJD)',
+                                     'Period (days)': 'Transit period (days)',
+                                     'Duration (hours)': 'Transit duration (hours)',
+                                     'Sectors': 'Sector'}, inplace=True)
+        dispositions['Sector'] = dispositions['Sector'].str.split(',')
+        dispositions = dispositions.explode('Sector')
+        dispositions['Sector'] = pd.to_numeric(dispositions['Sector'], errors='coerce').astype(pd.Int64Dtype())
+        return dispositions

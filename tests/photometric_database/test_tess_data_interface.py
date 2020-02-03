@@ -188,3 +188,12 @@ class TestTessDataInterface:
         variable_data_frame = tess_data_interface.get_variable_data_frame_for_tic_id(tic_id=0)
         assert variable_data_frame['VarType'].iloc[0] == b'RR'
         assert variable_data_frame['VarType'].iloc[1] == b'SNI'
+
+    @pytest.mark.slow
+    @pytest.mark.external
+    def test_can_retrieve_the_tess_toi_dispositions(self, tess_data_interface):
+        dispositions = tess_data_interface.retrieve_toi_dispositions_from_exofop()
+        target_dispositions = dispositions[dispositions['TIC ID'] == 307210830]
+        assert target_dispositions['TFOPWG Disposition'].iloc[0] == 'CP'
+        target_planet_sectors = target_dispositions['Sector'].unique()
+        assert np.array_equal(np.sort(np.array(target_planet_sectors)), [2, 5, 8, 9, 10, 11, 12])
