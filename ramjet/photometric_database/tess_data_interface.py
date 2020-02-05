@@ -44,10 +44,31 @@ class TessDataInterface:
         Observations.PAGESIZE = 3000
         Catalogs.TIMEOUT = 2000
         Catalogs.PAGESIZE = 3000
+        self.mast_input_query_chunk_size = 1000
+
+    def get_all_tess_time_series_observations(self, tic_id: Union[int, List[int]] = None) -> pd.DataFrame:
+        """
+        Gets all TESS time-series observations, limited to science data product level. Breaks large queries up to make
+        the communication with MAST smoother.
+
+        :param tic_id: An optional TIC ID or list of TIC IDs to limit the query to.
+        :return: The list of time series observations as rows in a Pandas data frame.
+        """
+        if tic_id is None or isinstance(tic_id, int):
+            observations = self.get_all_tess_time_series_observations_chunk(tic_id)
+        else:
+            observations = None
+            for tic_id_list_chunk in np.array_split(tic_id, math.ceil(len(tic_id) / self.mast_input_query_chunk_size)):
+                observations_chunk = self.get_all_tess_time_series_observations_chunk(tic_id_list_chunk)
+                if observations is None:
+                    observations = observations_chunk
+                else:
+                    observations = observations.append(observations_chunk, ignore_index=True)
+        return observations
 
     @staticmethod
     @retry(retry_on_exception=is_common_mast_connection_error)
-    def get_all_tess_time_series_observations(tic_id: Union[int, List[int]] = None) -> pd.DataFrame:
+    def get_all_tess_time_series_observations_chunk(tic_id: Union[int, List[int]] = None) -> pd.DataFrame:
         """
         Gets all TESS time-series observations, limited to science data product level. Repeats download attempt on
         error.
@@ -62,9 +83,27 @@ class TessDataInterface:
                                                         target_name=tic_id)
         return tess_observations.to_pandas()
 
+    def get_product_list(self, observations: pd.DataFrame) -> pd.DataFrame:
+        """
+        A wrapper for MAST's `get_product_list`, allowing the use of Pandas DataFrames instead of AstroPy Tables.
+        Breaks large queries up to make the communication with MAST smoother.
+
+        :param observations: The data frame of observations to get. Will be converted from DataFrame to Table for query.
+        :return: The data frame of the product list. Will be converted from Table to DataFrame for use.
+        """
+        product_list = None
+        for observations_chunk in np.array_split(observations,
+                                                 math.ceil(observations.shape[0] / self.mast_input_query_chunk_size)):
+            product_list_chunk = self.get_product_list(observations_chunk)
+            if product_list is None:
+                product_list = product_list_chunk
+            else:
+                product_list = product_list.append(product_list_chunk, ignore_index=True)
+        return product_list
+
     @staticmethod
     @retry(retry_on_exception=is_common_mast_connection_error)
-    def get_product_list(observations: pd.DataFrame) -> pd.DataFrame:
+    def get_product_list_chunk(observations: pd.DataFrame) -> pd.DataFrame:
         """
         A wrapper for MAST's `get_product_list`, allowing the use of Pandas DataFrames instead of AstroPy Tables.
         Retries on error when communicating with the MAST server.
