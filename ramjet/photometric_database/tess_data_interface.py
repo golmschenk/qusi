@@ -370,25 +370,19 @@ class TessDataInterface:
             print(dispositions_data_frame)
 
     def download_all_two_minute_cadence_lightcurves(self, save_directory: Path):
+        """
+        Downloads all two minute cadence lightcurves from TESS.
+
+        :param save_directory: The directory to save the lightcurves to.
+        """
         save_directory.mkdir(parents=True, exist_ok=True)
-        print('1')
+        print(f'Retrieving observations list from MAST...')
         tess_observations = self.get_all_tess_time_series_observations()
-        print('2')
         single_sector_observations = self.filter_for_single_sector_observations(tess_observations)
-        print('3')
-        # Break the query into chunks of 1000 observations to make MAST communication smoother.
-        single_sector_data_products = None
-        for single_sector_observations_chunk in np.array_split(single_sector_observations,
-                                                               math.ceil(single_sector_observations.shape[0] / 1000)):
-            print('1000 chunk')
-            single_sector_data_products_chunk = self.get_product_list(single_sector_observations_chunk)
-            if single_sector_data_products is None:
-                single_sector_data_products = single_sector_data_products_chunk
-            else:
-                single_sector_data_products = tess_observations.append(single_sector_data_products_chunk, ignore_index=True)
-        print('4')
+        print(f'Retrieving data products list from MAST...')
+        single_sector_data_products = self.get_product_list(single_sector_observations)
+        print(f'Downloading lightcurves...')
         download_manifest = self.download_products(single_sector_data_products, data_directory=save_directory)
-        print('5')
         print(f'Moving lightcurves to {save_directory}...')
         for file_path_string in download_manifest['Local Path']:
             file_path = Path(file_path_string)
