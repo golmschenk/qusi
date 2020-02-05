@@ -1,6 +1,7 @@
 """
 Code for a class for common interfacing with TESS data, such as downloading, sorting, and manipulating.
 """
+import math
 import shutil
 import tempfile
 from enum import Enum
@@ -14,6 +15,7 @@ from astropy.table import Table
 from astroquery.mast import Observations, Catalogs
 from astroquery.exceptions import TimeoutError as AstroQueryTimeoutError
 from astroquery.vizier import Vizier
+from retrying import retry
 
 from ramjet.analysis.lightcurve_visualizer import plot_lightcurve
 
@@ -21,6 +23,16 @@ from ramjet.analysis.lightcurve_visualizer import plot_lightcurve
 class TessFluxType(Enum):
     SAP = 'SAP_FLUX'
     PDCSAP = 'PDCSAP_FLUX'
+
+
+def is_common_mast_connection_error(exception: Exception) -> bool:
+    """
+    Returns if the passed exception is a common MAST connection error. Made for deciding whether to retry a function.
+
+    :param exception: The exception to check.
+    :return: A boolean stating if the exception is a common MAST connection error.
+    """
+    return isinstance(exception, AstroQueryTimeoutError)
 
 
 class TessDataInterface:
@@ -34,6 +46,7 @@ class TessDataInterface:
         Catalogs.PAGESIZE = 3000
 
     @staticmethod
+    @retry(retry_on_exception=is_common_mast_connection_error)
     def get_all_tess_time_series_observations(tic_id: Union[int, List[int]] = None) -> pd.DataFrame:
         """
         Gets all TESS time-series observations, limited to science data product level. Repeats download attempt on
@@ -44,18 +57,13 @@ class TessDataInterface:
         """
         if tic_id is None:
             tic_id = []  # When the empty list is passed to `query_criteria`, any value is considered a match.
-        tess_observations = None
-        while tess_observations is None:
-            try:
-                # noinspection SpellCheckingInspection
-                tess_observations = Observations.query_criteria(obs_collection='TESS', dataproduct_type='timeseries',
-                                                                calib_level=3,  # Science data product level.
-                                                                target_name=tic_id)
-            except (AstroQueryTimeoutError, ConnectionError):
-                print('Error connecting to MAST. They have occasional downtime. Trying again...')
+        tess_observations = Observations.query_criteria(obs_collection='TESS', dataproduct_type='timeseries',
+                                                        calib_level=3,  # Science data product level.
+                                                        target_name=tic_id)
         return tess_observations.to_pandas()
 
     @staticmethod
+    @retry(retry_on_exception=is_common_mast_connection_error)
     def get_product_list(observations: pd.DataFrame) -> pd.DataFrame:
         """
         A wrapper for MAST's `get_product_list`, allowing the use of Pandas DataFrames instead of AstroPy Tables.
@@ -64,17 +72,11 @@ class TessDataInterface:
         :param observations: The data frame of observations to get. Will be converted from DataFrame to Table for query.
         :return: The data frame of the product list. Will be converted from Table to DataFrame for use.
         """
-        data_products = None
-
-        while data_products is None:
-            try:
-                # noinspection SpellCheckingInspection
-                data_products = Observations.get_product_list(Table.from_pandas(observations))
-            except (AstroQueryTimeoutError, ConnectionError):
-                print('Error connecting to MAST. They have occasional downtime. Trying again...')
+        data_products = Observations.get_product_list(Table.from_pandas(observations))
         return data_products.to_pandas()
 
     @staticmethod
+    @retry(retry_on_exception=is_common_mast_connection_error)
     def download_products(data_products: pd.DataFrame, data_directory: Path) -> pd.DataFrame:
         """
          A wrapper for MAST's `download_products`, allowing the use of Pandas DataFrames instead of AstroPy Tables.
@@ -85,14 +87,7 @@ class TessDataInterface:
         :param data_directory: The path to download the data to.
         :return: The manifest of the download. Will be converted from Table to DataFrame for use.
         """
-        manifest = None
-        while manifest is None:
-            try:
-                # noinspection SpellCheckingInspection
-                manifest = Observations.download_products(Table.from_pandas(data_products),
-                                                          download_dir=str(data_directory))
-            except (AstroQueryTimeoutError, ConnectionError):
-                print('Error connecting to MAST. They have occasional downtime. Trying again...')
+        manifest = Observations.download_products(Table.from_pandas(data_products), download_dir=str(data_directory))
         return manifest.to_pandas()
 
     @staticmethod
@@ -334,3 +329,29 @@ class TessDataInterface:
         # Use context options to not truncate printed data.
         with pd.option_context('display.max_rows', None, 'display.max_columns', None, 'display.width', None):
             print(dispositions_data_frame)
+
+    def download_all_two_minute_cadence_lightcurves(self, save_directory: Path):
+        save_directory.mkdir(parents=True, exist_ok=True)
+        print('1')
+        tess_observations = self.get_all_tess_time_series_observations()
+        print('2')
+        single_sector_observations = self.filter_for_single_sector_observations(tess_observations)
+        print('3')
+        # Break the query into chunks of 1000 observations to make MAST communication smoother.
+        single_sector_data_products = None
+        for single_sector_observations_chunk in np.array_split(single_sector_observations,
+                                                               math.ceil(single_sector_observations.shape[0] / 1000)):
+            print('1000 chunk')
+            single_sector_data_products_chunk = self.get_product_list(single_sector_observations_chunk)
+            if single_sector_data_products is None:
+                single_sector_data_products = single_sector_data_products_chunk
+            else:
+                single_sector_data_products = tess_observations.append(single_sector_data_products_chunk, ignore_index=True)
+        print('4')
+        download_manifest = self.download_products(single_sector_data_products, data_directory=save_directory)
+        print('5')
+        print(f'Moving lightcurves to {save_directory}...')
+        for file_path_string in download_manifest['Local Path']:
+            file_path = Path(file_path_string)
+            file_path.rename(save_directory.joinpath(file_path.name))
+        print('Database ready.')
