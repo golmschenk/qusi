@@ -302,8 +302,20 @@ class TessDataInterface:
         dispositions.rename(columns={'Planet Num': 'Planet number', 'Epoch (BJD)': 'Transit epoch (BJD)',
                                      'Period (days)': 'Transit period (days)',
                                      'Duration (hours)': 'Transit duration (hours)',
-                                     'Sectors': 'Sector'}, inplace=True)
+                                     'Sectors': 'Sector', 'TFOPWG Disposition': 'TFOPWG disposition'}, inplace=True)
         dispositions['Sector'] = dispositions['Sector'].str.split(',')
         dispositions = dispositions.explode('Sector')
         dispositions['Sector'] = pd.to_numeric(dispositions['Sector'], errors='coerce').astype(pd.Int64Dtype())
         return dispositions
+
+    def retrieve_exofop_planet_disposition_for_tic_id(self, tic_id: int) -> pd.DataFrame:
+        """
+        Retrieves the ExoFOP disposition information for a given TIC ID from
+        <https://exofop.ipac.caltech.edu/tess/download_toi.php?sort=toi&output=csv>`_.
+
+        :param tic_id: The TIC ID to get available data for.
+        :return:
+        """
+        dispositions = self.retrieve_toi_dispositions_from_exofop()
+        tic_target_dispositions = dispositions[dispositions['TIC ID'] == tic_id]
+        return tic_target_dispositions
