@@ -94,7 +94,7 @@ class TessDataInterface:
         product_list = None
         for observations_chunk in np.array_split(observations,
                                                  math.ceil(observations.shape[0] / self.mast_input_query_chunk_size)):
-            product_list_chunk = self.get_product_list(observations_chunk)
+            product_list_chunk = self.get_product_list_chunk(observations_chunk)
             if product_list is None:
                 product_list = product_list_chunk
             else:
@@ -375,6 +375,7 @@ class TessDataInterface:
 
         :param save_directory: The directory to save the lightcurves to.
         """
+        print(f'Starting download of all 2-minute cadence lightcurves to directory `{save_directory}`.')
         save_directory.mkdir(parents=True, exist_ok=True)
         print(f'Retrieving observations list from MAST...')
         tess_observations = self.get_all_tess_time_series_observations()
@@ -388,3 +389,8 @@ class TessDataInterface:
             file_path = Path(file_path_string)
             file_path.rename(save_directory.joinpath(file_path.name))
         print('Database ready.')
+
+
+if __name__ == '__main__':
+    tess_data_interface = TessDataInterface()
+    tess_data_interface.download_all_two_minute_cadence_lightcurves(Path('data/tess_two_minute_cadence_lightcurves'))
