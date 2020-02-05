@@ -207,3 +207,4 @@ class TestTessDataInterface:
         assert dispositions1['TFOPWG disposition'].iloc[0] == 'CP'
         dispositions2 = tess_data_interface.retrieve_exofop_planet_disposition_for_tic_id(tic_id=25132999)
         assert dispositions2.shape[0] == 0
+

@@ -286,7 +286,8 @@ class TessDataInterface:
         print_data_frame.reset_index(drop=True, inplace=True)
         print(print_data_frame)
 
-    def retrieve_toi_dispositions_from_exofop(self) -> pd.DataFrame:
+    @staticmethod
+    def retrieve_toi_dispositions_from_exofop() -> pd.DataFrame:
         """
         Downloads and loads the ExoFOP TOI table information from CSV to a data frame using a project consistent format.
         The source for the dispositions is from the `ExoFOP TOI table
@@ -314,8 +315,22 @@ class TessDataInterface:
         <https://exofop.ipac.caltech.edu/tess/download_toi.php?sort=toi&output=csv>`_.
 
         :param tic_id: The TIC ID to get available data for.
-        :return:
+        :return: The disposition data frame.
         """
         dispositions = self.retrieve_toi_dispositions_from_exofop()
         tic_target_dispositions = dispositions[dispositions['TIC ID'] == tic_id]
         return tic_target_dispositions
+
+    def print_exofop_planet_dispositions_for_tic_target(self, tic_id):
+        """
+        Prints all ExoFOP disposition information for a given TESS target.
+
+        :param tic_id: The TIC target to for.
+        """
+        dispositions_data_frame = self.retrieve_exofop_planet_disposition_for_tic_id(tic_id)
+        if dispositions_data_frame.shape[0] == 0:
+            print('No known ExoFOP dispositions found.')
+            return
+        # Use context options to not truncate printed data.
+        with pd.option_context('display.max_rows', None, 'display.max_columns', None, 'display.width', None):
+            print(dispositions_data_frame)
