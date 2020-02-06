@@ -91,14 +91,17 @@ class TessDataInterface:
         :param observations: The data frame of observations to get. Will be converted from DataFrame to Table for query.
         :return: The data frame of the product list. Will be converted from Table to DataFrame for use.
         """
-        product_list = None
-        for observations_chunk in np.array_split(observations,
-                                                 math.ceil(observations.shape[0] / self.mast_input_query_chunk_size)):
-            product_list_chunk = self.get_product_list_chunk(observations_chunk)
-            if product_list is None:
-                product_list = product_list_chunk
-            else:
-                product_list = product_list.append(product_list_chunk, ignore_index=True)
+        if observations.shape[0] > 1:
+            product_list = None
+            for observations_chunk in np.array_split(observations,
+                                                     math.ceil(observations.shape[0] / self.mast_input_query_chunk_size)):
+                product_list_chunk = self.get_product_list_chunk(observations_chunk)
+                if product_list is None:
+                    product_list = product_list_chunk
+                else:
+                    product_list = product_list.append(product_list_chunk, ignore_index=True)
+        else:
+            product_list = self.get_product_list_chunk(observations)
         return product_list
 
     @staticmethod
