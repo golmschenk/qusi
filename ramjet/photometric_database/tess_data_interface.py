@@ -4,6 +4,7 @@ Code for a class for common interfacing with TESS data, such as downloading, sor
 import math
 import shutil
 import tempfile
+import time
 from enum import Enum
 from pathlib import Path
 from typing import Union, List
@@ -379,14 +380,20 @@ class TessDataInterface:
         :param save_directory: The directory to save the lightcurves to.
         """
         print(f'Starting download of all 2-minute cadence lightcurves to directory `{save_directory}`.')
+        if save_directory.exists():
+            print('Will delete existing existing directory in 10 seconds. Control-C to cancel.')
+            time.sleep(10)
+            print('Deleting existing data...')
+            shutil.rmtree(save_directory)
         save_directory.mkdir(parents=True, exist_ok=True)
         print(f'Retrieving observations list from MAST...')
         tess_observations = self.get_all_tess_time_series_observations()
         single_sector_observations = self.filter_for_single_sector_observations(tess_observations)
         print(f'Retrieving data products list from MAST...')
-        single_sector_data_products = self.get_product_list(single_sector_observations)
+        data_products = self.get_product_list(single_sector_observations)
         print(f'Downloading lightcurves...')
-        download_manifest = self.download_products(single_sector_data_products, data_directory=save_directory)
+        lightcurve_data_products = data_products[data_products['productFilename'].str.endswith('lc.fits')]
+        download_manifest = self.download_products(lightcurve_data_products, data_directory=save_directory)
         print(f'Moving lightcurves to {save_directory}...')
         for file_path_string in download_manifest['Local Path']:
             file_path = Path(file_path_string)
