@@ -13,6 +13,9 @@ def pytest_addoption(parser):
         '--exclude-functional', action='store_true', default=False, help='Run functional tests'
     )
     parser.addoption(
+        '--exclude-external', action='store_true', default=False, help='Run tests that rely on external resources'
+    )
+    parser.addoption(
         '--exclude-slow', action='store_true', default=False, help='Run slow tests'
     )
 
@@ -25,6 +28,9 @@ def pytest_configure(config):
     config.addinivalue_line(
         'markers', 'slow: Mark a test as a slow test.'
     )
+    config.addinivalue_line(
+        'markers', 'External: Mark a test as requiring an external resource (e.g. makes a network call to a URL).'
+    )
 
 
 def pytest_collection_modifyitems(config, items):
@@ -35,4 +41,6 @@ def pytest_collection_modifyitems(config, items):
         if 'functional' in item.keywords and config.getoption('--exclude-functional'):
             item.add_marker(functional_skip_mark)
         if 'slow' in item.keywords and config.getoption('--exclude-slow'):
+            item.add_marker(slow_skip_mark)
+        if 'external' in item.keywords and config.getoption('--exclude-external'):
             item.add_marker(slow_skip_mark)

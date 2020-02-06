@@ -1,6 +1,8 @@
 """
 Code for a class for common interfacing with TESS data, such as downloading, sorting, and manipulating.
 """
+import math
+import shutil
 import tempfile
 from enum import Enum
 from pathlib import Path
@@ -13,6 +15,7 @@ from astropy.table import Table
 from astroquery.mast import Observations, Catalogs
 from astroquery.exceptions import TimeoutError as AstroQueryTimeoutError
 from astroquery.vizier import Vizier
+from retrying import retry
 
 from ramjet.analysis.lightcurve_visualizer import plot_lightcurve
 
@@ -22,18 +25,50 @@ class TessFluxType(Enum):
     PDCSAP = 'PDCSAP_FLUX'
 
 
+def is_common_mast_connection_error(exception: Exception) -> bool:
+    """
+    Returns if the passed exception is a common MAST connection error. Made for deciding whether to retry a function.
+
+    :param exception: The exception to check.
+    :return: A boolean stating if the exception is a common MAST connection error.
+    """
+    return isinstance(exception, AstroQueryTimeoutError)
+
+
 class TessDataInterface:
     """
     A class for common interfacing with TESS data, such as downloading, sorting, and manipulating.
     """
     def __init__(self):
-        Observations.TIMEOUT = 1200
-        Observations.PAGESIZE = 10000
-        Catalogs.TIMEOUT = 1200
-        Catalogs.PAGESIZE = 10000
+        Observations.TIMEOUT = 2000
+        Observations.PAGESIZE = 3000
+        Catalogs.TIMEOUT = 2000
+        Catalogs.PAGESIZE = 3000
+        self.mast_input_query_chunk_size = 1000
+
+    def get_all_tess_time_series_observations(self, tic_id: Union[int, List[int]] = None) -> pd.DataFrame:
+        """
+        Gets all TESS time-series observations, limited to science data product level. Breaks large queries up to make
+        the communication with MAST smoother.
+
+        :param tic_id: An optional TIC ID or list of TIC IDs to limit the query to.
+        :return: The list of time series observations as rows in a Pandas data frame.
+        """
+        if tic_id is None or isinstance(tic_id, int):
+            observations = self.get_all_tess_time_series_observations_chunk(tic_id)
+        else:
+            observations = None
+            for tic_id_list_chunk in np.array_split(tic_id, math.ceil(len(tic_id) / self.mast_input_query_chunk_size)):
+                observations_chunk = self.get_all_tess_time_series_observations_chunk(tic_id_list_chunk)
+                if observations is None:
+                    observations = observations_chunk
+                else:
+                    observations = observations.append(observations_chunk, ignore_index=True)
+        return observations
 
     @staticmethod
-    def get_all_tess_time_series_observations(tic_id: Union[int, List[int]] = None) -> pd.DataFrame:
+    @retry(retry_on_exception=is_common_mast_connection_error)
+    def get_all_tess_time_series_observations_chunk(tic_id: Union[int, List[int]] = None) -> pd.DataFrame:
         """
         Gets all TESS time-series observations, limited to science data product level. Repeats download attempt on
         error.
@@ -43,19 +78,35 @@ class TessDataInterface:
         """
         if tic_id is None:
             tic_id = []  # When the empty list is passed to `query_criteria`, any value is considered a match.
-        tess_observations = None
-        while tess_observations is None:
-            try:
-                # noinspection SpellCheckingInspection
-                tess_observations = Observations.query_criteria(obs_collection='TESS', dataproduct_type='timeseries',
-                                                                calib_level=3,  # Science data product level.
-                                                                target_name=tic_id)
-            except (AstroQueryTimeoutError, ConnectionError):
-                print('Error connecting to MAST. They have occasional downtime. Trying again...')
+        tess_observations = Observations.query_criteria(obs_collection='TESS', dataproduct_type='timeseries',
+                                                        calib_level=3,  # Science data product level.
+                                                        target_name=tic_id)
         return tess_observations.to_pandas()
 
+    def get_product_list(self, observations: pd.DataFrame) -> pd.DataFrame:
+        """
+        A wrapper for MAST's `get_product_list`, allowing the use of Pandas DataFrames instead of AstroPy Tables.
+        Breaks large queries up to make the communication with MAST smoother.
+
+        :param observations: The data frame of observations to get. Will be converted from DataFrame to Table for query.
+        :return: The data frame of the product list. Will be converted from Table to DataFrame for use.
+        """
+        if observations.shape[0] > 1:
+            product_list = None
+            for observations_chunk in np.array_split(observations,
+                                                     math.ceil(observations.shape[0] / self.mast_input_query_chunk_size)):
+                product_list_chunk = self.get_product_list_chunk(observations_chunk)
+                if product_list is None:
+                    product_list = product_list_chunk
+                else:
+                    product_list = product_list.append(product_list_chunk, ignore_index=True)
+        else:
+            product_list = self.get_product_list_chunk(observations)
+        return product_list
+
     @staticmethod
-    def get_product_list(observations: pd.DataFrame) -> pd.DataFrame:
+    @retry(retry_on_exception=is_common_mast_connection_error)
+    def get_product_list_chunk(observations: pd.DataFrame) -> pd.DataFrame:
         """
         A wrapper for MAST's `get_product_list`, allowing the use of Pandas DataFrames instead of AstroPy Tables.
         Retries on error when communicating with the MAST server.
@@ -63,17 +114,11 @@ class TessDataInterface:
         :param observations: The data frame of observations to get. Will be converted from DataFrame to Table for query.
         :return: The data frame of the product list. Will be converted from Table to DataFrame for use.
         """
-        data_products = None
-
-        while data_products is None:
-            try:
-                # noinspection SpellCheckingInspection
-                data_products = Observations.get_product_list(Table.from_pandas(observations))
-            except (AstroQueryTimeoutError, ConnectionError):
-                print('Error connecting to MAST. They have occasional downtime. Trying again...')
+        data_products = Observations.get_product_list(Table.from_pandas(observations))
         return data_products.to_pandas()
 
     @staticmethod
+    @retry(retry_on_exception=is_common_mast_connection_error)
     def download_products(data_products: pd.DataFrame, data_directory: Path) -> pd.DataFrame:
         """
          A wrapper for MAST's `download_products`, allowing the use of Pandas DataFrames instead of AstroPy Tables.
@@ -84,14 +129,7 @@ class TessDataInterface:
         :param data_directory: The path to download the data to.
         :return: The manifest of the download. Will be converted from Table to DataFrame for use.
         """
-        manifest = None
-        while manifest is None:
-            try:
-                # noinspection SpellCheckingInspection
-                manifest = Observations.download_products(Table.from_pandas(data_products),
-                                                          download_dir=str(data_directory))
-            except (AstroQueryTimeoutError, ConnectionError):
-                print('Error connecting to MAST. They have occasional downtime. Trying again...')
+        manifest = Observations.download_products(Table.from_pandas(data_products), download_dir=str(data_directory))
         return manifest.to_pandas()
 
     @staticmethod
@@ -181,13 +219,14 @@ class TessDataInterface:
         times = np.delete(times, nan_indexes)
         return fluxes, times
 
-    def download_lightcurve(self, tic_id: int, sector: int = None, save_path: Path = None) -> Path:
+    def download_lightcurve(self, tic_id: int, sector: int = None, save_directory: Path = None) -> Path:
         """
         Downloads a lightcurve from MAST.
 
         :param tic_id: The TIC ID of the lightcurve target to download.
         :param sector: The sector to download. If not specified, downloads first available sector.
-        :param save_path: The path to save the FITS file to. If not specified, uses the system temporary directory.
+        :param save_directory: The directory to save the FITS file to. If not specified, uses the system temporary
+                               directory.
         :return: The path to the downloaded file.
         """
         observations = self.get_all_tess_time_series_observations(tic_id=tic_id)
@@ -201,10 +240,10 @@ class TessDataInterface:
         lightcurves_product_list = product_list[product_list['productSubGroupDescription'] == 'LC']
         manifest = self.download_products(lightcurves_product_list, data_directory=tempfile.gettempdir())
         lightcurve_path = Path(manifest['Local Path'].iloc[0])
-        if save_path is not None:
-            save_path.parent.mkdir(parents=True, exist_ok=True)
-            lightcurve_path.rename(save_path)
-            lightcurve_path = save_path
+        if save_directory is not None:
+            save_directory.parent.mkdir(parents=True, exist_ok=True)
+            shutil.move(str(lightcurve_path), str(save_directory))
+            lightcurve_path = save_directory
         return lightcurve_path
 
     def plot_lightcurve_from_mast(self, tic_id: int, sector: int = None, exclude_flux_outliers: bool = False,
@@ -214,6 +253,7 @@ class TessDataInterface:
 
         :param tic_id: The TIC ID of the lightcurve target to download.
         :param sector: The sector to download. If not specified, downloads first available sector.
+        :param exclude_flux_outliers: Whether or not to exclude flux outlier data points when plotting.
         :param base_data_point_size: The size of the data points to use when plotting (and related sizes).
         """
         lightcurve_path = self.download_lightcurve(tic_id, sector)
@@ -274,6 +314,7 @@ class TessDataInterface:
         if variable_data_frame.shape[0] == 0:
             print('No known variables found.')
             return
+        print('Variable type abbreviation explanations: http://www.sai.msu.su/gcvs/gcvs/vartype.htm')
         print_data_frame = pd.DataFrame()
         print_data_frame['Variable Type'] = variable_data_frame['VarType'].str.decode('utf-8')
         print_data_frame['Max magnitude'] = variable_data_frame['magMax']
@@ -281,3 +322,78 @@ class TessDataInterface:
         print_data_frame.sort_values('Max magnitude', inplace=True)
         print_data_frame.reset_index(drop=True, inplace=True)
         print(print_data_frame)
+
+    @staticmethod
+    def retrieve_toi_dispositions_from_exofop() -> pd.DataFrame:
+        """
+        Downloads and loads the ExoFOP TOI table information from CSV to a data frame using a project consistent format.
+        The source for the dispositions is from the `ExoFOP TOI table
+        <https://exofop.ipac.caltech.edu/tess/download_toi.php?sort=toi&output=csv>`_.
+
+        :return: The data frame containing the dispositions.
+        """
+        toi_csv_url = 'https://exofop.ipac.caltech.edu/tess/download_toi.php?sort=toi&output=csv'
+        columns_to_use = ['TIC ID', 'TFOPWG Disposition', 'Planet Num', 'Epoch (BJD)', 'Period (days)',
+                          'Duration (hours)', 'Sectors']
+        dispositions = pd.read_csv(toi_csv_url, usecols=columns_to_use)
+        dispositions['Sectors'] = dispositions['Sectors'].astype(str)
+        dispositions.rename(columns={'Planet Num': 'Planet number', 'Epoch (BJD)': 'Transit epoch (BJD)',
+                                     'Period (days)': 'Transit period (days)',
+                                     'Duration (hours)': 'Transit duration (hours)',
+                                     'Sectors': 'Sector', 'TFOPWG Disposition': 'TFOPWG disposition'}, inplace=True)
+        dispositions['Sector'] = dispositions['Sector'].str.split(',')
+        dispositions = dispositions.explode('Sector')
+        dispositions['Sector'] = pd.to_numeric(dispositions['Sector'], errors='coerce').astype(pd.Int64Dtype())
+        return dispositions
+
+    def retrieve_exofop_planet_disposition_for_tic_id(self, tic_id: int) -> pd.DataFrame:
+        """
+        Retrieves the ExoFOP disposition information for a given TIC ID from
+        <https://exofop.ipac.caltech.edu/tess/download_toi.php?sort=toi&output=csv>`_.
+
+        :param tic_id: The TIC ID to get available data for.
+        :return: The disposition data frame.
+        """
+        dispositions = self.retrieve_toi_dispositions_from_exofop()
+        tic_target_dispositions = dispositions[dispositions['TIC ID'] == tic_id]
+        return tic_target_dispositions
+
+    def print_exofop_planet_dispositions_for_tic_target(self, tic_id):
+        """
+        Prints all ExoFOP disposition information for a given TESS target.
+
+        :param tic_id: The TIC target to for.
+        """
+        dispositions_data_frame = self.retrieve_exofop_planet_disposition_for_tic_id(tic_id)
+        if dispositions_data_frame.shape[0] == 0:
+            print('No known ExoFOP dispositions found.')
+            return
+        # Use context options to not truncate printed data.
+        with pd.option_context('display.max_rows', None, 'display.max_columns', None, 'display.width', None):
+            print(dispositions_data_frame)
+
+    def download_all_two_minute_cadence_lightcurves(self, save_directory: Path):
+        """
+        Downloads all two minute cadence lightcurves from TESS.
+
+        :param save_directory: The directory to save the lightcurves to.
+        """
+        print(f'Starting download of all 2-minute cadence lightcurves to directory `{save_directory}`.')
+        save_directory.mkdir(parents=True, exist_ok=True)
+        print(f'Retrieving observations list from MAST...')
+        tess_observations = self.get_all_tess_time_series_observations()
+        single_sector_observations = self.filter_for_single_sector_observations(tess_observations)
+        print(f'Retrieving data products list from MAST...')
+        single_sector_data_products = self.get_product_list(single_sector_observations)
+        print(f'Downloading lightcurves...')
+        download_manifest = self.download_products(single_sector_data_products, data_directory=save_directory)
+        print(f'Moving lightcurves to {save_directory}...')
+        for file_path_string in download_manifest['Local Path']:
+            file_path = Path(file_path_string)
+            file_path.rename(save_directory.joinpath(file_path.name))
+        print('Database ready.')
+
+
+if __name__ == '__main__':
+    tess_data_interface = TessDataInterface()
+    tess_data_interface.download_all_two_minute_cadence_lightcurves(Path('data/tess_two_minute_cadence_lightcurves'))

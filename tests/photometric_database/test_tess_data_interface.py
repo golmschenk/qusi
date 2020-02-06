@@ -31,8 +31,8 @@ class TestTessDataInterface:
         assert Observations.TIMEOUT == 600
         assert Observations.PAGESIZE == 50000
         tess_data_interface = TessDataInterface()
-        assert Observations.TIMEOUT == 1200
-        assert Observations.PAGESIZE == 10000
+        assert Observations.TIMEOUT == 2000
+        assert Observations.PAGESIZE == 3000
 
     def test_can_request_time_series_observations_from_mast_as_pandas_data_frame(self, tess_data_interface,
                                                                                  tess_data_interface_module):
@@ -188,3 +188,23 @@ class TestTessDataInterface:
         variable_data_frame = tess_data_interface.get_variable_data_frame_for_tic_id(tic_id=0)
         assert variable_data_frame['VarType'].iloc[0] == b'RR'
         assert variable_data_frame['VarType'].iloc[1] == b'SNI'
+
+    @pytest.mark.slow
+    @pytest.mark.external
+    def test_can_retrieve_the_tess_toi_dispositions(self, tess_data_interface):
+        dispositions = tess_data_interface.retrieve_toi_dispositions_from_exofop()
+        target_dispositions = dispositions[dispositions['TIC ID'] == 307210830]
+        assert target_dispositions['TFOPWG disposition'].iloc[0] == 'CP'
+        target_planet_sectors = target_dispositions['Sector'].unique()
+        assert np.array_equal(np.sort(np.array(target_planet_sectors)), [2, 5, 8, 9, 10, 11, 12])
+
+    def test_can_get_exofop_planet_disposition_for_tic_id(self, tess_data_interface):
+        mock_dispositions = pd.DataFrame({'TIC ID': [231663901, 266980320], 'TFOPWG disposition': ['KP', 'CP']})
+        tess_data_interface.retrieve_toi_dispositions_from_exofop = Mock(return_value=mock_dispositions)
+        dispositions0 = tess_data_interface.retrieve_exofop_planet_disposition_for_tic_id(tic_id=231663901)
+        assert dispositions0['TFOPWG disposition'].iloc[0] == 'KP'
+        dispositions1 = tess_data_interface.retrieve_exofop_planet_disposition_for_tic_id(tic_id=266980320)
+        assert dispositions1['TFOPWG disposition'].iloc[0] == 'CP'
+        dispositions2 = tess_data_interface.retrieve_exofop_planet_disposition_for_tic_id(tic_id=25132999)
+        assert dispositions2.shape[0] == 0
+

@@ -4,7 +4,7 @@ from abc import ABC
 import os
 import random
 from pathlib import Path
-from typing import List, Union
+from typing import List, Union, Tuple
 
 import numpy as np
 import pandas as pd
@@ -13,6 +13,7 @@ import tensorflow as tf
 
 class LightcurveDatabase(ABC):
     """A base generalized database for photometric data to be subclassed."""
+
     def __init__(self, data_directory='data'):
         self.data_directory: Path = Path(data_directory)
         self.validation_ratio = 0.2
@@ -127,6 +128,14 @@ class LightcurveDatabase(ABC):
     @staticmethod
     def extract_shuffled_chunk_and_remainder(array_to_extract_from: Union[List, np.ndarray], chunk_ratio: float,
                                              chunk_to_extract_index: int = 0) -> (np.ndarray, np.ndarray):
+        """
+        Shuffles an array, extracts a chunk of the data, and returns the chunk and remainder of the array.
+
+        :param array_to_extract_from: The array to process.
+        :param chunk_ratio: The number of equal size chunks to split the array into before extracting one.
+        :param chunk_to_extract_index: The index of the chunk to extract out of all chunks.
+        :return: The chunk which is extracted, and the remainder of the array excluding the chunk.
+        """
         np.random.seed(0)
         np.random.shuffle(array_to_extract_from)
         number_of_chunks = int(1 / chunk_ratio)
@@ -135,3 +144,27 @@ class LightcurveDatabase(ABC):
         remaining_chunks = np.delete(chunks, chunk_to_extract_index, axis=0)
         remainder = np.concatenate(remaining_chunks)
         return extracted_chunk, remainder
+
+    @staticmethod
+    def padded_window_dataset_for_zipped_example_and_label_dataset(dataset: tf.data.Dataset, batch_size: int,
+                                                                   window_shift: int,
+                                                                   padded_shapes: Tuple[List, List]) -> tf.data.Dataset:
+        """
+        Takes a zipped example and label dataset, and converts it to padded batches, where each batch uses overlapping
+        examples based on a sliding window.
+
+        :param dataset: The zipped example and label dataset.
+        :param batch_size: The size of the batches to produce.
+        :param window_shift: The shift of the moving window between batches.
+        :param padded_shapes: The output padded shape.
+        :return: The padded window dataset.
+        """
+        examples_dataset = dataset.map(lambda element, _: element)
+        labels_dataset = dataset.map(lambda _, element: element)
+        examples_window_dataset = examples_dataset.window(batch_size, shift=window_shift)
+        examples_unbatched_window_dataset = examples_window_dataset.flat_map(lambda element: element)
+        labels_window_dataset = labels_dataset.window(batch_size, shift=window_shift)
+        labels_unbatched_window_dataset = labels_window_dataset.flat_map(lambda element: element)
+        unbatched_window_dataset = tf.data.Dataset.zip((examples_unbatched_window_dataset,
+                                                        labels_unbatched_window_dataset))
+        return unbatched_window_dataset.padded_batch(batch_size, padded_shapes=padded_shapes)

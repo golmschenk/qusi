@@ -12,3 +12,4 @@ sphinx-press-theme
 GitPython
 matplotlib
 pipreqs
+retrying
