@@ -208,8 +208,8 @@ class TessDataInterface:
         :param flux_type: The flux type to extract from the FITS file.
         :return: The flux and times values from the FITS file.
         """
-        hdu_list = fits.open(example_path)
-        lightcurve = hdu_list[1].data  # Lightcurve information is in first extension table.
+        with fits.open(example_path) as hdu_list:
+            lightcurve = hdu_list[1].data  # Lightcurve information is in first extension table.
         fluxes = lightcurve[flux_type.value]
         times = lightcurve['TIME']
         assert times.shape == fluxes.shape
