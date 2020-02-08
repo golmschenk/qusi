@@ -101,7 +101,9 @@ class LightcurveDatabase(ABC):
             example = example[start_slice:start_slice + length]
         else:
             elements_to_repeat = length - example.shape[0]
-            example = np.pad(example, (0, elements_to_repeat), mode='wrap')
+            pre_padding = np.random.randint(0, elements_to_repeat + 1)
+            post_padding = elements_to_repeat - pre_padding
+            example = np.pad(example, (pre_padding, post_padding), mode='wrap')
         return example
 
     def get_training_and_validation_datasets_for_file_paths(self, example_paths: List[Union[str, Path]]) -> (
