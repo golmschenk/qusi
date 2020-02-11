@@ -116,7 +116,7 @@ class LightcurveDatabase(ABC):
             else:
                 pre_padding = 0
             post_padding = elements_to_repeat - pre_padding
-            example = np.pad(example, (pre_padding, post_padding), mode='wrap')
+            example = np.pad(example, ((pre_padding, post_padding), (0, 0)), mode='wrap')
         return example
 
     def get_training_and_validation_datasets_for_file_paths(self, example_paths: List[Union[str, Path]]) -> (
