@@ -235,14 +235,14 @@ class TessDataInterface:
         if sector is not None:
             observations_with_sectors = observations_with_sectors[observations_with_sectors['Sector'] == sector]
         else:
-            observations_with_sectors.head(1)
+            observations_with_sectors = observations_with_sectors.head(1)
         product_list = self.get_product_list(observations_with_sectors)
         lightcurves_product_list = product_list[product_list['productSubGroupDescription'] == 'LC']
         manifest = self.download_products(lightcurves_product_list, data_directory=tempfile.gettempdir())
         lightcurve_path = Path(manifest['Local Path'].iloc[0])
         if save_directory is not None:
             save_directory.parent.mkdir(parents=True, exist_ok=True)
-            shutil.move(str(lightcurve_path), str(save_directory))
+            shutil.move(str(lightcurve_path), str(save_directory.joinpath(lightcurve_path.name)))
             lightcurve_path = save_directory
         return lightcurve_path
 
