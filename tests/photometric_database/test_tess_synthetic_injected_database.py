@@ -1,9 +1,12 @@
 """Tests for the TessSyntheticInjectedDatabase class."""
 from pathlib import Path
-from unittest.mock import Mock
-
+from unittest.mock import Mock, patch
+import numpy as np
+import pandas as pd
+import tensorflow as tf
 import pytest
 
+import ramjet.photometric_database.tess_data_interface
 from ramjet.photometric_database.tess_synthetic_injected_database import TessSyntheticInjectedDatabase
 
 
@@ -43,3 +46,40 @@ class TestTessSyntheticInjectedDatabase:
         assert training_batch1[1].sum == batch_size // 2  # Half the labels are positive.
         assert validation_batch0[0].shape == (batch_size, time_steps_per_example, 1)
         assert validation_batch1[0].shape == (batch_size, time_steps_per_example, 1)
+
+    @pytest.mark.functional
+    @patch.object(ramjet.photometric_database.tess_data_interface.fits, 'open')
+    @patch.object(ramjet.photometric_database.tess_data_interface.pd, 'read_feather')
+    def test_general_preprocessing_produces_an_inject_and_non_injected_lightcurve(self, mock_read_feather,
+                                                                                  mock_fits_open, database):
+        # Mock and initialize dataset components for simple testing.
+        lightcurve_length = 15
+        fits_fluxes = np.arange(lightcurve_length, dtype=np.float32)
+        fits_times = fits_fluxes * 10
+        hdu = Mock(data={'PDCSAP_FLUX': fits_fluxes, 'TIME': fits_times})
+        hdu_list = [None, hdu]  # Lightcurve information is in first extension table in TESS data.
+        mock_fits_open.return_value.__enter__.return_value = hdu_list
+        synthetic_magnitudes = np.arange(11)
+        synthetic_times = synthetic_magnitudes * 10
+        mock_read_feather.return_value = pd.DataFrame({'Magnitude': synthetic_magnitudes,
+                                                       'Time (days)': synthetic_times})
+        # Generate the datasets.
+        examples = database.general_preprocessing(tf.convert_to_tensor('fake_path.fits'),
+                                                  tf.convert_to_tensor('fake_path.feather'))
+        uninjected_lightcurve, negative_label, injected_lightcurve, positive_label = examples
+        # Test the datasets look right.
+        mock_fits_open.assert_called_with('fake_path.fits')
+        mock_read_feather.assert_called_with('fake_path.feather')
+        assert uninjected_lightcurve.shape == (15, 1)
+        assert injected_lightcurve.shape == (15, 1)
+        assert negative_label == [0]
+        assert positive_label == [1]
+
+    def test_can_inject_signal_into_fluxes(self, database):
+        lightcurve_fluxes = np.array([1, 2, 3, 4, 5])
+        lightcurve_times = np.array([10, 20, 30, 40, 50])
+        signal_magnifications = np.array([1, 3, 1])
+        signal_times = np.array([0, 20, 40])
+        lightcurve_with_injected_signal = database.inject_signal_into_lightcurve(lightcurve_fluxes, lightcurve_times,
+                                                                                 signal_magnifications, signal_times)
+        assert np.array_equal(lightcurve_with_injected_signal, np.array([1, 5, 9, 7, 5]))
