@@ -61,8 +61,8 @@ class TestTessSyntheticInjectedDatabase:
         mock_fits_open.return_value.__enter__.return_value = hdu_list
         synthetic_magnitudes = np.arange(11)
         synthetic_times = synthetic_magnitudes * 10
-        mock_read_feather.return_value = pd.DataFrame({'Magnitude': synthetic_magnitudes,
-                                                       'Time (days)': synthetic_times})
+        mock_read_feather.return_value = pd.DataFrame({'Magnification': synthetic_magnitudes,
+                                                       'Time (hours)': synthetic_times})
         # Generate the datasets.
         examples = database.general_preprocessing(tf.convert_to_tensor('fake_path.fits'),
                                                   tf.convert_to_tensor('fake_path.feather'))
@@ -80,6 +80,14 @@ class TestTessSyntheticInjectedDatabase:
         lightcurve_times = np.array([10, 20, 30, 40, 50])
         signal_magnifications = np.array([1, 3, 1])
         signal_times = np.array([0, 20, 40])
-        lightcurve_with_injected_signal = database.inject_signal_into_lightcurve(lightcurve_fluxes, lightcurve_times,
+        fluxes_with_injected_signal = database.inject_signal_into_lightcurve(lightcurve_fluxes, lightcurve_times,
                                                                                  signal_magnifications, signal_times)
-        assert np.array_equal(lightcurve_with_injected_signal, np.array([1, 5, 9, 7, 5]))
+        assert np.array_equal(fluxes_with_injected_signal, np.array([1, 5, 9, 7, 5]))
+
+    def test_flux_preprocessing_gives_a_normalized_correct_length_curve(self, database):
+        database.time_steps_per_example = 8
+        fluxes = np.array([100, 200, 100, 200, 100, 200])
+        preprocessed_fluxes = database.flux_preprocessing(fluxes)
+        assert preprocessed_fluxes.shape[0] == 8
+        assert np.min(preprocessed_fluxes) > -3
+        assert np.max(preprocessed_fluxes) < 3

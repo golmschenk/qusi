@@ -18,6 +18,7 @@ class TessSyntheticInjectedDatabase(LightcurveDatabase):
         self.lightcurve_directory: Path = self.data_directory.joinpath('lightcurves')
         self.synthetic_signal_directory: Path = self.data_directory.joinpath('synthetic_signals')
         self.tess_data_interface = TessDataInterface()
+        self.time_steps_per_example = 20000
 
     def generate_datasets(self):
         all_lightcurve_paths = list(self.lightcurve_directory.glob('*.fits'))
@@ -32,15 +33,25 @@ class TessSyntheticInjectedDatabase(LightcurveDatabase):
         batched_training_dataset = lightcurve_training_dataset.batch(100)
         prefetch_training_dataset = batched_training_dataset.prefetch(10)
 
-    def general_preprocessing(self, lightcurve_path_tensor: tf.Tensor, synthetic_signal_path_tensor: tf.Tensor
-                              ) -> ((np.ndarray, np.ndarray), (np.ndarray, np.ndarray)):
+    def fit_preprocessing(self, lightcurve_path_tensor: tf.Tensor, synthetic_signal_path_tensor: tf.Tensor
+                          ) -> ((np.ndarray, np.ndarray), (np.ndarray, np.ndarray)):
         lightcurve_path = lightcurve_path_tensor.numpy().decode('utf-8')
         synthetic_signal_path = synthetic_signal_path_tensor.numpy().decode('utf-8')
         fluxes, times = self.tess_data_interface.load_fluxes_and_times_from_fits_file(lightcurve_path)
         synthetic_signal = pd.read_feather(synthetic_signal_path)
         synthetic_magnifications, synthetic_times = synthetic_signal['Magnification'], synthetic_signal['Time (hours)']
-
+        synthetic_times = synthetic_times / 24  # Convert hours to days.
+        fluxes_with_injected_signal = self.inject_signal_into_lightcurve(fluxes, times, synthetic_magnifications,
+                                                                         synthetic_times)
+        fluxes = self.normalize(fluxes)
+        fluxes_with_injected_signal = self.normalize(fluxes_with_injected_signal)
         lightcurve = np.expand_dims(fluxes, axis=-1)
+
+    def flux_preprocessing(self, fluxes: np.ndarray, evaluation_mode=False) -> np.ndarray:
+        normalized_fluxes = self.normalize(fluxes)
+        uniform_length_fluxes = self.make_uniform_length(normalized_fluxes, self.time_steps_per_example,
+                                                         randomize=evaluation_mode)
+        return uniform_length_fluxes
 
     @staticmethod
     def inject_signal_into_lightcurve(lightcurve_fluxes, lightcurve_times, signal_magnifications, signal_times):
