@@ -50,23 +50,25 @@ class TestTessSyntheticInjectedDatabase:
     @pytest.mark.functional
     @patch.object(ramjet.photometric_database.tess_data_interface.fits, 'open')
     @patch.object(ramjet.photometric_database.tess_data_interface.pd, 'read_feather')
-    def test_general_preprocessing_produces_an_inject_and_non_injected_lightcurve(self, mock_read_feather,
-                                                                                  mock_fits_open, database):
+    def test_train_and_validation_preprocessing_produces_an_inject_and_non_injected_lightcurve(self, mock_read_feather,
+                                                                                               mock_fits_open,
+                                                                                               database):
         # Mock and initialize dataset components for simple testing.
         lightcurve_length = 15
+        database.time_steps_per_example = lightcurve_length
         fits_fluxes = np.arange(lightcurve_length, dtype=np.float32)
         fits_times = fits_fluxes * 10
         hdu = Mock(data={'PDCSAP_FLUX': fits_fluxes, 'TIME': fits_times})
         hdu_list = [None, hdu]  # Lightcurve information is in first extension table in TESS data.
         mock_fits_open.return_value.__enter__.return_value = hdu_list
-        synthetic_magnitudes = np.arange(11)
-        synthetic_times = synthetic_magnitudes * 10
+        synthetic_magnitudes = np.arange(16)
+        synthetic_times = synthetic_magnitudes * 10 * 24  # 24 to make it hours from days.
         mock_read_feather.return_value = pd.DataFrame({'Magnification': synthetic_magnitudes,
                                                        'Time (hours)': synthetic_times})
         # Generate the datasets.
-        examples = database.general_preprocessing(tf.convert_to_tensor('fake_path.fits'),
-                                                  tf.convert_to_tensor('fake_path.feather'))
-        uninjected_lightcurve, negative_label, injected_lightcurve, positive_label = examples
+        examples = database.train_and_validation_preprocessing(tf.convert_to_tensor('fake_path.fits'),
+                                                               tf.convert_to_tensor('fake_path.feather'))
+        (uninjected_lightcurve, negative_label), (injected_lightcurve, positive_label) = examples
         # Test the datasets look right.
         mock_fits_open.assert_called_with('fake_path.fits')
         mock_read_feather.assert_called_with('fake_path.feather')
@@ -81,7 +83,7 @@ class TestTessSyntheticInjectedDatabase:
         signal_magnifications = np.array([1, 3, 1])
         signal_times = np.array([0, 20, 40])
         fluxes_with_injected_signal = database.inject_signal_into_lightcurve(lightcurve_fluxes, lightcurve_times,
-                                                                                 signal_magnifications, signal_times)
+                                                                             signal_magnifications, signal_times)
         assert np.array_equal(fluxes_with_injected_signal, np.array([1, 5, 9, 7, 5]))
 
     def test_flux_preprocessing_gives_a_normalized_correct_length_curve(self, database):
