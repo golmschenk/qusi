@@ -212,3 +212,14 @@ class TestTessDataInterface:
         dispositions2 = tess_data_interface.retrieve_exofop_planet_disposition_for_tic_id(tic_id=25132999)
         assert dispositions2.shape[0] == 0
 
+    @patch.object(ramjet.photometric_database.tess_data_interface.Observations, 'query_criteria')
+    def test_can_get_list_of_sectors_target_appears_in(self, mock_query, tess_data_interface):
+        mock_query_result = Table(
+            {'dataURL': ['mast:TESS/product/tess2019006130736-s0007-0000000278956474-0131-s_lc.fits',
+                         'mast:TESS/product/tess2018319095959-s0005-0000000278956474-0125-s_lc.fits'],
+             'obs_id': ['tess2019006130736-s0007-0000000278956474-0131-s',
+                        'tess2018319095959-s0005-0000000278956474-0125-s']})
+        mock_query.return_value = mock_query_result
+        tic_id = 278956474
+        sectors = tess_data_interface.get_sectors_target_appears_in(tic_id)
+        assert sorted(sectors) == [5, 7]
