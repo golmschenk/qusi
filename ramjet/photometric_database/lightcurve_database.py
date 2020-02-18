@@ -20,6 +20,7 @@ class LightcurveDatabase(ABC):
         self.batch_size = 100
         self.trial_directory = None
         self.time_steps_per_example: int
+        self.number_of_parallel_processes_per_map = 16
 
     def log_dataset_file_names(self, dataset: tf.data.Dataset, dataset_name: str):
         """Saves the names of the files used in a dataset to a CSV file in the trail directory."""

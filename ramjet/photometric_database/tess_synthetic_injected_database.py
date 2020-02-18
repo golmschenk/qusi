@@ -33,12 +33,26 @@ class TessSyntheticInjectedDatabase(LightcurveDatabase):
             buffer_size=len(list(synthetic_signal_paths_dataset)))
         zipped_training_paths_dataset = tf.data.Dataset.zip((shuffled_training_lightcurve_paths_dataset,
                                                              shuffled_synthetic_signal_paths_dataset))
+        output_types = ((tf.float32, tf.float32), (tf.float32, tf.float32))
         lightcurve_training_dataset = map_py_function_to_dataset(zipped_training_paths_dataset,
                                                                  self.train_and_validation_preprocessing,
-                                                                 number_of_parallel_calls=16)
-
-        batched_training_dataset = lightcurve_training_dataset.batch(100)
-        prefetch_training_dataset = batched_training_dataset.prefetch(10)
+                                                                 self.number_of_parallel_processes_per_map,
+                                                                 output_types=output_types,
+                                                                 flat_map=True)
+        batched_training_dataset = lightcurve_training_dataset.batch(self.batch_size)
+        prefetch_training_dataset = batched_training_dataset.prefetch(tf.data.experimental.AUTOTUNE)
+        shuffled_validation_lightcurve_paths_dataset = validation_lightcurve_paths_dataset.shuffle(
+            buffer_size=len(list(validation_lightcurve_paths_dataset)))
+        zipped_validation_paths_dataset = tf.data.Dataset.zip((shuffled_validation_lightcurve_paths_dataset,
+                                                               shuffled_synthetic_signal_paths_dataset))
+        lightcurve_validation_dataset = map_py_function_to_dataset(zipped_validation_paths_dataset,
+                                                                   self.train_and_validation_preprocessing,
+                                                                   self.number_of_parallel_processes_per_map,
+                                                                   output_types=output_types,
+                                                                   flat_map=True)
+        batched_validation_dataset = lightcurve_validation_dataset.batch(self.batch_size)
+        prefetch_validation_dataset = batched_validation_dataset.prefetch(tf.data.experimental.AUTOTUNE)
+        return prefetch_training_dataset, prefetch_validation_dataset
 
     def train_and_validation_preprocessing(self, lightcurve_path_tensor: tf.Tensor,
                                            synthetic_signal_path_tensor: tf.Tensor,

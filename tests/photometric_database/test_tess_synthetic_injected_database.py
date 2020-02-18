@@ -8,6 +8,7 @@ import pytest
 
 import ramjet.photometric_database.tess_data_interface
 from ramjet.photometric_database.tess_synthetic_injected_database import TessSyntheticInjectedDatabase
+from tests.picklable_mock import PicklableMock
 
 
 class TestTessSyntheticInjectedDatabase:
@@ -22,15 +23,27 @@ class TestTessSyntheticInjectedDatabase:
         return TessSyntheticInjectedDatabase()
 
     @pytest.mark.functional
-    def test_can_generate_training_and_validation_datasets(self, database):
+    @patch.object(ramjet.photometric_database.tess_data_interface.fits, 'open')
+    @patch.object(ramjet.photometric_database.tess_data_interface.pd, 'read_feather')
+    def test_can_generate_training_and_validation_datasets(self, mock_read_feather, mock_fits_open, database):
         # Mock and initialize dataset components for simple testing.
         batch_size = 10
         database.batch_size = batch_size
         time_steps_per_example = 20
         database.time_steps_per_example = time_steps_per_example
-        database.lightcurve_directory = Mock(glob=Mock(return_value=(Path(f'{index}.fits') for index in range(30))))
-        database.synthetic_signal_directory = Mock(glob=Mock(return_value=(Path(f'{index}.feather')
-                                                                           for index in range(40))))
+        database.lightcurve_directory = PicklableMock(glob=PicklableMock(return_value=(Path(f'{index}.fits')
+                                                                                       for index in range(30))))
+        database.synthetic_signal_directory = PicklableMock(glob=PicklableMock(return_value=(Path(f'{index}.feather')
+                                                                                             for index in range(40))))
+        fits_fluxes = np.arange(time_steps_per_example, dtype=np.float32)
+        fits_times = fits_fluxes * 10
+        hdu = Mock(data={'PDCSAP_FLUX': fits_fluxes, 'TIME': fits_times})
+        hdu_list = [None, hdu]  # Lightcurve information is in first extension table in TESS data.
+        mock_fits_open.return_value.__enter__.return_value = hdu_list
+        synthetic_magnitudes = np.arange(time_steps_per_example + 1)
+        synthetic_times = synthetic_magnitudes * 10 * 24  # 24 to make it hours from days.
+        mock_read_feather.return_value = pd.DataFrame({'Magnification': synthetic_magnitudes,
+                                                       'Time (hours)': synthetic_times})
         # Generate the datasets.
         training_dataset, validation_dataset = database.generate_datasets()
         # Test the datasets look right.
@@ -65,6 +78,7 @@ class TestTessSyntheticInjectedDatabase:
         synthetic_times = synthetic_magnitudes * 10 * 24  # 24 to make it hours from days.
         mock_read_feather.return_value = pd.DataFrame({'Magnification': synthetic_magnitudes,
                                                        'Time (hours)': synthetic_times})
+        database.number_of_parallel_processes_per_map = 1
         # Generate the datasets.
         examples = database.train_and_validation_preprocessing(tf.convert_to_tensor('fake_path.fits'),
                                                                tf.convert_to_tensor('fake_path.feather'))
