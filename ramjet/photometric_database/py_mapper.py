@@ -36,18 +36,26 @@ class PyMapper:
         return mapped_element
 
     def map_to_dataset(self, dataset: tf.data.Dataset,
-                       output_types: Union[List[tf.dtypes.DType], tf.dtypes.DType] = tf.float32):
+                       output_types: Union[List[tf.dtypes.DType], tf.dtypes.DType] = tf.float32,
+                       flat_map: bool = False):
         """
         Maps the map function to the passed dataset.
 
         :param dataset: The dataset to apply the map function to.
         :param output_types: The TensorFlow output types of the function to convert to.
+        :param flat_map: Determines whether to flatten the first level of the output, similar to TensorFlow's
+                         `flat_map`. Note, the `output_types` should be the shape of the unflattened output.
         :return: The mapped dataset.
         """
         def map_py_function(*args):
             """A py_function wrapper for the map function."""
             return tf.py_function(self.send_to_map_pool, args, output_types)
-        return dataset.map(map_py_function, self.number_of_parallel_calls)
+
+        mapped_dataset = dataset.map(map_py_function, self.number_of_parallel_calls)
+        if flat_map:
+            return mapped_dataset.flat_map(lambda elements: tf.data.Dataset.from_tensor_slices(elements))
+        else:
+            return mapped_dataset
 
 
 def map_py_function_to_dataset(dataset: tf.data.Dataset, map_function: Callable, number_of_parallel_calls: int,
