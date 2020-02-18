@@ -2,6 +2,7 @@
 import os
 import time
 import pytest
+import pydevd
 import numpy as np
 import tensorflow as tf
 
@@ -48,6 +49,15 @@ class TestPyMapper:
         assert np.array_equal(plus_one_array, np.array([1, 11, 21, 31]))
         assert np.array_equal(plus_two_array, np.array([2, 12, 22, 32]))
 
+    def test_py_map_correctly_applies_map_function_with_two_inputs(self, dataset: tf.data.Dataset):
+        py_mapper = PyMapper(add_tensors, number_of_parallel_calls=4)
+        zipped_dataset = tf.data.Dataset.zip((dataset, dataset))
+        map_dataset = py_mapper.map_to_dataset(zipped_dataset)
+        batch_dataset = map_dataset.batch(batch_size=4)
+        batch = next(iter(batch_dataset))
+        batch_array = batch.numpy()
+        assert np.array_equal(batch_array, np.array([0, 20, 40, 60]))
+
     def test_single_function_wrapper(self, dataset):
         mapped_dataset = map_py_function_to_dataset(dataset=dataset, map_function=add_one, number_of_parallel_calls=4,
                                                     output_types=tf.float32)
@@ -86,6 +96,20 @@ def sleep_and_get_pid(element_tensor: tf.Tensor) -> int:
     return os.getpid()
 
 
+def add_tensors(element_tensor0: tf.Tensor, element_tensor1: tf.Tensor) -> float:
+    """
+    Adds two elements together.
+
+    :param element_tensor0: First input value.
+    :param element_tensor1: Second input value.
+    :return: The added inputs.
+    """
+    pydevd.settrace(suspend=False)  # To make debugging in the multi-processes easier (allows breakpoints).
+    element0 = element_tensor0.numpy()
+    element1 = element_tensor1.numpy()
+    return element0 + element1
+
+
 def add_one(element_tensor: tf.Tensor) -> float:
     """
     Adds 1
@@ -93,6 +117,7 @@ def add_one(element_tensor: tf.Tensor) -> float:
     :param element_tensor: Input value.
     :return: Input plus 1.
     """
+    pydevd.settrace(suspend=False)  # To make debugging in the multi-processes easier (allows breakpoints).
     element = element_tensor.numpy()
     return element + 1
 
@@ -104,5 +129,6 @@ def add_one_and_add_two(element_tensor: tf.Tensor) -> (float, float):
     :param element_tensor: Input value.
     :return: Input plus 1 and input plus 2.
     """
+    pydevd.settrace(suspend=False)  # To make debugging in the multi-processes easier (allows breakpoints).
     element = element_tensor.numpy()
     return element + 1, element + 2

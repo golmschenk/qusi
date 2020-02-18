@@ -24,14 +24,17 @@ class PyMapper:
         # Corrects bug where worker instances catch and throw away keyboard interrupts.
         signal.signal(signal.SIGINT, signal.SIG_IGN)
 
-    def send_to_map_pool(self, element_tensor):
+    def send_to_map_pool(self, *example_elements):
         """
         Sends the tensor element to the pool for processing.
 
-        :param element_tensor: The element to be processed by the pool.
+        :param example_elements: The elements list to be processed by the pool. That is, each example_elements
+                                 is the contents of a single example in the dataset. Often this may be a single element.
         :return: The output of the map function on the element.
         """
-        result = self.pool.apply_async(self.map_function, (element_tensor,))
+        import pydevd
+        pydevd.settrace(suspend=False)
+        result = self.pool.apply_async(self.map_function, example_elements)
         mapped_element = result.get()
         return mapped_element
 
