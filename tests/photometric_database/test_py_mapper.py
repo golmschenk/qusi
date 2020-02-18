@@ -65,6 +65,15 @@ class TestPyMapper:
         batch_array = batch.numpy()
         assert np.array_equal(batch_array, np.array([[1, 1], [11, 11], [21, 21], [31, 31]]))
 
+    def test_flat_map_can_be_used_from_single_function_wrapper(self):
+        dataset = tf.data.Dataset.from_tensor_slices([[[0, 0], [10, 10]], [[20, 20], [30, 30]]])
+        mapped_dataset = map_py_function_to_dataset(dataset=dataset, map_function=add_one, number_of_parallel_calls=4,
+                                                    output_types=tf.float32, flat_map=True)
+        batch_dataset = mapped_dataset.batch(batch_size=4)
+        batch = next(iter(batch_dataset))
+        batch_array = batch.numpy()
+        assert np.array_equal(batch_array, np.array([[1, 1], [11, 11], [21, 21], [31, 31]]))
+
 
 def sleep_and_get_pid(element_tensor: tf.Tensor) -> int:
     """
