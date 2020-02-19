@@ -32,8 +32,6 @@ class PyMapper:
                                  is the contents of a single example in the dataset. Often this may be a single element.
         :return: The output of the map function on the element.
         """
-        import pydevd
-        pydevd.settrace(suspend=False)
         result = self.pool.apply_async(self.map_function, example_elements)
         mapped_element = result.get()
         return mapped_element
