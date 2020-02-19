@@ -243,7 +243,7 @@ class TessDataInterface:
         lightcurve_path = Path(manifest['Local Path'].iloc[0])
         if save_directory is not None:
             save_directory = Path(save_directory)
-            save_directory.parent.mkdir(parents=True, exist_ok=True)
+            save_directory.mkdir(parents=True, exist_ok=True)
             shutil.move(str(lightcurve_path), str(save_directory.joinpath(lightcurve_path.name)))
             lightcurve_path = save_directory
         return lightcurve_path

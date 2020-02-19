@@ -5,7 +5,7 @@ with open("README.md", "r") as readme_file:
 
 setuptools.setup(
     name='astroramjet',
-    version='0.3.4',
+    version='0.3.5',
     packages=setuptools.find_packages(exclude=['tests', 'tests.*']),
     url='https://github.com/golmschenk/ramjet',
     license='Apache License 2.0',
