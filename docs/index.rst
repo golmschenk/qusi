@@ -24,6 +24,7 @@ to easily complete these two tasks, and to demonstrate the framework on specific
     :caption: Understanding RAMjET
 
     quick-start-tutorial
+    tess-data-interface-tutorial
     data_types
     python_api_for_tess_data
 
