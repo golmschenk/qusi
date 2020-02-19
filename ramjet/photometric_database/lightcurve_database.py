@@ -20,6 +20,7 @@ class LightcurveDatabase(ABC):
         self.batch_size = 100
         self.trial_directory = None
         self.time_steps_per_example: int
+        self.number_of_parallel_processes_per_map = 16
 
     def log_dataset_file_names(self, dataset: tf.data.Dataset, dataset_name: str):
         """Saves the names of the files used in a dataset to a CSV file in the trail directory."""
@@ -110,7 +111,12 @@ class LightcurveDatabase(ABC):
             example = example[start_slice:start_slice + length]
         else:
             elements_to_repeat = length - example.shape[0]
-            example = np.pad(example, (0, elements_to_repeat), mode='wrap')
+            if randomize:
+                pre_padding = np.random.randint(0, elements_to_repeat + 1)
+            else:
+                pre_padding = 0
+            post_padding = elements_to_repeat - pre_padding
+            example = np.pad(example, (pre_padding, post_padding), mode='wrap')
         return example
 
     def get_training_and_validation_datasets_for_file_paths(self, example_paths: List[Union[str, Path]]) -> (

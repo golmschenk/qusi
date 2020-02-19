@@ -209,8 +209,8 @@ class TessDataInterface:
         :param flux_type: The flux type to extract from the FITS file.
         :return: The flux and times values from the FITS file.
         """
-        hdu_list = fits.open(example_path)
-        lightcurve = hdu_list[1].data  # Lightcurve information is in first extension table.
+        with fits.open(example_path) as hdu_list:
+            lightcurve = hdu_list[1].data  # Lightcurve information is in first extension table.
         fluxes = lightcurve[flux_type.value]
         times = lightcurve['TIME']
         assert times.shape == fluxes.shape
@@ -236,14 +236,14 @@ class TessDataInterface:
         if sector is not None:
             observations_with_sectors = observations_with_sectors[observations_with_sectors['Sector'] == sector]
         else:
-            observations_with_sectors.head(1)
+            observations_with_sectors = observations_with_sectors.head(1)
         product_list = self.get_product_list(observations_with_sectors)
         lightcurves_product_list = product_list[product_list['productSubGroupDescription'] == 'LC']
         manifest = self.download_products(lightcurves_product_list, data_directory=tempfile.gettempdir())
         lightcurve_path = Path(manifest['Local Path'].iloc[0])
         if save_directory is not None:
             save_directory.parent.mkdir(parents=True, exist_ok=True)
-            shutil.move(str(lightcurve_path), str(save_directory))
+            shutil.move(str(lightcurve_path), str(save_directory.joinpath(lightcurve_path.name)))
             lightcurve_path = save_directory
         return lightcurve_path
 
@@ -399,6 +399,18 @@ class TessDataInterface:
             file_path = Path(file_path_string)
             file_path.rename(save_directory.joinpath(file_path.name))
         print('Database ready.')
+
+    def get_sectors_target_appears_in(self, tic_id: int) -> np.ndarray:
+        """
+        Gets the list of sectors a TESS target appears in.
+
+        :param tic_id: The TIC ID of the target.
+        :return: The list of sectors.
+        """
+        time_series_observations = self.get_all_tess_time_series_observations(tic_id)
+        single_sector_observations = self.filter_for_single_sector_observations(time_series_observations)
+        single_sector_observations = self.add_sector_column_to_single_sector_observations(single_sector_observations)
+        return single_sector_observations['Sector'].unique()
 
 
 if __name__ == '__main__':

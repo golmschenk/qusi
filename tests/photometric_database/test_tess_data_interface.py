@@ -3,7 +3,7 @@ Tests for the TessDataInterface class.
 """
 from pathlib import Path
 from typing import Any
-from unittest.mock import Mock, ANY
+from unittest.mock import Mock, ANY, patch
 import numpy as np
 import pandas as pd
 from astropy.coordinates import SkyCoord
@@ -13,6 +13,7 @@ from astropy.table import Table
 import pytest
 from astroquery.utils import TableList
 
+import ramjet.photometric_database.tess_data_interface
 from ramjet.photometric_database.tess_data_interface import TessDataInterface, TessFluxType
 
 
@@ -30,7 +31,7 @@ class TestTessDataInterface:
         from astroquery.mast import Observations
         assert Observations.TIMEOUT == 600
         assert Observations.PAGESIZE == 50000
-        tess_data_interface = TessDataInterface()
+        TessDataInterface()
         assert Observations.TIMEOUT == 2000
         assert Observations.PAGESIZE == 3000
 
@@ -113,36 +114,39 @@ class TestTessDataInterface:
         assert 5 in single_sector_observations['Sector'].values
         assert 1 in single_sector_observations['Sector'].values
 
-    def test_can_load_fluxes_and_times_from_tess_fits(self, tess_data_interface, tess_data_interface_module):
+    @patch.object(ramjet.photometric_database.tess_data_interface.fits, 'open')
+    def test_can_load_fluxes_and_times_from_tess_fits(self, mock_fits_open, tess_data_interface):
         expected_fluxes = np.array([1, 2, 3], dtype=np.float32)
         expected_times = np.array([4, 5, 6], dtype=np.float32)
         hdu = Mock(data={'PDCSAP_FLUX': expected_fluxes, 'TIME': expected_times})
         hdu_list = [None, hdu]  # Lightcurve information is in first extension table in TESS data.
-        tess_data_interface_module.fits.open = Mock(return_value=hdu_list)
+        mock_fits_open.return_value.__enter__.return_value = hdu_list
         lightcurve_path = 'path/to/lightcurve'
         fluxes, times = tess_data_interface.load_fluxes_and_times_from_fits_file(lightcurve_path)
-        tess_data_interface_module.fits.open.assert_called_with(lightcurve_path)
+        mock_fits_open.assert_called_with(lightcurve_path)
         assert np.array_equal(fluxes, expected_fluxes)
         assert np.array_equal(times, expected_times)
 
-    def test_loading_fluxes_and_times_from_fits_drops_nans(self, tess_data_interface, tess_data_interface_module):
+    @patch.object(ramjet.photometric_database.tess_data_interface.fits, 'open')
+    def test_loading_fluxes_and_times_from_fits_drops_nans(self, mock_fits_open, tess_data_interface):
         fits_fluxes = np.array([np.nan, 2, 3], dtype=np.float32)
         fits_times = np.array([4, 5, np.nan], dtype=np.float32)
         hdu = Mock(data={'PDCSAP_FLUX': fits_fluxes, 'TIME': fits_times})
         hdu_list = [None, hdu]  # Lightcurve information is in first extension table in TESS data.
-        tess_data_interface_module.fits.open = Mock(return_value=hdu_list)
+        mock_fits_open.return_value.__enter__.return_value = hdu_list
         lightcurve_path = 'path/to/lightcurve'
         fluxes, times = tess_data_interface.load_fluxes_and_times_from_fits_file(lightcurve_path)
         assert np.array_equal(fluxes, np.array([2], dtype=np.float32))
         assert np.array_equal(times, np.array([5], dtype=np.float32))
 
-    def test_can_extract_different_flux_types_from_fits(self, tess_data_interface, tess_data_interface_module):
+    @patch.object(ramjet.photometric_database.tess_data_interface.fits, 'open')
+    def test_can_extract_different_flux_types_from_fits(self, mock_fits_open, tess_data_interface):
         fits_sap_fluxes = np.array([1, 2, 3], dtype=np.float32)
         fits_pdcsap_fluxes = np.array([4, 5, 6], dtype=np.float32)
         fits_times = np.array([7, 8, 9], dtype=np.float32)
         hdu = Mock(data={'SAP_FLUX': fits_sap_fluxes, 'PDCSAP_FLUX': fits_pdcsap_fluxes, 'TIME': fits_times})
         hdu_list = [None, hdu]  # Lightcurve information is in first extension table in TESS data.
-        tess_data_interface_module.fits.open = Mock(return_value=hdu_list)
+        mock_fits_open.return_value.__enter__.return_value = hdu_list
         lightcurve_path = 'path/to/lightcurve'
         sap_fluxes, _ = tess_data_interface.load_fluxes_and_times_from_fits_file(lightcurve_path, TessFluxType.SAP)
         pdcsap_fluxes, _ = tess_data_interface.load_fluxes_and_times_from_fits_file(lightcurve_path,
@@ -208,3 +212,14 @@ class TestTessDataInterface:
         dispositions2 = tess_data_interface.retrieve_exofop_planet_disposition_for_tic_id(tic_id=25132999)
         assert dispositions2.shape[0] == 0
 
+    @patch.object(ramjet.photometric_database.tess_data_interface.Observations, 'query_criteria')
+    def test_can_get_list_of_sectors_target_appears_in(self, mock_query, tess_data_interface):
+        mock_query_result = Table(
+            {'dataURL': ['mast:TESS/product/tess2019006130736-s0007-0000000278956474-0131-s_lc.fits',
+                         'mast:TESS/product/tess2018319095959-s0005-0000000278956474-0125-s_lc.fits'],
+             'obs_id': ['tess2019006130736-s0007-0000000278956474-0131-s',
+                        'tess2018319095959-s0005-0000000278956474-0125-s']})
+        mock_query.return_value = mock_query_result
+        tic_id = 278956474
+        sectors = tess_data_interface.get_sectors_target_appears_in(tic_id)
+        assert sorted(sectors) == [5, 7]
