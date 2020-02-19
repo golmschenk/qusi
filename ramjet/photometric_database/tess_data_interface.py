@@ -220,7 +220,7 @@ class TessDataInterface:
         times = np.delete(times, nan_indexes)
         return fluxes, times
 
-    def download_lightcurve(self, tic_id: int, sector: int = None, save_directory: Path = None) -> Path:
+    def download_lightcurve(self, tic_id: int, sector: int = None, save_directory: Union[Path, str] = None) -> Path:
         """
         Downloads a lightcurve from MAST.
 
@@ -242,7 +242,8 @@ class TessDataInterface:
         manifest = self.download_products(lightcurves_product_list, data_directory=tempfile.gettempdir())
         lightcurve_path = Path(manifest['Local Path'].iloc[0])
         if save_directory is not None:
-            save_directory.parent.mkdir(parents=True, exist_ok=True)
+            save_directory = Path(save_directory)
+            save_directory.mkdir(parents=True, exist_ok=True)
             shutil.move(str(lightcurve_path), str(save_directory.joinpath(lightcurve_path.name)))
             lightcurve_path = save_directory
         return lightcurve_path
