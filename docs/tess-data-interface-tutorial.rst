@@ -4,7 +4,7 @@ Simple TESS data interface tutorial
 Tutorial Summary
 ----------------
 
-This tutorial provides shows how to use several convenience functions in the :code:`ramjet` package to quickly download,
+This tutorial shows how to use several convenience functions in the :code:`ramjet` package to quickly download,
 view, and find additional information about `TESS <https://tess.mit.edu>`_ lightcurves. For the time being, this is only
 for 2-minute cadence TESS lightcurves.
 
