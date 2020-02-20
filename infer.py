@@ -33,3 +33,5 @@ for example_path in example_paths:
     sector = tess_data_interface.get_sector_from_single_sector_obs_id(Path(example_path).stem)
     plot_title = f'TIC {tic_id} sector {sector}'
     plot_lightcurve(times, fluxes, label, prediction, title=plot_title, save_path=f'{plot_title}.png')
+
+print('Inference done.')

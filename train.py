@@ -45,6 +45,7 @@ def train():
         print('Interrupted. Saving model before quitting...')
     finally:
         model.save_weights(model_save_path)
+    print('Training done.')
 
 
 if __name__ == '__main__':
