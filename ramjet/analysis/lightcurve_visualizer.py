@@ -55,7 +55,7 @@ def plot_lightcurve(times: np.ndarray, fluxes: np.ndarray, labels: np.ndarray = 
             edge_colors = [data_point_color]
             face_colors = [(*data_point_color[:3], 0.2)]
         axes.scatter(times, fluxes, c=face_colors, marker='o', edgecolors=edge_colors,
-                     linewidths=base_data_point_size/10, s=base_data_point_size, zorder=3)
+                     linewidths=base_data_point_size / 10, s=base_data_point_size, zorder=3)
         if predictions is not None:
             axes.autoscale(False)
             transparent_prediction_color = (*prediction_color[:3], 0)
@@ -91,7 +91,7 @@ def is_outlier(points: np.ndarray, threshold: float = 5):
 
     :param points: The observations to search for outliers in.
     :param threshold: The modified z-score to use as a threshold. Observations with a modified z-score based on the
-    median absolute deviation greater than this value will be classified as outliers.
+                      median absolute deviation greater than this value will be classified as outliers.
     """
     assert len(points.shape) == 1  # Only designed to work with 1D data.
     median = np.median(points, axis=0)
