@@ -15,7 +15,7 @@ def train():
     model = ConvolutionalLstm()
     database = ToiLightcurveDatabase()
     # database.batch_size = 100  # Reducing the batch size may help if you are running out of memory.
-    epochs_to_run = 1000
+    epochs_to_run = 5
     trial_name = 'baseline'
     logs_directory = 'logs'
 
@@ -49,3 +49,6 @@ def train():
 
 if __name__ == '__main__':
     train()
+    print('............')
+    print('... Done ...')
+    print('............')
