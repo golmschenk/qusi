@@ -32,7 +32,7 @@ class TestTessSyntheticInjectedDatabase:
         time_steps_per_example = 20
         database.time_steps_per_example = time_steps_per_example
         database.lightcurve_directory = PicklableMock(glob=PicklableMock(return_value=(Path(f'{index}.fits')
-                                                                                       for index in range(30))))
+                                                                                       for index in range(50))))
         database.synthetic_signal_directory = PicklableMock(glob=PicklableMock(return_value=(Path(f'{index}.feather')
                                                                                              for index in range(40))))
         fits_fluxes = np.arange(time_steps_per_example, dtype=np.float32)
@@ -56,7 +56,7 @@ class TestTessSyntheticInjectedDatabase:
         assert training_batch0[0].shape == (batch_size, time_steps_per_example, 1)  # Batch examples shape
         assert training_batch1[0].shape == (batch_size, time_steps_per_example, 1)
         assert training_batch1[1].shape == (batch_size, 1)  # Batch labels shape
-        assert training_batch1[1].sum == batch_size // 2  # Half the labels are positive.
+        assert training_batch1[1].numpy().sum() == batch_size // 2  # Half the labels are positive.
         assert validation_batch0[0].shape == (batch_size, time_steps_per_example, 1)
         assert validation_batch1[0].shape == (batch_size, time_steps_per_example, 1)
 
