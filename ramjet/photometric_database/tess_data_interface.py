@@ -244,8 +244,9 @@ class TessDataInterface:
         if save_directory is not None:
             save_directory = Path(save_directory)
             save_directory.mkdir(parents=True, exist_ok=True)
-            shutil.move(str(lightcurve_path), str(save_directory.joinpath(lightcurve_path.name)))
-            lightcurve_path = save_directory
+            new_lightcurve_path = str(save_directory.joinpath(lightcurve_path.name))
+            shutil.move(str(lightcurve_path), new_lightcurve_path)
+            lightcurve_path = new_lightcurve_path
         return lightcurve_path
 
     def plot_lightcurve_from_mast(self, tic_id: int, sector: int = None, exclude_flux_outliers: bool = False,
