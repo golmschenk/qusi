@@ -2,11 +2,12 @@
 Tests for the LightcurveDatabase class.
 """
 from typing import Any
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 import numpy as np
 import tensorflow as tf
 import pytest
 
+import ramjet.photometric_database.lightcurve_database
 from ramjet.photometric_database.lightcurve_database import LightcurveDatabase
 
 
@@ -59,9 +60,15 @@ class TestLightcurveDatabase:
         batch1 = next(padded_window_iterator)
         assert np.array_equal(batch1[0].numpy(), [[3, 3, 0], [4, 4, 4], [5, 5, 5]])
 
-    def test_lightcurve_padding_can_be_made_non_random_for_evaluation(self, database, database_module):
-        database_module.np.random.randint = Mock(return_value=3)
+    @patch.object(ramjet.photometric_database.lightcurve_database.np.random, 'randint')
+    def test_lightcurve_padding_can_be_made_non_random_for_evaluation(self, mock_randint, database, database_module):
+        mock_randint.return_value = 3
         lightcurve0 = database.make_uniform_length(np.array([10, 20, 30, 40, 50]), length=9, randomize=True)
         assert np.array_equal(lightcurve0, [30, 40, 50, 10, 20, 30, 40, 50, 10])
         lightcurve1 = database.make_uniform_length(np.array([10, 20, 30, 40, 50]), length=9, randomize=False)
         assert np.array_equal(lightcurve1, [10, 20, 30, 40, 50, 10, 20, 30, 40])
+        # Should also work for lightcurves with more than just 1 value over time.
+        lightcurve2 = database.make_uniform_length(np.array([[10], [20], [30], [40], [50]]), length=9, randomize=True)
+        assert np.array_equal(lightcurve2, [[30], [40], [50], [10], [20], [30], [40], [50], [10]])
+        lightcurve3 = database.make_uniform_length(np.array([[10], [20], [30], [40], [50]]), length=9, randomize=False)
+        assert np.array_equal(lightcurve3, [[10], [20], [30], [40], [50], [10], [20], [30], [40]])

@@ -2,7 +2,6 @@
 import os
 import time
 import pytest
-import pydevd
 import numpy as np
 import tensorflow as tf
 
@@ -96,6 +95,7 @@ def sleep_and_get_pid(element_tensor: tf.Tensor) -> int:
     return os.getpid()
 
 
+# noinspection PyPackageRequirements
 def add_tensors(element_tensor0: tf.Tensor, element_tensor1: tf.Tensor) -> float:
     """
     Adds two elements together.
@@ -104,7 +104,6 @@ def add_tensors(element_tensor0: tf.Tensor, element_tensor1: tf.Tensor) -> float
     :param element_tensor1: Second input value.
     :return: The added inputs.
     """
-    pydevd.settrace(suspend=False)  # To make debugging in the multi-processes easier (allows breakpoints).
     element0 = element_tensor0.numpy()
     element1 = element_tensor1.numpy()
     return element0 + element1
@@ -117,7 +116,6 @@ def add_one(element_tensor: tf.Tensor) -> float:
     :param element_tensor: Input value.
     :return: Input plus 1.
     """
-    pydevd.settrace(suspend=False)  # To make debugging in the multi-processes easier (allows breakpoints).
     element = element_tensor.numpy()
     return element + 1
 
@@ -129,6 +127,5 @@ def add_one_and_add_two(element_tensor: tf.Tensor) -> (float, float):
     :param element_tensor: Input value.
     :return: Input plus 1 and input plus 2.
     """
-    pydevd.settrace(suspend=False)  # To make debugging in the multi-processes easier (allows breakpoints).
     element = element_tensor.numpy()
     return element + 1, element + 2
