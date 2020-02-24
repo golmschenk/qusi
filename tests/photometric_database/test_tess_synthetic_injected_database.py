@@ -22,6 +22,7 @@ class TestTessSyntheticInjectedDatabase:
         """
         return TessSyntheticInjectedDatabase()
 
+    @pytest.mark.slow
     @pytest.mark.functional
     @patch.object(ramjet.photometric_database.tess_data_interface.fits, 'open')
     @patch.object(ramjet.photometric_database.tess_data_interface.pd, 'read_feather')
@@ -80,9 +81,10 @@ class TestTessSyntheticInjectedDatabase:
                                                        'Time (hours)': synthetic_times})
         database.number_of_parallel_processes_per_map = 1
         # Generate the datasets.
-        examples = database.train_and_validation_preprocessing(tf.convert_to_tensor('fake_path.fits'),
-                                                               tf.convert_to_tensor('fake_path.feather'))
-        (uninjected_lightcurve, negative_label), (injected_lightcurve, positive_label) = examples
+        examples, labels = database.train_and_validation_preprocessing(tf.convert_to_tensor('fake_path.fits'),
+                                                                       tf.convert_to_tensor('fake_path.feather'))
+        uninjected_lightcurve, injected_lightcurve = examples
+        negative_label, positive_label = labels
         # Test the datasets look right.
         mock_fits_open.assert_called_with('fake_path.fits')
         mock_read_feather.assert_called_with('fake_path.feather')

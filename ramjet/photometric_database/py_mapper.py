@@ -52,9 +52,16 @@ class PyMapper:
             """A py_function wrapper for the map function."""
             return tf.py_function(self.send_to_map_pool, args, output_types)
 
+        def flat_map_function(*args):
+            """A method to flatten the first dimension of datasets, including zipped ones."""
+            if len(args) == 1:
+                return tf.data.Dataset.from_tensor_slices(args[0])
+            else:
+                return tf.data.Dataset.zip(tuple(tf.data.Dataset.from_tensor_slices(arg) for arg in args))
+
         mapped_dataset = dataset.map(map_py_function, self.number_of_parallel_calls)
         if flat_map:
-            return mapped_dataset.flat_map(lambda elements: tf.data.Dataset.from_tensor_slices(elements))
+            return mapped_dataset.flat_map(flat_map_function)
         else:
             return mapped_dataset
 
