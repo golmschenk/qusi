@@ -402,7 +402,7 @@ class TessDataInterface:
             file_path.rename(save_directory.joinpath(file_path.name))
         print('Database ready.')
 
-    def get_sectors_target_appears_in(self, tic_id: int) -> np.ndarray:
+    def get_sectors_target_appears_in(self, tic_id: int) -> List:
         """
         Gets the list of sectors a TESS target appears in.
 
@@ -412,7 +412,7 @@ class TessDataInterface:
         time_series_observations = self.get_all_tess_time_series_observations(tic_id)
         single_sector_observations = self.filter_for_single_sector_observations(time_series_observations)
         single_sector_observations = self.add_sector_column_to_single_sector_observations(single_sector_observations)
-        return single_sector_observations['Sector'].unique()
+        return sorted(single_sector_observations['Sector'].unique())
 
 
 if __name__ == '__main__':

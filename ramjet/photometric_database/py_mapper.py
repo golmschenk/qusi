@@ -2,7 +2,7 @@
 Code for TensorFlow's `Dataset` class which allows for multiprocessing in CPU map functions.
 """
 import multiprocessing
-from typing import Callable, Union, List
+from typing import Callable, Union, List, Tuple
 import signal
 import tensorflow as tf
 
@@ -52,15 +52,22 @@ class PyMapper:
             """A py_function wrapper for the map function."""
             return tf.py_function(self.send_to_map_pool, args, output_types)
 
+        def flat_map_function(*args):
+            """A method to flatten the first dimension of datasets, including zipped ones."""
+            if len(args) == 1:
+                return tf.data.Dataset.from_tensor_slices(args[0])
+            else:
+                return tf.data.Dataset.zip(tuple(tf.data.Dataset.from_tensor_slices(arg) for arg in args))
+
         mapped_dataset = dataset.map(map_py_function, self.number_of_parallel_calls)
         if flat_map:
-            return mapped_dataset.flat_map(lambda elements: tf.data.Dataset.from_tensor_slices(elements))
+            return mapped_dataset.flat_map(flat_map_function)
         else:
             return mapped_dataset
 
 
 def map_py_function_to_dataset(dataset: tf.data.Dataset, map_function: Callable, number_of_parallel_calls: int,
-                               output_types: Union[List[tf.dtypes.DType], tf.dtypes.DType] = tf.float32,
+                               output_types: Union[Tuple[tf.dtypes.DType, ...], tf.dtypes.DType] = tf.float32,
                                flat_map: bool = False) -> tf.data.Dataset:
     """
     A one line wrapper to allow mapping a parallel py function to a dataset.

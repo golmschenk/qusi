@@ -22,6 +22,7 @@ class TestTessSyntheticInjectedDatabase:
         """
         return TessSyntheticInjectedDatabase()
 
+    @pytest.mark.slow
     @pytest.mark.functional
     @patch.object(ramjet.photometric_database.tess_data_interface.fits, 'open')
     @patch.object(ramjet.photometric_database.tess_data_interface.pd, 'read_feather')
@@ -32,7 +33,7 @@ class TestTessSyntheticInjectedDatabase:
         time_steps_per_example = 20
         database.time_steps_per_example = time_steps_per_example
         database.lightcurve_directory = PicklableMock(glob=PicklableMock(return_value=(Path(f'{index}.fits')
-                                                                                       for index in range(30))))
+                                                                                       for index in range(50))))
         database.synthetic_signal_directory = PicklableMock(glob=PicklableMock(return_value=(Path(f'{index}.feather')
                                                                                              for index in range(40))))
         fits_fluxes = np.arange(time_steps_per_example, dtype=np.float32)
@@ -56,7 +57,7 @@ class TestTessSyntheticInjectedDatabase:
         assert training_batch0[0].shape == (batch_size, time_steps_per_example, 1)  # Batch examples shape
         assert training_batch1[0].shape == (batch_size, time_steps_per_example, 1)
         assert training_batch1[1].shape == (batch_size, 1)  # Batch labels shape
-        assert training_batch1[1].sum == batch_size // 2  # Half the labels are positive.
+        assert training_batch1[1].numpy().sum() == batch_size // 2  # Half the labels are positive.
         assert validation_batch0[0].shape == (batch_size, time_steps_per_example, 1)
         assert validation_batch1[0].shape == (batch_size, time_steps_per_example, 1)
 
@@ -80,9 +81,10 @@ class TestTessSyntheticInjectedDatabase:
                                                        'Time (hours)': synthetic_times})
         database.number_of_parallel_processes_per_map = 1
         # Generate the datasets.
-        examples = database.train_and_validation_preprocessing(tf.convert_to_tensor('fake_path.fits'),
-                                                               tf.convert_to_tensor('fake_path.feather'))
-        (uninjected_lightcurve, negative_label), (injected_lightcurve, positive_label) = examples
+        examples, labels = database.train_and_validation_preprocessing(tf.convert_to_tensor('fake_path.fits'),
+                                                                       tf.convert_to_tensor('fake_path.feather'))
+        uninjected_lightcurve, injected_lightcurve = examples
+        negative_label, positive_label = labels
         # Test the datasets look right.
         mock_fits_open.assert_called_with('fake_path.fits')
         mock_read_feather.assert_called_with('fake_path.feather')

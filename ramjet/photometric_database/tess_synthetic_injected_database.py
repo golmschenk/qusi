@@ -13,6 +13,10 @@ from ramjet.photometric_database.tess_data_interface import TessDataInterface
 
 
 class TessSyntheticInjectedDatabase(LightcurveDatabase):
+    """
+    A class to represent the database for injecting synthetic signals into real TESS data.
+    """
+
     def __init__(self):
         super().__init__()
         self.data_directory: Path = Path('data/microlensing')
@@ -33,7 +37,7 @@ class TessSyntheticInjectedDatabase(LightcurveDatabase):
             buffer_size=len(list(synthetic_signal_paths_dataset)))
         zipped_training_paths_dataset = tf.data.Dataset.zip((shuffled_training_lightcurve_paths_dataset,
                                                              shuffled_synthetic_signal_paths_dataset))
-        output_types = ((tf.float32, tf.float32), (tf.float32, tf.float32))
+        output_types = (tf.float32, tf.float32)
         lightcurve_training_dataset = map_py_function_to_dataset(zipped_training_paths_dataset,
                                                                  self.train_and_validation_preprocessing,
                                                                  self.number_of_parallel_processes_per_map,
@@ -56,13 +60,15 @@ class TessSyntheticInjectedDatabase(LightcurveDatabase):
 
     def train_and_validation_preprocessing(self, lightcurve_path_tensor: tf.Tensor,
                                            synthetic_signal_path_tensor: tf.Tensor,
-                                           ) -> ((np.ndarray, np.ndarray), (np.ndarray, np.ndarray)):
+                                           ) -> (np.ndarray, np.ndarray, np.ndarray, np.ndarray):
         """
         The training and validation preprocessing.
 
         :param lightcurve_path_tensor: The lightcurve's path to be preprocessed.
         :param synthetic_signal_path_tensor: The synthetic signal's path to be injected.
-        :return: Two examples, one negative uninjected signal and one positive injected signal, both with labels.
+        :return: Two examples, one negative un-injected signal and one positive injected signal (paired as a tuple),
+                 and the corresponding labels (paired as a tuple). Expected to have a post flat mapping to make each
+                 element of the data be an individual example and label pair.
         """
         lightcurve_path = lightcurve_path_tensor.numpy().decode('utf-8')
         synthetic_signal_path = synthetic_signal_path_tensor.numpy().decode('utf-8')
@@ -76,9 +82,18 @@ class TessSyntheticInjectedDatabase(LightcurveDatabase):
         fluxes_with_injected_signal = self.flux_preprocessing(fluxes_with_injected_signal)
         lightcurve = np.expand_dims(fluxes, axis=-1)
         lightcurve_with_injected_signal = np.expand_dims(fluxes_with_injected_signal, axis=-1)
-        return (lightcurve, np.array([0])), (lightcurve_with_injected_signal, np.array([1]))
+        examples = (lightcurve, lightcurve_with_injected_signal)
+        labels = (np.array([0]), np.array([1]))
+        return examples, labels
 
     def flux_preprocessing(self, fluxes: np.ndarray, evaluation_mode=False) -> np.ndarray:
+        """
+        Preprocessing for the flux.
+
+        :param fluxes: The flux array to preprocess.
+        :param evaluation_mode: If the preprocessing should be consistent for evaluation.
+        :return: The preprocessed flux array.
+        """
         normalized_fluxes = self.normalize(fluxes)
         uniform_length_fluxes = self.make_uniform_length(normalized_fluxes, self.time_steps_per_example,
                                                          randomize=not evaluation_mode)
