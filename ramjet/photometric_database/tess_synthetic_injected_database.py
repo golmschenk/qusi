@@ -34,7 +34,7 @@ class TessSyntheticInjectedDatabase(LightcurveDatabase):
         shuffled_training_lightcurve_paths_dataset = training_lightcurve_paths_dataset.shuffle(
             buffer_size=len(list(training_lightcurve_paths_dataset)))
         shuffled_synthetic_signal_paths_dataset = synthetic_signal_paths_dataset.shuffle(
-            buffer_size=len(list(synthetic_signal_paths_dataset)))
+            buffer_size=len(list(synthetic_signal_paths_dataset))).repeat()
         zipped_training_paths_dataset = tf.data.Dataset.zip((shuffled_training_lightcurve_paths_dataset,
                                                              shuffled_synthetic_signal_paths_dataset))
         output_types = (tf.float32, tf.float32)
