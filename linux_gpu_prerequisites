@@ -1,0 +1,199 @@
+#!/bin/bash
+## @ambiguiccoherence
+## + this bash shell script builds ramjet requirements, including TensorFlow 2.0 for use on embedded GPU development boards. 
+## + having said this, the GPU development boards all run a variation on ubuntu 18.04
+## + this is not optimized at all
+## + using sudo in this way is not always recommended. however, it works on the embedded boards we're evaluating
+##
+## + USAGE:
+## +   tensorflow 2.0 from nVidia for Jetpack 4.2:  sudo bash SETUP_TF_RAMJET cuda42
+## +   tensorflow 2.0 from nVidia for Jetpack 3.3:  sudo bash SETUP_TF_RAMJET cuda33
+## +   tensorflow 2.0 from python for other ones:   sudo bash SETUP_TF_RAMJET notcuda
+##
+
+## proverbial repository update
+sudo apt update
+sudo add-apt-repository universe
+sudo apt update
+
+## If there is less than 4GB of RAM, then use Swap space
+## First, ask to verify swap usage
+#sudo swapon --show
+## Then, make a swap file
+#sudo fallocate -l 4G /swapfile
+#sudo chmod 600 /swapfile
+#sudo mkswap /swapfile
+#sudo swapon /swapfile
+#echo "add this to fstab: /swapfile swap swap defaults 0 0"
+#sudo gedit /etc/fstab
+##sudo echo "/swapfile swap swap defaults 0 0" >> /etc/fstab
+## Finally, verify the swap
+#sudo swapon --show
+
+## building process bits
+sudo apt-get install -y build-essential python3-dev python3-pip cmake git
+sudo pip3 install -U pip
+sudo apt-get install -y libjemalloc-dev libboost-dev libboost-filesystem-dev libboost-system-dev libboost-regex-dev autoconf flex bison virtualenv
+sudo apt-get install -y openssl 
+sudo -H pip3 install hypothesis sortedcontainers-2.1.0
+sudo pip3 install cmake 
+sudo apt-get install -y clang-tidy clang-format
+sudo apt-get install -y zip unzip
+
+#python dependencies
+sudo apt-get install -y python3-dev python3-pip
+
+sudo pip3 install -U pip
+sudo pip3 install Cython==0.29.13 pybind11==2.2.4 numpy==1.16.1
+sudo apt-get install -y libhdf5-serial-dev hdf5-tools libhdf5-dev zlib1g-dev zip libjpeg8-dev libc-ares-dev libeigen3-dev
+sudo pip3 install -U future==0.17.1 mock==3.0.5 h5py==2.9.0 keras_preprocessing==1.0.5 keras_applications==1.0.8 gast==0.2.2 enum34 futures testresources setuptools protobuf
+sudo pip3 install -U protobuf
+sudo pip3 install h5py==2.9.0
+sudo apt-get install -y openmpi-bin libopenmpi-dev
+sudo apt-get install -y libatlas-base-dev
+sudo pip3 install -U --user six wheel mock
+
+sudo pip3 install substring pydot pydotplus graphviz
+sudo apt-get install -y python3-scipy
+sudo apt-get install -y git
+sudo pip3 install git+git://github.com/keras-team/keras.git --upgrade --no-deps
+sudo apt-get install -y python3-matplotlib python3-graphviz
+sudo apt-get install -y absl-py-0.9.0 astor-0.8.1 cachetools-4.0.0 google-auth-1.10.0 google-auth-oauthlib-0.4.1 google-pasta-0.1.8 grpcio-1.26.0 markdown-3.1.1 oauthlib-3.1.0 opt-einsum-3.1.0 pyasn1-0.4.8 pyasn1-modules-0.2.7 requests-2.22.0 requests-oauthlib-1.3.0 rsa-4.0 tensorboard-2.0.2 tensorflow-estimator-2.0.1  termcolor-1.1.0 werkzeug-0.16.0 wrapt-1.11.2
+
+VARG1=$1
+if [ "$VARG1"  ==  "cuda42" ]; then
+    sudo pip3 install --pre --extra-index-url https://developer.download.nvidia.com/compute/redist/jp/v42 tensorflow-gpu==2.0.0
+elif [ "$VARG1"  ==  "cuda33" ]; then
+    sudo pip3 install --pre --extra-index-url https://developer.download.nvidia.com/compute/redist/jp/v33 tensorflow-gpu==2.0.0
+else
+    sudo pip3 install tensorflow==2.0.0
+fi
+
+## enum34 needs to be removed from py2.7 after tf2 is installed. 
+sudo pip uninstall -y enum34
+
+##snappy
+sudo wget https://github.com/google/snappy/archive/master.zip
+sudo mkdir snappy-src
+sudo unzip master.zip -d snappy-src 
+sudo chmod +777 --recursive snappy-src
+cd snappy-src/snappy-master
+sudo mkdir build
+cd build && cmake ../ && make
+cd ~/
+
+sudo wget https://github.com/google/double-conversion/archive/master.zip -O double-conversion-master.zip
+sudo mkdir double-conversion-src
+sudo unzip double-conversion-master.zip -d double-conversion-src 
+sudo chmod +777 --recursive double-conversion-src
+cd double-conversion-src/double-conversion-master
+cmake . -DBUILD_TESTING=ON
+make
+test/cctest/cctest --list | tr -d '<' | xargs test/cctest/cctest
+cd ~/
+
+sudo pip3 install boost brotli 
+
+#gflags
+sudo apt-get install -y libgflags-dev
+
+#glog
+sudo wget https://github.com/google/glog/archive/master.zip -O glog-master.zip
+sudo mkdir glog-src
+sudo unzip glog-master.zip -d glog-src
+sudo chmod +777 --recursive glog-src
+cd glog-src/glog-master
+cmake -H. -Bbuild -G "Unix Makefiles"
+cmake --build build
+cmake --build build --target test
+sudo cmake --build build --target install
+cd ~/
+
+#gtest
+sudo apt-get install -y libgtest-dev
+
+sudo pip3 install thrift-0.13.0
+
+##benchmark
+sudo git clone https://github.com/google/benchmark.git
+sudo git clone https://github.com/google/googletest.git benchmark/googletest
+cd benchmark
+sudo mkdir build && cd build
+cmake ../
+make
+cd ~/
+
+sudo pip3 install rapidjson
+#zlib
+sudo apt-get install -y zlib1g-dev bzip2
+sudo pip3 install lz4 zstd 
+
+#re
+sudo mkdir re2-src
+sudo wget https://github.com/google/re2/archive/master.zip -O re2-src.zip
+sudo unzip re2-src.zip -d re2-src
+sudo chmod +777 --recursive re2-src
+cd re2-src/re2-master
+make
+make test
+sudo make testinstall
+sudo make install
+cd ~/
+
+#libffi-dev 13.2.1-8 is required to install cffi
+sudo apt-get install -y libffi-dev
+sudo pip3 install cffi==1.13.2
+#py.org cares is inside of pycares as of 1.0.0
+sudo pip3 install pycares==3.1.0
+
+#grpc
+sudo apt-get install -y clang-5.0 libc++-dev
+sudo apt-get install -y build-essential autoconf libtool pkg-config
+sudo apt-get install -y curl
+sudo git clone -b $(curl -L https://grpc.io/release) https://github.com/grpc/grpc
+cd grpc
+sudo git submodule update --init
+make
+cd ~/
+
+###minimal release build
+sudo git clone https://github.com/apache/arrow.git
+cd arrow/cpp
+sudo mkdir release
+sudo chmod +777 --recursive release
+cd release
+cmake ..
+make
+
+sudo git clone https://github.com/golmschenk/ramjet/
+
+sudo apt-get install -y python3-numpy-dev python3-jinja2 python3-pytest-astropy hypothesis-5.1.0
+
+sudo pip3 install pandas==0.25.3 
+sudo pip3 install atomicwrites-1.3.0 attrs-19.3.0 thrift sortedcontainers-2.1.0 importlib-metadata-1.3.0 more-itertools-8.0.2 packaging-19.2 pluggy-0.13.1 py-1.8.1 wcwidth-0.1.8 zipp-0.6.0 zstd sqlalchemy extension-helpers
+sudo pip3 install pytest==5.0.1 
+
+sudo git clone --recursive git://github.com/astropy/astropy.git
+cd astropy
+sudo -H pip3 install .
+cd..
+
+sudo git clone https://github.com/astropy/astroquery.git
+cd astroquery
+sudo python3 setup.py install
+cd ..
+
+sudo -H pip3 install GitPython==3.0.4
+
+sudo apt-get install -y python3-sphinx
+
+###sphinx-autoapi
+sudo -H pip3 install setuptools_scm==3.3.1
+sudo -H pip3 install setuptools==44.0.0
+sudo -H pip3 install lazy-object-proxy==1.3.1
+
+
+###sphinx-autoapi 
+sudo -H pip3 install pydocstyle snowballstemmer unidecode wheel-0.33.6
+sudo pip3 install -U wheel==0.34.2
+
