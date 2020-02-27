@@ -65,7 +65,7 @@ class ToiLightcurveDatabase(TransitLightcurveLabelPerTimeStepDatabase):
         Prepares the meta data frame with the transit information based on known planet transits.
         """
         dispositions = self.load_toi_dispositions_in_project_format()
-        confirmed_planet_dispositions = dispositions[dispositions['disposition'].isin(['CP', 'KP']) &
+        suspected_planet_dispositions = dispositions[~dispositions['disposition'].isin(['FP']) &
                                                      dispositions['transit_epoch'].notna() &
                                                      dispositions['transit_period'].notna() &
                                                      dispositions['transit_duration'].notna()]
@@ -75,7 +75,7 @@ class ToiLightcurveDatabase(TransitLightcurveLabelPerTimeStepDatabase):
         sectors = [tess_data_interface.get_sector_from_single_sector_obs_id(path.name) for path in lightcurve_paths]
         lightcurve_meta_data = pd.DataFrame({'lightcurve_path': list(map(str, lightcurve_paths)), 'TIC ID': tic_ids,
                                              'Sector': sectors})
-        meta_data_frame_with_candidate_nans = pd.merge(confirmed_planet_dispositions, lightcurve_meta_data,
+        meta_data_frame_with_candidate_nans = pd.merge(suspected_planet_dispositions, lightcurve_meta_data,
                                                        how='inner', on=['TIC ID', 'Sector'])
         self.meta_data_frame = meta_data_frame_with_candidate_nans.dropna()
 
@@ -98,23 +98,23 @@ class ToiLightcurveDatabase(TransitLightcurveLabelPerTimeStepDatabase):
             single_sector_observations)
         single_sector_observations = tess_data_interface.add_sector_column_to_single_sector_observations(
             single_sector_observations)
-        print("Downloading lightcurves which are confirmed planets in TOI dispositions...")
+        print("Downloading lightcurves which are confirmed or suspected planets in TOI dispositions...")
         # noinspection SpellCheckingInspection
         toi_dispositions = self.load_toi_dispositions_in_project_format()
-        confirmed_planet_dispositions = toi_dispositions[toi_dispositions['disposition'].isin(['CP', 'KP'])]
-        confirmed_planet_observations = pd.merge(single_sector_observations, confirmed_planet_dispositions, how='inner',
+        suspected_planet_dispositions = toi_dispositions[~toi_dispositions['disposition'].isin(['FP'])]
+        suspencted_planet_observations = pd.merge(single_sector_observations, suspected_planet_dispositions, how='inner',
                                                  on=['TIC ID', 'Sector'])
-        observations_not_found = confirmed_planet_dispositions.shape[0] - confirmed_planet_observations.shape[0]
-        print(f"{confirmed_planet_observations.shape[0]} observations found that match the TOI dispositions.")
+        observations_not_found = suspected_planet_dispositions.shape[0] - suspencted_planet_observations.shape[0]
+        print(f"{suspencted_planet_observations.shape[0]} observations found that match the TOI dispositions.")
         print(f"No observations found for {observations_not_found} entries in TOI dispositions.")
-        confirmed_planet_data_products = tess_data_interface.get_product_list(confirmed_planet_observations)
-        confirmed_planet_lightcurve_data_products = confirmed_planet_data_products[
-            confirmed_planet_data_products['productFilename'].str.endswith('lc.fits')
+        suspected_planet_data_products = tess_data_interface.get_product_list(suspencted_planet_observations)
+        suspected_planet_lightcurve_data_products = suspected_planet_data_products[
+            suspected_planet_data_products['productFilename'].str.endswith('lc.fits')
         ]
-        confirmed_planet_download_manifest = tess_data_interface.download_products(
-            confirmed_planet_lightcurve_data_products, data_directory=self.data_directory)
+        suspected_planet_download_manifest = tess_data_interface.download_products(
+            suspected_planet_lightcurve_data_products, data_directory=self.data_directory)
         print(f'Moving lightcurves to {self.lightcurve_directory}...')
-        for file_path_string in confirmed_planet_download_manifest['Local Path']:
+        for file_path_string in suspected_planet_download_manifest['Local Path']:
             file_path = Path(file_path_string)
             file_path.rename(self.lightcurve_directory.joinpath(file_path.name))
         print("Downloading lightcurves which are not in TOI dispositions and do not have TCEs (not planets)...")
