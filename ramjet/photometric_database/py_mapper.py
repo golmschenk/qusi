@@ -38,19 +38,22 @@ class PyMapper:
 
     def map_to_dataset(self, dataset: tf.data.Dataset,
                        output_types: Union[List[tf.dtypes.DType], tf.dtypes.DType] = tf.float32,
+                       output_shapes: Union[List[Tuple[int, ...]], Tuple[int, ...]] = None,
                        flat_map: bool = False):
         """
         Maps the map function to the passed dataset.
 
         :param dataset: The dataset to apply the map function to.
         :param output_types: The TensorFlow output types of the function to convert to.
+        :param output_shapes: The shape of the outputs of the dataset.
         :param flat_map: Determines whether to flatten the first level of the output, similar to TensorFlow's
                          `flat_map`. Note, the `output_types` should be the shape of the unflattened output.
         :return: The mapped dataset.
         """
         def map_py_function(*args):
             """A py_function wrapper for the map function."""
-            return tf.py_function(self.send_to_map_pool, args, output_types)
+            py_function = tf.py_function(self.send_to_map_pool, args, output_types)
+            return py_function
 
         def flat_map_function(*args):
             """A method to flatten the first dimension of datasets, including zipped ones."""
@@ -59,7 +62,32 @@ class PyMapper:
             else:
                 return tf.data.Dataset.zip(tuple(tf.data.Dataset.from_tensor_slices(arg) for arg in args))
 
+        def set_shape_function(*args):
+            """A method to shape a dataset's output."""
+            # TensorFlow doesn't like iterating over the Tensor. This is a work around. There's probably a better
+            # solution.
+            if len(args) == 1:
+                args[0].set_shape(output_shapes)
+            elif len(args) == 2:
+                args[0].set_shape(output_shapes[0])
+                args[1].set_shape(output_shapes[1])
+            elif len(args) == 4:
+                args[0].set_shape(output_shapes[0])
+                args[1].set_shape(output_shapes[1])
+                args[2].set_shape(output_shapes[2])
+                args[3].set_shape(output_shapes[3])
+            else:
+                raise NotImplementedError
+
+            if len(args) == 1:
+                return args[0]
+            else:
+                return args
+
         mapped_dataset = dataset.map(map_py_function, self.number_of_parallel_calls)
+        if output_shapes is not None:
+            assert isinstance(output_types, tf.DType) or len(output_types) == len(output_shapes)
+            mapped_dataset = mapped_dataset.map(set_shape_function)
         if flat_map:
             return mapped_dataset.flat_map(flat_map_function)
         else:
