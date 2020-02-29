@@ -99,6 +99,12 @@ class TestPyMapper:
         assert map_dataset.element_spec[0].shape == (3,)
         assert map_dataset.element_spec[1].shape == (2,)
 
+    def test_py_map_returns_specified_shape_when_shape_passed_in_wrapper(self):
+        dataset = tf.data.Dataset.from_tensor_slices([[0, 0, 0], [1, 1, 1]])
+        map_dataset = map_py_function_to_dataset(dataset=dataset, map_function=add_one, number_of_parallel_calls=4,
+                                                 output_shapes=(3,))
+        assert map_dataset.element_spec.shape == (3,)
+
 
 def sleep_and_get_pid(element_tensor: tf.Tensor) -> int:
     """

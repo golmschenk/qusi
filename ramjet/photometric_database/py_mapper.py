@@ -96,6 +96,7 @@ class PyMapper:
 
 def map_py_function_to_dataset(dataset: tf.data.Dataset, map_function: Callable, number_of_parallel_calls: int,
                                output_types: Union[Tuple[tf.dtypes.DType, ...], tf.dtypes.DType] = tf.float32,
+                               output_shapes: Union[List[Tuple[int, ...]], Tuple[int, ...]] = None,
                                flat_map: bool = False) -> tf.data.Dataset:
     """
     A one line wrapper to allow mapping a parallel py function to a dataset.
@@ -104,10 +105,12 @@ def map_py_function_to_dataset(dataset: tf.data.Dataset, map_function: Callable,
     :param map_function: The function to map to the dataset.
     :param number_of_parallel_calls: The number of parallel calls of the mapping function.
     :param output_types: The TensorFlow output types of the function to convert to.
+    :param output_shapes: The shape to set the outputs to clarify from Python to TensorFlow.
     :param flat_map: Determines whether to flatten the first level of the output, similar to TensorFlow's
-                     `flat_map`. Note, the `output_types` should be the shape of the unflattened output.
+                     `flat_map`. Note, the `output_types` should be the shape of the un-flattened output.
     :return: The mapped dataset.
     """
     py_mapper = PyMapper(map_function=map_function, number_of_parallel_calls=number_of_parallel_calls)
-    mapped_dataset = py_mapper.map_to_dataset(dataset=dataset, output_types=output_types, flat_map=flat_map)
+    mapped_dataset = py_mapper.map_to_dataset(dataset=dataset, output_types=output_types, output_shapes=output_shapes,
+                                              flat_map=flat_map)
     return mapped_dataset
