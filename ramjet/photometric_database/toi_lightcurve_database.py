@@ -34,7 +34,7 @@ class ToiLightcurveDatabase(TransitLightcurveLabelPerTimeStepDatabase):
         positive_example_paths = self.meta_data_frame['lightcurve_path'].tolist()
         positive_example_paths = list(set(positive_example_paths))  # Remove duplicates from multi-planet targets.
         print(f'{len(positive_example_paths)} positive examples.')
-        all_lightcurve_paths = list(map(str, self.lightcurve_directory.glob('*lc.fits')))
+        all_lightcurve_paths = list(map(str, self.lightcurve_directory.glob('**/*lc.fits')))
         negative_example_paths = list(set(all_lightcurve_paths) - set(self.meta_data_frame['lightcurve_path'].tolist()))
         print(f'{len(negative_example_paths)} negative examples.')
         positive_datasets = self.get_training_and_validation_datasets_for_file_paths(positive_example_paths)
@@ -65,11 +65,11 @@ class ToiLightcurveDatabase(TransitLightcurveLabelPerTimeStepDatabase):
         Prepares the meta data frame with the transit information based on known planet transits.
         """
         dispositions = self.load_toi_dispositions_in_project_format()
-        suspected_planet_dispositions = dispositions[~dispositions['disposition'].isin(['FP']) &
+        suspected_planet_dispositions = dispositions[(dispositions['disposition'] != 'FP') &
                                                      dispositions['transit_epoch'].notna() &
                                                      dispositions['transit_period'].notna() &
                                                      dispositions['transit_duration'].notna()]
-        lightcurve_paths = list(self.lightcurve_directory.glob('*lc.fits'))
+        lightcurve_paths = list(self.lightcurve_directory.glob('**/*lc.fits'))
         tess_data_interface = TessDataInterface()
         tic_ids = [tess_data_interface.get_tic_id_from_single_sector_obs_id(path.name) for path in lightcurve_paths]
         sectors = [tess_data_interface.get_sector_from_single_sector_obs_id(path.name) for path in lightcurve_paths]
@@ -101,13 +101,13 @@ class ToiLightcurveDatabase(TransitLightcurveLabelPerTimeStepDatabase):
         print("Downloading lightcurves which are confirmed or suspected planets in TOI dispositions...")
         # noinspection SpellCheckingInspection
         toi_dispositions = self.load_toi_dispositions_in_project_format()
-        suspected_planet_dispositions = toi_dispositions[~toi_dispositions['disposition'].isin(['FP'])]
-        suspencted_planet_observations = pd.merge(single_sector_observations, suspected_planet_dispositions, how='inner',
-                                                 on=['TIC ID', 'Sector'])
-        observations_not_found = suspected_planet_dispositions.shape[0] - suspencted_planet_observations.shape[0]
-        print(f"{suspencted_planet_observations.shape[0]} observations found that match the TOI dispositions.")
+        suspected_planet_dispositions = toi_dispositions[toi_dispositions['disposition'] != 'FP']
+        suspected_planet_observations = pd.merge(single_sector_observations, suspected_planet_dispositions, how='inner',
+                                                  on=['TIC ID', 'Sector'])
+        observations_not_found = suspected_planet_dispositions.shape[0] - suspected_planet_observations.shape[0]
+        print(f"{suspected_planet_observations.shape[0]} observations found that match the TOI dispositions.")
         print(f"No observations found for {observations_not_found} entries in TOI dispositions.")
-        suspected_planet_data_products = tess_data_interface.get_product_list(suspencted_planet_observations)
+        suspected_planet_data_products = tess_data_interface.get_product_list(suspected_planet_observations)
         suspected_planet_lightcurve_data_products = suspected_planet_data_products[
             suspected_planet_data_products['productFilename'].str.endswith('lc.fits')
         ]
@@ -165,6 +165,8 @@ class ToiLightcurveDatabase(TransitLightcurveLabelPerTimeStepDatabase):
                                      'Planet Num': 'planet_number', 'Epoch (BJD)': 'transit_epoch',
                                      'Period (days)': 'transit_period', 'Duration (hours)': 'transit_duration',
                                      'Sectors': 'Sector'}, inplace=True)
+        dispositions['disposition'] = dispositions['disposition'].fillna('')
+        dispositions = dispositions[dispositions['Sector'].notna()]
         dispositions['Sector'] = dispositions['Sector'].str.split(',')
         dispositions = dispositions.explode('Sector')
         dispositions['Sector'] = pd.to_numeric(dispositions['Sector']).astype(pd.Int64Dtype())
