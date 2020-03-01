@@ -116,9 +116,8 @@ class TessSyntheticInjectedDatabase(LightcurveDatabase):
         """
         median_flux = np.median(lightcurve_fluxes)
         signal_fluxes = (signal_magnifications * median_flux) - median_flux
-        time_differences = np.diff(lightcurve_times, prepend=lightcurve_times[0])
         signal_flux_interpolator = interp1d(signal_times, signal_fluxes, bounds_error=True)
-        lightcurve_relative_times = np.cumsum(time_differences)
+        lightcurve_relative_times = lightcurve_times - np.min(lightcurve_times)
         interpolated_signal_fluxes = signal_flux_interpolator(lightcurve_relative_times)
         fluxes_with_injected_signal = lightcurve_fluxes + interpolated_signal_fluxes
         return fluxes_with_injected_signal
