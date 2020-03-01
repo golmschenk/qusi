@@ -38,7 +38,7 @@ class TessSyntheticInjectedDatabase(LightcurveDatabase):
         zipped_training_paths_dataset = tf.data.Dataset.zip((shuffled_training_lightcurve_paths_dataset,
                                                              shuffled_synthetic_signal_paths_dataset))
         output_types = (tf.float32, tf.float32)
-        output_shapes = [(self.time_steps_per_example, 1), (self.time_steps_per_example, 1), 1, 1]
+        output_shapes = [(self.time_steps_per_example, 1), 1]
         lightcurve_training_dataset = map_py_function_to_dataset(zipped_training_paths_dataset,
                                                                  self.train_and_validation_preprocessing,
                                                                  self.number_of_parallel_processes_per_map,
