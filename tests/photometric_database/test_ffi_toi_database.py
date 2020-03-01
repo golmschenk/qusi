@@ -1,0 +1,53 @@
+"""Tests for the FfiToiDatabase class."""
+from pathlib import Path
+from typing import Tuple
+from unittest.mock import patch
+import numpy as np
+import pytest
+
+import ramjet.photometric_database.tess_data_interface
+from ramjet.photometric_database.ffi_toi_database import FfiToiDatabase
+
+
+class TestFfiToiDatabase:
+    """Tests for the FfiToiDatabase class."""
+
+    @pytest.fixture
+    def database(self) -> FfiToiDatabase:
+        """
+        Sets up the database for use in a test.
+
+        :return: The database.
+        """
+        return FfiToiDatabase()
+
+    @pytest.fixture
+    def ffi_pickle_contents(self) -> Tuple[int, float, float, float,
+                                           np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        """
+        Creates a mock contents of one of Brian's FFI data files.
+
+        :return: TIC ID, right ascension, declination, TESS magnitude,
+                 time, raw flux, corrected flux, PCA flux, flux error.
+        """
+        tic_id = 231663901
+        ra = 62.2
+        dec = -71.4
+        tess_magnitude = 10
+        time = np.arange(0, 100, 10)
+        raw_flux = np.arange(10)
+        corrected_flux = np.arange(10, 20)
+        pca_flux = np.arange(20, 30)
+        flux_error = np.arange(0, 1, 0.1)
+        return tic_id, ra, dec, tess_magnitude, time, raw_flux, corrected_flux, pca_flux, flux_error
+
+    @patch.object(ramjet.photometric_database.ffi_toi_database.pickle, 'load')
+    @patch.object(Path, 'open')
+    def test_can_load_flux_and_data_from_ffi_pickle_files(self, mock_open, mock_pickle_load, database,
+                                                          ffi_pickle_contents):
+        mock_pickle_load.return_value = ffi_pickle_contents
+        fake_file_path = Path('fake_path.pkl')
+        fluxes, times = database.load_fluxes_and_times_from_ffi_pickle_file(fake_file_path)
+        assert mock_open.called
+        assert np.array_equal(fluxes, ffi_pickle_contents[6])
+        assert np.array_equal(times, ffi_pickle_contents[4])
