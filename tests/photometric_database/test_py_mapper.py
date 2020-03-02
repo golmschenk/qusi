@@ -105,6 +105,15 @@ class TestPyMapper:
                                                  output_shapes=(3,))
         assert map_dataset.element_spec.shape == (3,)
 
+    def test_flat_map_with_output_shapes_are_applied_in_the_correct_order(self):
+        dataset = tf.data.Dataset.from_tensor_slices([[[0, 0], [10, 10]], [[20, 20], [30, 30]]])
+        mapped_dataset = map_py_function_to_dataset(dataset=dataset, map_function=add_one, number_of_parallel_calls=4,
+                                                    output_types=tf.float32, flat_map=True, output_shapes=(2,))
+        batch_dataset = mapped_dataset.batch(batch_size=4)
+        batch = next(iter(batch_dataset))
+        batch_array = batch.numpy()
+        assert np.array_equal(batch_array, np.array([[1, 1], [11, 11], [21, 21], [31, 31]]))
+
 
 def sleep_and_get_pid(element_tensor: tf.Tensor) -> int:
     """

@@ -11,7 +11,7 @@ from pathlib import Path
 from ramjet.photometric_database.tess_synthetic_injected_database import TessSyntheticInjectedDatabase
 
 
-class FfiDataIndixes(Enum):
+class FfiDataIndexes(Enum):
     """
     An enum for accessing Brian Powell's FFI pickle data with understandable indexes.
     """
@@ -42,8 +42,8 @@ class FfiToiDatabase(TessSyntheticInjectedDatabase):
             file_path = Path(file_path)
         with file_path.open('rb') as pickle_file:
             lightcurve = pickle.load(pickle_file)
-        fluxes = lightcurve[FfiDataIndixes.CORRECTED_FLUX.value]
-        times = lightcurve[FfiDataIndixes.TIME.value]
+        fluxes = lightcurve[FfiDataIndexes.CORRECTED_FLUX.value]
+        times = lightcurve[FfiDataIndexes.TIME.value]
         assert times.shape == fluxes.shape
         return fluxes, times
 
