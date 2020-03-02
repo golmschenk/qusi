@@ -75,10 +75,9 @@ class TessSyntheticInjectedDatabase(LightcurveDatabase):
         """
         lightcurve_path = lightcurve_path_tensor.numpy().decode('utf-8')
         synthetic_signal_path = synthetic_signal_path_tensor.numpy().decode('utf-8')
-        fluxes, times = self.tess_data_interface.load_fluxes_and_times_from_fits_file(lightcurve_path)
-        synthetic_signal = pd.read_feather(synthetic_signal_path)
-        synthetic_magnifications, synthetic_times = synthetic_signal['Magnification'], synthetic_signal['Time (hours)']
-        synthetic_times = synthetic_times / 24  # Convert hours to days.
+        fluxes, times = self.load_fluxes_and_times_from_lightcurve_path(lightcurve_path)
+        synthetic_magnifications, synthetic_times = self.load_magnifications_and_times_from_synthetic_signal_path(
+            synthetic_signal_path)
         fluxes_with_injected_signal = self.inject_signal_into_lightcurve(fluxes, times, synthetic_magnifications,
                                                                          synthetic_times)
         fluxes = self.flux_preprocessing(fluxes)
@@ -88,6 +87,16 @@ class TessSyntheticInjectedDatabase(LightcurveDatabase):
         examples = (lightcurve, lightcurve_with_injected_signal)
         labels = (np.array([0]), np.array([1]))
         return examples, labels
+
+    def load_fluxes_and_times_from_lightcurve_path(self, lightcurve_path):
+        fluxes, times = self.tess_data_interface.load_fluxes_and_times_from_fits_file(lightcurve_path)
+        return fluxes, times
+
+    def load_magnifications_and_times_from_synthetic_signal_path(self, synthetic_signal_path):
+        synthetic_signal = pd.read_feather(synthetic_signal_path)
+        synthetic_magnifications, synthetic_times = synthetic_signal['Magnification'], synthetic_signal['Time (hours)']
+        synthetic_times = synthetic_times / 24  # Convert hours to days.
+        return synthetic_magnifications, synthetic_times
 
     def flux_preprocessing(self, fluxes: np.ndarray, evaluation_mode=False) -> np.ndarray:
         """
