@@ -85,13 +85,12 @@ class PyMapper:
                 return args
 
         mapped_dataset = dataset.map(map_py_function, self.number_of_parallel_calls)
+        if flat_map:
+            mapped_dataset = mapped_dataset.flat_map(flat_map_function)
         if output_shapes is not None:
             assert isinstance(output_types, tf.DType) or len(output_types) == len(output_shapes)
             mapped_dataset = mapped_dataset.map(set_shape_function)
-        if flat_map:
-            return mapped_dataset.flat_map(flat_map_function)
-        else:
-            return mapped_dataset
+        return mapped_dataset
 
 
 def map_py_function_to_dataset(dataset: tf.data.Dataset, map_function: Callable, number_of_parallel_calls: int,

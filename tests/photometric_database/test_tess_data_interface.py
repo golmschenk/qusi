@@ -7,7 +7,7 @@ from unittest.mock import Mock, ANY, patch
 import numpy as np
 import pandas as pd
 from astropy.coordinates import SkyCoord
-
+import astroquery
 from astropy.table import Table
 
 import pytest
@@ -27,14 +27,6 @@ class TestTessDataInterface:
     def tess_data_interface(self) -> TessDataInterface:
         return TessDataInterface()
 
-    def test_new_tess_data_interface_sets_astroquery_api_limits(self):
-        from astroquery.mast import Observations
-        assert Observations.TIMEOUT == 600
-        assert Observations.PAGESIZE == 50000
-        TessDataInterface()
-        assert Observations.TIMEOUT == 2000
-        assert Observations.PAGESIZE == 3000
-
     def test_can_request_time_series_observations_from_mast_as_pandas_data_frame(self, tess_data_interface,
                                                                                  tess_data_interface_module):
         mock_query_result = Table({'a': [1, 2], 'b': [3, 4]})
@@ -42,6 +34,14 @@ class TestTessDataInterface:
         query_result = tess_data_interface.get_all_tess_time_series_observations()
         assert isinstance(query_result, pd.DataFrame)
         assert np.array_equal(query_result['a'].values, [1, 2])
+
+    def test_new_tess_data_interface_sets_astroquery_api_limits(self):
+        from astroquery.mast import Observations
+        Observations.TIMEOUT = 600
+        Observations.PAGESIZE = 50000
+        TessDataInterface()
+        assert Observations.TIMEOUT == 2000
+        assert Observations.PAGESIZE == 3000
 
     def test_can_request_data_products_from_mast_as_pandas_data_frame(self, tess_data_interface,
                                                                       tess_data_interface_module):
