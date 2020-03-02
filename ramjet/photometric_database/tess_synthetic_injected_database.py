@@ -2,6 +2,8 @@
 Code to represent the database for injecting synthetic signals into real TESS data.
 """
 from pathlib import Path
+from typing import List
+
 import numpy as np
 import pandas as pd
 import tensorflow as tf
@@ -19,15 +21,15 @@ class TessSyntheticInjectedDatabase(LightcurveDatabase):
 
     def __init__(self):
         super().__init__()
-        self.data_directory: Path = Path('data/microlensing')
+        self.data_directory: Path = Path('data/self_lensing_binaries')
         self.lightcurve_directory: Path = self.data_directory.joinpath('lightcurves')
         self.synthetic_signal_directory: Path = self.data_directory.joinpath('synthetic_signals')
         self.tess_data_interface = TessDataInterface()
         self.time_steps_per_example = 20000
 
     def generate_datasets(self):
-        all_lightcurve_paths = list(self.lightcurve_directory.glob('*.fits'))
-        all_synthetic_paths = list(map(str, self.synthetic_signal_directory.glob('*.feather')))
+        all_lightcurve_paths = self.get_all_lightcurve_paths()
+        all_synthetic_paths = self.get_all_synthetic_signal_paths()
         synthetic_signal_paths_dataset = tf.data.Dataset.from_tensor_slices(all_synthetic_paths)
         lightcurve_paths_datasets = self.get_training_and_validation_datasets_for_file_paths(all_lightcurve_paths)
         training_lightcurve_paths_dataset, validation_lightcurve_paths_dataset = lightcurve_paths_datasets
@@ -61,6 +63,24 @@ class TessSyntheticInjectedDatabase(LightcurveDatabase):
         prefetch_validation_dataset = batched_validation_dataset.prefetch(tf.data.experimental.AUTOTUNE)
         return prefetch_training_dataset, prefetch_validation_dataset
 
+    def get_all_lightcurve_paths(self) -> List[str]:
+        """
+        Returns the list of all lightcurves to use. Expected to be overridden for subclass databases.
+
+        :return: The list of lightcurves.
+        """
+        lightcurve_paths = list(map(str, self.lightcurve_directory.glob('**/*.fits')))
+        return lightcurve_paths
+
+    def get_all_synthetic_signal_paths(self) -> List[str]:
+        """
+        Returns the list of all synthetic signals to use. Expected to be overridden for subclass databases.
+
+        :return: The list of synthetic signals.
+        """
+        synthetic_signal_paths = list(map(str, self.synthetic_signal_directory.glob('**/*.feather')))
+        return synthetic_signal_paths
+
     def train_and_validation_preprocessing(self, lightcurve_path_tensor: tf.Tensor,
                                            synthetic_signal_path_tensor: tf.Tensor,
                                            ) -> (np.ndarray, np.ndarray, np.ndarray, np.ndarray):
@@ -88,11 +108,24 @@ class TessSyntheticInjectedDatabase(LightcurveDatabase):
         labels = (np.array([0]), np.array([1]))
         return examples, labels
 
-    def load_fluxes_and_times_from_lightcurve_path(self, lightcurve_path):
+    def load_fluxes_and_times_from_lightcurve_path(self, lightcurve_path: str) -> (np.ndarray, np.ndarray):
+        """
+        Loads the lightcurve from the path given. Should be overridden to fit a specific database's file format.
+
+        :param lightcurve_path:
+        :return:
+        """
         fluxes, times = self.tess_data_interface.load_fluxes_and_times_from_fits_file(lightcurve_path)
         return fluxes, times
 
-    def load_magnifications_and_times_from_synthetic_signal_path(self, synthetic_signal_path):
+    def load_magnifications_and_times_from_synthetic_signal_path(self, synthetic_signal_path: str
+                                                                 ) -> (np.ndarray, np.ndarray):
+        """
+        Loads the synthetic signal from the path given. Should be overridden to fit a specific database's file format.
+
+        :param synthetic_signal_path:
+        :return:
+        """
         synthetic_signal = pd.read_feather(synthetic_signal_path)
         synthetic_magnifications, synthetic_times = synthetic_signal['Magnification'], synthetic_signal['Time (hours)']
         synthetic_times = synthetic_times / 24  # Convert hours to days.
