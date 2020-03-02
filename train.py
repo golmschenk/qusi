@@ -5,19 +5,18 @@ import tensorflow as tf
 from tensorflow.python.keras import callbacks
 
 from ramjet.losses import PerTimeStepBinaryCrossEntropy
-from ramjet.models import ConvolutionalLstm, SimpleLightcurveCnn
-from ramjet.photometric_database.tess_synthetic_injected_database import TessSyntheticInjectedDatabase
+from ramjet.models import ConvolutionalLstm
 from ramjet.photometric_database.toi_lightcurve_database import ToiLightcurveDatabase
 
 
 def train():
     """Runs the training."""
     # Basic training settings.
-    model = SimpleLightcurveCnn()
-    database = TessSyntheticInjectedDatabase()
+    model = ConvolutionalLstm()
+    database = ToiLightcurveDatabase()
     # database.batch_size = 100  # Reducing the batch size may help if you are running out of memory.
     epochs_to_run = 1000
-    trial_name = 'New synthetic database run'
+    trial_name = 'baseline'
     logs_directory = 'logs'
 
     # Setup logging.
