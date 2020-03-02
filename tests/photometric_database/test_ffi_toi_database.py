@@ -51,3 +51,11 @@ class TestFfiToiDatabase:
         assert mock_open.called
         assert np.array_equal(fluxes, ffi_pickle_contents[6])
         assert np.array_equal(times, ffi_pickle_contents[4])
+
+    def test_can_create_synthetic_signal_from_real_data(self, database):
+        fluxes = np.array([100, 100, 90, 110, 100, 100])
+        times = np.array([100, 110, 120, 130, 140, 150])
+        synthetic_magnifications, synthetic_times = database.generate_synthetic_signal_from_real_data(fluxes, times)
+        assert np.array_equal(synthetic_magnifications, [1, 1, 0.9, 1.1, 1, 1])
+        assert np.array_equal(synthetic_times, [0, 10, 20, 30, 40, 50])
+
