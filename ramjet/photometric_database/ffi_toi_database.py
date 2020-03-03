@@ -175,9 +175,7 @@ class FfiToiDatabase(TessSyntheticInjectedDatabase):
         :param lightcurve_path: The path to the lightcurve file.
         :return: The fluxes and times of the lightcurve
         """
-        ffi_data = self.load_fluxes_and_times_from_ffi_pickle_file(lightcurve_path)
-        fluxes = ffi_data[FfiDataIndexes.CORRECTED_FLUX.value]
-        times = ffi_data[FfiDataIndexes.TIME.value]
+        fluxes, times = self.load_fluxes_and_times_from_ffi_pickle_file(lightcurve_path)
         nan_indexes = np.union1d(np.argwhere(np.isnan(fluxes)), np.argwhere(np.isnan(times)))
         fluxes = np.delete(fluxes, nan_indexes)
         times = np.delete(times, nan_indexes)
