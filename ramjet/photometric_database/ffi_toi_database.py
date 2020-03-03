@@ -190,9 +190,8 @@ class FfiToiDatabase(TessSyntheticInjectedDatabase):
         :param synthetic_signal_path: The path to the synthetic signal data file.
         :return: The magnifications and relative times of the synthetic signal.
         """
-        synthetic_signal = pd.read_feather(synthetic_signal_path)
-        synthetic_magnifications, synthetic_times = synthetic_signal['Magnification'], synthetic_signal['Time (hours)']
-        synthetic_times = synthetic_times / 24  # Convert hours to days.
+        fluxes, times = self.tess_data_interface.load_fluxes_and_times_from_fits_file(synthetic_signal_path)
+        synthetic_magnifications, synthetic_times = self.generate_synthetic_signal_from_real_data(fluxes, times)
         return synthetic_magnifications, synthetic_times
 
 

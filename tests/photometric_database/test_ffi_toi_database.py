@@ -65,3 +65,13 @@ class TestFfiToiDatabase:
         fluxes, times = database.load_fluxes_and_times_from_lightcurve_path(fake_file_path)
         assert np.array_equal(fluxes, ffi_pickle_contents[6])
         assert np.array_equal(times, ffi_pickle_contents[4])
+
+    def test_synthetic_signal_loading_loads_real_toi_lightcurve_as_synthetic(self, database):
+        file_fluxes = np.array([100, 100, 90, 110, 100, 100])
+        file_times = np.array([100, 110, 120, 130, 140, 150])
+        file_lightcurve = file_fluxes, file_times
+        database.tess_data_interface.load_fluxes_and_times_from_fits_file = Mock(return_value=file_lightcurve)
+        fake_file_path = 'fake_path.fits'
+        magnifications, times = database.load_magnifications_and_times_from_synthetic_signal_path(fake_file_path)
+        assert np.array_equal(magnifications, [1, 1, 0.9, 1.1, 1, 1])
+        assert np.array_equal(times, [0, 10, 20, 30, 40, 50])
