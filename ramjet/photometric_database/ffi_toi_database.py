@@ -117,7 +117,7 @@ class FfiToiDatabase(TessSyntheticInjectedDatabase):
         print(f'Moving lightcurves to {self.synthetic_signal_directory}...')
         for file_path_string in suspected_planet_download_manifest['Local Path']:
             file_path = Path(file_path_string)
-            file_path.rename(self.lightcurve_directory.joinpath(file_path.name))
+            file_path.rename(self.synthetic_signal_directory.joinpath(file_path.name))
 
     def load_toi_dispositions_in_project_format(self) -> pd.DataFrame:
         """
@@ -148,6 +148,7 @@ class FfiToiDatabase(TessSyntheticInjectedDatabase):
         """
         super().create_data_directories()
         self.lightcurve_directory.mkdir(parents=True, exist_ok=True)
+        self.synthetic_signal_directory.mkdir(parents=True, exist_ok=True)
 
     def get_all_lightcurve_paths(self) -> List[str]:
         """
