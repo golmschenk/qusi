@@ -111,8 +111,8 @@ class TessSyntheticInjectedDatabase(LightcurveDatabase):
         """
         Loads the lightcurve from the path given. Should be overridden to fit a specific database's file format.
 
-        :param lightcurve_path:
-        :return:
+        :param lightcurve_path: The path to the lightcurve file.
+        :return: The fluxes and times of the lightcurve
         """
         fluxes, times = self.tess_data_interface.load_fluxes_and_times_from_fits_file(lightcurve_path)
         return fluxes, times
@@ -122,8 +122,8 @@ class TessSyntheticInjectedDatabase(LightcurveDatabase):
         """
         Loads the synthetic signal from the path given. Should be overridden to fit a specific database's file format.
 
-        :param synthetic_signal_path:
-        :return:
+        :param synthetic_signal_path: The path to the synthetic signal data file.
+        :return: The magnifications and relative times of the synthetic signal.
         """
         synthetic_signal = pd.read_feather(synthetic_signal_path)
         synthetic_magnifications, synthetic_times = synthetic_signal['Magnification'], synthetic_signal['Time (hours)']

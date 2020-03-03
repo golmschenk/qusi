@@ -1,7 +1,7 @@
 """Tests for the FfiToiDatabase class."""
 from pathlib import Path
 from typing import Tuple
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 import numpy as np
 import pytest
 
@@ -59,3 +59,9 @@ class TestFfiToiDatabase:
         assert np.array_equal(synthetic_magnifications, [1, 1, 0.9, 1.1, 1, 1])
         assert np.array_equal(synthetic_times, [0, 10, 20, 30, 40, 50])
 
+    def test_lightcurve_loading_loads_ffi_data_from_pickle(self, database, ffi_pickle_contents):
+        database.load_fluxes_and_times_from_ffi_pickle_file = Mock(return_value=ffi_pickle_contents)
+        fake_file_path = 'fake_path.pkl'
+        fluxes, times = database.load_fluxes_and_times_from_lightcurve_path(fake_file_path)
+        assert np.array_equal(fluxes, ffi_pickle_contents[6])
+        assert np.array_equal(times, ffi_pickle_contents[4])

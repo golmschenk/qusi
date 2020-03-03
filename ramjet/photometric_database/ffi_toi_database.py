@@ -6,7 +6,7 @@ import requests
 import numpy as np
 import pandas as pd
 from enum import Enum
-from typing import Union
+from typing import Union, List
 from pathlib import Path
 
 from ramjet.photometric_database.tess_data_interface import TessDataInterface
@@ -148,6 +148,52 @@ class FfiToiDatabase(TessSyntheticInjectedDatabase):
         """
         super().create_data_directories()
         self.lightcurve_directory.mkdir(parents=True, exist_ok=True)
+
+    def get_all_lightcurve_paths(self) -> List[str]:
+        """
+        Returns the list of all lightcurves to use.
+
+        :return: The list of lightcurves.
+        """
+        lightcurve_paths = list(map(str, self.lightcurve_directory.glob('**/*.pkl')))
+        return lightcurve_paths
+
+    def get_all_synthetic_signal_paths(self) -> List[str]:
+        """
+        Returns the list of all synthetic signals to use.
+
+        :return: The list of synthetic signals.
+        """
+        synthetic_signal_paths = list(map(str, self.synthetic_signal_directory.glob('**/*.fits')))
+        return synthetic_signal_paths
+
+    def load_fluxes_and_times_from_lightcurve_path(self, lightcurve_path: str) -> (np.ndarray, np.ndarray):
+        """
+        Loads the lightcurve from the path given. Should be overridden to fit a specific database's file format.
+
+        :param lightcurve_path: The path to the lightcurve file.
+        :return: The fluxes and times of the lightcurve
+        """
+        ffi_data = self.load_fluxes_and_times_from_ffi_pickle_file(lightcurve_path)
+        fluxes = ffi_data[FfiDataIndexes.CORRECTED_FLUX.value]
+        times = ffi_data[FfiDataIndexes.TIME.value]
+        nan_indexes = np.union1d(np.argwhere(np.isnan(fluxes)), np.argwhere(np.isnan(times)))
+        fluxes = np.delete(fluxes, nan_indexes)
+        times = np.delete(times, nan_indexes)
+        return fluxes, times
+
+    def load_magnifications_and_times_from_synthetic_signal_path(self, synthetic_signal_path: str
+                                                                 ) -> (np.ndarray, np.ndarray):
+        """
+        Loads the synthetic signal from the path given. Should be overridden to fit a specific database's file format.
+
+        :param synthetic_signal_path: The path to the synthetic signal data file.
+        :return: The magnifications and relative times of the synthetic signal.
+        """
+        synthetic_signal = pd.read_feather(synthetic_signal_path)
+        synthetic_magnifications, synthetic_times = synthetic_signal['Magnification'], synthetic_signal['Time (hours)']
+        synthetic_times = synthetic_times / 24  # Convert hours to days.
+        return synthetic_magnifications, synthetic_times
 
 
 if __name__ == '__main__':
