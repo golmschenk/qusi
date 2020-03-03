@@ -1,5 +1,6 @@
 """Code for a base generalized database for photometric data to be subclassed."""
 import math
+import shutil
 from abc import ABC
 import os
 import random
@@ -177,3 +178,17 @@ class LightcurveDatabase(ABC):
         unbatched_window_dataset = tf.data.Dataset.zip((examples_unbatched_window_dataset,
                                                         labels_unbatched_window_dataset))
         return unbatched_window_dataset.padded_batch(batch_size, padded_shapes=padded_shapes)
+
+    def clear_data_directory(self):
+        """
+        Empties the data directory.
+        """
+        if self.data_directory.exists():
+            shutil.rmtree(self.data_directory)
+        self.create_data_directories()
+
+    def create_data_directories(self):
+        """
+        Creates the data directories to be used by the database.
+        """
+        self.data_directory.mkdir(parents=True, exist_ok=True)

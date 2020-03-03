@@ -19,9 +19,8 @@ class TessSyntheticInjectedDatabase(LightcurveDatabase):
     A class to represent the database for injecting synthetic signals into real TESS data.
     """
 
-    def __init__(self):
-        super().__init__()
-        self.data_directory: Path = Path('data/self_lensing_binaries')
+    def __init__(self, data_directory='data/self_lensing_binaries'):
+        super().__init__(data_directory=data_directory)
         self.lightcurve_directory: Path = self.data_directory.joinpath('lightcurves')
         self.synthetic_signal_directory: Path = self.data_directory.joinpath('synthetic_signals')
         self.tess_data_interface = TessDataInterface()
