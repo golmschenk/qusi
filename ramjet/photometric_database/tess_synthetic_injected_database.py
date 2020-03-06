@@ -1,6 +1,7 @@
 """
 Code to represent the database for injecting synthetic signals into real TESS data.
 """
+import time
 from pathlib import Path
 from typing import List
 
@@ -99,8 +100,9 @@ class TessSyntheticInjectedDatabase(LightcurveDatabase):
             synthetic_signal_path)
         fluxes_with_injected_signal = self.inject_signal_into_lightcurve(fluxes, times, synthetic_magnifications,
                                                                          synthetic_times)
-        fluxes = self.flux_preprocessing(fluxes)
-        fluxes_with_injected_signal = self.flux_preprocessing(fluxes_with_injected_signal)
+        time_seed = int(time.time())
+        fluxes = self.flux_preprocessing(fluxes, seed=time_seed)
+        fluxes_with_injected_signal = self.flux_preprocessing(fluxes_with_injected_signal, seed=time_seed)
         lightcurve = np.expand_dims(fluxes, axis=-1)
         lightcurve_with_injected_signal = np.expand_dims(fluxes_with_injected_signal, axis=-1)
         examples = (lightcurve, lightcurve_with_injected_signal)
@@ -130,17 +132,18 @@ class TessSyntheticInjectedDatabase(LightcurveDatabase):
         synthetic_times = synthetic_times / 24  # Convert hours to days.
         return synthetic_magnifications, synthetic_times
 
-    def flux_preprocessing(self, fluxes: np.ndarray, evaluation_mode=False) -> np.ndarray:
+    def flux_preprocessing(self, fluxes: np.ndarray, evaluation_mode: bool = False, seed: int = None) -> np.ndarray:
         """
         Preprocessing for the flux.
 
         :param fluxes: The flux array to preprocess.
         :param evaluation_mode: If the preprocessing should be consistent for evaluation.
+        :param seed: Seed for the randomization.
         :return: The preprocessed flux array.
         """
         normalized_fluxes = self.normalize(fluxes)
         uniform_length_fluxes = self.make_uniform_length(normalized_fluxes, self.time_steps_per_example,
-                                                         randomize=not evaluation_mode)
+                                                         randomize=not evaluation_mode, seed=seed)
         return uniform_length_fluxes
 
     @staticmethod
