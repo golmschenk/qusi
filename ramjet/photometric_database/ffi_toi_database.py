@@ -48,6 +48,7 @@ class FfiToiDatabase(TessSyntheticInjectedDatabase):
     def __init__(self, data_directory='data/tess_toi_ffi'):
         super().__init__(data_directory=data_directory)
         self.toi_dispositions_path = self.data_directory.joinpath('toi_dispositions.csv')
+        self.time_steps_per_example = 1296  # 27 days / 30 minutes.
 
     @staticmethod
     def load_fluxes_and_times_from_ffi_pickle_file(file_path: Union[Path, str]) -> (np.ndarray, np.ndarray):
