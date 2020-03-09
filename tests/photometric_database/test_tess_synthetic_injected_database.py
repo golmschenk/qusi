@@ -109,3 +109,22 @@ class TestTessSyntheticInjectedDatabase:
         assert preprocessed_fluxes.shape[0] == 8
         assert np.min(preprocessed_fluxes) > -3
         assert np.max(preprocessed_fluxes) < 3
+
+    def test_inject_signal_errors_on_out_of_bounds(self, database):
+        lightcurve_fluxes = np.array([1, 2, 3, 4, 5, 3])
+        lightcurve_times = np.array([10, 20, 30, 40, 50, 60])
+        signal_magnifications = np.array([1, 3, 1])
+        signal_times = np.array([0, 20, 40])
+        with pytest.raises(ValueError):
+            database.inject_signal_into_lightcurve(lightcurve_fluxes, lightcurve_times,
+                                                   signal_magnifications, signal_times)
+
+    def test_inject_signal_can_be_told_to_allow_out_of_bounds(self, database):
+        lightcurve_fluxes = np.array([1, 2, 3, 4, 5, 3])
+        lightcurve_times = np.array([10, 20, 30, 40, 50, 60])
+        signal_magnifications = np.array([1, 3, 1])
+        signal_times = np.array([0, 20, 40])
+        fluxes_with_injected_signal = database.inject_signal_into_lightcurve(lightcurve_fluxes, lightcurve_times,
+                                                                             signal_magnifications, signal_times,
+                                                                             allow_out_of_bounds=True)
+        assert np.array_equal(fluxes_with_injected_signal, np.array([1, 5, 9, 7, 5, 3]))
