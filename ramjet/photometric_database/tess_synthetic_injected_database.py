@@ -26,6 +26,7 @@ class TessSyntheticInjectedDatabase(LightcurveDatabase):
         self.synthetic_signal_directory: Path = self.data_directory.joinpath('synthetic_signals')
         self.tess_data_interface = TessDataInterface()
         self.time_steps_per_example = 20000
+        self.allow_out_of_bounds_injection = False
 
     def generate_datasets(self):
         all_lightcurve_paths = self.get_all_lightcurve_paths()
@@ -146,10 +147,8 @@ class TessSyntheticInjectedDatabase(LightcurveDatabase):
                                                          randomize=not evaluation_mode, seed=seed)
         return uniform_length_fluxes
 
-    @staticmethod
-    def inject_signal_into_lightcurve(lightcurve_fluxes: np.ndarray, lightcurve_times: np.ndarray,
-                                      signal_magnifications: np.ndarray, signal_times: np.ndarray,
-                                      allow_out_of_bounds=False):
+    def inject_signal_into_lightcurve(self, lightcurve_fluxes: np.ndarray, lightcurve_times: np.ndarray,
+                                      signal_magnifications: np.ndarray, signal_times: np.ndarray):
         """
         Injects a synthetic magnification signal into real lightcurve fluxes.
 
@@ -157,12 +156,11 @@ class TessSyntheticInjectedDatabase(LightcurveDatabase):
         :param lightcurve_times: The times of the flux observations of the lightcurve.
         :param signal_magnifications: The synthetic magnifications to inject.
         :param signal_times: The times of the synthetic magnifications.
-        :param allow_out_of_bounds: Allows for signals to be shorter than the lightcurve.
         :return: The fluxes with the injected signal.
         """
         median_flux = np.median(lightcurve_fluxes)
         signal_fluxes = (signal_magnifications * median_flux) - median_flux
-        if allow_out_of_bounds:
+        if self.allow_out_of_bounds_injection:
             signal_flux_interpolator = interp1d(signal_times, signal_fluxes, bounds_error=False, fill_value=0)
         else:
             signal_flux_interpolator = interp1d(signal_times, signal_fluxes, bounds_error=True)

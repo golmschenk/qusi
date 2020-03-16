@@ -124,7 +124,7 @@ class TestTessSyntheticInjectedDatabase:
         lightcurve_times = np.array([10, 20, 30, 40, 50, 60])
         signal_magnifications = np.array([1, 3, 1])
         signal_times = np.array([0, 20, 40])
+        database.allow_out_of_bounds_injection = True
         fluxes_with_injected_signal = database.inject_signal_into_lightcurve(lightcurve_fluxes, lightcurve_times,
-                                                                             signal_magnifications, signal_times,
-                                                                             allow_out_of_bounds=True)
+                                                                             signal_magnifications, signal_times)
         assert np.array_equal(fluxes_with_injected_signal, np.array([1, 5, 9, 7, 5, 3]))

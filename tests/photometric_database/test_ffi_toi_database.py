@@ -78,3 +78,12 @@ class TestFfiToiDatabase:
         magnifications, times = database.load_magnifications_and_times_from_synthetic_signal_path(fake_file_path)
         assert np.array_equal(magnifications, [1, 1, 0.9, 1.1, 1, 1])
         assert np.array_equal(times, [0, 10, 20, 30, 40, 50])
+
+    def test_injecting_out_of_bounds_is_enabled_by_default(self, database):
+        lightcurve_fluxes = np.array([1, 2, 3, 4, 5, 3])
+        lightcurve_times = np.array([10, 20, 30, 40, 50, 60])
+        signal_magnifications = np.array([1, 3, 1])
+        signal_times = np.array([0, 20, 40])
+        fluxes_with_injected_signal = database.inject_signal_into_lightcurve(lightcurve_fluxes, lightcurve_times,
+                                                                             signal_magnifications, signal_times)
+        assert np.array_equal(fluxes_with_injected_signal, np.array([1, 5, 9, 7, 5, 3]))
