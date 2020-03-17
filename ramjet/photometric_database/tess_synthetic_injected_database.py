@@ -34,6 +34,9 @@ class TessSyntheticInjectedDatabase(LightcurveDatabase):
         synthetic_signal_paths_dataset = tf.data.Dataset.from_tensor_slices(all_synthetic_paths)
         lightcurve_paths_datasets = self.get_training_and_validation_datasets_for_file_paths(all_lightcurve_paths)
         training_lightcurve_paths_dataset, validation_lightcurve_paths_dataset = lightcurve_paths_datasets
+        print(f'{len(list(training_lightcurve_paths_dataset))} training lightcurves.')
+        print(f'{len(list(validation_lightcurve_paths_dataset))} validation lightcurves.')
+        print(f'{len(list(synthetic_signal_paths_dataset))} injectable signals.')
         shuffled_training_lightcurve_paths_dataset = training_lightcurve_paths_dataset.shuffle(
             buffer_size=len(list(training_lightcurve_paths_dataset)))
         shuffled_synthetic_signal_paths_dataset = synthetic_signal_paths_dataset.shuffle(
