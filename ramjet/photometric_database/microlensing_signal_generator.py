@@ -1,3 +1,8 @@
+"""Script that generates a Gravitational Microlensing Signal, randomly, within the natural parameters: u0 (
+source-lens impact parameter), tE (Einstein radius crossing time), rho (angular source size normalized by the
+angular Einstein radius) , s (Projected separation of the masses normalized by the angular Einstein radius),
+q (Mass ratio M_planet/M_host), alpha (Trajectory angle).
+"""
 import muLAn.models.BLcontU as esbl_vbb
 import numpy as np
 import pandas as pd
@@ -6,6 +11,10 @@ import matplotlib.pyplot as plt
 
 class MagnificationSignal:
     def __init__(self, directory_path_with_te_and_rho='distribution/'):
+        """
+
+        :param directory_path_with_te_and_rho:
+        """
         self.path = directory_path_with_te_and_rho
         self.n_data_points = 40000
         self.timeserie = np.linspace(-30, 30, self.n_data_points)
@@ -19,6 +28,18 @@ class MagnificationSignal:
         self.alpha = None
 
     def getting_random_values(self):
+        """
+        Set randomly the natural parameters: u0 (source-lens impact parameter), tE (Einstein radius crossing time),
+        rho (angular source size normalized by the angular Einstein radius) , s (Projected separation of the masses
+        normalized by the angular Einstein radius), q (Mass ratio M_planet/M_host), alpha (Trajectory angle)
+        :return:
+        u0
+        tE
+        rho
+        s
+        q
+        alpha
+        """
         u0_list = np.linspace(0.01, 3.5, 10)
         self.u0 = np.random.choice(u0_list)
 
@@ -44,6 +65,11 @@ class MagnificationSignal:
         return self.u0, self.tE, self.rho, self.s, self.q, self.alpha
 
     def generating_magnification(self):
+        """
+        Creates the magnification signal
+        :return:
+        magnification_signal_curve: Pandas data frame with time and magnification
+        """
         lens_params = dict({'u0': self.u0,
                             'tE': self.tE,
                             't0': 0.0,
@@ -69,6 +95,10 @@ class MagnificationSignal:
         return self.magnification_signal_curve
 
     def plot_magnification(self):
+        """
+        Plot the lightcurve.
+        :return:
+        """
         # PLOT
         plt.plot(self.timeserie, self.magnification)
         plt.xlabel('Days')
