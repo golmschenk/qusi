@@ -7,6 +7,7 @@ import os
 import datetime
 from typing import Dict
 from importlib import import_module
+from unittest.mock import Mock
 # noinspection PyPackageRequirements
 from autoapi.mappers.python.objects import PythonPythonMapper
 from sphinx.application import Sphinx
@@ -31,6 +32,11 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.napoleon', 'autoapi.extension', 
 add_module_names = False
 templates_path = ['_templates']
 exclude_patterns = ['_build', '_templates', 'Thumbs.db', '.DS_Store']
+
+# Mock packages we don't expect to be imported for any reason (e.g., requires C libraries on docs VM)
+
+mock_modules = ['muLAn', 'muLAn.models', 'muLAn.models.BLcontU']
+sys.modules.update((module_name, Mock()) for module_name in mock_modules)
 
 # AutoAPI configuration.
 
