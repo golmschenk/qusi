@@ -3,7 +3,10 @@ source-lens impact parameter), tE (Einstein radius crossing time), rho (angular 
 angular Einstein radius) , s (Projected separation of the masses normalized by the angular Einstein radius),
 q (Mass ratio M_planet/M_host), alpha (Trajectory angle).
 """
-import muLAn.models.BLcontU as esbl_vbb
+try:
+    import muLAn.models.BLcontU as esbl_vbb
+except ModuleNotFoundError as error:
+    raise ModuleNotFoundError(f'{__file__} module requires the muLAn package. Please install separately.') from error
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
