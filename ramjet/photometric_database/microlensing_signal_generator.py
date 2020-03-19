@@ -95,7 +95,7 @@ class MagnificationSignal:
         # Compute magnification
         self.magnification = esbl_vbb.magnifcalc(self.timeserie, lens_params, Ds=Ds, tb=tb)
         self.magnification_signal_curve = pd.DataFrame({'Time': self.timeserie, 'Magnification': self.magnification})
-        return self.magnification_signal_curve
+        return None
 
     def plot_magnification(self):
         """
@@ -113,10 +113,15 @@ class MagnificationSignal:
         plt.show()
         return None
 
+    @classmethod
+    def generate_randomly_based_on_moa_observations(cls):
+        microlensing_signal = cls()
+        microlensing_signal.getting_random_values()
+        microlensing_signal.generating_magnification()
+        return microlensing_signal
+
 
 if __name__ == '__main__':
-    microlensing_signal = MagnificationSignal()
-    microlensing_signal.getting_random_values()
-    magnification_curve = microlensing_signal.generating_magnification()
-    microlensing_signal.plot_magnification()
+    random_signal = MagnificationSignal.generate_randomly_based_on_moa_observations()
+    random_signal.plot_magnification()
     print("Done")
