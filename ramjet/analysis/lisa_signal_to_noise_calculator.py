@@ -17,6 +17,15 @@ class LisaSignalToNoiseCalculator:
 
     def calculate_median_signal_to_noise_ratio(self, orbital_period: float, distance: float,
                                                mass0: float, mass1: float):
+        """
+        Calculates the median SNR for a given binary based on John Baker's formula and reference values.
+
+        :param orbital_period: The orbital period in days of the binary.
+        :param distance: The distance to the target.
+        :param mass0: The mass of the first star.
+        :param mass1: The mass of the second star.
+        :return: The median LISA SNR estimate.
+        """
         orbital_period__seconds = orbital_period * 86400
         interpreted_ratios = np.interp(orbital_period__seconds, self.reference_data_frame['Orbital period (seconds)'],
                                        self.reference_data_frame['Median signal to noise ratio'])
