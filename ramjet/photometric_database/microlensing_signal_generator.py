@@ -65,8 +65,6 @@ class MagnificationSignal:
         alpha_list = np.linspace(0, np.pi, 10)
         self.alpha = np.random.choice(alpha_list)
 
-        return self.u0, self.tE, self.rho, self.s, self.q, self.alpha
-
     def generating_magnification(self):
         """
         Creates the magnification signal
@@ -95,7 +93,6 @@ class MagnificationSignal:
         # Compute magnification
         self.magnification = esbl_vbb.magnifcalc(self.timeserie, lens_params, Ds=Ds, tb=tb)
         self.magnification_signal_curve = pd.DataFrame({'Time': self.timeserie, 'Magnification': self.magnification})
-        return None
 
     def plot_magnification(self):
         """
@@ -111,7 +108,6 @@ class MagnificationSignal:
         # plt.title(f'u0= {:3.5f}; tE= {:10.5f}; rho= {:5.5f};\n s= {:3.5f}; '
         #           f'q= {:5.5f}; alpha= {:2.5f}'.format(self.u0,self.tE,self.rho,self.s,self.q,self.alpha))
         plt.show()
-        return None
 
     @classmethod
     def generate_randomly_based_on_moa_observations(cls):
