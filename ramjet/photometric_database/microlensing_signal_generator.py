@@ -14,8 +14,14 @@ from pathlib import Path
 
 
 class MagnificationSignal:
-    path = Path(__file__).parent.joinpath('microlensing_signal_meta_data/moa9yr_events_meta_oct2018.txt')
-    df = pd.read_csv(path, header=None, skipinitialspace=True, names=['event'])
+    try:
+        path = Path(__file__).parent.joinpath('microlensing_signal_meta_data/moa9yr_events_meta_oct2018.txt')
+        df = pd.read_csv(path, header=None, skipinitialspace=True, names=['event'])
+    except FileNotFoundError as error:
+        raise SystemExit('\n\033[93m  MOA metadata not found. '
+                         '\n  Please, contact the Microlensing Group to get this file'
+                         '\n  ... Quitting the code')
+
     data = df['event'].str.split("\s+", 134, expand=True)
     tE_list = data[58]
     rho_list = data[107]
