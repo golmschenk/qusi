@@ -10,10 +10,11 @@ except ModuleNotFoundError as error:
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from pathlib import Path
 
 
 class MagnificationSignal:
-    path = 'meta_data/moa9yr_events_meta_oct2018.txt'
+    path = Path(__file__).parent.joinpath('microlensing_signal_meta_data/moa9yr_events_meta_oct2018.txt')
     df = pd.read_csv(path, header=None, skipinitialspace=True, names=['event'])
     data = df['event'].str.split("\s+", 134, expand=True)
     tE_list = data[58]
