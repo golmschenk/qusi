@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 
 
 class MagnificationSignal:
-    def __init__(self, directory_path_with_te_and_rho='distribution/'):
+    def __init__(self, directory_path_with_te_and_rho='meta_data/moa9yr_events_meta_oct2018.txt'):
         """
 
         :param directory_path_with_te_and_rho:
@@ -43,18 +43,17 @@ class MagnificationSignal:
         q
         alpha
         """
+        df = pd.read_csv(self.path, header=None, skipinitialspace=True, names=['event'])
+        data = df['event'].str.split("\s+", 134, expand=True)
+        tE_list  = data[58]
+        rho_list = data[107]
+
         u0_list = np.linspace(0.01, 3.5, 10)
         self.u0 = np.random.choice(u0_list)
 
-        tE_path = self.path + 'tE_distribution.feather'
-        tE_list = pd.read_feather(tE_path)
-        tE_list = (tE_list['fake_tE']).to_numpy()
-        self.tE = np.random.choice(tE_list)
+        self.tE = float(np.random.choice(tE_list))
 
-        rho_path = self.path + 'rho_distribution.feather'
-        rho_list = pd.read_feather(rho_path)
-        rho_list = (rho_list['fake_rho']).to_numpy()
-        self.rho = np.random.choice(rho_list)
+        self.rho = float(np.random.choice(rho_list))
 
         s_list = np.linspace(0.01, 3.5, 100)
         self.s = np.random.choice(s_list)
