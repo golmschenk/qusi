@@ -14,23 +14,11 @@ from pathlib import Path
 
 
 class MagnificationSignal:
-    try:
-        path = Path(__file__).parent.joinpath('microlensing_signal_meta_data/moa9yr_events_meta_oct2018.txt')
-        df = pd.read_csv(path, header=None, skipinitialspace=True, names=['event'])
-    except FileNotFoundError as error:
-        raise SystemExit('\n\033[93m  MOA metadata not found. '
-                         '\n  Please, contact the Microlensing Group to get this file'
-                         '\n  ... Quitting the code')
-
-    data = df['event'].str.split("\s+", 134, expand=True)
-    tE_list = data[58]
-    rho_list = data[107]
+    tE_list: pd.Series = None
+    rho_list: pd.Series = None
 
     def __init__(self):
-        """
-
-        :param directory_path_with_te_and_rho:
-        """
+        self.load_moa_meta_data_to_class_attributes()
         self.n_data_points = 40000
         self.timeserie = np.linspace(-30, 30, self.n_data_points)
         self.magnification = None
@@ -41,6 +29,23 @@ class MagnificationSignal:
         self.s = None
         self.q = None
         self.alpha = None
+
+    def load_moa_meta_data_to_class_attributes(self):
+        """
+        Loads the MOA meta data defining microlensing to class attributes. If already loaded, does nothing.
+        """
+        if self.tE_list is None:
+            try:
+                path = Path(__file__).parent.joinpath('microlensing_signal_meta_data/moa9yr_events_meta_oct2018.txt')
+                df = pd.read_csv(path, header=None, skipinitialspace=True, names=['event'])
+            except FileNotFoundError as error:
+                raise SystemExit('\n\033[93m  MOA metadata not found. '
+                                 '\n  Please, contact the Microlensing Group to get this file'
+                                 '\n  ... Quitting the code')
+
+            data = df['event'].str.split("\s+", 134, expand=True)
+            self.tE_list = data[58]
+            self.rho_list = data[107]
 
     def getting_random_values(self):
         """
