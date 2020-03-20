@@ -20,7 +20,7 @@ class MagnificationSignal:
     def __init__(self):
         self.load_moa_meta_data_to_class_attributes()
         self.n_data_points = 40000
-        self.timeserie = np.linspace(-30, 30, self.n_data_points)
+        self.timeseries = np.linspace(-30, 30, self.n_data_points)
         self.magnification = None
         self.magnification_signal_curve = None
         self.u0 = None
@@ -35,13 +35,13 @@ class MagnificationSignal:
         Loads the MOA meta data defining microlensing to class attributes. If already loaded, does nothing.
         """
         if self.tE_list is None:
+            microlensing_meta_data_path = Path(__file__).parent.joinpath(
+                'microlensing_signal_meta_data/moa9yr_events_meta_oct2018.txt')
             try:
-                path = Path(__file__).parent.joinpath('microlensing_signal_meta_data/moa9yr_events_meta_oct2018.txt')
-                df = pd.read_csv(path, header=None, skipinitialspace=True, names=['event'])
-            except FileNotFoundError as error:
-                raise SystemExit('\n\033[93m  MOA metadata not found. '
-                                 '\n  Please, contact the Microlensing Group to get this file'
-                                 '\n  ... Quitting the code')
+                df = pd.read_csv(microlensing_meta_data_path, header=None, skipinitialspace=True, names=['event'])
+            except FileNotFoundError as error_:
+                raise FileNotFoundError(f'{microlensing_meta_data_path} is required\nMOA metadata not found.' +
+                                        'Please, contact the Microlensing Group to get this file') from error_
 
             data = df['event'].str.split("\s+", 134, expand=True)
             self.tE_list = data[58]
@@ -103,8 +103,8 @@ class MagnificationSignal:
         Ds = dict({'N': np.zeros(self.n_data_points), 'E': np.zeros(self.n_data_points)})
 
         # Compute magnification
-        self.magnification = esbl_vbb.magnifcalc(self.timeserie, lens_params, Ds=Ds, tb=tb)
-        self.magnification_signal_curve = pd.DataFrame({'Time': self.timeserie, 'Magnification': self.magnification})
+        self.magnification = esbl_vbb.magnifcalc(self.timeseries, lens_params, Ds=Ds, tb=tb)
+        self.magnification_signal_curve = pd.DataFrame({'Time': self.timeseries, 'Magnification': self.magnification})
 
     def plot_magnification(self):
         """
@@ -112,7 +112,7 @@ class MagnificationSignal:
         :return:
         """
         # PLOT
-        plt.plot(self.timeserie, self.magnification)
+        plt.plot(self.timeseries, self.magnification)
         plt.xlabel('Days')
         plt.ylabel('Magnification')
         plt.title(f'u0= {self.u0:3.5f}; tE= {self.tE:12.5f}; rho= {self.rho:8.5f};\n s= {self.s:3.5f}; '
