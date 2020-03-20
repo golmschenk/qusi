@@ -13,12 +13,17 @@ import matplotlib.pyplot as plt
 
 
 class MagnificationSignal:
-    def __init__(self, directory_path_with_te_and_rho='meta_data/moa9yr_events_meta_oct2018.txt'):
+    path = 'meta_data/moa9yr_events_meta_oct2018.txt'
+    df = pd.read_csv(path, header=None, skipinitialspace=True, names=['event'])
+    data = df['event'].str.split("\s+", 134, expand=True)
+    tE_list = data[58]
+    rho_list = data[107]
+
+    def __init__(self):
         """
 
         :param directory_path_with_te_and_rho:
         """
-        self.path = directory_path_with_te_and_rho
         self.n_data_points = 40000
         self.timeserie = np.linspace(-30, 30, self.n_data_points)
         self.magnification = None
@@ -43,17 +48,13 @@ class MagnificationSignal:
         q
         alpha
         """
-        df = pd.read_csv(self.path, header=None, skipinitialspace=True, names=['event'])
-        data = df['event'].str.split("\s+", 134, expand=True)
-        tE_list  = data[58]
-        rho_list = data[107]
 
         u0_list = np.linspace(0.01, 3.5, 10)
         self.u0 = np.random.choice(u0_list)
 
-        self.tE = float(np.random.choice(tE_list))
+        self.tE = float(np.random.choice(self.tE_list))
 
-        self.rho = float(np.random.choice(rho_list))
+        self.rho = float(np.random.choice(self.rho_list))
 
         s_list = np.linspace(0.01, 3.5, 100)
         self.s = np.random.choice(s_list)
