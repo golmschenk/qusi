@@ -52,13 +52,6 @@ class MagnificationSignal:
         Set randomly the natural parameters: u0 (source-lens impact parameter), tE (Einstein radius crossing time),
         rho (angular source size normalized by the angular Einstein radius) , s (Projected separation of the masses
         normalized by the angular Einstein radius), q (Mass ratio M_planet/M_host), alpha (Trajectory angle)
-        :return:
-        u0
-        tE
-        rho
-        s
-        q
-        alpha
         """
 
         u0_list = np.linspace(0.01, 3.5, 10)
@@ -80,8 +73,6 @@ class MagnificationSignal:
     def generating_magnification(self):
         """
         Creates the magnification signal
-        :return:
-        magnification_signal_curve: Pandas data frame with time and magnification
         """
         lens_params = dict({'u0': self.u0,
                             'tE': self.tE,
@@ -109,7 +100,6 @@ class MagnificationSignal:
     def plot_magnification(self):
         """
         Plot the lightcurve.
-        :return:
         """
         # PLOT
         plt.plot(self.timeseries, self.magnification)
