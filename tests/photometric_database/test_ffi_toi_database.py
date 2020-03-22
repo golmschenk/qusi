@@ -5,7 +5,7 @@ from unittest.mock import patch, Mock
 import numpy as np
 import pytest
 
-import ramjet.photometric_database.tess_data_interface
+import ramjet.data_interface.tess_data_interface
 from ramjet.photometric_database.ffi_toi_database import FfiToiDatabase
 
 

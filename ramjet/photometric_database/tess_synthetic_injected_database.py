@@ -11,8 +11,8 @@ import tensorflow as tf
 from scipy.interpolate import interp1d
 
 from ramjet.photometric_database.lightcurve_database import LightcurveDatabase
-from ramjet.photometric_database.py_mapper import map_py_function_to_dataset
-from ramjet.photometric_database.tess_data_interface import TessDataInterface
+from ramjet.py_mapper import map_py_function_to_dataset
+from ramjet.data_interface.tess_data_interface import TessDataInterface
 
 
 class TessSyntheticInjectedDatabase(LightcurveDatabase):

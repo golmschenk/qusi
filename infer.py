@@ -5,7 +5,7 @@ from pathlib import Path
 from ramjet.analysis.lightcurve_visualizer import plot_lightcurve
 from ramjet.analysis.model_loader import get_latest_log_directory
 from ramjet.models import ConvolutionalLstm
-from ramjet.photometric_database.tess_data_interface import TessDataInterface
+from ramjet.data_interface.tess_data_interface import TessDataInterface
 from ramjet.photometric_database.toi_lightcurve_database import ToiLightcurveDatabase
 
 saved_log_directory = get_latest_log_directory('logs')  # Uses the latest log directory's model.

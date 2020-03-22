@@ -6,7 +6,7 @@ import pandas as pd
 import tensorflow as tf
 import pytest
 
-import ramjet.photometric_database.tess_data_interface
+import ramjet.data_interface.tess_data_interface
 from ramjet.photometric_database.tess_synthetic_injected_database import TessSyntheticInjectedDatabase
 from tests.picklable_mock import PicklableMock
 
@@ -24,8 +24,8 @@ class TestTessSyntheticInjectedDatabase:
 
     @pytest.mark.slow
     @pytest.mark.functional
-    @patch.object(ramjet.photometric_database.tess_data_interface.fits, 'open')
-    @patch.object(ramjet.photometric_database.tess_data_interface.pd, 'read_feather')
+    @patch.object(ramjet.data_interface.tess_data_interface.fits, 'open')
+    @patch.object(ramjet.data_interface.tess_data_interface.pd, 'read_feather')
     def test_can_generate_training_and_validation_datasets(self, mock_read_feather, mock_fits_open, database):
         # Mock and initialize dataset components for simple testing.
         batch_size = 10
@@ -62,8 +62,8 @@ class TestTessSyntheticInjectedDatabase:
         assert validation_batch1[0].shape == (batch_size, time_steps_per_example, 1)
 
     @pytest.mark.functional
-    @patch.object(ramjet.photometric_database.tess_data_interface.fits, 'open')
-    @patch.object(ramjet.photometric_database.tess_data_interface.pd, 'read_feather')
+    @patch.object(ramjet.data_interface.tess_data_interface.fits, 'open')
+    @patch.object(ramjet.data_interface.tess_data_interface.pd, 'read_feather')
     def test_train_and_validation_preprocessing_produces_an_inject_and_non_injected_lightcurve(self, mock_read_feather,
                                                                                                mock_fits_open,
                                                                                                database):

@@ -8,7 +8,7 @@ import pandas as pd
 import tensorflow as tf
 
 from ramjet.photometric_database.lightcurve_label_per_time_step_database import LightcurveLabelPerTimeStepDatabase
-from ramjet.photometric_database.tess_data_interface import TessDataInterface
+from ramjet.data_interface.tess_data_interface import TessDataInterface
 
 
 class TransitLightcurveLabelPerTimeStepDatabase(LightcurveLabelPerTimeStepDatabase):

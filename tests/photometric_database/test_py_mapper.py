@@ -5,7 +5,7 @@ import pytest
 import numpy as np
 import tensorflow as tf
 
-from ramjet.photometric_database.py_mapper import PyMapper, map_py_function_to_dataset
+from ramjet.py_mapper import PyMapper, map_py_function_to_dataset
 
 
 class TestPyMapper:

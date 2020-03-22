@@ -7,20 +7,19 @@ from unittest.mock import Mock, ANY, patch
 import numpy as np
 import pandas as pd
 from astropy.coordinates import SkyCoord
-import astroquery
 from astropy.table import Table
 
 import pytest
 from astroquery.utils import TableList
 
-import ramjet.photometric_database.tess_data_interface
-from ramjet.photometric_database.tess_data_interface import TessDataInterface, TessFluxType
+import ramjet.data_interface.tess_data_interface
+from ramjet.data_interface.tess_data_interface import TessDataInterface, TessFluxType
 
 
 class TestTessDataInterface:
     @pytest.fixture
     def tess_data_interface_module(self) -> Any:
-        import ramjet.photometric_database.tess_data_interface as tess_data_interface_module
+        import ramjet.data_interface.tess_data_interface as tess_data_interface_module
         return tess_data_interface_module
 
     @pytest.fixture
@@ -114,7 +113,7 @@ class TestTessDataInterface:
         assert 5 in single_sector_observations['Sector'].values
         assert 1 in single_sector_observations['Sector'].values
 
-    @patch.object(ramjet.photometric_database.tess_data_interface.fits, 'open')
+    @patch.object(ramjet.data_interface.tess_data_interface.fits, 'open')
     def test_can_load_fluxes_and_times_from_tess_fits(self, mock_fits_open, tess_data_interface):
         expected_fluxes = np.array([1, 2, 3], dtype=np.float32)
         expected_times = np.array([4, 5, 6], dtype=np.float32)
@@ -127,7 +126,7 @@ class TestTessDataInterface:
         assert np.array_equal(fluxes, expected_fluxes)
         assert np.array_equal(times, expected_times)
 
-    @patch.object(ramjet.photometric_database.tess_data_interface.fits, 'open')
+    @patch.object(ramjet.data_interface.tess_data_interface.fits, 'open')
     def test_loading_fluxes_and_times_from_fits_drops_nans(self, mock_fits_open, tess_data_interface):
         fits_fluxes = np.array([np.nan, 2, 3], dtype=np.float32)
         fits_times = np.array([4, 5, np.nan], dtype=np.float32)
@@ -139,7 +138,7 @@ class TestTessDataInterface:
         assert np.array_equal(fluxes, np.array([2], dtype=np.float32))
         assert np.array_equal(times, np.array([5], dtype=np.float32))
 
-    @patch.object(ramjet.photometric_database.tess_data_interface.fits, 'open')
+    @patch.object(ramjet.data_interface.tess_data_interface.fits, 'open')
     def test_can_extract_different_flux_types_from_fits(self, mock_fits_open, tess_data_interface):
         fits_sap_fluxes = np.array([1, 2, 3], dtype=np.float32)
         fits_pdcsap_fluxes = np.array([4, 5, 6], dtype=np.float32)
@@ -212,7 +211,7 @@ class TestTessDataInterface:
         dispositions2 = tess_data_interface.retrieve_exofop_planet_disposition_for_tic_id(tic_id=25132999)
         assert dispositions2.shape[0] == 0
 
-    @patch.object(ramjet.photometric_database.tess_data_interface.Observations, 'query_criteria')
+    @patch.object(ramjet.data_interface.tess_data_interface.Observations, 'query_criteria')
     def test_can_get_list_of_sectors_target_appears_in(self, mock_query, tess_data_interface):
         mock_query_result = Table(
             {'dataURL': ['mast:TESS/product/tess2019006130736-s0007-0000000278956474-0131-s_lc.fits',

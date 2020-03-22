@@ -9,7 +9,7 @@ from enum import Enum
 from typing import Union, List
 from pathlib import Path
 
-from ramjet.photometric_database.tess_data_interface import TessDataInterface
+from ramjet.data_interface.tess_data_interface import TessDataInterface
 from ramjet.photometric_database.tess_synthetic_injected_database import TessSyntheticInjectedDatabase
 
 
