@@ -1,31 +1,16 @@
 """
 Code to represent a database to train to find exoplanet transits in FFI data based on known TOI dispositions.
 """
-import pickle
 import requests
 import numpy as np
 import pandas as pd
 from enum import Enum
-from typing import Union, List
+from typing import List
 from pathlib import Path
 
 from ramjet.data_interface.tess_data_interface import TessDataInterface
+from ramjet.data_interface.tess_ffi_data_interface import TessFfiDataInterface
 from ramjet.photometric_database.tess_synthetic_injected_database import TessSyntheticInjectedDatabase
-
-
-class FfiDataIndexes(Enum):
-    """
-    An enum for accessing Brian Powell's FFI pickle data with understandable indexes.
-    """
-    TIC_ID = 0
-    RA = 1
-    DEC = 2
-    TESS_MAGNITUDE = 3
-    TIME = 4
-    RAW_FLUX = 5
-    CORRECTED_FLUX = 6
-    PCA_FLUX = 7
-    FLUX_ERROR = 8
 
 
 class ToiColumns(Enum):
@@ -50,23 +35,7 @@ class FfiToiDatabase(TessSyntheticInjectedDatabase):
         self.toi_dispositions_path = self.data_directory.joinpath('toi_dispositions.csv')
         self.time_steps_per_example = 1296  # 27 days / 30 minutes.
         self.allow_out_of_bounds_injection = True
-
-    @staticmethod
-    def load_fluxes_and_times_from_ffi_pickle_file(file_path: Union[Path, str]) -> (np.ndarray, np.ndarray):
-        """
-        Loads the fluxes and times from one of Brian Powell's FFI pickle files.
-
-        :param file_path: The path to the pickle file to load.
-        :return: The fluxes and the times.
-        """
-        if not isinstance(file_path, Path):
-            file_path = Path(file_path)
-        with file_path.open('rb') as pickle_file:
-            lightcurve = pickle.load(pickle_file)
-        fluxes = lightcurve[FfiDataIndexes.CORRECTED_FLUX.value]
-        times = lightcurve[FfiDataIndexes.TIME.value]
-        assert times.shape == fluxes.shape
-        return fluxes, times
+        self.tess_ffi_data_interface = TessFfiDataInterface
 
     @staticmethod
     def generate_synthetic_signal_from_real_data(fluxes: np.ndarray, times: np.ndarray) -> (np.ndarray, np.ndarray):
@@ -177,7 +146,7 @@ class FfiToiDatabase(TessSyntheticInjectedDatabase):
         :param lightcurve_path: The path to the lightcurve file.
         :return: The fluxes and times of the lightcurve
         """
-        fluxes, times = self.load_fluxes_and_times_from_ffi_pickle_file(lightcurve_path)
+        fluxes, times = self.tess_ffi_data_interface.load_fluxes_and_times_from_pickle_file(lightcurve_path)
         nan_indexes = np.union1d(np.argwhere(np.isnan(fluxes)), np.argwhere(np.isnan(times)))
         fluxes = np.delete(fluxes, nan_indexes)
         times = np.delete(times, nan_indexes)
