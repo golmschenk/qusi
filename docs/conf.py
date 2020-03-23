@@ -35,7 +35,7 @@ exclude_patterns = ['_build', '_templates', 'Thumbs.db', '.DS_Store']
 
 # Mock packages we don't expect to be imported for any reason (e.g., requires C libraries on docs VM)
 
-mock_modules = ['muLAn', 'muLAn.models', 'muLAn.models.BLcontU']
+mock_modules = ['muLAn', 'muLAn.models', 'muLAn.models.vbb', 'muLAn.models.vbb.vbb', 'muLAn.models.vbb.vbb.vbbmagU']
 sys.modules.update((module_name, Mock()) for module_name in mock_modules)
 
 # AutoAPI configuration.
