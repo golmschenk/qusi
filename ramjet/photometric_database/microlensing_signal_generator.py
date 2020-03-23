@@ -79,16 +79,15 @@ class MagnificationSignal:
         """
         if self.tE_list is None:
             microlensing_meta_data_path = Path(__file__).parent.joinpath(
-                'microlensing_signal_meta_data/moa9yr_events_meta_oct2018.txt')
+                'microlensing_signal_meta_data/candlist_RADec.dat.txt')
             try:
-                df = pd.read_csv(microlensing_meta_data_path, header=None, skipinitialspace=True, names=['event'])
+                data = pd.read_csv(microlensing_meta_data_path, header=None, delim_whitespace=True, comment='#',
+                                                  usecols=[19, 36], names=['tE', 'rho'])
             except FileNotFoundError as error_:
                 raise FileNotFoundError(f'{microlensing_meta_data_path} is required\nMOA metadata not found.' +
                                         'Please, contact the Microlensing Group to get this file') from error_
-
-            data = df['event'].str.split("\s+", 134, expand=True)
-            self.tE_list = data[58]
-            self.rho_list = data[107]
+            self.tE_list = data['tE']
+            self.rho_list = data['rho']
 
     def getting_random_values(self):
         """
