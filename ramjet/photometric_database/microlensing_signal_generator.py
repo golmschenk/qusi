@@ -4,13 +4,44 @@ angular Einstein radius) , s (Projected separation of the masses normalized by t
 q (Mass ratio M_planet/M_host), alpha (Trajectory angle).
 """
 try:
-    import muLAn.models.BLcontU as esbl_vbb
+    from muLAn.models.vbb.vbb import vbbmagU
 except ModuleNotFoundError as error:
     raise ModuleNotFoundError(f'{__file__} module requires the muLAn package. Please install separately.') from error
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from pathlib import Path
+
+
+def calculating_magnification_from_vbb(timeseries, lens_params):
+    """Return the VBB method finite-source uniform magnification.
+    Adapted from muLAn: gravitational MICROlensing Analysis Software.
+    """
+    # Get parameters
+    t0 = lens_params['t0']
+    u0 = lens_params['u0']
+    tE = lens_params['tE']
+    rho = lens_params['rho']
+    q = lens_params['q']
+    alpha = lens_params['alpha']
+    s = lens_params['s']
+
+    tau = (timeseries - t0) / tE
+
+    cos_alpha = np.cos(alpha)
+    sin_alpha = np.sin(alpha)
+
+    x = tau * cos_alpha - u0 * sin_alpha
+    y = tau * sin_alpha + u0 * cos_alpha
+
+    # Conversion secondary body left -> right
+    x = -x
+    # Compute magnification
+    accuracy = 1.e-3  # Absolute mag accuracy (mag+/-accuracy)
+    magnification = np.array([vbbmagU(s, q, rho, x[i], y[i], accuracy) for i in range(len(x))])
+    return magnification
+
+# --------------------------------------------------------------------
 
 
 class MagnificationSignal:
@@ -54,7 +85,7 @@ class MagnificationSignal:
         normalized by the angular Einstein radius), q (Mass ratio M_planet/M_host), alpha (Trajectory angle)
         """
 
-        u0_list = np.linspace(0.01, 3.5, 10)
+        u0_list = np.linspace(-3.5, 3.5, 1000)
         self.u0 = np.random.choice(u0_list)
 
         self.tE = float(np.random.choice(self.tE_list))
@@ -64,10 +95,10 @@ class MagnificationSignal:
         s_list = np.linspace(0.01, 3.5, 100)
         self.s = np.random.choice(s_list)
 
-        q_list = np.linspace(0.0001, 10000, 100000)
+        q_list = np.power(10, (np.linspace(-5, 0, 3000)))
         self.q = np.random.choice(q_list)
 
-        alpha_list = np.linspace(0, np.pi, 10)
+        alpha_list = np.linspace(0, 2 * np.pi, 60)
         self.alpha = np.random.choice(alpha_list)
 
     def generating_magnification(self):
@@ -77,24 +108,14 @@ class MagnificationSignal:
         lens_params = dict({'u0': self.u0,
                             'tE': self.tE,
                             't0': 0.0,
-                            'piEN': 0.0,
-                            'piEE': 0.0,
                             'rho': self.rho,
                             's': self.s,
                             'q': self.q,
-                            'alpha': self.alpha,
-                            'dadt': 0.0,
-                            'dsdt': 0.0,
+                            'alpha': self.alpha
                             })
-        # No lens orbital motion (dalpha=0, ds=0)
-
-        tb = lens_params['t0']  # we choose t_binary = t0 here (see, e.g., Skowron et al. 2011)
-
-        # We don't want to include microlens parallax in this fit
-        Ds = dict({'N': np.zeros(self.n_data_points), 'E': np.zeros(self.n_data_points)})
 
         # Compute magnification
-        self.magnification = esbl_vbb.magnifcalc(self.timeseries, lens_params, Ds=Ds, tb=tb)
+        self.magnification = calculating_magnification_from_vbb(self.timeseries, lens_params)
         self.magnification_signal_curve = pd.DataFrame({'Time': self.timeseries, 'Magnification': self.magnification})
 
     def plot_magnification(self):
@@ -120,6 +141,9 @@ class MagnificationSignal:
 
 
 if __name__ == '__main__':
+    import time
+    start_time = time.time()
     random_signal = MagnificationSignal.generate_randomly_based_on_moa_observations()
+    print("--- %s seconds ---" % (time.time() - start_time))
     random_signal.plot_magnification()
     print("Done")
