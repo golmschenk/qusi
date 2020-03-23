@@ -4,14 +4,15 @@ angular Einstein radius) , s (Projected separation of the masses normalized by t
 q (Mass ratio M_planet/M_host), alpha (Trajectory angle). The distribution for tE and rho are based on the MOA
 observations.
 """
-try:
-    from muLAn.models.vbb.vbb import vbbmagU
-except ModuleNotFoundError as error:
-    raise ModuleNotFoundError(f'{__file__} module requires the muLAn package. Please install separately.') from error
+import requests
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from pathlib import Path
+try:
+    from muLAn.models.vbb.vbb import vbbmagU
+except ModuleNotFoundError as error:
+    raise ModuleNotFoundError(f'{__file__} module requires the muLAn package. Please install separately.') from error
 
 
 class MagnificationSignal:
@@ -49,12 +50,13 @@ class MagnificationSignal:
         if self.tE_list is None:
             microlensing_meta_data_path = Path(__file__).parent.joinpath(
                 'microlensing_signal_meta_data/candlist_RADec.dat.txt')
-            try:
-                data = pd.read_csv(microlensing_meta_data_path, header=None, delim_whitespace=True, comment='#',
-                                                  usecols=[19, 36], names=['tE', 'rho'])
-            except FileNotFoundError as error_:
-                raise FileNotFoundError(f'{microlensing_meta_data_path} is required\nMOA metadata not found.' +
-                                        'Please, contact the Microlensing Group to get this file') from error_
+            if not microlensing_meta_data_path.exists():
+                candidate_list_csv_url = 'https://exoplanetarchive.ipac.caltech.edu/data/ExoData/MOA/candlist_RADec.dat'
+                response = requests.get(candidate_list_csv_url)
+                with open(microlensing_meta_data_path, 'wb') as csv_file:
+                    csv_file.write(response.content)
+            data = pd.read_csv(microlensing_meta_data_path, header=None, delim_whitespace=True, comment='#',
+                               usecols=[19, 36], names=['tE', 'rho'])
             self.tE_list = data['tE']
             self.rho_list = data['rho']
 
