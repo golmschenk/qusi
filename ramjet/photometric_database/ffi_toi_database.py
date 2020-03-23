@@ -4,26 +4,13 @@ Code to represent a database to train to find exoplanet transits in FFI data bas
 import requests
 import numpy as np
 import pandas as pd
-from enum import Enum
 from typing import List
 from pathlib import Path
 
 from ramjet.data_interface.tess_data_interface import TessDataInterface
 from ramjet.data_interface.tess_ffi_data_interface import TessFfiDataInterface
+from ramjet.data_interface.tess_toi_data_interface import ToiColumns, TessToiDataInterface
 from ramjet.photometric_database.tess_synthetic_injected_database import TessSyntheticInjectedDatabase
-
-
-class ToiColumns(Enum):
-    """
-    An enum for the names of the TOI columns for Pandas data frames.
-    """
-    tic_id = 'TIC ID'
-    disposition = 'Disposition'
-    planet_number = 'Planet number'
-    transit_epoch__bjd = 'Transit epoch (BJD)'
-    transit_period__days = 'Transit period (days)'
-    transit_duration = 'Transit duration (hours)'
-    sector = 'Sector'
 
 
 class FfiToiDatabase(TessSyntheticInjectedDatabase):
@@ -35,7 +22,8 @@ class FfiToiDatabase(TessSyntheticInjectedDatabase):
         self.toi_dispositions_path = self.data_directory.joinpath('toi_dispositions.csv')
         self.time_steps_per_example = 1296  # 27 days / 30 minutes.
         self.allow_out_of_bounds_injection = True
-        self.tess_ffi_data_interface = TessFfiDataInterface
+        self.tess_ffi_data_interface = TessFfiDataInterface()
+        self.tess_toi_data_interface = TessToiDataInterface()
 
     @staticmethod
     def generate_synthetic_signal_from_real_data(fluxes: np.ndarray, times: np.ndarray) -> (np.ndarray, np.ndarray):
@@ -62,7 +50,7 @@ class FfiToiDatabase(TessSyntheticInjectedDatabase):
         response = requests.get(toi_csv_url)
         with self.toi_dispositions_path.open('wb') as csv_file:
             csv_file.write(response.content)
-        toi_dispositions = self.load_toi_dispositions_in_project_format()
+        toi_dispositions = self.tess_toi_data_interface.toi_dispositions
         tic_ids = toi_dispositions[ToiColumns.tic_id.value].unique()
         print('Downloading TESS obdservation list...')
         tess_data_interface = TessDataInterface()
@@ -89,29 +77,6 @@ class FfiToiDatabase(TessSyntheticInjectedDatabase):
         for file_path_string in suspected_planet_download_manifest['Local Path']:
             file_path = Path(file_path_string)
             file_path.rename(self.synthetic_signal_directory.joinpath(file_path.name))
-
-    def load_toi_dispositions_in_project_format(self) -> pd.DataFrame:
-        """
-        Loads the ExoFOP TOI table information from CSV to a data frame using a project consistent naming scheme.
-
-        :return: The data frame of the TOI dispositions table.
-        """
-        columns_to_use = ['TIC ID', 'TFOPWG Disposition', 'Planet Num', 'Epoch (BJD)', 'Period (days)',
-                          'Duration (hours)', 'Sectors']
-        dispositions = pd.read_csv(self.toi_dispositions_path, usecols=columns_to_use)
-        dispositions.rename(columns={'TFOPWG Disposition': ToiColumns.disposition.value,
-                                     'Planet Num': ToiColumns.planet_number.value,
-                                     'Epoch (BJD)': ToiColumns.transit_epoch__bjd.value,
-                                     'Period (days)': ToiColumns.transit_period__days.value,
-                                     'Duration (hours)': ToiColumns.transit_duration.value,
-                                     'Sectors': ToiColumns.sector.value}, inplace=True)
-        dispositions[ToiColumns.disposition.value] = dispositions[ToiColumns.disposition.value].fillna('')
-        dispositions = dispositions[dispositions[ToiColumns.sector.value].notna()]
-        dispositions[ToiColumns.sector.value] = dispositions[ToiColumns.sector.value].str.split(',')
-        dispositions = dispositions.explode(ToiColumns.sector.value)
-        dispositions[ToiColumns.sector.value] = pd.to_numeric(dispositions[ToiColumns.sector.value]
-                                                              ).astype(pd.Int64Dtype())
-        return dispositions
 
     def create_data_directories(self):
         """

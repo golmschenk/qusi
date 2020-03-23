@@ -19,6 +19,7 @@ from astroquery.vizier import Vizier
 from retrying import retry
 
 from ramjet.analysis.lightcurve_visualizer import plot_lightcurve
+from ramjet.data_interface.tess_toi_data_interface import TessToiDataInterface
 
 
 class TessFluxType(Enum):
@@ -326,29 +327,6 @@ class TessDataInterface:
         print_data_frame.reset_index(drop=True, inplace=True)
         print(print_data_frame)
 
-    @staticmethod
-    def retrieve_toi_dispositions_from_exofop() -> pd.DataFrame:
-        """
-        Downloads and loads the ExoFOP TOI table information from CSV to a data frame using a project consistent format.
-        The source for the dispositions is from the `ExoFOP TOI table
-        <https://exofop.ipac.caltech.edu/tess/download_toi.php?sort=toi&output=csv>`_.
-
-        :return: The data frame containing the dispositions.
-        """
-        toi_csv_url = 'https://exofop.ipac.caltech.edu/tess/download_toi.php?sort=toi&output=csv'
-        columns_to_use = ['TIC ID', 'TFOPWG Disposition', 'Planet Num', 'Epoch (BJD)', 'Period (days)',
-                          'Duration (hours)', 'Sectors']
-        dispositions = pd.read_csv(toi_csv_url, usecols=columns_to_use)
-        dispositions['Sectors'] = dispositions['Sectors'].astype(str)
-        dispositions.rename(columns={'Planet Num': 'Planet number', 'Epoch (BJD)': 'Transit epoch (BJD)',
-                                     'Period (days)': 'Transit period (days)',
-                                     'Duration (hours)': 'Transit duration (hours)',
-                                     'Sectors': 'Sector', 'TFOPWG Disposition': 'TFOPWG disposition'}, inplace=True)
-        dispositions['Sector'] = dispositions['Sector'].str.split(',')
-        dispositions = dispositions.explode('Sector')
-        dispositions['Sector'] = pd.to_numeric(dispositions['Sector'], errors='coerce').astype(pd.Int64Dtype())
-        return dispositions
-
     def retrieve_exofop_planet_disposition_for_tic_id(self, tic_id: int) -> pd.DataFrame:
         """
         Retrieves the ExoFOP disposition information for a given TIC ID from
@@ -357,7 +335,9 @@ class TessDataInterface:
         :param tic_id: The TIC ID to get available data for.
         :return: The disposition data frame.
         """
-        dispositions = self.retrieve_toi_dispositions_from_exofop()
+        tess_toi_data_interface = TessToiDataInterface()
+        tess_toi_data_interface.update_toi_dispositions_file()
+        dispositions = tess_toi_data_interface.toi_dispositions
         tic_target_dispositions = dispositions[dispositions['TIC ID'] == tic_id]
         return tic_target_dispositions
 
