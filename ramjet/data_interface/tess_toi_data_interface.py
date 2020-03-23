@@ -22,29 +22,29 @@ class TessToiDataInterface:
     """
     A data interface for working with the TESS table of objects of interest.
     """
-    toi_dispositions_: pd.DataFrame = None
+    dispositions_: pd.DataFrame = None
 
     def __init__(self, data_directory='data/tess_toi'):
         self.data_directory = Path(data_directory)
         self.data_directory.mkdir(parents=True, exist_ok=True)
-        self.toi_dispositions_path = self.data_directory.joinpath('toi_dispositions.csv')
+        self.dispositions_path = self.data_directory.joinpath('toi_dispositions.csv')
 
     @property
-    def toi_dispositions(self):
+    def dispositions(self):
         """
         The TOI dispositions data frame property. Will load as a single class attribute on first access. If the
         data file does not exists, downloads it first.
 
         :return: The TOI dispositions data frame.
         """
-        if self.toi_dispositions_ is None:
-            if not self.toi_dispositions_path.exists():
+        if self.dispositions_ is None:
+            if not self.dispositions_path.exists():
                 toi_csv_url = 'https://exofop.ipac.caltech.edu/tess/download_toi.php?sort=toi&output=csv'
                 response = requests.get(toi_csv_url)
-                with self.toi_dispositions_path.open('wb') as csv_file:
+                with self.dispositions_path.open('wb') as csv_file:
                     csv_file.write(response.content)
-            self.toi_dispositions_ = self.load_toi_dispositions_in_project_format()
-        return self.toi_dispositions_
+            self.dispositions_ = self.load_toi_dispositions_in_project_format()
+        return self.dispositions_
 
     def update_toi_dispositions_file(self):
         """
@@ -52,9 +52,9 @@ class TessToiDataInterface:
         """
         toi_csv_url = 'https://exofop.ipac.caltech.edu/tess/download_toi.php?sort=toi&output=csv'
         response = requests.get(toi_csv_url)
-        with self.toi_dispositions_path.open('wb') as csv_file:
+        with self.dispositions_path.open('wb') as csv_file:
             csv_file.write(response.content)
-        self.toi_dispositions_ = self.load_toi_dispositions_in_project_format()
+        self.dispositions_ = self.load_toi_dispositions_in_project_format()
 
     def load_toi_dispositions_in_project_format(self) -> pd.DataFrame:
         """
@@ -64,7 +64,7 @@ class TessToiDataInterface:
         """
         columns_to_use = ['TIC ID', 'TFOPWG Disposition', 'Planet Num', 'Epoch (BJD)', 'Period (days)',
                           'Duration (hours)', 'Sectors']
-        dispositions = pd.read_csv(self.toi_dispositions_path, usecols=columns_to_use)
+        dispositions = pd.read_csv(self.dispositions_path, usecols=columns_to_use)
         dispositions.rename(columns={'TFOPWG Disposition': ToiColumns.disposition.value,
                                      'Planet Num': ToiColumns.planet_number.value,
                                      'Epoch (BJD)': ToiColumns.transit_epoch__bjd.value,

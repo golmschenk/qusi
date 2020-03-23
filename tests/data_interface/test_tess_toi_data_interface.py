@@ -12,7 +12,7 @@ class TestTessToiDataInterface:
     @pytest.mark.slow
     @pytest.mark.external
     def test_can_retrieve_the_tess_toi_dispositions(self, data_interface):
-        dispositions = data_interface.toi_dispositions
+        dispositions = data_interface.dispositions
         target_dispositions = dispositions[dispositions['TIC ID'] == 307210830]
         assert target_dispositions['Disposition'].iloc[0] == 'CP'
         target_planet_sectors = target_dispositions['Sector'].unique()

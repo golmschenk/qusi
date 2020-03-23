@@ -337,7 +337,7 @@ class TessDataInterface:
         """
         tess_toi_data_interface = TessToiDataInterface()
         tess_toi_data_interface.update_toi_dispositions_file()
-        dispositions = tess_toi_data_interface.toi_dispositions
+        dispositions = tess_toi_data_interface.dispositions
         tic_target_dispositions = dispositions[dispositions['TIC ID'] == tic_id]
         return tic_target_dispositions
 
