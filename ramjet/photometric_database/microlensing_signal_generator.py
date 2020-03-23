@@ -1,7 +1,8 @@
 """Script that generates a Gravitational Microlensing Signal, randomly, within the natural parameters: u0 (
 source-lens impact parameter), tE (Einstein radius crossing time), rho (angular source size normalized by the
 angular Einstein radius) , s (Projected separation of the masses normalized by the angular Einstein radius),
-q (Mass ratio M_planet/M_host), alpha (Trajectory angle).
+q (Mass ratio M_planet/M_host), alpha (Trajectory angle). The distribution for tE and rho are based on the MOA
+observations.
 """
 try:
     from muLAn.models.vbb.vbb import vbbmagU
@@ -45,6 +46,17 @@ def calculating_magnification_from_vbb(timeseries, lens_params):
 
 
 class MagnificationSignal:
+    """A class to generate a random microlensing magnification signal.
+    Using the parameters:
+    u0 (source-lens impact parameter)
+    tE (Einstein radius crossing time)
+    rho (angular source size normalized by the angular Einstein radius)
+    s (Projected separation of the masses normalized by the angular Einstein radius)
+    q (Mass ratio M_planet/M_host)
+    alpha (Trajectory angle)
+    > The distribution for tE and rho are based on the MOA observations
+    > No parallax effect is considered
+    """
     tE_list: pd.Series = None
     rho_list: pd.Series = None
 
