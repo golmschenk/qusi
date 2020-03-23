@@ -50,6 +50,7 @@ class MagnificationSignal:
         if self.tE_list is None:
             microlensing_meta_data_path = Path(__file__).parent.joinpath(
                 'microlensing_signal_meta_data/candlist_RADec.dat.txt')
+            microlensing_meta_data_path.parent.mkdir(parents=True, exist_ok=True)
             if not microlensing_meta_data_path.exists():
                 candidate_list_csv_url = 'https://exoplanetarchive.ipac.caltech.edu/data/ExoData/MOA/candlist_RADec.dat'
                 response = requests.get(candidate_list_csv_url)
