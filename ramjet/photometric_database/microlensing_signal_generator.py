@@ -14,37 +14,6 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 
 
-def calculating_magnification_from_vbb(timeseries, lens_params):
-    """Return the VBB method finite-source uniform magnification.
-    Adapted from muLAn: gravitational MICROlensing Analysis Software.
-    """
-    # Get parameters
-    t0 = lens_params['t0']
-    u0 = lens_params['u0']
-    tE = lens_params['tE']
-    rho = lens_params['rho']
-    q = lens_params['q']
-    alpha = lens_params['alpha']
-    s = lens_params['s']
-
-    tau = (timeseries - t0) / tE
-
-    cos_alpha = np.cos(alpha)
-    sin_alpha = np.sin(alpha)
-
-    x = tau * cos_alpha - u0 * sin_alpha
-    y = tau * sin_alpha + u0 * cos_alpha
-
-    # Conversion secondary body left -> right
-    x = -x
-    # Compute magnification
-    accuracy = 1.e-3  # Absolute mag accuracy (mag+/-accuracy)
-    magnification = np.array([vbbmagU(s, q, rho, x[i], y[i], accuracy) for i in range(len(x))])
-    return magnification
-
-# --------------------------------------------------------------------
-
-
 class MagnificationSignal:
     """A class to generate a random microlensing magnification signal.
     Using the parameters:
@@ -126,7 +95,7 @@ class MagnificationSignal:
                             })
 
         # Compute magnification
-        self.magnification = calculating_magnification_from_vbb(self.timeseries, lens_params)
+        self.magnification = self.calculating_magnification_from_vbb(self.timeseries, lens_params)
         self.magnification_signal_curve = pd.DataFrame({'Time': self.timeseries, 'Magnification': self.magnification})
 
     def plot_magnification(self):
@@ -149,6 +118,35 @@ class MagnificationSignal:
         microlensing_signal.getting_random_values()
         microlensing_signal.generating_magnification()
         return microlensing_signal
+
+    @staticmethod
+    def calculating_magnification_from_vbb(timeseries, lens_params):
+        """Return the VBB method finite-source uniform magnification.
+        Adapted from muLAn: gravitational MICROlensing Analysis Software.
+        """
+        # Get parameters
+        t0 = lens_params['t0']
+        u0 = lens_params['u0']
+        tE = lens_params['tE']
+        rho = lens_params['rho']
+        q = lens_params['q']
+        alpha = lens_params['alpha']
+        s = lens_params['s']
+
+        tau = (timeseries - t0) / tE
+
+        cos_alpha = np.cos(alpha)
+        sin_alpha = np.sin(alpha)
+
+        x = tau * cos_alpha - u0 * sin_alpha
+        y = tau * sin_alpha + u0 * cos_alpha
+
+        # Conversion secondary body left -> right
+        x = -x
+        # Compute magnification
+        accuracy = 1.e-3  # Absolute mag accuracy (mag+/-accuracy)
+        magnification = np.array([vbbmagU(s, q, rho, x[i], y[i], accuracy) for i in range(len(x))])
+        return magnification
 
 
 if __name__ == '__main__':
