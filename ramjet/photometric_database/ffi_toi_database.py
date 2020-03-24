@@ -25,20 +25,6 @@ class FfiToiDatabase(TessSyntheticInjectedDatabase):
         self.tess_ffi_data_interface = TessFfiDataInterface()
         self.tess_toi_data_interface = TessToiDataInterface()
 
-    @staticmethod
-    def generate_synthetic_signal_from_real_data(fluxes: np.ndarray, times: np.ndarray) -> (np.ndarray, np.ndarray):
-        """
-        Takes real lightcurve data and converts it to a form that can be used for synthetic lightcurve injection.
-
-        :param fluxes: The real lightcurve fluxes.
-        :param times: The real lightcurve times.
-        :return: Fake synthetic magnifications and times.
-        """
-        flux_median = np.median(fluxes)
-        normalized_fluxes = fluxes / flux_median
-        relative_times = times - np.min(times)
-        return normalized_fluxes, relative_times
-
     def download_exofop_toi_lightcurves_to_synthetic_directory(self):
         """
         Downloads the `ExoFOP database <https://exofop.ipac.caltech.edu/tess/view_toi.php>`_ lightcurve files to the
