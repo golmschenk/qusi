@@ -1,8 +1,11 @@
 from enum import Enum
 from pathlib import Path
+from typing import Union
 
 import pandas as pd
 import requests
+
+from ramjet.data_interface.tess_data_interface import TessDataInterface
 
 
 class ToiColumns(Enum):
@@ -28,6 +31,7 @@ class TessToiDataInterface:
         self.data_directory = Path(data_directory)
         self.data_directory.mkdir(parents=True, exist_ok=True)
         self.dispositions_path = self.data_directory.joinpath('toi_dispositions.csv')
+        self.lightcurves_directory = self.data_directory.joinpath('lightcurves')
 
     @property
     def dispositions(self):
@@ -78,3 +82,48 @@ class TessToiDataInterface:
         dispositions[ToiColumns.sector.value] = pd.to_numeric(dispositions[ToiColumns.sector.value]
                                                               ).astype(pd.Int64Dtype())
         return dispositions
+
+    def download_exofop_toi_lightcurves_to_directory(self, directory: Union[Path, str] = None):
+        """
+        Downloads the `ExoFOP database <https://exofop.ipac.caltech.edu/tess/view_toi.php>`_ lightcurve files to the
+        given directory.
+
+        :param directory: The directory to download the lightcurves to. Defaults to the data interface directory.
+        """
+        print("Downloading ExoFOP TOI disposition CSV...")
+
+        if directory is None:
+            directory = self.lightcurves_directory
+        if isinstance(directory, str):
+            directory = Path(directory)
+        toi_csv_url = 'https://exofop.ipac.caltech.edu/tess/download_toi.php?sort=toi&output=csv'
+        response = requests.get(toi_csv_url)
+        with self.dispositions_path.open('wb') as csv_file:
+            csv_file.write(response.content)
+        toi_dispositions = self.load_toi_dispositions_in_project_format()
+        tic_ids = toi_dispositions[ToiColumns.tic_id.value].unique()
+        print('Downloading TESS obdservation list...')
+        tess_data_interface = TessDataInterface()
+        tess_observations = tess_data_interface.get_all_tess_time_series_observations(tic_id=tic_ids)
+        single_sector_observations = tess_data_interface.filter_for_single_sector_observations(tess_observations)
+        single_sector_observations = tess_data_interface.add_tic_id_column_to_single_sector_observations(
+            single_sector_observations)
+        single_sector_observations = tess_data_interface.add_sector_column_to_single_sector_observations(
+            single_sector_observations)
+        print("Downloading lightcurves which are confirmed or suspected planets in TOI dispositions...")
+        suspected_planet_dispositions = toi_dispositions[toi_dispositions[ToiColumns.disposition.value] != 'FP']
+        suspected_planet_observations = pd.merge(single_sector_observations, suspected_planet_dispositions, how='inner',
+                                                 on=[ToiColumns.tic_id.value, ToiColumns.sector.value])
+        observations_not_found = suspected_planet_dispositions.shape[0] - suspected_planet_observations.shape[0]
+        print(f"{suspected_planet_observations.shape[0]} observations found that match the TOI dispositions.")
+        print(f"No observations found for {observations_not_found} entries in TOI dispositions.")
+        suspected_planet_data_products = tess_data_interface.get_product_list(suspected_planet_observations)
+        suspected_planet_lightcurve_data_products = suspected_planet_data_products[
+            suspected_planet_data_products['productFilename'].str.endswith('lc.fits')
+        ]
+        suspected_planet_download_manifest = tess_data_interface.download_products(
+            suspected_planet_lightcurve_data_products, data_directory=self.data_directory)
+        print(f'Moving lightcurves to {directory}...')
+        for file_path_string in suspected_planet_download_manifest['Local Path']:
+            file_path = Path(file_path_string)
+            file_path.rename(directory.joinpath(file_path.name))
