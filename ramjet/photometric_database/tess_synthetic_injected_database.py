@@ -171,3 +171,17 @@ class TessSyntheticInjectedDatabase(LightcurveDatabase):
         interpolated_signal_fluxes = signal_flux_interpolator(lightcurve_relative_times)
         fluxes_with_injected_signal = lightcurve_fluxes + interpolated_signal_fluxes
         return fluxes_with_injected_signal
+
+    def infer_preprocessing(self, lightcurve_path_tensor: tf.string) -> (str, np.array):
+        """
+        Preprocesses a lightcurve for inference. Returns the lightcurve path, as directly linking this to the
+        lightcurve can ease analysis when using multiprocessing, where the order of the inputs is inconsistent.
+
+        :param lightcurve_path_tensor: A tensor containing the path of the lightcurve to preprocess.
+        :return: The path of the lightcurve and the preprocessed lightcurve.
+        """
+        lightcurve_path = lightcurve_path_tensor.numpy().decode('utf-8')
+        fluxes, times = self.load_fluxes_and_times_from_lightcurve_path(lightcurve_path)
+        fluxes = self.flux_preprocessing(fluxes, evaluation_mode=True)
+        lightcurve = np.expand_dims(fluxes, axis=-1)
+        return lightcurve_path, lightcurve

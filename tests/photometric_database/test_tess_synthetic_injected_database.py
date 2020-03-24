@@ -128,3 +128,20 @@ class TestTessSyntheticInjectedDatabase:
         fluxes_with_injected_signal = database.inject_signal_into_lightcurve(lightcurve_fluxes, lightcurve_times,
                                                                              signal_magnifications, signal_times)
         assert np.array_equal(fluxes_with_injected_signal, np.array([1, 5, 9, 7, 5, 3]))
+
+    @patch.object(ramjet.data_interface.tess_data_interface.fits, 'open')
+    def test_infer_preprocessing_preprocessing_produces_a_path_and_lightcurve(self, mock_fits_open, database):
+        lightcurve_length = 15
+        database.time_steps_per_example = lightcurve_length
+        fits_fluxes = np.array([1, 2, 3, 4, 5], dtype=np.float32)
+        fits_times = fits_fluxes * 10
+        hdu = Mock(data={'PDCSAP_FLUX': fits_fluxes, 'TIME': fits_times})
+        hdu_list = [None, hdu]  # Lightcurve information is in first extension table in TESS data.
+        mock_fits_open.return_value.__enter__.return_value = hdu_list
+        path, lightcurve = database.infer_preprocessing(tf.convert_to_tensor('fake_path.fits'))
+        mock_fits_open.assert_called_with('fake_path.fits')
+        assert lightcurve.shape == (15, 1)
+        assert np.allclose(lightcurve, [[-1.25], [-0.625], [0], [0.625], [1.25],
+                                        [-1.25], [-0.625], [0], [0.625], [1.25],
+                                        [-1.25], [-0.625], [0], [0.625], [1.25]])
+        assert path == 'fake_path.fits'
