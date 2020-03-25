@@ -2,6 +2,7 @@
 Code for a class for common interfacing with TESS data, such as downloading, sorting, and manipulating.
 """
 import math
+import re
 import shutil
 import tempfile
 import time
@@ -438,6 +439,23 @@ class TessDataInterface:
         for file_path_string in suspected_planet_download_manifest['Local Path']:
             file_path = Path(file_path_string)
             file_path.rename(directory.joinpath(file_path.name))
+
+    @staticmethod
+    def get_tic_id_and_sector_from_file_path(file_path: Union[Path, str]):
+        """
+        Add general purpose function to get the TIC ID and sector from commonly encountered file name patterns.
+
+        :param file_path: The path of the file to extract the TIC ID and sector.
+        :return: The TIC ID and sector. The sector might be omitted (as None).
+        """
+        if isinstance(file_path, str):
+            file_path = Path(file_path)
+        file_name = file_path.stem
+        # Search for the human readable version. E.g., "TIC 169480782 sector 5"
+        match = re.search(r'TIC (\d+) sector (\d+)', file_name)
+        if match:
+            return int(match.group(1)), int(match.group(2))
+        raise ValueError(f'{file_name} does not match a known pattern to extract TIC ID and sector from.')
 
 
 if __name__ == '__main__':

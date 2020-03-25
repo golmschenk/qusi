@@ -23,7 +23,7 @@ class FfiDataIndexes(Enum):
     FLUX_ERROR = 8
 
 
-class TessFfiDataInterface():
+class TessFfiDataInterface:
     """
     A class for interfacing with Brian Powell's TESS full frame image (FFI) data.
     """

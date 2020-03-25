@@ -213,3 +213,16 @@ class TestTessDataInterface:
         tic_id = 278956474
         sectors = tess_data_interface.get_sectors_target_appears_in(tic_id)
         assert sorted(sectors) == [5, 7]
+
+    def test_can_get_tic_id_and_sector_from_human_readable_file_name(self, tess_data_interface):
+        tic_id0, sector0 = tess_data_interface.get_tic_id_and_sector_from_file_path(
+            'TIC 289890301 sector 15 second half')
+        assert tic_id0 == 289890301
+        assert sector0 == 15
+        tic_id1, sector1 = tess_data_interface.get_tic_id_and_sector_from_file_path('output/TIC 169480782 sector 5.png')
+        assert tic_id1 == 169480782
+        assert sector1 == 5
+
+    def test_get_tic_id_and_sector_raises_error_with_unknown_pattern(self, tess_data_interface):
+        with pytest.raises(ValueError):
+            tess_data_interface.get_tic_id_and_sector_from_file_path('a b c d e f g')
