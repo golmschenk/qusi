@@ -4,7 +4,6 @@ Uses known TOI dispositions and injects them into other TESS lightcurves to crea
 """
 import numpy as np
 from typing import List
-from ramjet.data_interface.tess_toi_data_interface import TessToiDataInterface
 from ramjet.photometric_database.tess_synthetic_injected_database import TessSyntheticInjectedDatabase
 
 
@@ -18,7 +17,6 @@ class ToiDatabase(TessSyntheticInjectedDatabase):
         super().__init__(data_directory=data_directory)
         self.toi_dispositions_path = self.data_directory.joinpath('toi_dispositions.csv')
         self.allow_out_of_bounds_injection = True
-        self.tess_toi_data_interface = TessToiDataInterface()
 
     def get_all_synthetic_signal_paths(self) -> List[str]:
         """
@@ -44,6 +42,6 @@ class ToiDatabase(TessSyntheticInjectedDatabase):
 
 if __name__ == '__main__':
     toi_database = ToiDatabase()
-    toi_database.tess_toi_data_interface.download_exofop_toi_lightcurves_to_directory(
+    toi_database.tess_data_interface.download_exofop_toi_lightcurves_to_directory(
         toi_database.synthetic_signal_directory)
     toi_database.tess_data_interface.download_all_two_minute_cadence_lightcurves(toi_database.lightcurve_directory)
