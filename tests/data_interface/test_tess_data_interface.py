@@ -226,3 +226,13 @@ class TestTessDataInterface:
     def test_get_tic_id_and_sector_raises_error_with_unknown_pattern(self, tess_data_interface):
         with pytest.raises(ValueError):
             tess_data_interface.get_tic_id_and_sector_from_file_path('a b c d e f g')
+
+    def test_can_get_tic_id_and_sector_from_tess_obs_id_style_file_name(self, tess_data_interface):
+        tic_id0, sector0 = tess_data_interface.get_tic_id_and_sector_from_file_path(
+            'mast:TESS/product/tess2019006130736-s0007-0000000278956474-0131-s_lc.fits')
+        assert tic_id0 == 278956474
+        assert sector0 == 7
+        tic_id1, sector1 = tess_data_interface.get_tic_id_and_sector_from_file_path(
+            'tess2018319095959-s0005-0000000278956474-0125-s')
+        assert tic_id1 == 278956474
+        assert sector1 == 5

@@ -455,6 +455,11 @@ class TessDataInterface:
         match = re.search(r'TIC (\d+) sector (\d+)', file_name)
         if match:
             return int(match.group(1)), int(match.group(2))
+        # Search for the TESS obs_id version. E.g., "tess2018319095959-s0005-0000000278956474-0125-s"
+        match = re.search(r'tess\d+-s(\d+)-(\d+)-\d+-s', file_name)
+        if match:
+            return int(match.group(2)), int(match.group(1))
+        # Raise an error if none of the patterns matched.
         raise ValueError(f'{file_name} does not match a known pattern to extract TIC ID and sector from.')
 
 
