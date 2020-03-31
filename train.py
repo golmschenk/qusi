@@ -11,6 +11,7 @@ from ramjet.photometric_database.toi_lightcurve_database import ToiLightcurveDat
 
 def train():
     """Runs the training."""
+    print('Starting training process...')
     # Basic training settings.
     model = ConvolutionalLstm()
     database = ToiLightcurveDatabase()
