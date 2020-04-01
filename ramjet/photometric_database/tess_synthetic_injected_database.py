@@ -26,9 +26,15 @@ class TessSyntheticInjectedDatabase(LightcurveDatabase):
         self.synthetic_signal_directory: Path = self.data_directory.joinpath('synthetic_signals')
         self.tess_data_interface = TessDataInterface()
         self.time_steps_per_example = 20000
+        self.shuffle_buffer_size = 10000
         self.allow_out_of_bounds_injection = False
 
-    def generate_datasets(self):
+    def generate_datasets(self) -> (tf.data.Dataset, tf.data.Dataset):
+        """
+        Generates the training and validation datasets for the database.
+
+        :return: The training and validation dataset.
+        """
         all_lightcurve_paths = self.get_all_lightcurve_paths()
         all_synthetic_paths = self.get_all_synthetic_signal_paths()
         synthetic_signal_paths_dataset = tf.data.Dataset.from_tensor_slices(all_synthetic_paths)
@@ -37,10 +43,10 @@ class TessSyntheticInjectedDatabase(LightcurveDatabase):
         print(f'{len(list(training_lightcurve_paths_dataset))} training lightcurves.')
         print(f'{len(list(validation_lightcurve_paths_dataset))} validation lightcurves.')
         print(f'{len(list(synthetic_signal_paths_dataset))} injectable signals.')
-        shuffled_training_lightcurve_paths_dataset = training_lightcurve_paths_dataset.shuffle(
-            buffer_size=len(list(training_lightcurve_paths_dataset))).repeat()
-        shuffled_synthetic_signal_paths_dataset = synthetic_signal_paths_dataset.shuffle(
-            buffer_size=len(list(synthetic_signal_paths_dataset))).repeat()
+        shuffled_training_lightcurve_paths_dataset = training_lightcurve_paths_dataset.repeat().shuffle(
+            buffer_size=self.shuffle_buffer_size)
+        shuffled_synthetic_signal_paths_dataset = synthetic_signal_paths_dataset.repeat().shuffle(
+            buffer_size=self.shuffle_buffer_size)
         zipped_training_paths_dataset = tf.data.Dataset.zip((shuffled_training_lightcurve_paths_dataset,
                                                              shuffled_synthetic_signal_paths_dataset))
         output_types = (tf.float32, tf.float32)
@@ -53,8 +59,8 @@ class TessSyntheticInjectedDatabase(LightcurveDatabase):
                                                                  flat_map=True)
         batched_training_dataset = lightcurve_training_dataset.batch(self.batch_size)
         prefetch_training_dataset = batched_training_dataset.prefetch(tf.data.experimental.AUTOTUNE)
-        shuffled_validation_lightcurve_paths_dataset = validation_lightcurve_paths_dataset.shuffle(
-            buffer_size=len(list(validation_lightcurve_paths_dataset))).repeat()
+        shuffled_validation_lightcurve_paths_dataset = validation_lightcurve_paths_dataset.repeat().shuffle(
+            buffer_size=self.shuffle_buffer_size)
         zipped_validation_paths_dataset = tf.data.Dataset.zip((shuffled_validation_lightcurve_paths_dataset,
                                                                shuffled_synthetic_signal_paths_dataset))
         lightcurve_validation_dataset = map_py_function_to_dataset(zipped_validation_paths_dataset,
