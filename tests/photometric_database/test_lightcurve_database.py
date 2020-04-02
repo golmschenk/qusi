@@ -1,6 +1,7 @@
 """
 Tests for the LightcurveDatabase class.
 """
+from pathlib import Path
 from typing import Any
 from unittest.mock import Mock, patch
 import numpy as np
@@ -72,3 +73,13 @@ class TestLightcurveDatabase:
         assert np.array_equal(lightcurve2, [[30], [40], [50], [10], [20], [30], [40], [50], [10]])
         lightcurve3 = database.make_uniform_length(np.array([[10], [20], [30], [40], [50]]), length=9, randomize=False)
         assert np.array_equal(lightcurve3, [[10], [20], [30], [40], [50], [10], [20], [30], [40]])
+
+    @patch.object(ramjet.photometric_database.lightcurve_database.np.random, 'shuffle')
+    def test_splitting_of_training_and_validation_datasets_for_file_paths(self, mock_shuffle, database):
+        mock_shuffle = Mock()  # Make sure the shuffle does nothing to get consistent output.
+        paths = [Path('a'), Path('b'), Path('c'), Path('d'), Path('e'), Path('f')]
+        database.validation_ratio = 1/3
+        datasets = database.get_training_and_validation_datasets_for_file_paths(paths)
+        training_paths_dataset, validation_paths_dataset = datasets
+        assert list(training_paths_dataset) == ['c', 'd', 'e', 'f']
+        assert list(validation_paths_dataset) == ['a', 'b']

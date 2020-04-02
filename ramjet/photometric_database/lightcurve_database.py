@@ -127,14 +127,20 @@ class LightcurveDatabase(ABC):
 
     def get_training_and_validation_datasets_for_file_paths(self, example_paths: List[Union[str, Path]]) -> (
             tf.data.Dataset, tf.data.Dataset):
-        """Creates a TensorFlow Dataset from a list of file names and desired label for those files."""
+        """
+        Creates training and validation datasets from a list of all file paths. The database validation ratio is used
+        to determine the size of the split.
+
+        :param example_paths: The total list of file paths.
+        :return: The training and validation datasets.
+        """
         example_paths = [str(example_path) for example_path in example_paths]
         chunk_ratio = self.validation_ratio
         validation_chunk_index = 0
         validation_paths, training_paths = self.extract_shuffled_chunk_and_remainder(example_paths, chunk_ratio,
                                                                                      validation_chunk_index)
-        validation_dataset = tf.data.Dataset.from_tensor_slices(validation_paths)
         training_dataset = tf.data.Dataset.from_tensor_slices(training_paths)
+        validation_dataset = tf.data.Dataset.from_tensor_slices(validation_paths)
         return training_dataset, validation_dataset
 
     @staticmethod
