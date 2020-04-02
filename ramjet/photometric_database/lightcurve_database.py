@@ -126,7 +126,7 @@ class LightcurveDatabase(ABC):
         return example
 
     def get_training_and_validation_datasets_for_file_paths(
-                self, example_paths: Union[List[Path], Callable[[], Generator[Path, None, None]]]
+                self, example_paths: Union[List[Path], Callable[[], Union[Generator[Path], List[Path]]]]
             ) -> (tf.data.Dataset, tf.data.Dataset):
         """
         Creates training and validation datasets from a list of all file paths. The database validation ratio is used
@@ -139,7 +139,7 @@ class LightcurveDatabase(ABC):
             """Produces a generator from either the examples path list or example paths factory to strings."""
             def paths_to_strings_generator():
                 """A generator from either the examples path list or example paths factory to strings."""
-                if isinstance(example_paths, Callable):  # If a generator factory, produce a new generator.
+                if isinstance(example_paths, Callable):  # If a generator/list factory, produce a new generator/list.
                     resolved_example_paths = example_paths()
                 else:  # Otherwise, the paths are already a resolved list, and can be directly used.
                     resolved_example_paths = example_paths
