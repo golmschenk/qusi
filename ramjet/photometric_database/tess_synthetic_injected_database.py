@@ -3,7 +3,7 @@ Code to represent the database for injecting synthetic signals into real TESS da
 """
 import time
 from pathlib import Path
-from typing import List
+from typing import Iterable
 
 import numpy as np
 import pandas as pd
@@ -35,10 +35,10 @@ class TessSyntheticInjectedDatabase(LightcurveDatabase):
 
         :return: The training and validation dataset.
         """
-        all_lightcurve_paths = self.get_all_lightcurve_paths()
-        all_synthetic_paths = self.get_all_synthetic_signal_paths()
-        synthetic_signal_paths_dataset = tf.data.Dataset.from_tensor_slices(all_synthetic_paths)
-        lightcurve_paths_datasets = self.get_training_and_validation_datasets_for_file_paths(all_lightcurve_paths)
+        synthetic_signal_paths_dataset = self.paths_dataset_from_list_or_generator_factory(
+            self.get_all_synthetic_signal_paths)
+        lightcurve_paths_datasets = self.get_training_and_validation_datasets_for_file_paths(
+            self.get_all_lightcurve_paths)
         training_lightcurve_paths_dataset, validation_lightcurve_paths_dataset = lightcurve_paths_datasets
         print(f'{len(list(training_lightcurve_paths_dataset))} training lightcurves.')
         print(f'{len(list(validation_lightcurve_paths_dataset))} validation lightcurves.')
@@ -73,22 +73,22 @@ class TessSyntheticInjectedDatabase(LightcurveDatabase):
         prefetch_validation_dataset = batched_validation_dataset.prefetch(tf.data.experimental.AUTOTUNE)
         return prefetch_training_dataset, prefetch_validation_dataset
 
-    def get_all_lightcurve_paths(self) -> List[str]:
+    def get_all_lightcurve_paths(self) -> Iterable[Path]:
         """
         Returns the list of all lightcurves to use. Expected to be overridden for subclass databases.
 
         :return: The list of lightcurves.
         """
-        lightcurve_paths = list(map(str, self.lightcurve_directory.glob('**/*.fits')))
+        lightcurve_paths = self.lightcurve_directory.glob('**/*.fits')
         return lightcurve_paths
 
-    def get_all_synthetic_signal_paths(self) -> List[str]:
+    def get_all_synthetic_signal_paths(self) -> Iterable[Path]:
         """
         Returns the list of all synthetic signals to use. Expected to be overridden for subclass databases.
 
         :return: The list of synthetic signals.
         """
-        synthetic_signal_paths = list(map(str, self.synthetic_signal_directory.glob('**/*.feather')))
+        synthetic_signal_paths = self.synthetic_signal_directory.glob('**/*.feather')
         return synthetic_signal_paths
 
     def train_and_validation_preprocessing(self, lightcurve_path_tensor: tf.Tensor,

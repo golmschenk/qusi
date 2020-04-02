@@ -5,7 +5,7 @@ from abc import ABC
 import os
 import random
 from pathlib import Path
-from typing import List, Union, Tuple, Generator, Callable
+from typing import List, Union, Tuple, Callable, Iterable
 
 import numpy as np
 import pandas as pd
@@ -126,7 +126,7 @@ class LightcurveDatabase(ABC):
         return example
 
     def get_training_and_validation_datasets_for_file_paths(
-                self, example_paths: Union[List[Path], Callable[[], Union[Generator[Path], List[Path]]]]
+                self, example_paths: Union[Iterable[Path], Callable[[], Iterable[Path]]]
             ) -> (tf.data.Dataset, tf.data.Dataset):
         """
         Creates training and validation datasets from a list of all file paths. The database validation ratio is used
@@ -135,18 +135,6 @@ class LightcurveDatabase(ABC):
         :param example_paths: The total list of file paths.
         :return: The training and validation datasets.
         """
-        def paths_to_strings_generator_factory():
-            """Produces a generator from either the examples path list or example paths factory to strings."""
-            def paths_to_strings_generator():
-                """A generator from either the examples path list or example paths factory to strings."""
-                if isinstance(example_paths, Callable):  # If a generator/list factory, produce a new generator/list.
-                    resolved_example_paths = example_paths()
-                else:  # Otherwise, the paths are already a resolved list, and can be directly used.
-                    resolved_example_paths = example_paths
-                for path_string in map(str, resolved_example_paths):
-                    yield path_string
-            return paths_to_strings_generator
-
         def element_should_be_in_validation(index, _):
             """Checks if the element should be in the validation set based on the index."""
             return index % int(1 / self.validation_ratio) == 0
@@ -159,8 +147,7 @@ class LightcurveDatabase(ABC):
             """Drops the index from the index element pair dataset."""
             return element
 
-        example_paths_dataset = tf.data.Dataset.from_generator(paths_to_strings_generator_factory(),
-                                                               output_types=tf.string)
+        example_paths_dataset = self.paths_dataset_from_list_or_generator_factory(example_paths)
         training_example_paths_dataset = example_paths_dataset.enumerate().filter(element_should_be_in_training
                                                                                   ).map(drop_index)
         validation_example_paths_dataset = example_paths_dataset.enumerate().filter(element_should_be_in_validation
@@ -224,3 +211,23 @@ class LightcurveDatabase(ABC):
         Creates the data directories to be used by the database.
         """
         self.data_directory.mkdir(parents=True, exist_ok=True)
+
+    @staticmethod
+    def paths_dataset_from_list_or_generator_factory(
+            list_or_generator_factory: Union[Iterable[Path], Callable[[], Iterable[Path]]]
+            ) -> tf.data.Dataset:
+        """
+        Produces a dataset from either the examples path list or example paths factory to strings.
+
+        :param list_or_generator_factory: The list or generator factory.
+        :return: The new path generator.
+        """
+        def paths_to_strings_generator():
+            """A generator from either the examples path list or example paths factory to strings."""
+            if isinstance(list_or_generator_factory, Callable):  # If factory, produce a new generator/list.
+                resolved_example_paths = list_or_generator_factory()
+            else:  # Otherwise, the paths are already a resolved list, and can be directly used.
+                resolved_example_paths = list_or_generator_factory
+            for path_string in map(str, resolved_example_paths):
+                yield path_string
+        return tf.data.Dataset.from_generator(paths_to_strings_generator, output_types=tf.string)

@@ -32,10 +32,12 @@ class TestTessSyntheticInjectedDatabase:
         database.batch_size = batch_size
         time_steps_per_example = 20
         database.time_steps_per_example = time_steps_per_example
-        database.lightcurve_directory = PicklableMock(glob=PicklableMock(return_value=(Path(f'{index}.fits')
-                                                                                       for index in range(50))))
-        database.synthetic_signal_directory = PicklableMock(glob=PicklableMock(return_value=(Path(f'{index}.feather')
-                                                                                             for index in range(40))))
+        def fits_file_generator(_):
+            return (Path(f'{index}.fits') for index in range(50))
+        database.lightcurve_directory = PicklableMock(glob=fits_file_generator)
+        def feather_file_generator(_):
+            return (Path(f'{index}.feather') for index in range(40))
+        database.synthetic_signal_directory = PicklableMock(glob=feather_file_generator)
         fits_fluxes = np.arange(time_steps_per_example, dtype=np.float32)
         fits_times = fits_fluxes * 10
         hdu = Mock(data={'PDCSAP_FLUX': fits_fluxes, 'TIME': fits_times})
