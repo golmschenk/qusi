@@ -5,7 +5,7 @@ from abc import ABC
 import os
 import random
 from pathlib import Path
-from typing import List, Union, Tuple
+from typing import List, Union, Tuple, Generator, Callable
 
 import numpy as np
 import pandas as pd
@@ -125,8 +125,9 @@ class LightcurveDatabase(ABC):
                 example = np.pad(example, (pre_padding, post_padding), mode='wrap')
         return example
 
-    def get_training_and_validation_datasets_for_file_paths(self, example_paths: List[Union[str, Path]]) -> (
-            tf.data.Dataset, tf.data.Dataset):
+    def get_training_and_validation_datasets_for_file_paths(
+                self, example_paths: Union[List[Path], Callable[[], Generator[Path, None, None]]]
+            ) -> (tf.data.Dataset, tf.data.Dataset):
         """
         Creates training and validation datasets from a list of all file paths. The database validation ratio is used
         to determine the size of the split.
@@ -134,14 +135,37 @@ class LightcurveDatabase(ABC):
         :param example_paths: The total list of file paths.
         :return: The training and validation datasets.
         """
-        example_paths = [str(example_path) for example_path in example_paths]
-        chunk_ratio = self.validation_ratio
-        validation_chunk_index = 0
-        validation_paths, training_paths = self.extract_shuffled_chunk_and_remainder(example_paths, chunk_ratio,
-                                                                                     validation_chunk_index)
-        training_dataset = tf.data.Dataset.from_tensor_slices(training_paths)
-        validation_dataset = tf.data.Dataset.from_tensor_slices(validation_paths)
-        return training_dataset, validation_dataset
+        def paths_to_strings_generator_factory():
+            """Produces a generator from either the examples path list or example paths factory to strings."""
+            def paths_to_strings_generator():
+                """A generator from either the examples path list or example paths factory to strings."""
+                if isinstance(example_paths, Callable):  # If a generator factory, produce a new generator.
+                    resolved_example_paths = example_paths()
+                else:  # Otherwise, the paths are already a resolved list, and can be directly used.
+                    resolved_example_paths = example_paths
+                for path_string in map(str, resolved_example_paths):
+                    yield path_string
+            return paths_to_strings_generator
+
+        def element_should_be_in_validation(index, _):
+            """Checks if the element should be in the validation set based on the index."""
+            return index % int(1 / self.validation_ratio) == 0
+
+        def element_should_be_in_training(index, element):
+            """Checks if the element should be in the training set based on the index."""
+            return not element_should_be_in_validation(index, element)
+
+        def drop_index(_, element):
+            """Drops the index from the index element pair dataset."""
+            return element
+
+        example_paths_dataset = tf.data.Dataset.from_generator(paths_to_strings_generator_factory(),
+                                                               output_types=tf.string)
+        training_example_paths_dataset = example_paths_dataset.enumerate().filter(element_should_be_in_training
+                                                                                  ).map(drop_index)
+        validation_example_paths_dataset = example_paths_dataset.enumerate().filter(element_should_be_in_validation
+                                                                                    ).map(drop_index)
+        return training_example_paths_dataset, validation_example_paths_dataset
 
     @staticmethod
     def extract_shuffled_chunk_and_remainder(array_to_extract_from: Union[List, np.ndarray], chunk_ratio: float,
