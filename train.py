@@ -17,7 +17,7 @@ def train():
     database = ToiDatabase()
     # database.batch_size = 100  # Reducing the batch size may help if you are running out of memory.
     epochs_to_run = 1000
-    trial_name = 'Microlensing FFI small model default binary cross entropy'
+    trial_name = 'baseline'
     logs_directory = 'logs'
 
     # Setup logging.
