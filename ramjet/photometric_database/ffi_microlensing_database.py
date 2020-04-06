@@ -31,8 +31,7 @@ class FfiMicrolensingDatabase(TessSyntheticInjectedDatabase):
         """
         synthetic_signal = pd.read_feather(synthetic_signal_path)
         synthetic_magnifications, synthetic_times = synthetic_signal['Magnification'], synthetic_signal['Time']
-        synthetic_times -= 20
-        # synthetic_times += np.random.random() * 30  # Synthetic data goes from -30 to 30.
+        synthetic_times += np.random.random() * 30  # Synthetic data goes from -30 to 30.
         return synthetic_magnifications, synthetic_times
 
     def get_all_lightcurve_paths(self) -> List[str]:
