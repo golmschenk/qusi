@@ -20,8 +20,7 @@ datetime_string = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
 print('Setting up dataset...')
 database = ToiDatabase()
 example_paths = database.get_all_lightcurve_paths()
-example_paths_dataset = tf.data.Dataset.from_tensor_slices(list(map(str, example_paths)))
-example_paths_dataset = example_paths_dataset.shuffle(len(example_paths))
+example_paths_dataset = database.paths_dataset_from_list_or_generator_factory(example_paths)
 mapped_dataset = map_py_function_to_dataset(example_paths_dataset, database.infer_preprocessing,
                                             number_of_parallel_calls=database.number_of_parallel_processes_per_map,
                                             output_types=(tf.string, tf.float32))
