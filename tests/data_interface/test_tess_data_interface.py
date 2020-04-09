@@ -153,6 +153,22 @@ class TestTessDataInterface:
         assert np.array_equal(sap_fluxes, fits_sap_fluxes)
         assert np.array_equal(pdcsap_fluxes, fits_pdcsap_fluxes)
 
+    @patch.object(ramjet.data_interface.tess_data_interface.fits, 'open')
+    def test_can_load_fluxes_flux_errors_and_times_from_tess_fits(self, mock_fits_open, tess_data_interface):
+        expected_fluxes = np.array([1, 2, 3], dtype=np.float32)
+        expected_flux_errors = np.array([1, 2, 3], dtype=np.float32)
+        expected_times = np.array([4, 5, 6], dtype=np.float32)
+        hdu = Mock(data={'PDCSAP_FLUX': expected_fluxes, 'PDCSAP_FLUX_ERR': expected_flux_errors,
+                         'TIME': expected_times})
+        hdu_list = [None, hdu]  # Lightcurve information is in first extension table in TESS data.
+        mock_fits_open.return_value.__enter__.return_value = hdu_list
+        lightcurve_path = 'path/to/lightcurve'
+        fluxes, flux_errors, times = tess_data_interface.load_fluxes_flux_errors_and_times_from_fits_file(lightcurve_path)
+        mock_fits_open.assert_called_with(lightcurve_path)
+        assert np.array_equal(fluxes, expected_fluxes)
+        assert np.array_equal(flux_errors, expected_flux_errors)
+        assert np.array_equal(times, expected_times)
+
     def test_can_limit_an_observations_query_by_tic_id(self, tess_data_interface, tess_data_interface_module):
         mock_query_result = Table({'a': [1, 2], 'b': [3, 4]})
         tess_data_interface_module.Observations.query_criteria = Mock(return_value=mock_query_result)
