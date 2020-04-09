@@ -311,6 +311,17 @@ class TessDataInterface:
         return SkyCoord(ra, dec, unit='deg')
 
     @staticmethod
+    def get_tess_input_catalog_row(tic_id: int) -> pd.Series:
+        """
+        Get the TIC row for a TIC ID.
+
+        :param tic_id: The target's TIC ID.
+        :return: The row of a the TIC corresponding to the TIC ID.
+        """
+        target_observations = Catalogs.query_criteria(catalog='TIC', ID=tic_id).to_pandas()
+        return target_observations.iloc[0]
+
+    @staticmethod
     def get_variable_data_frame_for_coordinates(coordinates, radius='21s') -> pd.DataFrame:
         """
         Gets a data frame containing all known variables within a radius of the given coordinates.

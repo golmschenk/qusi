@@ -252,3 +252,10 @@ class TestTessDataInterface:
             'tess2018319095959-s0005-0000000278956474-0125-s')
         assert tic_id1 == 278956474
         assert sector1 == 5
+
+    def test_can_get_the_tic_row_of_a_target_based_on_tic_id(self, tess_data_interface, tess_data_interface_module):
+        mock_query_result = Table({'ra': [62.2, 62.2], 'dec': [-71.4, -71.4]})
+        tess_data_interface_module.Catalogs.query_criteria = Mock(return_value=mock_query_result)
+        tic_row = tess_data_interface.get_tess_input_catalog_row(tic_id=0)
+        assert tic_row['ra'] == 62.2
+        assert tic_row['dec'] == -71.4
