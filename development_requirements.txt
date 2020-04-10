@@ -13,3 +13,4 @@ sphinx-press-theme
 GitPython
 matplotlib
 pipreqs
+bokeh
