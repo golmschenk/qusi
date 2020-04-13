@@ -18,9 +18,11 @@ from astropy.table import Table
 from astroquery.mast import Observations, Catalogs
 from astroquery.exceptions import TimeoutError as AstroQueryTimeoutError
 from astroquery.vizier import Vizier
+from bokeh.io import show
 from retrying import retry
+from bokeh.plotting import Figure
 
-from ramjet.analysis.lightcurve_visualizer import plot_lightcurve
+from ramjet.analysis.lightcurve_visualizer import plot_lightcurve, create_dual_lightcurve_figure
 from ramjet.data_interface.tess_toi_data_interface import TessToiDataInterface, ToiColumns
 
 
@@ -267,7 +269,7 @@ class TessDataInterface:
             observations_with_sectors = observations_with_sectors.head(1)
         product_list = self.get_product_list(observations_with_sectors)
         lightcurves_product_list = product_list[product_list['productSubGroupDescription'] == 'LC']
-        manifest = self.download_products(lightcurves_product_list, data_directory=tempfile.gettempdir())
+        manifest = self.download_products(lightcurves_product_list, data_directory=Path(tempfile.gettempdir()))
         lightcurve_path = Path(manifest['Local Path'].iloc[0])
         if save_directory is not None:
             save_directory = Path(save_directory)
@@ -296,6 +298,38 @@ class TessDataInterface:
             title += ' (outliers removed)'
         plot_lightcurve(times=times, fluxes=fluxes, exclude_flux_outliers=exclude_flux_outliers, title=title,
                         base_data_point_size=base_data_point_size)
+
+    def create_pdcsap_and_sap_comparison_figure_from_mast(self, tic_id: int, sector: int = None) -> Figure:
+        """
+        Creates a comparison figure containing both the PDCSAP and SAP signals.
+
+        :param tic_id: The TIC ID of the lightcurve to plot.
+        :param sector: The sector of the lightcurve to plot.
+        :return: The generated figure.
+        """
+        lightcurve_path = self.download_lightcurve(tic_id, sector)
+        pdcsap_fluxes, pdcsap_times = self.load_fluxes_and_times_from_fits_file(lightcurve_path, TessFluxType.PDCSAP)
+        normalized_pdcsap_fluxes = pdcsap_fluxes / np.median(pdcsap_fluxes)
+        sap_fluxes, sap_times = self.load_fluxes_and_times_from_fits_file(lightcurve_path, TessFluxType.SAP)
+        normalized_sap_fluxes = sap_fluxes / np.median(sap_fluxes)
+        if sector is None:
+            _, sector = self.get_tic_id_and_sector_from_file_path(lightcurve_path)
+        title = f'TIC {tic_id} sector {sector}'
+        figure = create_dual_lightcurve_figure(fluxes0=normalized_pdcsap_fluxes, times0=pdcsap_times, name0='PDCSAP',
+                                               fluxes1=normalized_sap_fluxes, times1=sap_times, name1='SAP',
+                                               title=title, x_axis_label='Time (BTJD)')
+        return figure
+
+    def show_pdcsap_and_sap_comparison_from_mast(self, tic_id: int, sector: int = None):
+        """
+        Shows a comparison figure containing both the PDCSAP and SAP signals.
+
+        :param tic_id: The TIC ID of the lightcurve to plot.
+        :param sector: The sector of the lightcurve to plot.
+        """
+        comparison_figure = self.create_pdcsap_and_sap_comparison_figure_from_mast(tic_id, sector)
+        comparison_figure.sizing_mode = 'stretch_width'
+        show(comparison_figure)
 
     @staticmethod
     def get_target_coordinates(tic_id: int) -> SkyCoord:
