@@ -1,4 +1,3 @@
-
 from unittest.mock import Mock, patch
 import pytest
 import numpy as np
@@ -27,7 +26,12 @@ class TestTransitFitter:
         return TransitFitter(tic_id=23324827, sector=9)
 
     def test_can_calculate_period_from_approximate_event_times(self, transit_fitter):
-        event_times = [3, 4.9, 7.1, 11, 17.1, 19.1]
+        event_times = [3, 4.9, 7.1, 11, 17.1, 19.01]
         epoch, period = transit_fitter.calculate_epoch_and_period_from_approximate_event_times(event_times)
         assert epoch == 3
-        assert period == pytest.approx(2)
+        assert period == pytest.approx(2, rel=0.1)
+
+    def test_can_fold_times_based_on_epoch_and_period(self, transit_fitter):
+        times = np.array([1, 2, 3, 4, 5, 6])
+        folded_times = transit_fitter.fold_times(times=times, epoch=2, period=3)
+        assert np.array_equal(folded_times, [-1, 0, 1, -1, 0, 1])

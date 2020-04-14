@@ -46,7 +46,7 @@ class TransitFitter:
     def create_lightcurve_figure(self):
         figure = Figure(title=self.title, x_axis_label='Time (days)', y_axis_label='Relative flux')
 
-        def draw_lightcurve(times, fluxes, legend_label):
+        def draw_lightcurve(times, fluxes):
             data_source = ColumnDataSource({'Time (days)': times, 'Relative flux': fluxes})
             mapper = LinearColorMapper(
                 palette='Plasma256',
@@ -58,15 +58,15 @@ class TransitFitter:
                           fill_color=colors, fill_alpha=0.1, line_color=colors, line_alpha=0.4,
                           source=data_source)
 
-        draw_lightcurve(self.times, self.normalized_fluxes, 'PDCSAP')
+        draw_lightcurve(self.times, self.normalized_fluxes)
         figure.sizing_mode = 'stretch_width'
         return figure
 
     def add_folded_figured_based_on_clicks_in_unfolded_figure(self, unfolded_figure):
         # Setup empty period recording clicks for folding.
-        period_coordinates = []
-        period_coordinates_data_source = ColumnDataSource({'Time (days)': [], 'Relative flux': []})
-        unfolded_figure.circle('Time (days)', 'Relative flux', source=period_coordinates_data_source,
+        event_coordinates = []
+        event_coordinates_data_source = ColumnDataSource({'Time (days)': [], 'Relative flux': []})
+        unfolded_figure.circle('Time (days)', 'Relative flux', source=event_coordinates_data_source,
                                color='red', alpha=0.8)  # Will be updated.
         # Prepare the folded plot.
         folded_data_source = ColumnDataSource({'Relative flux': self.normalized_fluxes,
@@ -87,25 +87,22 @@ class TransitFitter:
         self_ = self
 
         def click_unfolded_figure_callback(tap_event):  # Setup what should happen when a click occurs.
-            period_coordinate = tap_event.x, tap_event.y
-            period_coordinates.append(period_coordinate)
-            period_coordinates_data_source.data = {
-                'Time (days)': [coordinate[0] for coordinate in period_coordinates],
-                'Relative flux': [coordinate[1] for coordinate in period_coordinates]
+            event_coordinate = tap_event.x, tap_event.y
+            event_coordinates.append(event_coordinate)
+            event_coordinates_data_source.data = {
+                'Time (days)': [coordinate[0] for coordinate in event_coordinates],
+                'Relative flux': [coordinate[1] for coordinate in event_coordinates]
             }
-            if len(period_coordinates) > 1:  # If we have more than 1 period click, we can start folding.
-                period_times = [coordinate[0] for coordinate in period_coordinates]
-                period_times = sorted(period_times)
-                period_times = np.array(period_times, dtype=np.float64)
-                period = np.mean(np.diff(period_times))  # Assumes periods are contiguous (don't jump over one).
-                epoch_times = self_.times - (period_times[0] - (period / 2))
-                folded_pdcsap_times = epoch_times % period - (period / 2)
-                folded_data_source.data['Folded time (days)'] = folded_pdcsap_times
+            if len(event_coordinates) > 1:  # If we have more than 1 period click, we can start folding.
+                event_times = [coordinate[0] for coordinate in event_coordinates]
+                epoch, period = self.calculate_epoch_and_period_from_approximate_event_times(event_times)
+                folded_times = self.fold_times(self_.times, epoch, period)
+                folded_data_source.data['Folded time (days)'] = folded_times
                 # folded_figure.x_range.start = -period/10
                 # folded_figure.x_range.end = period/10
                 self_.period = period
-                self_.transit_epoch = period_times[0]
-                period_depths = [coordinate[1] for coordinate in period_coordinates]
+                self_.transit_epoch = epoch
+                period_depths = [coordinate[1] for coordinate in event_coordinates]
                 self_.depth = np.abs(np.mean(period_depths))
 
         unfolded_figure.on_event(Tap, click_unfolded_figure_callback)
@@ -245,6 +242,22 @@ class TransitFitter:
         # Weight the larger differences more heavily, based on the number of cycles estimated.
         period = np.average(period_estimates, weights=cycles_per_time_difference)
         return epoch, period
+
+    @staticmethod
+    def fold_times(times: np.ndarray, epoch: float, period: float) -> np.ndarray:
+        """
+        Folds an array of times based on an epoch and period.
+
+        :param times: The times to fold.
+        :param epoch: The epoch of the fold.
+        :param period: The period of the fold.
+        :return: The folded times.
+        """
+        half_period = (period / 2)
+        half_period_offset_epoch_times = times - (epoch - half_period)
+        half_period_offset_folded_times = half_period_offset_epoch_times % period
+        folded_times = half_period_offset_folded_times - half_period
+        return folded_times
 
 
 if __name__ == '__main__':
