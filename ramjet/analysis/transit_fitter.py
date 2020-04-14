@@ -1,4 +1,6 @@
 """Code for producing a transit fitting."""
+from typing import List
+
 import numpy as np
 import pandas as pd
 from bokeh.events import Tap
@@ -9,28 +11,31 @@ import pymc3 as pm
 import theano.tensor as tt
 import exoplanet as xo
 
-from ramjet.data_interface.tess_data_interface import TessDataInterface, TessFluxType
+from ramjet.data_interface.tess_data_interface import TessDataInterface
 
 
 class TransitFitter:
+    """
+    A class to fit a transit.
+    """
     def __init__(self, tic_id, sector):
-        self.tess_data_interface = TessDataInterface()
-        lightcurve_path = self.tess_data_interface.download_lightcurve(tic_id, sector)
+        tess_data_interface = TessDataInterface()
         self.title = f'TIC {tic_id} sector {sector}'
-        pdcsap_fluxes, pdcsap_flux_errors, pdcsap_times = self.tess_data_interface.load_fluxes_flux_errors_and_times_from_fits_file(
-            lightcurve_path)
-        pdcsap_median = np.median(pdcsap_fluxes)
-        self.times = pdcsap_times.astype(np.float64)
-        self.normalized_fluxes = (pdcsap_fluxes.astype(np.float64) / pdcsap_median) - 1
-        self.normalized_flux_errors = pdcsap_flux_errors.astype(np.float64) / pdcsap_median
-        tic_row = self.tess_data_interface.get_tess_input_catalog_row(tic_id)
+        lightcurve_path = tess_data_interface.download_lightcurve(tic_id, sector)
+        lightcurve = tess_data_interface.load_fluxes_flux_errors_and_times_from_fits_file(lightcurve_path)
+        fluxes, flux_errors, times = lightcurve
+        flux_median = np.median(fluxes)
+        self.times = times.astype(np.float64)
+        self.normalized_fluxes = (fluxes.astype(np.float64) / flux_median) - 1
+        self.normalized_flux_errors = flux_errors.astype(np.float64) / flux_median
+        tic_row = tess_data_interface.get_tess_input_catalog_row(tic_id)
         self.star_radius = tic_row['rad']
         self.period = None
         self.depth = None
         self.transit_epoch = None
 
     def bokeh_application(self, bokeh_document):
-        lightcurve_figure = self.create_lightcure_figure()
+        lightcurve_figure = self.create_lightcurve_figure()
         folded_figure = self.add_folded_figured_based_on_clicks_in_unfolded_figure(lightcurve_figure)
         run_fitting_button = Button(label='Run fitting')
         initial_fit_figure, parameters_table = self.create_mcmc_fit_figures(run_fitting_button)
@@ -38,7 +43,7 @@ class TransitFitter:
         column.sizing_mode = 'stretch_width'
         bokeh_document.add_root(column)
 
-    def create_lightcure_figure(self):
+    def create_lightcurve_figure(self):
         figure = Figure(title=self.title, x_axis_label='Time (days)', y_axis_label='Relative flux')
 
         def draw_lightcurve(times, fluxes, legend_label):
@@ -114,7 +119,8 @@ class TransitFitter:
                                     title=f'Initial fit {self.title}')
         parameters_table_data_source = ColumnDataSource(pd.DataFrame())
         parameters_table_columns = [TableColumn(field=column, title=column) for column in ['parameter', 'mean', 'sd', 'r_hat']]
-        parameters_table = DataTable(source=parameters_table_data_source, columns=parameters_table_columns)
+        parameters_table = DataTable(source=parameters_table_data_source, columns=parameters_table_columns,
+                                     editable=True)
         def run_fitting():
             with pm.Model() as model:
                 # Stellar parameters
@@ -158,7 +164,7 @@ class TransitFitter:
                     )
 
                 # Finally the GP observation model
-                gp = xo.gp.GP(kernel, self_.times, self_.normalized_flux_errors ** 2 + sigma ** 2, mean=lc_model)
+                gp = xo.gp.GP(kernel, self_.times, (self_.normalized_flux_errors ** 2) + (sigma ** 2), mean=lc_model)
                 gp.marginal("obs", observed=self_.normalized_fluxes)
 
                 # Double check that everything looks good - we shouldn't see any NaNs!
@@ -193,11 +199,12 @@ class TransitFitter:
                     step=xo.get_dense_nuts_step(target_accept=0.9),
                 )
 
-            trace_summary = pm.summary(trace)
+            trace_summary = pm.summary(trace, round_to='none')  # Not a typo. PyMC3 wants 'none' as a string here.
             parameters_table_data_source.data = trace_summary
             parameters_table_data_source.data['parameter'] = trace_summary.index
-            with pd.option_context('precision', 10, 'display.max_columns', None, 'display.max_rows', None):
+            with pd.option_context('display.max_columns', None, 'display.max_rows', None):
                 print(trace_summary)
+                print(f'Star radius: {self.star_radius}')
 
         run_fitting_button.on_click(run_fitting)
         mapper = LinearColorMapper(
@@ -213,11 +220,37 @@ class TransitFitter:
 
         return initial_fit_figure, parameters_table
 
+    @staticmethod
+    def calculate_epoch_and_period_from_approximate_event_times(event_times: List[float]) -> (float, float):
+        """
+        Calculates the period and epoch of a signal given selected event times. The epoch is set to the first event
+        chronologically.
+
+        :param event_times: The times of the events.
+        :return: The epoch and period.
+        """
+        sorted_event_times = np.sort(event_times)
+        epoch = sorted_event_times[0]
+        event_time_differences = np.diff(sorted_event_times)
+        # Assume the smallest difference is close to a single period.
+        smallest_time_difference = np.min(event_time_differences)
+        # Get all differences close to the smallest difference to estimate a single period difference.
+        threshold_from_smallest = smallest_time_difference * 0.1
+        single_period_differences = event_time_differences[
+            np.abs(event_time_differences - smallest_time_difference) < threshold_from_smallest]
+        period_estimate_from_single_period_events = np.mean(single_period_differences)
+        # Using the above estimate, estimate the number of cycles in larger time differences.
+        cycles_per_time_difference = np.rint(event_time_differences / period_estimate_from_single_period_events)
+        period_estimates = event_time_differences / cycles_per_time_difference
+        # Weight the larger differences more heavily, based on the number of cycles estimated.
+        period = np.average(period_estimates, weights=cycles_per_time_difference)
+        return epoch, period
+
 
 if __name__ == '__main__':
     print('Opening Bokeh application on http://localhost:5006/')
     # Start the server.
-    server = Server({'/': TransitFitter(tic_id=362043085, sector=5).bokeh_application})
+    server = Server({'/': TransitFitter(tic_id=23324827, sector=9).bokeh_application})
     server.start()
     # Start the specific application on the server.
     server.io_loop.add_callback(server.show, "/")
