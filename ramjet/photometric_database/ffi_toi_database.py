@@ -36,7 +36,7 @@ class FfiToiDatabase(TessSyntheticInjectedDatabase):
         response = requests.get(toi_csv_url)
         with self.toi_dispositions_path.open('wb') as csv_file:
             csv_file.write(response.content)
-        toi_dispositions = self.tess_toi_data_interface.dispositions
+        toi_dispositions = self.tess_toi_data_interface.toi_dispositions
         tic_ids = toi_dispositions[ToiColumns.tic_id.value].unique()
         print('Downloading TESS obdservation list...')
         tess_data_interface = TessDataInterface()
