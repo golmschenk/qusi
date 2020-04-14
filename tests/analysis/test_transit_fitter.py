@@ -22,8 +22,9 @@ class TestTransitFitter:
             np.array([1, 2, 3, 4, 5]), np.array([0.1, 0.2, 0.3, 0.4, 0.5]), np.array([10, 20, 30, 40, 50])
         ))
         mock_tess_data_interface.get_tess_input_catalog_row = Mock(return_value=pd.Series({'rad': 1}))
+        mock_tess_data_interface.get_sectors_target_appears_in = Mock(return_value=[9])
         mock_tess_data_interface_class.return_value = mock_tess_data_interface
-        return TransitFitter(tic_id=23324827, sector=9)
+        return TransitFitter(tic_id=23324827, sectors=[9])
 
     def test_can_calculate_period_from_approximate_event_times(self, transit_fitter):
         event_times = [3, 4.9, 7.1, 11, 17.1, 19.01]
@@ -35,3 +36,12 @@ class TestTransitFitter:
         times = np.array([1, 2, 3, 4, 5, 6])
         folded_times = transit_fitter.fold_times(times=times, epoch=2, period=3)
         assert np.array_equal(folded_times, [-1, 0, 1, -1, 0, 1])
+
+    def test_can_round_series_to_significant_digits(self, transit_fitter):
+        series = pd.Series([1.2345, 0.00012345, 12345000])
+        rounded_series_3_significant_figures = transit_fitter.round_series_to_significant_figures(series,
+                                                                                                  significant_figures=3)
+        assert rounded_series_3_significant_figures.equals(pd.Series([1.23, 0.000123, 12300000]))
+        rounded_series_4_significant_figures = transit_fitter.round_series_to_significant_figures(series,
+                                                                                                  significant_figures=4)
+        assert rounded_series_4_significant_figures.equals(pd.Series([1.234, 0.0001234, 12340000]))

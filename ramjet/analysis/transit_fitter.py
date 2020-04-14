@@ -1,4 +1,5 @@
 """Code for producing a transit fitting."""
+import math
 from typing import List
 
 import numpy as np
@@ -18,16 +19,30 @@ class TransitFitter:
     """
     A class to fit a transit.
     """
-    def __init__(self, tic_id, sector):
+
+    def __init__(self, tic_id, sectors=None):
         tess_data_interface = TessDataInterface()
-        self.title = f'TIC {tic_id} sector {sector}'
-        lightcurve_path = tess_data_interface.download_lightcurve(tic_id, sector)
-        lightcurve = tess_data_interface.load_fluxes_flux_errors_and_times_from_fits_file(lightcurve_path)
-        fluxes, flux_errors, times = lightcurve
-        flux_median = np.median(fluxes)
-        self.times = times.astype(np.float64)
-        self.normalized_fluxes = (fluxes.astype(np.float64) / flux_median) - 1
-        self.normalized_flux_errors = flux_errors.astype(np.float64) / flux_median
+        self.title = f'TIC {tic_id}'
+        relative_fluxes_arrays = []
+        relative_flux_errors_arrays = []
+        times_arrays = []
+        if sectors is None:
+            sectors = tess_data_interface.get_sectors_target_appears_in(tic_id)
+        if isinstance(sectors, int):
+            sectors = [sectors]
+        for sector in sectors:
+            lightcurve_path = tess_data_interface.download_lightcurve(tic_id, sector)
+            lightcurve = tess_data_interface.load_fluxes_flux_errors_and_times_from_fits_file(lightcurve_path)
+            sector_fluxes, sector_flux_errors, sector_times = lightcurve
+            sector_flux_median = np.median(sector_fluxes)
+            sector_normalized_fluxes = sector_fluxes / sector_flux_median - 1
+            sector_normalized_flux_errors = sector_flux_errors / sector_flux_median
+            relative_fluxes_arrays.append(sector_normalized_fluxes)
+            relative_flux_errors_arrays.append(sector_normalized_flux_errors)
+            times_arrays.append(sector_times)
+        self.times = np.concatenate(times_arrays).astype(np.float64)
+        self.relative_fluxes = np.concatenate(relative_fluxes_arrays).astype(np.float64)
+        self.relative_flux_errors = np.concatenate(relative_flux_errors_arrays).astype(np.float64)
         tic_row = tess_data_interface.get_tess_input_catalog_row(tic_id)
         self.star_radius = tic_row['rad']
         self.period = None
@@ -58,7 +73,7 @@ class TransitFitter:
                           fill_color=colors, fill_alpha=0.1, line_color=colors, line_alpha=0.4,
                           source=data_source)
 
-        draw_lightcurve(self.times, self.normalized_fluxes)
+        draw_lightcurve(self.times, self.relative_fluxes)
         figure.sizing_mode = 'stretch_width'
         return figure
 
@@ -69,7 +84,7 @@ class TransitFitter:
         unfolded_figure.circle('Time (days)', 'Relative flux', source=event_coordinates_data_source,
                                color='red', alpha=0.8)  # Will be updated.
         # Prepare the folded plot.
-        folded_data_source = ColumnDataSource({'Relative flux': self.normalized_fluxes,
+        folded_data_source = ColumnDataSource({'Relative flux': self.relative_fluxes,
                                                'Folded time (days)': [],
                                                'Time (days)': self.times})
         folded_figure = Figure(x_axis_label='Folded time (days)', y_axis_label='Relative flux',
@@ -115,9 +130,11 @@ class TransitFitter:
         initial_fit_figure = Figure(x_axis_label='Folded time (days)', y_axis_label='Relative flux',
                                     title=f'Initial fit {self.title}')
         parameters_table_data_source = ColumnDataSource(pd.DataFrame())
-        parameters_table_columns = [TableColumn(field=column, title=column) for column in ['parameter', 'mean', 'sd', 'r_hat']]
+        parameters_table_columns = [TableColumn(field=column, title=column) for column in
+                                    ['parameter', 'mean', 'sd', 'r_hat']]
         parameters_table = DataTable(source=parameters_table_data_source, columns=parameters_table_columns,
                                      editable=True)
+
         def run_fitting():
             with pm.Model() as model:
                 # Stellar parameters
@@ -126,7 +143,7 @@ class TransitFitter:
                 star_params = [mean, u]
 
                 # Gaussian process noise model
-                sigma = pm.InverseGamma("sigma", alpha=3.0, beta=2 * np.median(self_.normalized_flux_errors))
+                sigma = pm.InverseGamma("sigma", alpha=3.0, beta=2 * np.median(self_.relative_flux_errors))
                 log_Sw4 = pm.Normal("log_Sw4", mu=0.0, sigma=10.0)
                 log_w0 = pm.Normal("log_w0", mu=np.log(2 * np.pi / 10.0), sigma=10.0)
                 kernel = xo.gp.terms.SHOTerm(log_Sw4=log_Sw4, log_w0=log_w0, Q=1.0 / 3)
@@ -157,12 +174,12 @@ class TransitFitter:
 
                 def lc_model(t):
                     return mean + tt.sum(
-                        star.get_light_curve(orbit=orbit, r=ror*self.star_radius, t=t), axis=-1
+                        star.get_light_curve(orbit=orbit, r=ror * self.star_radius, t=t), axis=-1
                     )
 
                 # Finally the GP observation model
-                gp = xo.gp.GP(kernel, self_.times, (self_.normalized_flux_errors ** 2) + (sigma ** 2), mean=lc_model)
-                gp.marginal("obs", observed=self_.normalized_fluxes)
+                gp = xo.gp.GP(kernel, self_.times, (self_.relative_flux_errors ** 2) + (sigma ** 2), mean=lc_model)
+                gp.marginal("obs", observed=self_.relative_fluxes)
 
                 # Double check that everything looks good - we shouldn't see any NaNs!
                 print(model.check_test_point())
@@ -183,9 +200,10 @@ class TransitFitter:
             ] - 0.5 * map_soln["period"]
             inds = np.argsort(x_fold)
             initial_fit_data_source.data['Folded time (days)'] = x_fold
-            initial_fit_data_source.data['Relative flux'] = self_.normalized_fluxes - gp_pred - map_soln["mean"]
+            initial_fit_data_source.data['Relative flux'] = self_.relative_fluxes - gp_pred - map_soln["mean"]
             initial_fit_data_source.data['Fit'] = lc_pred[inds] - map_soln["mean"]
-            initial_fit_data_source.data['Fit time'] = x_fold[inds]  # TODO: This is terrible, you should be able to line them up *afterward* to not make a duplicate time column
+            initial_fit_data_source.data['Fit time'] = x_fold[
+                inds]  # TODO: This is terrible, you should be able to line them up *afterward* to not make a duplicate time column
 
             with model:
                 trace = pm.sample(
@@ -259,11 +277,27 @@ class TransitFitter:
         folded_times = half_period_offset_folded_times - half_period
         return folded_times
 
+    @staticmethod
+    def round_series_to_significant_figures(series: pd.Series, significant_figures: int) -> pd.Series:
+        """
+        Rounds a series to a given number of significant figures.
+
+        :param series: The series to round.
+        :param significant_figures: The number of signficant figures to round to.
+        :return: The rounded series.
+        """
+
+        def round_value_to_significant_figures(value):
+            """Rounds a value to the outer scope number of significant figures"""
+            return round(value, significant_figures - 1 - int(math.floor(math.log10(abs(value)))))
+
+        return series.apply(round_value_to_significant_figures)
+
 
 if __name__ == '__main__':
     print('Opening Bokeh application on http://localhost:5006/')
     # Start the server.
-    server = Server({'/': TransitFitter(tic_id=23324827, sector=9).bokeh_application})
+    server = Server({'/': TransitFitter(tic_id=207493152).bokeh_application})
     server.start()
     # Start the specific application on the server.
     server.io_loop.add_callback(server.show, "/")
