@@ -1,4 +1,5 @@
 """Code for producing a transit fitting."""
+import itertools
 import math
 from typing import List
 
@@ -11,6 +12,8 @@ from bokeh.server.server import Server
 import pymc3 as pm
 import theano.tensor as tt
 import exoplanet as xo
+# import gspread
+# from google.oauth2.service_account import Credentials
 
 from ramjet.data_interface.tess_data_interface import TessDataInterface
 
@@ -26,6 +29,14 @@ class TransitFitter:
         relative_fluxes_arrays = []
         relative_flux_errors_arrays = []
         times_arrays = []
+        dispositions_data_frame = tess_data_interface.retrieve_exofop_toi_and_ctoi_planet_disposition_for_tic_id(tic_id)
+        if dispositions_data_frame.shape[0] == 0:
+            print('No known ExoFOP dispositions found.')
+        # Use context options to not truncate printed data.
+        else:
+            with pd.option_context('display.max_rows', None, 'display.max_columns', None, 'display.width', None):
+                print(dispositions_data_frame)
+                exit()
         if sectors is None:
             sectors = tess_data_interface.get_sectors_target_appears_in(tic_id)
         if isinstance(sectors, int):
@@ -40,11 +51,14 @@ class TransitFitter:
             relative_fluxes_arrays.append(sector_normalized_fluxes)
             relative_flux_errors_arrays.append(sector_normalized_flux_errors)
             times_arrays.append(sector_times)
+        self.sectors = sectors
+        self.tic_id = tic_id
         self.times = np.concatenate(times_arrays).astype(np.float64)
         self.relative_fluxes = np.concatenate(relative_fluxes_arrays).astype(np.float64)
         self.relative_flux_errors = np.concatenate(relative_flux_errors_arrays).astype(np.float64)
         tic_row = tess_data_interface.get_tess_input_catalog_row(tic_id)
         self.star_radius = tic_row['rad']
+        print(self.star_radius)
         self.period = None
         self.depth = None
         self.transit_epoch = None
@@ -215,11 +229,36 @@ class TransitFitter:
                 )
 
             trace_summary = pm.summary(trace, round_to='none')  # Not a typo. PyMC3 wants 'none' as a string here.
+            epoch = round(trace_summary['mean']['t0'], 3)  # Round the epoch differently, as BTJD needs more digits.
+            trace_summary['mean'] = self_.round_series_to_significant_figures(trace_summary['mean'], 5)
+            trace_summary['mean']['t0'] = epoch
             parameters_table_data_source.data = trace_summary
             parameters_table_data_source.data['parameter'] = trace_summary.index
             with pd.option_context('display.max_columns', None, 'display.max_rows', None):
                 print(trace_summary)
                 print(f'Star radius: {self.star_radius}')
+            # TODO: This should not happen automatically. Only after a button click.
+            # scopes = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+            # credentials = Credentials.from_service_account_file(
+            #     'ramjet/analysis/google_spreadsheet_credentials.json', scopes=scopes)
+            # gc = gspread.authorize(credentials)
+            # sh = gc.open('Ramjet transit candidates shared for vetting')
+            # worksheet = sh.get_worksheet(0)
+            # # Find first empty row.
+            # empty_row_index = 1
+            # for row_index in itertools.count(start=1):
+            #     row_values = worksheet.row_values(row_index)
+            #     if len(row_values) == 0:
+            #         empty_row_index = row_index
+            #         break
+            # worksheet.update_cell(empty_row_index, 1, self_.tic_id)
+            # worksheet.update_cell(empty_row_index, 2, str(self_.sectors).replace('[', '').replace(']', '')),
+            # worksheet.update_cell(empty_row_index, 3, trace_summary['mean']['t0'])
+            # worksheet.update_cell(empty_row_index, 4, trace_summary['mean']['period'])
+            # worksheet.update_cell(empty_row_index, 5, trace_summary['mean']['depth'])
+            # worksheet.update_cell(empty_row_index, 6, trace_summary['mean']['dur'])
+            # worksheet.update_cell(empty_row_index, 7, self_.star_radius)
+            # worksheet.update_cell(empty_row_index, 8, trace_summary['mean']['ror'] * self_.star_radius)
 
         run_fitting_button.on_click(run_fitting)
         mapper = LinearColorMapper(
@@ -297,7 +336,7 @@ class TransitFitter:
 if __name__ == '__main__':
     print('Opening Bokeh application on http://localhost:5006/')
     # Start the server.
-    server = Server({'/': TransitFitter(tic_id=207493152).bokeh_application})
+    server = Server({'/': TransitFitter(tic_id=362043085).bokeh_application})
     server.start()
     # Start the specific application on the server.
     server.io_loop.add_callback(server.show, "/")
