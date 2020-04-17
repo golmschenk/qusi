@@ -54,7 +54,7 @@ class TransitFitter:
 
     def bokeh_application(self, bokeh_document):
         lightcurve_figure = self.create_lightcurve_figure()
-        folded_figure = self.add_folded_figured_based_on_clicks_in_unfolded_figure(lightcurve_figure)
+        folded_figure = self.create_folded_figured_based_on_clicks_in_unfolded_figure(lightcurve_figure)
         run_fitting_button = Button(label='Run fitting')
         initial_fit_figure, parameters_table = self.create_mcmc_fit_figures(run_fitting_button)
         column = Column(lightcurve_figure, folded_figure, run_fitting_button, initial_fit_figure, parameters_table)
@@ -68,7 +68,7 @@ class TransitFitter:
         figure.sizing_mode = 'stretch_width'
         return figure
 
-    def add_folded_figured_based_on_clicks_in_unfolded_figure(self, unfolded_figure):
+    def create_folded_figured_based_on_clicks_in_unfolded_figure(self, unfolded_figure):
         # Setup empty period recording clicks for folding.
         event_coordinates = []
         event_coordinates_data_source = ColumnDataSource({'Time (BTJD)': [], 'Relative flux': []})

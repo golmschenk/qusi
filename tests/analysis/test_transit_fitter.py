@@ -21,6 +21,8 @@ class TestTransitFitter:
         mock_tess_data_interface.load_fluxes_flux_errors_and_times_from_fits_file = Mock(return_value=(
             np.array([1, 2, 3, 4, 5]), np.array([0.1, 0.2, 0.3, 0.4, 0.5]), np.array([10, 20, 30, 40, 50])
         ))
+        mock_tess_data_interface.retrieve_exofop_toi_and_ctoi_planet_disposition_for_tic_id = Mock(
+            return_value=pd.DataFrame())
         mock_tess_data_interface.get_tess_input_catalog_row = Mock(return_value=pd.Series({'rad': 1}))
         mock_tess_data_interface.get_sectors_target_appears_in = Mock(return_value=[9])
         mock_tess_data_interface_class.return_value = mock_tess_data_interface
