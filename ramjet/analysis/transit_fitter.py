@@ -73,45 +73,25 @@ class TransitFitter:
         bokeh_document.add_root(column)
 
     def create_lightcurve_figure(self):
-        figure = Figure(title=self.title, x_axis_label='Time (days)', y_axis_label='Relative flux')
-
-        def draw_lightcurve(times, fluxes):
-            data_source = ColumnDataSource({'Time (days)': times, 'Relative flux': fluxes})
-            mapper = LinearColorMapper(
-                palette='Plasma256',
-                low=np.min(data_source.data['Time (days)']),
-                high=np.max(data_source.data['Time (days)'])
-            )
-            colors = {'field': 'Time (days)', 'transform': mapper}
-            figure.circle('Time (days)', 'Relative flux',
-                          fill_color=colors, fill_alpha=0.1, line_color=colors, line_alpha=0.4,
-                          source=data_source)
-
-        draw_lightcurve(self.times, self.relative_fluxes)
+        figure = Figure(title=self.title, x_axis_label='Time (BTJD)', y_axis_label='Relative flux')
+        data_source = ColumnDataSource({'Time (BTJD)': self.times, 'Relative flux': self.relative_fluxes})
+        self.plot_lightcurve_source(figure, data_source)
         figure.sizing_mode = 'stretch_width'
         return figure
 
     def add_folded_figured_based_on_clicks_in_unfolded_figure(self, unfolded_figure):
         # Setup empty period recording clicks for folding.
         event_coordinates = []
-        event_coordinates_data_source = ColumnDataSource({'Time (days)': [], 'Relative flux': []})
+        event_coordinates_data_source = ColumnDataSource({'Time (BTJD)': [], 'Relative flux': []})
         unfolded_figure.circle('Time (days)', 'Relative flux', source=event_coordinates_data_source,
                                color='red', alpha=0.8)  # Will be updated.
         # Prepare the folded plot.
         folded_data_source = ColumnDataSource({'Relative flux': self.relative_fluxes,
                                                'Folded time (days)': [],
-                                               'Time (days)': self.times})
+                                               'Time (BTJD)': self.times})
         folded_figure = Figure(x_axis_label='Folded time (days)', y_axis_label='Relative flux',
                                title=f'Folded {self.title}')
-        mapper = LinearColorMapper(
-            palette='Plasma256',
-            low=np.min(self.times),
-            high=np.max(self.times)
-        )
-        colors = {'field': 'Time (days)', 'transform': mapper}
-        folded_figure.circle('Folded time (days)', 'Relative flux',
-                             fill_color=colors, fill_alpha=0.1, line_color=colors, line_alpha=0.4,
-                             source=folded_data_source)
+        self.plot_lightcurve_source(folded_figure, folded_data_source, time_column_name='Folded time (days)')
         folded_figure.sizing_mode = 'stretch_width'
         self_ = self
 
@@ -119,7 +99,7 @@ class TransitFitter:
             event_coordinate = tap_event.x, tap_event.y
             event_coordinates.append(event_coordinate)
             event_coordinates_data_source.data = {
-                'Time (days)': [coordinate[0] for coordinate in event_coordinates],
+                'Time (BTJD)': [coordinate[0] for coordinate in event_coordinates],
                 'Relative flux': [coordinate[1] for coordinate in event_coordinates]
             }
             if len(event_coordinates) > 1:  # If we have more than 1 period click, we can start folding.
@@ -267,10 +247,20 @@ class TransitFitter:
 
         return initial_fit_figure, parameters_table
 
-    def plot_lightcurve_source(self, figure: Figure, data_source: ColumnDataSource,
+    @staticmethod
+    def plot_lightcurve_source(figure: Figure, data_source: ColumnDataSource,
                                time_column_name: str = 'Time (BTJD)',
                                flux_column_name: str = 'Relative flux',
                                color_value_column_name: str = 'Time (BTJD)'):
+        """
+        Plots the lightcurve data source on the passed figure.
+
+        :param figure: The figure to plot to.
+        :param data_source: The data source containing the lightcurve data.
+        :param time_column_name: The name of the time column whose values will be used on the x axis.
+        :param flux_column_name: The name of the flux column whose values will be used on the y axis.
+        :param color_value_column_name: The name of the column whose values will be used to determine data point color.
+        """
         mapper = LinearColorMapper(palette='Plasma256',
                                    low=np.min(data_source.data[color_value_column_name]),
                                    high=np.max(data_source.data[color_value_column_name]))
