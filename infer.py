@@ -39,6 +39,6 @@ for batch_index, (paths, examples) in enumerate(batch_dataset):
     batch_predictions = pd.DataFrame({'Lightcurve path': paths, 'Prediction': np.squeeze(predictions, axis=1)})
     predictions_data_frame = pd.concat([predictions_data_frame, batch_predictions])
     print(f'{batch_index * database.batch_size} examples inferred on.')
-predictions_data_frame.sort_values('Prediction', ascending=False).reset_index().to_feather(
+predictions_data_frame.sort_values('Prediction', ascending=False).reset_index(drop=True).to_feather(
     f'{log_name} {datetime_string}.feather'
 )

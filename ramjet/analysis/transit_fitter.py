@@ -79,8 +79,8 @@ class TransitFitter:
             data_source = ColumnDataSource({'Time (days)': times, 'Relative flux': fluxes})
             mapper = LinearColorMapper(
                 palette='Plasma256',
-                low=np.min(times),
-                high=np.max(times)
+                low=np.min(data_source.data['Time (days)']),
+                high=np.max(data_source.data['Time (days)'])
             )
             colors = {'field': 'Time (days)', 'transform': mapper}
             figure.circle('Time (days)', 'Relative flux',
@@ -139,7 +139,7 @@ class TransitFitter:
 
     def create_mcmc_fit_figures(self, run_fitting_button):
         initial_fit_data_source = ColumnDataSource({'Folded time (days)': [], 'Relative flux': [],
-                                                    'Fit': [], 'Fit time': [], 'Time (days)': self.times})
+                                                    'Fit': [], 'Fit time': [], 'Time (BTJD)': self.times})
         self_ = self
         initial_fit_figure = Figure(x_axis_label='Folded time (days)', y_axis_label='Relative flux',
                                     title=f'Initial fit {self.title}')
@@ -261,18 +261,22 @@ class TransitFitter:
             # worksheet.update_cell(empty_row_index, 8, trace_summary['mean']['ror'] * self_.star_radius)
 
         run_fitting_button.on_click(run_fitting)
-        mapper = LinearColorMapper(
-            palette='Plasma256',
-            low=np.min(self.times),
-            high=np.max(self.times)
-        )
-        colors = {'field': 'Time (days)', 'transform': mapper}
-        initial_fit_figure.circle('Folded time (days)', 'Relative flux', source=initial_fit_data_source,
-                                  fill_color=colors, fill_alpha=0.1, line_color=colors, line_alpha=0.4)
+        self.plot_lightcurve_source(initial_fit_figure, initial_fit_data_source, time_column_name='Folded time (days)')
         initial_fit_figure.line('Fit time', 'Fit', source=initial_fit_data_source, color='black', line_width=3)
         initial_fit_figure.sizing_mode = 'stretch_width'
 
         return initial_fit_figure, parameters_table
+
+    def plot_lightcurve_source(self, figure: Figure, data_source: ColumnDataSource,
+                               time_column_name: str = 'Time (BTJD)',
+                               flux_column_name: str = 'Relative flux',
+                               color_value_column_name: str = 'Time (BTJD)'):
+        mapper = LinearColorMapper(palette='Plasma256',
+                                   low=np.min(data_source.data[color_value_column_name]),
+                                   high=np.max(data_source.data[color_value_column_name]))
+        colors = {'field': color_value_column_name, 'transform': mapper}
+        figure.circle(time_column_name, flux_column_name, source=data_source, fill_color=colors, fill_alpha=0.1,
+                      line_color=colors, line_alpha=0.4)
 
     @staticmethod
     def calculate_epoch_and_period_from_approximate_event_times(event_times: List[float]) -> (float, float):
