@@ -1,7 +1,7 @@
 """Code for producing a transit fitting."""
 import itertools
 import math
-from typing import List
+from typing import List, Union
 
 import numpy as np
 import pandas as pd
@@ -24,12 +24,9 @@ class TransitFitter:
     """
 
     def __init__(self, tic_id, sectors=None):
-        tess_data_interface = TessDataInterface()
         self.title = f'TIC {tic_id}'
-        relative_fluxes_arrays = []
-        relative_flux_errors_arrays = []
-        times_arrays = []
-        dispositions_data_frame = tess_data_interface.retrieve_exofop_toi_and_ctoi_planet_disposition_for_tic_id(tic_id)
+        self.tess_data_interface = TessDataInterface()
+        dispositions_data_frame = self.tess_data_interface.retrieve_exofop_toi_and_ctoi_planet_disposition_for_tic_id(tic_id)
         if dispositions_data_frame.shape[0] == 0:
             print('No known ExoFOP dispositions found.')
         # Use context options to not truncate printed data.
@@ -38,25 +35,17 @@ class TransitFitter:
                 print(dispositions_data_frame)
                 exit()
         if sectors is None:
-            sectors = tess_data_interface.get_sectors_target_appears_in(tic_id)
+            sectors = self.tess_data_interface.get_sectors_target_appears_in(tic_id)
         if isinstance(sectors, int):
             sectors = [sectors]
-        for sector in sectors:
-            lightcurve_path = tess_data_interface.download_lightcurve(tic_id, sector)
-            lightcurve = tess_data_interface.load_fluxes_flux_errors_and_times_from_fits_file(lightcurve_path)
-            sector_fluxes, sector_flux_errors, sector_times = lightcurve
-            sector_flux_median = np.median(sector_fluxes)
-            sector_normalized_fluxes = sector_fluxes / sector_flux_median - 1
-            sector_normalized_flux_errors = sector_flux_errors / sector_flux_median
-            relative_fluxes_arrays.append(sector_normalized_fluxes)
-            relative_flux_errors_arrays.append(sector_normalized_flux_errors)
-            times_arrays.append(sector_times)
         self.sectors = sectors
+        lightcurve = self.stitch_fluxes_flux_errors_and_times_for_target_from_mast(tic_id, sectors)
+        relative_flux_errors, relative_fluxes, times = lightcurve
         self.tic_id = tic_id
-        self.times = np.concatenate(times_arrays).astype(np.float64)
-        self.relative_fluxes = np.concatenate(relative_fluxes_arrays).astype(np.float64)
-        self.relative_flux_errors = np.concatenate(relative_flux_errors_arrays).astype(np.float64)
-        tic_row = tess_data_interface.get_tess_input_catalog_row(tic_id)
+        self.times = times
+        self.relative_fluxes = relative_fluxes
+        self.relative_flux_errors = relative_flux_errors
+        tic_row = self.tess_data_interface.get_tess_input_catalog_row(tic_id)
         self.star_radius = tic_row['rad']
         print(self.star_radius)
         self.period = None
@@ -83,7 +72,7 @@ class TransitFitter:
         # Setup empty period recording clicks for folding.
         event_coordinates = []
         event_coordinates_data_source = ColumnDataSource({'Time (BTJD)': [], 'Relative flux': []})
-        unfolded_figure.circle('Time (days)', 'Relative flux', source=event_coordinates_data_source,
+        unfolded_figure.circle('Time (BTJD)', 'Relative flux', source=event_coordinates_data_source,
                                color='red', alpha=0.8)  # Will be updated.
         # Prepare the folded plot.
         folded_data_source = ColumnDataSource({'Relative flux': self.relative_fluxes,
@@ -267,6 +256,34 @@ class TransitFitter:
         colors = {'field': color_value_column_name, 'transform': mapper}
         figure.circle(time_column_name, flux_column_name, source=data_source, fill_color=colors, fill_alpha=0.1,
                       line_color=colors, line_alpha=0.4)
+
+    def stitch_fluxes_flux_errors_and_times_for_target_from_mast(self, tic_id: int,
+                                                                 sectors: Union[int, List[int], None] = None
+                                                                 ) -> (np.ndarray, np.ndarray, np.ndarray):
+        """
+        Downloads lightcurves from MAST for a given TIC ID and stitches them together.
+
+        :param tic_id: The target TIC ID.
+        :param sectors: The sectors to download and stitch together. Defaults to None which will download all available.
+        :return: The fluxes, flux errors, and times of the stitched lightcurves.
+        """
+        relative_fluxes_arrays = []
+        relative_flux_errors_arrays = []
+        times_arrays = []
+        for sector in sectors:
+            lightcurve_path = self.tess_data_interface.download_lightcurve(tic_id, sector)
+            lightcurve = self.tess_data_interface.load_fluxes_flux_errors_and_times_from_fits_file(lightcurve_path)
+            sector_fluxes, sector_flux_errors, sector_times = lightcurve
+            sector_flux_median = np.median(sector_fluxes)
+            sector_normalized_fluxes = sector_fluxes / sector_flux_median - 1
+            sector_normalized_flux_errors = sector_flux_errors / sector_flux_median
+            relative_fluxes_arrays.append(sector_normalized_fluxes)
+            relative_flux_errors_arrays.append(sector_normalized_flux_errors)
+            times_arrays.append(sector_times)
+        times = np.concatenate(times_arrays).astype(np.float64)
+        relative_fluxes = np.concatenate(relative_fluxes_arrays).astype(np.float64)
+        relative_flux_errors = np.concatenate(relative_flux_errors_arrays).astype(np.float64)
+        return relative_flux_errors, relative_fluxes, times
 
     @staticmethod
     def calculate_epoch_and_period_from_approximate_event_times(event_times: List[float]) -> (float, float):
