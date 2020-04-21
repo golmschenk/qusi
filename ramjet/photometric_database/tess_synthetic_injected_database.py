@@ -40,9 +40,6 @@ class TessSyntheticInjectedDatabase(LightcurveDatabase):
         lightcurve_paths_datasets = self.get_training_and_validation_datasets_for_file_paths(
             self.get_all_lightcurve_paths)
         training_lightcurve_paths_dataset, validation_lightcurve_paths_dataset = lightcurve_paths_datasets
-        print(f'{len(list(training_lightcurve_paths_dataset))} training lightcurves.')
-        print(f'{len(list(validation_lightcurve_paths_dataset))} validation lightcurves.')
-        print(f'{len(list(synthetic_signal_paths_dataset))} injectable signals.')
         shuffled_training_lightcurve_paths_dataset = training_lightcurve_paths_dataset.repeat().shuffle(
             buffer_size=self.shuffle_buffer_size)
         shuffled_synthetic_signal_paths_dataset = synthetic_signal_paths_dataset.repeat().shuffle(
@@ -140,6 +137,7 @@ class TessSyntheticInjectedDatabase(LightcurveDatabase):
         synthetic_signal = pd.read_feather(synthetic_signal_path)
         synthetic_magnifications, synthetic_times = synthetic_signal['Magnification'], synthetic_signal['Time (hours)']
         synthetic_times = synthetic_times / 24  # Convert hours to days.
+        synthetic_times -= 30 * np.random.random()
         return synthetic_magnifications, synthetic_times
 
     def flux_preprocessing(self, fluxes: np.ndarray, evaluation_mode: bool = False, seed: int = None) -> np.ndarray:
