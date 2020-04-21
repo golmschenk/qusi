@@ -2,12 +2,15 @@
 Code to represent a database to train to find exoplanet transits 2 minute cadence TESS data.
 Uses known TOI dispositions and injects them into other TESS lightcurves to create positive training samples.
 """
+from pathlib import Path
+
 import numpy as np
-from typing import List
-from ramjet.photometric_database.tess_synthetic_injected_database import TessSyntheticInjectedDatabase
+from typing import Iterable
+from ramjet.photometric_database.tess_synthetic_injected_with_negative_injection_database import \
+    TessSyntheticInjectedWithNegativeInjectionDatabase
 
 
-class ToiDatabase(TessSyntheticInjectedDatabase):
+class ToiDatabase(TessSyntheticInjectedWithNegativeInjectionDatabase):
     """
     A class to represent a database to train to find exoplanet transits 2 minute cadence TESS data.
     Uses known TOI dispositions and injects them into other TESS lightcurves to create positive training samples.
@@ -18,13 +21,13 @@ class ToiDatabase(TessSyntheticInjectedDatabase):
         self.toi_dispositions_path = self.data_directory.joinpath('toi_dispositions.csv')
         self.allow_out_of_bounds_injection = True
 
-    def get_all_synthetic_signal_paths(self) -> List[str]:
+    def get_all_synthetic_signal_paths(self) -> Iterable[Path]:
         """
         Returns the list of all synthetic signals to use.
 
         :return: The list of synthetic signals.
         """
-        synthetic_signal_paths = list(map(str, self.synthetic_signal_directory.glob('**/*.fits')))
+        synthetic_signal_paths = self.synthetic_signal_directory.glob('**/*.fits')
         return synthetic_signal_paths
 
     def load_magnifications_and_times_from_synthetic_signal_path(self, synthetic_signal_path: str

@@ -4,16 +4,17 @@ Code to represent a database to train to find exoplanet transits in FFI data bas
 import requests
 import numpy as np
 import pandas as pd
-from typing import List
+from typing import Iterable
 from pathlib import Path
 
 from ramjet.data_interface.tess_data_interface import TessDataInterface
 from ramjet.data_interface.tess_ffi_data_interface import TessFfiDataInterface
 from ramjet.data_interface.tess_toi_data_interface import ToiColumns, TessToiDataInterface
-from ramjet.photometric_database.tess_synthetic_injected_database import TessSyntheticInjectedDatabase
+from ramjet.photometric_database.tess_synthetic_injected_with_negative_injection_database import \
+    TessSyntheticInjectedWithNegativeInjectionDatabase
 
 
-class FfiToiDatabase(TessSyntheticInjectedDatabase):
+class FfiToiDatabase(TessSyntheticInjectedWithNegativeInjectionDatabase):
     """
     Code to represent a database to train to find exoplanet transits in FFI data based on known TOI dispositions.
     """
@@ -21,6 +22,7 @@ class FfiToiDatabase(TessSyntheticInjectedDatabase):
         super().__init__(data_directory=data_directory)
         self.toi_dispositions_path = self.data_directory.joinpath('toi_dispositions.csv')
         self.time_steps_per_example = 1296  # 27 days / 30 minutes.
+        self.batch_size = 1000
         self.allow_out_of_bounds_injection = True
         self.tess_ffi_data_interface = TessFfiDataInterface()
         self.tess_toi_data_interface = TessToiDataInterface()
@@ -72,22 +74,22 @@ class FfiToiDatabase(TessSyntheticInjectedDatabase):
         self.lightcurve_directory.mkdir(parents=True, exist_ok=True)
         self.synthetic_signal_directory.mkdir(parents=True, exist_ok=True)
 
-    def get_all_lightcurve_paths(self) -> List[str]:
+    def get_all_lightcurve_paths(self) -> Iterable[Path]:
         """
         Returns the list of all lightcurves to use.
 
         :return: The list of lightcurves.
         """
-        lightcurve_paths = list(map(str, self.lightcurve_directory.glob('**/*.pkl')))
+        lightcurve_paths = self.lightcurve_directory.glob('**/*.pkl')
         return lightcurve_paths
 
-    def get_all_synthetic_signal_paths(self) -> List[str]:
+    def get_all_synthetic_signal_paths(self) -> Iterable[Path]:
         """
         Returns the list of all synthetic signals to use.
 
         :return: The list of synthetic signals.
         """
-        synthetic_signal_paths = list(map(str, self.synthetic_signal_directory.glob('**/*.fits')))
+        synthetic_signal_paths = self.synthetic_signal_directory.glob('**/*.fits')
         return synthetic_signal_paths
 
     def load_fluxes_and_times_from_lightcurve_path(self, lightcurve_path: str) -> (np.ndarray, np.ndarray):
