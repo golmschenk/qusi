@@ -7,13 +7,14 @@ from pathlib import Path
 from typing import Iterable
 
 from ramjet.data_interface.tess_data_interface import TessDataInterface
-from ramjet.photometric_database.tess_synthetic_injected_database import TessSyntheticInjectedDatabase
+from ramjet.photometric_database.tess_synthetic_injected_with_negative_injection_database import \
+    TessSyntheticInjectedWithNegativeInjectionDatabase
 
 
-class EclipsingBinaryDatabase(TessSyntheticInjectedDatabase):
+class EclipsingBinaryDatabase(TessSyntheticInjectedWithNegativeInjectionDatabase):
     """
-    A class to represent a database to train to find exoplanet transits 2 minute cadence TESS data.
-    Uses known TOI dispositions and injects them into other TESS lightcurves to create positive training samples.
+    A class to represent a database to train to find eclipsing binaries in 2 minute cadence TESS data.
+    Uses known cases from Brian Powell's eclipsing binary catalog.
     """
 
     def __init__(self, data_directory='data/eclipsing_binary_database'):
