@@ -70,9 +70,12 @@ class TestTessSyntheticInjectedDatabase:
     @pytest.mark.functional
     @patch.object(ramjet.data_interface.tess_data_interface.fits, 'open')
     @patch.object(ramjet.data_interface.tess_data_interface.pd, 'read_feather')
-    def test_train_and_validation_preprocessing_produces_an_inject_and_non_injected_lightcurve(self, mock_read_feather,
-                                                                                               mock_fits_open,
-                                                                                               database):
+    @patch.object(ramjet.photometric_database.tess_synthetic_injected_database.np.random, 'random')
+    def test_train_and_validation_preprocessing_produces_an_injected_and_non_injected_lightcurve(self,
+                                                                                                 mock_numpy_random,
+                                                                                                 mock_read_feather,
+                                                                                                 mock_fits_open,
+                                                                                                 database):
         # Mock and initialize dataset components for simple testing.
         lightcurve_length = 15
         database.time_steps_per_example = lightcurve_length
@@ -86,6 +89,7 @@ class TestTessSyntheticInjectedDatabase:
         mock_read_feather.return_value = pd.DataFrame({'Magnification': synthetic_magnitudes,
                                                        'Time (hours)': synthetic_times})
         database.number_of_parallel_processes_per_map = 1
+        mock_numpy_random.return_value = 0
         # Generate the datasets.
         examples, labels = database.train_and_validation_preprocessing(tf.convert_to_tensor('fake_path.fits'),
                                                                        tf.convert_to_tensor('fake_path.feather'))
