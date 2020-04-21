@@ -17,7 +17,7 @@ log_name = get_latest_log_directory(logs_directory='logs')  # Uses the latest mo
 saved_log_directory = Path(f'logs/{log_name}')
 datetime_string = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
 
-print('Setting up dataset...')
+print('Setting up dataset...', flush=True)
 database = ToiDatabase()
 example_paths = database.get_all_lightcurve_paths()
 example_paths_dataset = database.paths_dataset_from_list_or_generator_factory(example_paths)
@@ -26,11 +26,11 @@ mapped_dataset = map_py_function_to_dataset(example_paths_dataset, database.infe
                                             output_types=(tf.string, tf.float32))
 batch_dataset = mapped_dataset.batch(database.batch_size).prefetch(5)
 
-print('Loading model...')
+print('Loading model...', flush=True)
 model = SimpleLightcurveCnn()
 model.load_weights(str(saved_log_directory.joinpath('model.ckpt'))).expect_partial()
 
-print('Inferring and plotting...')
+print('Inferring and plotting...', flush=True)
 columns = ['Lightcurve path', 'Prediction']
 dtypes = [str, int]
 predictions_data_frame = pd.read_csv(io.StringIO(''), names=columns, dtype=dict(zip(columns, dtypes)))
@@ -39,7 +39,7 @@ for batch_index, (paths, examples) in enumerate(batch_dataset):
     predictions = model.predict(examples)
     batch_predictions = pd.DataFrame({'Lightcurve path': paths, 'Prediction': np.squeeze(predictions, axis=1)})
     predictions_data_frame = pd.concat([predictions_data_frame, batch_predictions])
-    print(f'{batch_index * database.batch_size} examples inferred on.')
+    print(f'{batch_index * database.batch_size} examples inferred on.', flush=True)
 predictions_data_frame.sort_values('Prediction', ascending=False).reset_index().to_feather(
     f'{log_name} {datetime_string}.feather'
 )

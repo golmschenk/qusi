@@ -11,7 +11,7 @@ from ramjet.photometric_database.toi_database import ToiDatabase
 
 def train():
     """Runs the training."""
-    print('Starting training process...')
+    print('Starting training process...', flush=True)
     # Basic training settings.
     model = SimpleLightcurveCnn()
     database = ToiDatabase()
@@ -44,10 +44,10 @@ def train():
                   callbacks=[tensorboard_callback, model_checkpoint_callback], steps_per_epoch=5000,
                   validation_steps=500)
     except KeyboardInterrupt:
-        print('Interrupted. Saving model before quitting...')
+        print('Interrupted. Saving model before quitting...', flush=True)
     finally:
         model.save_weights(model_save_path)
-    print('Training done.')
+    print('Training done.', flush=True)
 
 
 if __name__ == '__main__':
