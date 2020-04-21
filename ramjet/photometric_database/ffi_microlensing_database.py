@@ -1,12 +1,13 @@
 """
 Code to represent a database to find microlensing events in FFI data.
 """
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from typing import List
+from typing import Iterable
 
-from ramjet.data_interface.tess_ffi_data_interface import TessFfiDataInterface
+from ramjet.data_interface.tess_ffi_data_interface import TessFfiDataInterface, FfiDataIndexes
 from ramjet.photometric_database.tess_synthetic_injected_database import TessSyntheticInjectedDatabase
 
 
@@ -34,13 +35,13 @@ class FfiMicrolensingDatabase(TessSyntheticInjectedDatabase):
         synthetic_times += np.random.random() * 30  # Synthetic data goes from -30 to 30.
         return synthetic_magnifications, synthetic_times
 
-    def get_all_lightcurve_paths(self) -> List[str]:
+    def get_all_lightcurve_paths(self) -> Iterable[Path]:
         """
         Returns the list of all lightcurves to use.
 
         :return: The list of lightcurves.
         """
-        lightcurve_paths = list(map(str, self.lightcurve_directory.glob('**/*.pkl')))
+        lightcurve_paths = self.lightcurve_directory.glob('**/*.pkl')
         return lightcurve_paths
 
     def load_fluxes_and_times_from_lightcurve_path(self, lightcurve_path: str) -> (np.ndarray, np.ndarray):
@@ -50,7 +51,8 @@ class FfiMicrolensingDatabase(TessSyntheticInjectedDatabase):
         :param lightcurve_path: The path to the lightcurve file.
         :return: The fluxes and times of the lightcurve
         """
-        fluxes, times = self.tess_ffi_data_interface.load_fluxes_and_times_from_pickle_file(lightcurve_path)
+        fluxes, times = self.tess_ffi_data_interface.load_fluxes_and_times_from_pickle_file(
+            lightcurve_path, FfiDataIndexes.RAW_FLUX)
         nan_indexes = np.union1d(np.argwhere(np.isnan(fluxes)), np.argwhere(np.isnan(times)))
         fluxes = np.delete(fluxes, nan_indexes)
         times = np.delete(times, nan_indexes)
