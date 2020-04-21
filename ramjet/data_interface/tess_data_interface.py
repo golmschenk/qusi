@@ -58,7 +58,7 @@ class TessDataInterface:
         :param tic_id: An optional TIC ID or list of TIC IDs to limit the query to.
         :return: The list of time series observations as rows in a Pandas data frame.
         """
-        if tic_id is None or isinstance(tic_id, int):
+        if tic_id is None or np.isscalar(tic_id):
             observations = self.get_all_tess_time_series_observations_chunk(tic_id)
         else:
             observations = None
