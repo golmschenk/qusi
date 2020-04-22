@@ -118,7 +118,7 @@ def create_dual_lightcurve_figure(fluxes0, times0, name0, fluxes1, times1, name1
     :param y_axis_label: The label of the y axis.
     :return: The resulting figure.
     """
-    figure = Figure(title=title, x_axis_label=x_axis_label, y_axis_label=y_axis_label)
+    figure = Figure(title=title, x_axis_label=x_axis_label, y_axis_label=y_axis_label, active_drag='box_zoom')
 
     def add_lightcurve(times, fluxes, legend_label, color):
         """Adds a lightcurve to the figure."""

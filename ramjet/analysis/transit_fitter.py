@@ -62,7 +62,8 @@ class TransitFitter:
         bokeh_document.add_root(column)
 
     def create_lightcurve_figure(self):
-        figure = Figure(title=self.title, x_axis_label='Time (BTJD)', y_axis_label='Relative flux')
+        figure = Figure(title=self.title, x_axis_label='Time (BTJD)', y_axis_label='Relative flux',
+                        active_drag='box_zoom')
         data_source = ColumnDataSource({'Time (BTJD)': self.times, 'Relative flux': self.relative_fluxes})
         self.plot_lightcurve_source(figure, data_source)
         figure.sizing_mode = 'stretch_width'
