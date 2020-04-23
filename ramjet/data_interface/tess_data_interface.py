@@ -399,36 +399,6 @@ class TessDataInterface:
         print_data_frame.reset_index(drop=True, inplace=True)
         print(print_data_frame)
 
-    def retrieve_exofop_toi_and_ctoi_planet_disposition_for_tic_id(self, tic_id: int) -> pd.DataFrame:
-        """
-        Retrieves the ExoFOP disposition information for a given TIC ID from <https://exofop.ipac.caltech.edu/tess/>`_.
-
-        :param tic_id: The TIC ID to get available data for.
-        :return: The disposition data frame.
-        """
-        tess_toi_data_interface = TessToiDataInterface()
-        tess_toi_data_interface.update_toi_dispositions_file()
-        tess_toi_data_interface.update_ctoi_dispositions_file()
-        toi_dispositions = tess_toi_data_interface.toi_dispositions
-        ctoi_dispositions = tess_toi_data_interface.ctoi_dispositions
-        toi_and_coi_dispositions = pd.concat([toi_dispositions, ctoi_dispositions], axis=0, ignore_index=True)
-        tic_target_dispositions = toi_and_coi_dispositions[toi_and_coi_dispositions['TIC ID'] == tic_id]
-        return tic_target_dispositions
-
-    def print_exofop_toi_and_ctoi_planet_dispositions_for_tic_target(self, tic_id):
-        """
-        Prints all ExoFOP disposition information for a given TESS target.
-
-        :param tic_id: The TIC target to for.
-        """
-        dispositions_data_frame = self.retrieve_exofop_toi_and_ctoi_planet_disposition_for_tic_id(tic_id)
-        if dispositions_data_frame.shape[0] == 0:
-            print('No known ExoFOP dispositions found.')
-            return
-        # Use context options to not truncate printed data.
-        with pd.option_context('display.max_rows', None, 'display.max_columns', None, 'display.width', None):
-            print(dispositions_data_frame)
-
     def download_all_two_minute_cadence_lightcurves(self, save_directory: Path):
         """
         Downloads all two minute cadence lightcurves from TESS.

@@ -208,16 +208,6 @@ class TestTessDataInterface:
         assert variable_data_frame['VarType'].iloc[0] == b'RR'
         assert variable_data_frame['VarType'].iloc[1] == b'SNI'
 
-    def test_can_get_exofop_planet_disposition_for_tic_id(self, tess_data_interface):
-        mock_dispositions = pd.DataFrame({'TIC ID': [231663901, 266980320], 'Disposition': ['KP', 'CP']})
-        tess_data_interface.retrieve_toi_dispositions_from_exofop = Mock(return_value=mock_dispositions)
-        dispositions0 = tess_data_interface.retrieve_exofop_toi_and_ctoi_planet_disposition_for_tic_id(tic_id=231663901)
-        assert dispositions0['Disposition'].iloc[0] == 'KP'
-        dispositions1 = tess_data_interface.retrieve_exofop_toi_and_ctoi_planet_disposition_for_tic_id(tic_id=266980320)
-        assert dispositions1['Disposition'].iloc[0] == 'CP'
-        dispositions2 = tess_data_interface.retrieve_exofop_toi_and_ctoi_planet_disposition_for_tic_id(tic_id=25132999)
-        assert dispositions2.shape[0] == 0
-
     @patch.object(ramjet.data_interface.tess_data_interface.Observations, 'query_criteria')
     def test_can_get_list_of_sectors_target_appears_in(self, mock_query, tess_data_interface):
         mock_query_result = Table(

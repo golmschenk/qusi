@@ -16,6 +16,7 @@ import exoplanet as xo
 # from google.oauth2.service_account import Credentials
 
 from ramjet.data_interface.tess_data_interface import TessDataInterface
+from ramjet.data_interface.tess_toi_data_interface import TessToiDataInterface
 
 
 class TransitFitter:
@@ -25,15 +26,16 @@ class TransitFitter:
 
     def __init__(self, tic_id, sectors=None):
         self.title = f'TIC {tic_id}'
+        tess_toi_data_interface = TessToiDataInterface()
         self.tess_data_interface = TessDataInterface()
-        dispositions_data_frame = self.tess_data_interface.retrieve_exofop_toi_and_ctoi_planet_disposition_for_tic_id(tic_id)
+        dispositions_data_frame = tess_toi_data_interface.retrieve_exofop_toi_and_ctoi_planet_disposition_for_tic_id(
+            tic_id)
         if dispositions_data_frame.shape[0] == 0:
             print('No known ExoFOP dispositions found.')
         # Use context options to not truncate printed data.
         else:
             with pd.option_context('display.max_rows', None, 'display.max_columns', None, 'display.width', None):
                 print(dispositions_data_frame)
-                exit()
         if sectors is None:
             sectors = self.tess_data_interface.get_sectors_target_appears_in(tic_id)
         if isinstance(sectors, int):

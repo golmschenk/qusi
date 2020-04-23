@@ -22,15 +22,16 @@ class TessToiDataInterface:
     """
     A data interface for working with the TESS table of objects of interest.
     """
-    toi_dispositions_: pd.DataFrame = None
-    ctoi_dispositions_: pd.DataFrame = None
-
     def __init__(self, data_directory='data/tess_toi'):
         self.data_directory = Path(data_directory)
         self.data_directory.mkdir(parents=True, exist_ok=True)
         self.toi_dispositions_path = self.data_directory.joinpath('toi_dispositions.csv')
         self.ctoi_dispositions_path = self.data_directory.joinpath('ctoi_dispositions.csv')
         self.lightcurves_directory = self.data_directory.joinpath('lightcurves')
+        self.update_toi_dispositions_file()
+        self.update_ctoi_dispositions_file()
+        self.toi_dispositions_: Union[pd.DataFrame, None] = None
+        self.ctoi_dispositions_: Union[pd.DataFrame, None] = None
 
     @property
     def toi_dispositions(self):
@@ -123,3 +124,30 @@ class TessToiDataInterface:
                                      'Duration (hrs)': ToiColumns.transit_duration.value}, inplace=True)
         dispositions[ToiColumns.disposition.value] = dispositions[ToiColumns.disposition.value].fillna('')
         return dispositions
+
+    def retrieve_exofop_toi_and_ctoi_planet_disposition_for_tic_id(self, tic_id: int) -> pd.DataFrame:
+        """
+        Retrieves the ExoFOP disposition information for a given TIC ID from <https://exofop.ipac.caltech.edu/tess/>`_.
+
+        :param tic_id: The TIC ID to get available data for.
+        :return: The disposition data frame.
+        """
+        toi_dispositions = self.toi_dispositions
+        ctoi_dispositions = self.ctoi_dispositions
+        toi_and_coi_dispositions = pd.concat([toi_dispositions, ctoi_dispositions], axis=0, ignore_index=True)
+        tic_target_dispositions = toi_and_coi_dispositions[toi_and_coi_dispositions['TIC ID'] == tic_id]
+        return tic_target_dispositions
+
+    def print_exofop_toi_and_ctoi_planet_dispositions_for_tic_target(self, tic_id):
+        """
+        Prints all ExoFOP disposition information for a given TESS target.
+
+        :param tic_id: The TIC target to for.
+        """
+        dispositions_data_frame = self.retrieve_exofop_toi_and_ctoi_planet_disposition_for_tic_id(tic_id)
+        if dispositions_data_frame.shape[0] == 0:
+            print('No known ExoFOP dispositions found.')
+            return
+        # Use context options to not truncate printed data.
+        with pd.option_context('display.max_rows', None, 'display.max_columns', None, 'display.width', None):
+            print(dispositions_data_frame)
