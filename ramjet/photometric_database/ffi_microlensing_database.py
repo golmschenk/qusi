@@ -8,10 +8,11 @@ import pandas as pd
 from typing import Iterable
 
 from ramjet.data_interface.tess_ffi_data_interface import TessFfiDataInterface, FfiDataIndexes
-from ramjet.photometric_database.tess_synthetic_injected_database import TessSyntheticInjectedDatabase
+from ramjet.photometric_database.injected_with_additional_explicit_negative_database import \
+    InjectedWithAdditionalExplicitNegativeDatabase
 
 
-class FfiMicrolensingDatabase(TessSyntheticInjectedDatabase):
+class FfiMicrolensingDatabase(InjectedWithAdditionalExplicitNegativeDatabase):
     """
     A class to represent a database to find microlensing events in FFI data.
     """

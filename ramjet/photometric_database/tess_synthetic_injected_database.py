@@ -90,7 +90,7 @@ class TessSyntheticInjectedDatabase(LightcurveDatabase):
 
     def train_and_validation_preprocessing(self, lightcurve_path_tensor: tf.Tensor,
                                            synthetic_signal_path_tensor: tf.Tensor,
-                                           ) -> (np.ndarray, np.ndarray, np.ndarray, np.ndarray):
+                                           ) -> ((np.ndarray, np.ndarray), (np.ndarray, np.ndarray)):
         """
         The training and validation preprocessing.
 
