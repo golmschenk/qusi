@@ -50,7 +50,7 @@ class TessSyntheticInjectedWithNegativeInjectionDatabase(TessSyntheticInjectedDa
                                                                  output_types=output_types,
                                                                  output_shapes=output_shapes,
                                                                  flat_map=True)
-        batched_training_dataset = lightcurve_training_dataset.batch(self.batch_size)
+        batched_training_dataset = lightcurve_training_dataset.window(self.batch_size, shift=int(self.batch_size / 10))
         prefetch_training_dataset = batched_training_dataset.prefetch(tf.data.experimental.AUTOTUNE)
         shuffled_validation_lightcurve_paths_dataset = validation_lightcurve_paths_dataset.repeat().shuffle(
             buffer_size=self.shuffle_buffer_size)
