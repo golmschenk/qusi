@@ -3,9 +3,13 @@ Code to represent a database to train to find exoplanet transits 2 minute cadenc
 Uses known TOI dispositions and injects them into other TESS lightcurves to create positive training samples.
 """
 from pathlib import Path
-
 import numpy as np
+import pandas as pd
 from typing import Iterable
+import requests
+
+from ramjet.data_interface.tess_data_interface import TessDataInterface
+from ramjet.data_interface.tess_toi_data_interface import TessToiDataInterface
 from ramjet.photometric_database.tess_synthetic_injected_with_negative_injection_database import \
     TessSyntheticInjectedWithNegativeInjectionDatabase
 
@@ -41,6 +45,79 @@ class ToiDatabase(TessSyntheticInjectedWithNegativeInjectionDatabase):
         fluxes, times = self.tess_data_interface.load_fluxes_and_times_from_fits_file(synthetic_signal_path)
         synthetic_magnifications, synthetic_times = self.generate_synthetic_signal_from_real_data(fluxes, times)
         return synthetic_magnifications, synthetic_times
+
+    def download_limited_exofop_toi_database(self, number_of_negative_lightcurves_to_download=10000):
+        """
+        Downloads the `ExoFOP database <https://exofop.ipac.caltech.edu/tess/view_toi.php>`_.
+        """
+        print('Clearing data directory...')
+        self.clear_data_directory()
+        print("Downloading ExoFOP TOI disposition CSV...")
+        toi_csv_url = 'https://exofop.ipac.caltech.edu/tess/download_toi.php?sort=toi&output=csv'
+        response = requests.get(toi_csv_url)
+        with self.toi_dispositions_path.open('wb') as csv_file:
+            csv_file.write(response.content)
+        print('Downloading TESS observation list...')
+        tess_data_interface = TessDataInterface()
+        tess_observations = tess_data_interface.get_all_tess_time_series_observations()
+        single_sector_observations = tess_data_interface.filter_for_single_sector_observations(tess_observations)
+        single_sector_observations = tess_data_interface.add_tic_id_column_to_single_sector_observations(
+            single_sector_observations)
+        single_sector_observations = tess_data_interface.add_sector_column_to_single_sector_observations(
+            single_sector_observations)
+        print("Downloading lightcurves which are confirmed or suspected planets in TOI dispositions...")
+        tess_toi_data_interface = TessToiDataInterface()
+        toi_dispositions = tess_toi_data_interface.load_toi_dispositions_in_project_format()
+        suspected_planet_dispositions = toi_dispositions[toi_dispositions['disposition'] != 'FP']
+        suspected_planet_observations = pd.merge(single_sector_observations, suspected_planet_dispositions, how='inner',
+                                                 on=['TIC ID', 'Sector'])
+        observations_not_found = suspected_planet_dispositions.shape[0] - suspected_planet_observations.shape[0]
+        print(f"{suspected_planet_observations.shape[0]} observations found that match the TOI dispositions.")
+        print(f"No observations found for {observations_not_found} entries in TOI dispositions.")
+        suspected_planet_data_products = tess_data_interface.get_product_list(suspected_planet_observations)
+        suspected_planet_lightcurve_data_products = suspected_planet_data_products[
+            suspected_planet_data_products['productFilename'].str.endswith('lc.fits')
+        ]
+        suspected_planet_download_manifest = tess_data_interface.download_products(
+            suspected_planet_lightcurve_data_products, data_directory=self.data_directory)
+        print(f'Moving lightcurves to {self.lightcurve_directory}...')
+        for file_path_string in suspected_planet_download_manifest['Local Path']:
+            file_path = Path(file_path_string)
+            file_path.rename(self.lightcurve_directory.joinpath(file_path.name))
+        print("Downloading lightcurves which are not in TOI dispositions and do not have TCEs (not planets)...")
+        print(f'Download limited to {number_of_negative_lightcurves_to_download} lightcurves...')
+        # noinspection SpellCheckingInspection
+        toi_tic_ids = toi_dispositions['TIC ID'].values
+        not_toi_observations = single_sector_observations[
+            ~single_sector_observations['TIC ID'].isin(toi_tic_ids)  # Don't include even false positives.
+        ]
+        not_toi_observations = not_toi_observations.sample(frac=1, random_state=0)
+        # Shorten product list obtaining.
+        not_toi_observations = not_toi_observations.head(number_of_negative_lightcurves_to_download * 2)
+        not_toi_data_products = tess_data_interface.get_product_list(not_toi_observations)
+        not_toi_data_products = tess_data_interface.add_tic_id_column_to_single_sector_observations(
+            not_toi_data_products)
+        not_toi_lightcurve_data_products = not_toi_data_products[
+            not_toi_data_products['productFilename'].str.endswith('lc.fits')
+        ]
+        not_toi_data_validation_data_products = not_toi_data_products[
+            not_toi_data_products['productFilename'].str.endswith('dvr.xml')
+        ]
+        tic_ids_with_dv = not_toi_data_validation_data_products['TIC ID'].values
+        not_planet_lightcurve_data_products = not_toi_lightcurve_data_products[
+            ~not_toi_lightcurve_data_products['TIC ID'].isin(tic_ids_with_dv)  # Remove any lightcurves with TCEs.
+        ]
+        # Shuffle rows.
+        not_planet_lightcurve_data_products = not_planet_lightcurve_data_products.sample(frac=1, random_state=0)
+        not_planet_download_manifest = tess_data_interface.download_products(
+            not_planet_lightcurve_data_products.head(number_of_negative_lightcurves_to_download),
+            data_directory=self.data_directory
+        )
+        print(f'Moving lightcurves to {self.lightcurve_directory}...')
+        for file_path_string in not_planet_download_manifest['Local Path']:
+            file_path = Path(file_path_string)
+            file_path.rename(self.lightcurve_directory.joinpath(file_path.name))
+        print('Database ready.')
 
 
 if __name__ == '__main__':
