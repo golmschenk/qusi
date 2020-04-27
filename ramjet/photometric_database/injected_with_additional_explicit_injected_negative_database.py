@@ -79,7 +79,7 @@ class InjectedWithAdditionalExplicitInjectedNegativeDatabase(TessSyntheticInject
         negative_synthetic_signal_path = negative_synthetic_signal_path_tensor.numpy().decode('utf-8')
         explicit_negative_signal_path = explicit_negative_lightcurve_path_tensor.numpy().decode('utf-8')
         fluxes, times = self.load_fluxes_and_times_from_lightcurve_path(lightcurve_path)
-        negative_synthetic_signal = self.load_magnifications_and_times_from_synthetic_signal_path(
+        negative_synthetic_signal = self.load_magnifications_and_times_from_negative_synthetic_signal_path(
             negative_synthetic_signal_path)
         negative_synthetic_magnifications, negative_synthetic_times = negative_synthetic_signal
         explicit_negative_magnifications, explicit_negative_times = self.load_magnifications_and_times_from_synthetic_signal_path(
@@ -106,11 +106,9 @@ class InjectedWithAdditionalExplicitInjectedNegativeDatabase(TessSyntheticInject
 
     def get_explicit_negative_synthetic_signal_paths(self) -> Iterable[Path]:
         explicit_negative_lightcurve_paths = list(self.data_directory.joinpath('explicit_negative').glob('**/*.fits'))
-        print(f'Before: {len(explicit_negative_lightcurve_paths)}')
         synthetic_signal_names = [path.name for path in self.synthetic_signal_directory.glob('**/*.fits')]
         explicit_negative_lightcurve_paths = [path for path in explicit_negative_lightcurve_paths if path.name
                                               not in synthetic_signal_names]
-        print(f'After: {len(explicit_negative_lightcurve_paths)}')
         return explicit_negative_lightcurve_paths
 
     def get_all_negative_synthetic_signal_paths(self) -> Iterable[Path]:
@@ -122,6 +120,12 @@ class InjectedWithAdditionalExplicitInjectedNegativeDatabase(TessSyntheticInject
         return synthetic_signal_paths
 
     def load_magnifications_and_times_from_synthetic_signal_path(self, synthetic_signal_path: str
+                                                                 ) -> (np.ndarray, np.ndarray):
+        fluxes, times = self.tess_data_interface.load_fluxes_and_times_from_fits_file(synthetic_signal_path)
+        synthetic_magnifications, synthetic_times = self.generate_synthetic_signal_from_real_data(fluxes, times)
+        return synthetic_magnifications, synthetic_times
+
+    def load_magnifications_and_times_from_negative_synthetic_signal_path(self, synthetic_signal_path: str
                                                                  ) -> (np.ndarray, np.ndarray):
         fluxes, times = self.tess_data_interface.load_fluxes_and_times_from_fits_file(synthetic_signal_path)
         synthetic_magnifications, synthetic_times = self.generate_synthetic_signal_from_real_data(fluxes, times)

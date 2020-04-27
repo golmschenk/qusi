@@ -10,15 +10,17 @@ from pathlib import Path
 from ramjet.data_interface.tess_data_interface import TessDataInterface
 from ramjet.data_interface.tess_ffi_data_interface import TessFfiDataInterface
 from ramjet.data_interface.tess_toi_data_interface import ToiColumns, TessToiDataInterface
+from ramjet.photometric_database.injected_with_additional_explicit_injected_negative_database import \
+    InjectedWithAdditionalExplicitInjectedNegativeDatabase
 from ramjet.photometric_database.tess_synthetic_injected_with_negative_injection_database import \
     TessSyntheticInjectedWithNegativeInjectionDatabase
 
 
-class FfiToiDatabase(TessSyntheticInjectedWithNegativeInjectionDatabase):
+class FfiToiDatabase(InjectedWithAdditionalExplicitInjectedNegativeDatabase):
     """
     Code to represent a database to train to find exoplanet transits in FFI data based on known TOI dispositions.
     """
-    def __init__(self, data_directory='data/tess_toi_ffi'):
+    def __init__(self, data_directory='data/toi_ffi_anti_eclipsing_binary_database'):
         super().__init__(data_directory=data_directory)
         self.toi_dispositions_path = self.data_directory.joinpath('toi_dispositions.csv')
         self.time_steps_per_example = 1296  # 27 days / 30 minutes.
@@ -114,6 +116,12 @@ class FfiToiDatabase(TessSyntheticInjectedWithNegativeInjectionDatabase):
         :return: The magnifications and relative times of the synthetic signal.
         """
         fluxes, times = self.tess_data_interface.load_fluxes_and_times_from_fits_file(synthetic_signal_path)
+        synthetic_magnifications, synthetic_times = self.generate_synthetic_signal_from_real_data(fluxes, times)
+        return synthetic_magnifications, synthetic_times
+
+    def load_magnifications_and_times_from_negative_synthetic_signal_path(self, synthetic_signal_path: str
+                                                                 ) -> (np.ndarray, np.ndarray):
+        fluxes, times = self.tess_ffi_data_interface.load_fluxes_and_times_from_pickle_file(synthetic_signal_path)
         synthetic_magnifications, synthetic_times = self.generate_synthetic_signal_from_real_data(fluxes, times)
         return synthetic_magnifications, synthetic_times
 
