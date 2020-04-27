@@ -4,7 +4,6 @@ Uses known TOI dispositions and injects them into other TESS lightcurves to crea
 """
 from pathlib import Path
 import numpy as np
-import pandas as pd
 from typing import Iterable
 import requests
 
@@ -67,23 +66,9 @@ class ToiDatabase(TessSyntheticInjectedWithNegativeInjectionDatabase):
             single_sector_observations)
         print("Downloading lightcurves which are confirmed or suspected planets in TOI dispositions...")
         tess_toi_data_interface = TessToiDataInterface()
+        toi_database.tess_data_interface.download_exofop_toi_lightcurves_to_directory(
+            toi_database.synthetic_signal_directory)
         toi_dispositions = tess_toi_data_interface.load_toi_dispositions_in_project_format()
-        suspected_planet_dispositions = toi_dispositions[toi_dispositions['disposition'] != 'FP']
-        suspected_planet_observations = pd.merge(single_sector_observations, suspected_planet_dispositions, how='inner',
-                                                 on=['TIC ID', 'Sector'])
-        observations_not_found = suspected_planet_dispositions.shape[0] - suspected_planet_observations.shape[0]
-        print(f"{suspected_planet_observations.shape[0]} observations found that match the TOI dispositions.")
-        print(f"No observations found for {observations_not_found} entries in TOI dispositions.")
-        suspected_planet_data_products = tess_data_interface.get_product_list(suspected_planet_observations)
-        suspected_planet_lightcurve_data_products = suspected_planet_data_products[
-            suspected_planet_data_products['productFilename'].str.endswith('lc.fits')
-        ]
-        suspected_planet_download_manifest = tess_data_interface.download_products(
-            suspected_planet_lightcurve_data_products, data_directory=self.data_directory)
-        print(f'Moving lightcurves to {self.lightcurve_directory}...')
-        for file_path_string in suspected_planet_download_manifest['Local Path']:
-            file_path = Path(file_path_string)
-            file_path.rename(self.lightcurve_directory.joinpath(file_path.name))
         print("Downloading lightcurves which are not in TOI dispositions and do not have TCEs (not planets)...")
         print(f'Download limited to {number_of_negative_lightcurves_to_download} lightcurves...')
         # noinspection SpellCheckingInspection
@@ -114,6 +99,7 @@ class ToiDatabase(TessSyntheticInjectedWithNegativeInjectionDatabase):
             data_directory=self.data_directory
         )
         print(f'Moving lightcurves to {self.lightcurve_directory}...')
+        self.lightcurve_directory.mkdir(parents=True, exist_ok=True)
         for file_path_string in not_planet_download_manifest['Local Path']:
             file_path = Path(file_path_string)
             file_path.rename(self.lightcurve_directory.joinpath(file_path.name))
@@ -122,6 +108,4 @@ class ToiDatabase(TessSyntheticInjectedWithNegativeInjectionDatabase):
 
 if __name__ == '__main__':
     toi_database = ToiDatabase()
-    toi_database.tess_data_interface.download_exofop_toi_lightcurves_to_directory(
-        toi_database.synthetic_signal_directory)
-    toi_database.tess_data_interface.download_all_two_minute_cadence_lightcurves(toi_database.lightcurve_directory)
+    toi_database.download_limited_exofop_toi_database()
