@@ -7,6 +7,7 @@ import tensorflow as tf
 import pytest
 
 import ramjet.data_interface.tess_data_interface
+import ramjet.photometric_database.tess_synthetic_injected_database
 from ramjet.photometric_database.tess_synthetic_injected_database import TessSyntheticInjectedDatabase
 from tests.picklable_mock import PicklableMock
 
@@ -26,7 +27,9 @@ class TestTessSyntheticInjectedDatabase:
     @pytest.mark.functional
     @patch.object(ramjet.data_interface.tess_data_interface.fits, 'open')
     @patch.object(ramjet.data_interface.tess_data_interface.pd, 'read_feather')
-    def test_can_generate_training_and_validation_datasets(self, mock_read_feather, mock_fits_open, database):
+    @patch.object(ramjet.photometric_database.tess_synthetic_injected_database.np.random, 'random')
+    def test_can_generate_training_and_validation_datasets(self, mock_numpy_random, mock_read_feather, mock_fits_open,
+                                                           database):
         # Mock and initialize dataset components for simple testing.
         batch_size = 10
         database.batch_size = batch_size
@@ -47,6 +50,7 @@ class TestTessSyntheticInjectedDatabase:
         synthetic_times = synthetic_magnitudes * 10 * 24  # 24 to make it hours from days.
         mock_read_feather.return_value = pd.DataFrame({'Magnification': synthetic_magnitudes,
                                                        'Time (hours)': synthetic_times})
+        mock_numpy_random.return_value = 0
         # Generate the datasets.
         training_dataset, validation_dataset = database.generate_datasets()
         # Test the datasets look right.
@@ -66,9 +70,12 @@ class TestTessSyntheticInjectedDatabase:
     @pytest.mark.functional
     @patch.object(ramjet.data_interface.tess_data_interface.fits, 'open')
     @patch.object(ramjet.data_interface.tess_data_interface.pd, 'read_feather')
-    def test_train_and_validation_preprocessing_produces_an_inject_and_non_injected_lightcurve(self, mock_read_feather,
-                                                                                               mock_fits_open,
-                                                                                               database):
+    @patch.object(ramjet.photometric_database.tess_synthetic_injected_database.np.random, 'random')
+    def test_train_and_validation_preprocessing_produces_an_injected_and_non_injected_lightcurve(self,
+                                                                                                 mock_numpy_random,
+                                                                                                 mock_read_feather,
+                                                                                                 mock_fits_open,
+                                                                                                 database):
         # Mock and initialize dataset components for simple testing.
         lightcurve_length = 15
         database.time_steps_per_example = lightcurve_length
@@ -82,6 +89,7 @@ class TestTessSyntheticInjectedDatabase:
         mock_read_feather.return_value = pd.DataFrame({'Magnification': synthetic_magnitudes,
                                                        'Time (hours)': synthetic_times})
         database.number_of_parallel_processes_per_map = 1
+        mock_numpy_random.return_value = 0
         # Generate the datasets.
         examples, labels = database.train_and_validation_preprocessing(tf.convert_to_tensor('fake_path.fits'),
                                                                        tf.convert_to_tensor('fake_path.feather'))

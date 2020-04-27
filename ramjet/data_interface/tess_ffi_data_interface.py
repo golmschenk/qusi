@@ -28,7 +28,9 @@ class TessFfiDataInterface:
     A class for interfacing with Brian Powell's TESS full frame image (FFI) data.
     """
     @staticmethod
-    def load_fluxes_and_times_from_pickle_file(file_path: Union[Path, str]) -> (np.ndarray, np.ndarray):
+    def load_fluxes_and_times_from_pickle_file(file_path: Union[Path, str],
+                                               flux_type_index: FfiDataIndexes = FfiDataIndexes.CORRECTED_FLUX
+                                               ) -> (np.ndarray, np.ndarray):
         """
         Loads the fluxes and times from one of Brian Powell's FFI pickle files.
 
@@ -39,7 +41,7 @@ class TessFfiDataInterface:
             file_path = Path(file_path)
         with file_path.open('rb') as pickle_file:
             lightcurve = pickle.load(pickle_file)
-        fluxes = lightcurve[FfiDataIndexes.CORRECTED_FLUX.value]
+        fluxes = lightcurve[flux_type_index.value]
         times = lightcurve[FfiDataIndexes.TIME.value]
         assert times.shape == fluxes.shape
         return fluxes, times

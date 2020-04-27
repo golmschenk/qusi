@@ -60,7 +60,7 @@ class TessDataInterface:
         :param tic_id: An optional TIC ID or list of TIC IDs to limit the query to.
         :return: The list of time series observations as rows in a Pandas data frame.
         """
-        if tic_id is None or isinstance(tic_id, int):
+        if tic_id is None or np.isscalar(tic_id):
             observations = self.get_all_tess_time_series_observations_chunk(tic_id)
         else:
             observations = None
@@ -478,6 +478,7 @@ class TessDataInterface:
         suspected_planet_download_manifest = self.download_products(
             suspected_planet_lightcurve_data_products, data_directory=tess_toi_data_interface.data_directory)
         print(f'Moving lightcurves to {directory}...')
+        directory.mkdir(parents=True, exist_ok=True)
         for file_path_string in suspected_planet_download_manifest['Local Path']:
             file_path = Path(file_path_string)
             file_path.rename(directory.joinpath(file_path.name))
