@@ -8,8 +8,8 @@ import tensorflow as tf
 import requests
 from pathlib import Path
 
-from ramjet.photometric_database.py_mapper import map_py_function_to_dataset
-from ramjet.photometric_database.tess_data_interface import TessDataInterface
+from ramjet.py_mapper import map_py_function_to_dataset
+from ramjet.data_interface.tess_data_interface import TessDataInterface
 from ramjet.photometric_database.tess_transit_lightcurve_label_per_time_step_database import \
     TransitLightcurveLabelPerTimeStepDatabase
 
@@ -50,12 +50,12 @@ class ToiLightcurveDatabase(TransitLightcurveLabelPerTimeStepDatabase):
         training_dataset = training_dataset.shuffle(buffer_size=len(list(training_dataset)))
         training_dataset = map_py_function_to_dataset(training_dataset, self.training_preprocessing,
                                                       number_of_parallel_calls=16,
-                                                      output_types=[tf.float32, tf.float32])
+                                                      output_types=(tf.float32, tf.float32))
         training_dataset = training_dataset.padded_batch(self.batch_size, padded_shapes=([None, 2], [None])).prefetch(
             buffer_size=tf.data.experimental.AUTOTUNE)
         validation_dataset = map_py_function_to_dataset(validation_dataset, self.evaluation_preprocessing,
                                                         number_of_parallel_calls=4,
-                                                        output_types=[tf.float32, tf.float32])
+                                                        output_types=(tf.float32, tf.float32))
         validation_dataset = validation_dataset.padded_batch(1, padded_shapes=([None, 2], [None])).prefetch(
             buffer_size=tf.data.experimental.AUTOTUNE)
         return training_dataset, validation_dataset
@@ -88,7 +88,7 @@ class ToiLightcurveDatabase(TransitLightcurveLabelPerTimeStepDatabase):
         print("Downloading ExoFOP TOI disposition CSV...")
         toi_csv_url = 'https://exofop.ipac.caltech.edu/tess/download_toi.php?sort=toi&output=csv'
         response = requests.get(toi_csv_url)
-        with open(self.toi_dispositions_path, 'wb') as csv_file:
+        with self.toi_dispositions_path.open('wb') as csv_file:
             csv_file.write(response.content)
         print('Downloading TESS observation list...')
         tess_data_interface = TessDataInterface()
@@ -99,11 +99,10 @@ class ToiLightcurveDatabase(TransitLightcurveLabelPerTimeStepDatabase):
         single_sector_observations = tess_data_interface.add_sector_column_to_single_sector_observations(
             single_sector_observations)
         print("Downloading lightcurves which are confirmed or suspected planets in TOI dispositions...")
-        # noinspection SpellCheckingInspection
         toi_dispositions = self.load_toi_dispositions_in_project_format()
         suspected_planet_dispositions = toi_dispositions[toi_dispositions['disposition'] != 'FP']
         suspected_planet_observations = pd.merge(single_sector_observations, suspected_planet_dispositions, how='inner',
-                                                  on=['TIC ID', 'Sector'])
+                                                 on=['TIC ID', 'Sector'])
         observations_not_found = suspected_planet_dispositions.shape[0] - suspected_planet_observations.shape[0]
         print(f"{suspected_planet_observations.shape[0]} observations found that match the TOI dispositions.")
         print(f"No observations found for {observations_not_found} entries in TOI dispositions.")

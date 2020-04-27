@@ -76,6 +76,13 @@ class PyMapper:
                 args[1].set_shape(output_shapes[1])
                 args[2].set_shape(output_shapes[2])
                 args[3].set_shape(output_shapes[3])
+            elif len(args) == 6:
+                args[0].set_shape(output_shapes[0])
+                args[1].set_shape(output_shapes[1])
+                args[2].set_shape(output_shapes[2])
+                args[3].set_shape(output_shapes[3])
+                args[4].set_shape(output_shapes[4])
+                args[5].set_shape(output_shapes[5])
             else:
                 raise NotImplementedError
 

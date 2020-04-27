@@ -2,6 +2,7 @@
 Code for a class for common interfacing with TESS data, such as downloading, sorting, and manipulating.
 """
 import math
+import re
 import shutil
 import tempfile
 import time
@@ -10,6 +11,7 @@ from pathlib import Path
 from typing import Union, List
 import numpy as np
 import pandas as pd
+import requests
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.table import Table
@@ -19,6 +21,7 @@ from astroquery.vizier import Vizier
 from retrying import retry
 
 from ramjet.analysis.lightcurve_visualizer import plot_lightcurve
+from ramjet.data_interface.tess_toi_data_interface import TessToiDataInterface, ToiColumns
 
 
 class TessFluxType(Enum):
@@ -55,7 +58,7 @@ class TessDataInterface:
         :param tic_id: An optional TIC ID or list of TIC IDs to limit the query to.
         :return: The list of time series observations as rows in a Pandas data frame.
         """
-        if tic_id is None or isinstance(tic_id, int):
+        if tic_id is None or np.isscalar(tic_id):
             observations = self.get_all_tess_time_series_observations_chunk(tic_id)
         else:
             observations = None
@@ -326,29 +329,6 @@ class TessDataInterface:
         print_data_frame.reset_index(drop=True, inplace=True)
         print(print_data_frame)
 
-    @staticmethod
-    def retrieve_toi_dispositions_from_exofop() -> pd.DataFrame:
-        """
-        Downloads and loads the ExoFOP TOI table information from CSV to a data frame using a project consistent format.
-        The source for the dispositions is from the `ExoFOP TOI table
-        <https://exofop.ipac.caltech.edu/tess/download_toi.php?sort=toi&output=csv>`_.
-
-        :return: The data frame containing the dispositions.
-        """
-        toi_csv_url = 'https://exofop.ipac.caltech.edu/tess/download_toi.php?sort=toi&output=csv'
-        columns_to_use = ['TIC ID', 'TFOPWG Disposition', 'Planet Num', 'Epoch (BJD)', 'Period (days)',
-                          'Duration (hours)', 'Sectors']
-        dispositions = pd.read_csv(toi_csv_url, usecols=columns_to_use)
-        dispositions['Sectors'] = dispositions['Sectors'].astype(str)
-        dispositions.rename(columns={'Planet Num': 'Planet number', 'Epoch (BJD)': 'Transit epoch (BJD)',
-                                     'Period (days)': 'Transit period (days)',
-                                     'Duration (hours)': 'Transit duration (hours)',
-                                     'Sectors': 'Sector', 'TFOPWG Disposition': 'TFOPWG disposition'}, inplace=True)
-        dispositions['Sector'] = dispositions['Sector'].str.split(',')
-        dispositions = dispositions.explode('Sector')
-        dispositions['Sector'] = pd.to_numeric(dispositions['Sector'], errors='coerce').astype(pd.Int64Dtype())
-        return dispositions
-
     def retrieve_exofop_planet_disposition_for_tic_id(self, tic_id: int) -> pd.DataFrame:
         """
         Retrieves the ExoFOP disposition information for a given TIC ID from
@@ -357,7 +337,9 @@ class TessDataInterface:
         :param tic_id: The TIC ID to get available data for.
         :return: The disposition data frame.
         """
-        dispositions = self.retrieve_toi_dispositions_from_exofop()
+        tess_toi_data_interface = TessToiDataInterface()
+        tess_toi_data_interface.update_toi_dispositions_file()
+        dispositions = tess_toi_data_interface.dispositions
         tic_target_dispositions = dispositions[dispositions['TIC ID'] == tic_id]
         return tic_target_dispositions
 
@@ -413,6 +395,73 @@ class TessDataInterface:
         single_sector_observations = self.filter_for_single_sector_observations(time_series_observations)
         single_sector_observations = self.add_sector_column_to_single_sector_observations(single_sector_observations)
         return sorted(single_sector_observations['Sector'].unique())
+
+    def download_exofop_toi_lightcurves_to_directory(self, directory: Union[Path, str] = None):
+        """
+        Downloads the `ExoFOP database <https://exofop.ipac.caltech.edu/tess/view_toi.php>`_ lightcurve files to the
+        given directory.
+
+        :param directory: The directory to download the lightcurves to. Defaults to the data interface directory.
+        """
+        print("Downloading ExoFOP TOI disposition CSV...")
+        tess_toi_data_interface = TessToiDataInterface()
+        if directory is None:
+            directory = tess_toi_data_interface.lightcurves_directory
+        if isinstance(directory, str):
+            directory = Path(directory)
+        toi_csv_url = 'https://exofop.ipac.caltech.edu/tess/download_toi.php?sort=toi&output=csv'
+        response = requests.get(toi_csv_url)
+        with tess_toi_data_interface.dispositions_path.open('wb') as csv_file:
+            csv_file.write(response.content)
+        toi_dispositions = tess_toi_data_interface.load_toi_dispositions_in_project_format()
+        tic_ids = toi_dispositions[ToiColumns.tic_id.value].unique()
+        print('Downloading TESS observation list...')
+        tess_observations = self.get_all_tess_time_series_observations(tic_id=tic_ids)
+        single_sector_observations = self.filter_for_single_sector_observations(tess_observations)
+        single_sector_observations = self.add_tic_id_column_to_single_sector_observations(
+            single_sector_observations)
+        single_sector_observations = self.add_sector_column_to_single_sector_observations(
+            single_sector_observations)
+        print("Downloading lightcurves which are confirmed or suspected planets in TOI dispositions...")
+        suspected_planet_dispositions = toi_dispositions[toi_dispositions[ToiColumns.disposition.value] != 'FP']
+        suspected_planet_observations = pd.merge(single_sector_observations, suspected_planet_dispositions, how='inner',
+                                                 on=[ToiColumns.tic_id.value, ToiColumns.sector.value])
+        observations_not_found = suspected_planet_dispositions.shape[0] - suspected_planet_observations.shape[0]
+        print(f"{suspected_planet_observations.shape[0]} observations found that match the TOI dispositions.")
+        print(f"No observations found for {observations_not_found} entries in TOI dispositions.")
+        suspected_planet_data_products = self.get_product_list(suspected_planet_observations)
+        suspected_planet_lightcurve_data_products = suspected_planet_data_products[
+            suspected_planet_data_products['productFilename'].str.endswith('lc.fits')
+        ]
+        suspected_planet_download_manifest = self.download_products(
+            suspected_planet_lightcurve_data_products, data_directory=tess_toi_data_interface.data_directory)
+        print(f'Moving lightcurves to {directory}...')
+        directory.mkdir(parents=True, exist_ok=True)
+        for file_path_string in suspected_planet_download_manifest['Local Path']:
+            file_path = Path(file_path_string)
+            file_path.rename(directory.joinpath(file_path.name))
+
+    @staticmethod
+    def get_tic_id_and_sector_from_file_path(file_path: Union[Path, str]):
+        """
+        Add general purpose function to get the TIC ID and sector from commonly encountered file name patterns.
+
+        :param file_path: The path of the file to extract the TIC ID and sector.
+        :return: The TIC ID and sector. The sector might be omitted (as None).
+        """
+        if isinstance(file_path, str):
+            file_path = Path(file_path)
+        file_name = file_path.stem
+        # Search for the human readable version. E.g., "TIC 169480782 sector 5"
+        match = re.search(r'TIC (\d+) sector (\d+)', file_name)
+        if match:
+            return int(match.group(1)), int(match.group(2))
+        # Search for the TESS obs_id version. E.g., "tess2018319095959-s0005-0000000278956474-0125-s"
+        match = re.search(r'tess\d+-s(\d+)-(\d+)-\d+-s', file_name)
+        if match:
+            return int(match.group(2)), int(match.group(1))
+        # Raise an error if none of the patterns matched.
+        raise ValueError(f'{file_name} does not match a known pattern to extract TIC ID and sector from.')
 
 
 if __name__ == '__main__':

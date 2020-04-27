@@ -6,7 +6,8 @@ import pandas as pd
 import tensorflow as tf
 import pytest
 
-import ramjet.photometric_database.tess_data_interface
+import ramjet.data_interface.tess_data_interface
+import ramjet.photometric_database.tess_synthetic_injected_database
 from ramjet.photometric_database.tess_synthetic_injected_database import TessSyntheticInjectedDatabase
 from tests.picklable_mock import PicklableMock
 
@@ -24,18 +25,22 @@ class TestTessSyntheticInjectedDatabase:
 
     @pytest.mark.slow
     @pytest.mark.functional
-    @patch.object(ramjet.photometric_database.tess_data_interface.fits, 'open')
-    @patch.object(ramjet.photometric_database.tess_data_interface.pd, 'read_feather')
-    def test_can_generate_training_and_validation_datasets(self, mock_read_feather, mock_fits_open, database):
+    @patch.object(ramjet.data_interface.tess_data_interface.fits, 'open')
+    @patch.object(ramjet.data_interface.tess_data_interface.pd, 'read_feather')
+    @patch.object(ramjet.photometric_database.tess_synthetic_injected_database.np.random, 'random')
+    def test_can_generate_training_and_validation_datasets(self, mock_numpy_random, mock_read_feather, mock_fits_open,
+                                                           database):
         # Mock and initialize dataset components for simple testing.
         batch_size = 10
         database.batch_size = batch_size
         time_steps_per_example = 20
         database.time_steps_per_example = time_steps_per_example
-        database.lightcurve_directory = PicklableMock(glob=PicklableMock(return_value=(Path(f'{index}.fits')
-                                                                                       for index in range(50))))
-        database.synthetic_signal_directory = PicklableMock(glob=PicklableMock(return_value=(Path(f'{index}.feather')
-                                                                                             for index in range(40))))
+        def fits_file_generator(_):
+            return (Path(f'{index}.fits') for index in range(50))
+        database.lightcurve_directory = PicklableMock(glob=fits_file_generator)
+        def feather_file_generator(_):
+            return (Path(f'{index}.feather') for index in range(40))
+        database.synthetic_signal_directory = PicklableMock(glob=feather_file_generator)
         fits_fluxes = np.arange(time_steps_per_example, dtype=np.float32)
         fits_times = fits_fluxes * 10
         hdu = Mock(data={'PDCSAP_FLUX': fits_fluxes, 'TIME': fits_times})
@@ -45,6 +50,7 @@ class TestTessSyntheticInjectedDatabase:
         synthetic_times = synthetic_magnitudes * 10 * 24  # 24 to make it hours from days.
         mock_read_feather.return_value = pd.DataFrame({'Magnification': synthetic_magnitudes,
                                                        'Time (hours)': synthetic_times})
+        mock_numpy_random.return_value = 0
         # Generate the datasets.
         training_dataset, validation_dataset = database.generate_datasets()
         # Test the datasets look right.
@@ -62,11 +68,14 @@ class TestTessSyntheticInjectedDatabase:
         assert validation_batch1[0].shape == (batch_size, time_steps_per_example, 1)
 
     @pytest.mark.functional
-    @patch.object(ramjet.photometric_database.tess_data_interface.fits, 'open')
-    @patch.object(ramjet.photometric_database.tess_data_interface.pd, 'read_feather')
-    def test_train_and_validation_preprocessing_produces_an_inject_and_non_injected_lightcurve(self, mock_read_feather,
-                                                                                               mock_fits_open,
-                                                                                               database):
+    @patch.object(ramjet.data_interface.tess_data_interface.fits, 'open')
+    @patch.object(ramjet.data_interface.tess_data_interface.pd, 'read_feather')
+    @patch.object(ramjet.photometric_database.tess_synthetic_injected_database.np.random, 'random')
+    def test_train_and_validation_preprocessing_produces_an_injected_and_non_injected_lightcurve(self,
+                                                                                                 mock_numpy_random,
+                                                                                                 mock_read_feather,
+                                                                                                 mock_fits_open,
+                                                                                                 database):
         # Mock and initialize dataset components for simple testing.
         lightcurve_length = 15
         database.time_steps_per_example = lightcurve_length
@@ -80,6 +89,7 @@ class TestTessSyntheticInjectedDatabase:
         mock_read_feather.return_value = pd.DataFrame({'Magnification': synthetic_magnitudes,
                                                        'Time (hours)': synthetic_times})
         database.number_of_parallel_processes_per_map = 1
+        mock_numpy_random.return_value = 0
         # Generate the datasets.
         examples, labels = database.train_and_validation_preprocessing(tf.convert_to_tensor('fake_path.fits'),
                                                                        tf.convert_to_tensor('fake_path.feather'))
@@ -109,3 +119,39 @@ class TestTessSyntheticInjectedDatabase:
         assert preprocessed_fluxes.shape[0] == 8
         assert np.min(preprocessed_fluxes) > -3
         assert np.max(preprocessed_fluxes) < 3
+
+    def test_inject_signal_errors_on_out_of_bounds(self, database):
+        lightcurve_fluxes = np.array([1, 2, 3, 4, 5, 3])
+        lightcurve_times = np.array([10, 20, 30, 40, 50, 60])
+        signal_magnifications = np.array([1, 3, 1])
+        signal_times = np.array([0, 20, 40])
+        with pytest.raises(ValueError):
+            database.inject_signal_into_lightcurve(lightcurve_fluxes, lightcurve_times,
+                                                   signal_magnifications, signal_times)
+
+    def test_inject_signal_can_be_told_to_allow_out_of_bounds(self, database):
+        lightcurve_fluxes = np.array([1, 2, 3, 4, 5, 3])
+        lightcurve_times = np.array([10, 20, 30, 40, 50, 60])
+        signal_magnifications = np.array([1, 3, 1])
+        signal_times = np.array([0, 20, 40])
+        database.allow_out_of_bounds_injection = True
+        fluxes_with_injected_signal = database.inject_signal_into_lightcurve(lightcurve_fluxes, lightcurve_times,
+                                                                             signal_magnifications, signal_times)
+        assert np.array_equal(fluxes_with_injected_signal, np.array([1, 5, 9, 7, 5, 3]))
+
+    @patch.object(ramjet.data_interface.tess_data_interface.fits, 'open')
+    def test_infer_preprocessing_preprocessing_produces_a_path_and_lightcurve(self, mock_fits_open, database):
+        lightcurve_length = 15
+        database.time_steps_per_example = lightcurve_length
+        fits_fluxes = np.array([1, 2, 3, 4, 5], dtype=np.float32)
+        fits_times = fits_fluxes * 10
+        hdu = Mock(data={'PDCSAP_FLUX': fits_fluxes, 'TIME': fits_times})
+        hdu_list = [None, hdu]  # Lightcurve information is in first extension table in TESS data.
+        mock_fits_open.return_value.__enter__.return_value = hdu_list
+        path, lightcurve = database.infer_preprocessing(tf.convert_to_tensor('fake_path.fits'))
+        mock_fits_open.assert_called_with('fake_path.fits')
+        assert lightcurve.shape == (15, 1)
+        assert np.allclose(lightcurve, [[-1.25], [-0.625], [0], [0.625], [1.25],
+                                        [-1.25], [-0.625], [0], [0.625], [1.25],
+                                        [-1.25], [-0.625], [0], [0.625], [1.25]])
+        assert path == 'fake_path.fits'

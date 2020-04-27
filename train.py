@@ -3,18 +3,18 @@ import datetime
 import os
 import tensorflow as tf
 from tensorflow.python.keras import callbacks
+from tensorflow_core.python.keras.losses import BinaryCrossentropy
 
-from ramjet.losses import PerTimeStepBinaryCrossEntropy
-from ramjet.models import ConvolutionalLstm
-from ramjet.photometric_database.toi_lightcurve_database import ToiLightcurveDatabase
+from ramjet.models import SimpleLightcurveCnn
+from ramjet.photometric_database.toi_database import ToiDatabase
 
 
 def train():
     """Runs the training."""
-    print('Starting training process...')
+    print('Starting training process...', flush=True)
     # Basic training settings.
-    model = ConvolutionalLstm()
-    database = ToiLightcurveDatabase()
+    model = SimpleLightcurveCnn()
+    database = ToiDatabase()
     # database.batch_size = 100  # Reducing the batch size may help if you are running out of memory.
     epochs_to_run = 1000
     trial_name = 'baseline'
@@ -31,7 +31,7 @@ def train():
     # Prepare training data and metrics.
     training_dataset, validation_dataset = database.generate_datasets()
     optimizer = tf.optimizers.Adam(learning_rate=1e-4)
-    loss_metric = PerTimeStepBinaryCrossEntropy(name='Loss', positive_weight=50)
+    loss_metric = BinaryCrossentropy(name='Loss')
     metrics = [tf.metrics.BinaryAccuracy(name='Accuracy'), tf.metrics.Precision(name='Precision'),
                tf.metrics.Recall(name='Recall'),
                tf.metrics.SpecificityAtSensitivity(0.9, name='Specificity_at_90_percent_sensitivity'),
@@ -41,12 +41,13 @@ def train():
     model.compile(optimizer=optimizer, loss=loss_metric, metrics=metrics)
     try:
         model.fit(training_dataset, epochs=epochs_to_run, validation_data=validation_dataset,
-                  callbacks=[tensorboard_callback, model_checkpoint_callback])
+                  callbacks=[tensorboard_callback, model_checkpoint_callback], steps_per_epoch=5000,
+                  validation_steps=500)
     except KeyboardInterrupt:
-        print('Interrupted. Saving model before quitting...')
+        print('Interrupted. Saving model before quitting...', flush=True)
     finally:
         model.save_weights(model_save_path)
-    print('Training done.')
+    print('Training done.', flush=True)
 
 
 if __name__ == '__main__':
