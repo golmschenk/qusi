@@ -37,7 +37,8 @@ predictions_data_frame = pd.read_csv(io.StringIO(''), names=columns, dtype=dict(
 old_top_predictions_data_frame = predictions_data_frame
 for batch_index, (paths, examples) in enumerate(batch_dataset):
     predictions = model.predict(examples)
-    batch_predictions = pd.DataFrame({'Lightcurve path': paths, 'Prediction': np.squeeze(predictions, axis=1)})
+    batch_predictions = pd.DataFrame({'Lightcurve path': paths.numpy().astype(str),
+                                      'Prediction': np.squeeze(predictions, axis=1)})
     predictions_data_frame = pd.concat([predictions_data_frame, batch_predictions])
     print(f'{batch_index * database.batch_size} examples inferred on.', flush=True)
 predictions_data_frame.sort_values('Prediction', ascending=False).reset_index().to_feather(
