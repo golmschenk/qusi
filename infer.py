@@ -30,7 +30,7 @@ print('Loading model...', flush=True)
 model = SimpleLightcurveCnn()
 model.load_weights(str(saved_log_directory.joinpath('model.ckpt'))).expect_partial()
 
-print('Inferring and plotting...', flush=True)
+print('Inferring...', flush=True)
 columns = ['Lightcurve path', 'Prediction']
 dtypes = [str, int]
 predictions_data_frame = pd.read_csv(io.StringIO(''), names=columns, dtype=dict(zip(columns, dtypes)))
