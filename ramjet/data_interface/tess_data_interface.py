@@ -206,12 +206,14 @@ class TessDataInterface:
 
     @staticmethod
     def load_fluxes_and_times_from_fits_file(example_path: Union[str, Path],
-                                             flux_type: TessFluxType = TessFluxType.PDCSAP) -> (np.ndarray, np.ndarray):
+                                             flux_type: TessFluxType = TessFluxType.PDCSAP,
+                                             remove_nans: bool = True) -> (np.ndarray, np.ndarray):
         """
         Extract the flux and time values from a TESS FITS file.
 
         :param example_path: The path to the FITS file.
         :param flux_type: The flux type to extract from the FITS file.
+        :param remove_nans: Whether or not to remove nans.
         :return: The flux and times values from the FITS file.
         """
         with fits.open(example_path) as hdu_list:
@@ -219,21 +221,24 @@ class TessDataInterface:
         fluxes = lightcurve[flux_type.value]
         times = lightcurve['TIME']
         assert times.shape == fluxes.shape
-        # noinspection PyUnresolvedReferences
-        nan_indexes = np.union1d(np.argwhere(np.isnan(fluxes)), np.argwhere(np.isnan(times)))
-        fluxes = np.delete(fluxes, nan_indexes)
-        times = np.delete(times, nan_indexes)
+        if remove_nans:
+            # noinspection PyUnresolvedReferences
+            nan_indexes = np.union1d(np.argwhere(np.isnan(fluxes)), np.argwhere(np.isnan(times)))
+            fluxes = np.delete(fluxes, nan_indexes)
+            times = np.delete(times, nan_indexes)
         return fluxes, times
 
     @staticmethod
     def load_fluxes_flux_errors_and_times_from_fits_file(example_path: Union[str, Path],
-                                                         flux_type: TessFluxType = TessFluxType.PDCSAP
+                                                         flux_type: TessFluxType = TessFluxType.PDCSAP,
+                                                         remove_nans: bool = True
                                                          ) -> (np.ndarray, np.ndarray, np.ndarray):
         """
         Extract the flux and time values from a TESS FITS file.
 
         :param example_path: The path to the FITS file.
         :param flux_type: The flux type to extract from the FITS file.
+        :param remove_nans: Whether or not to remove nans.
         :return: The flux and times values from the FITS file.
         """
         with fits.open(example_path) as hdu_list:
@@ -242,12 +247,13 @@ class TessDataInterface:
         flux_errors = lightcurve[flux_type.value + '_ERR']
         times = lightcurve['TIME']
         assert times.shape == fluxes.shape
-        # noinspection PyUnresolvedReferences
-        nan_indexes = np.union1d(np.argwhere(np.isnan(fluxes)), np.union1d(np.argwhere(np.isnan(times)),
-                                                                           np.argwhere(np.isnan(flux_errors))))
-        fluxes = np.delete(fluxes, nan_indexes)
-        flux_errors = np.delete(flux_errors, nan_indexes)
-        times = np.delete(times, nan_indexes)
+        if remove_nans:
+            # noinspection PyUnresolvedReferences
+            nan_indexes = np.union1d(np.argwhere(np.isnan(fluxes)), np.union1d(np.argwhere(np.isnan(times)),
+                                                                               np.argwhere(np.isnan(flux_errors))))
+            fluxes = np.delete(fluxes, nan_indexes)
+            flux_errors = np.delete(flux_errors, nan_indexes)
+            times = np.delete(times, nan_indexes)
         return fluxes, flux_errors, times
 
     def download_lightcurve(self, tic_id: int, sector: int = None, save_directory: Union[Path, str] = None) -> Path:
