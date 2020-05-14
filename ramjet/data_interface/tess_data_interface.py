@@ -8,7 +8,7 @@ import tempfile
 import time
 from enum import Enum
 from pathlib import Path
-from typing import Union, List
+from typing import Union, List, Dict
 import numpy as np
 import pandas as pd
 import requests
@@ -204,20 +204,37 @@ class TessDataInterface:
         observations['Sector'] = observations['obs_id'].map(self.get_sector_from_single_sector_obs_id)
         return observations
 
-    @staticmethod
-    def load_fluxes_and_times_from_fits_file(example_path: Union[str, Path],
+    def load_lightcurve_from_fits_file(self, lightcurve_path: Union[str, Path]) -> Dict[str, np.ndarray]:
+        """
+        Loads a lightcurve from a FITS file in a dictionary form with the structure of the FITS arrays.
+
+        :param lightcurve_path: The path to the FITS file.
+        :return: The lightcurve.
+        """
+        try:
+            with fits.open(lightcurve_path) as hdu_list:
+                lightcurve = hdu_list[1].data  # Lightcurve information is in first extension table.
+        except OSError:  # If the FITS file is corrupt, re-download (seems to happen often enough).
+            lightcurve_path = Path(lightcurve_path)  # In case it's currently a string.
+            lightcurve_path.unlink()
+            tic_id, sector = self.get_tic_id_and_sector_from_file_path(lightcurve_path)
+            self.download_lightcurve(tic_id=tic_id, sector=sector, save_directory=lightcurve_path.parent)
+            with fits.open(lightcurve_path) as hdu_list:
+                lightcurve = hdu_list[1].data  # Lightcurve information is in first extension table.
+        return lightcurve
+
+    def load_fluxes_and_times_from_fits_file(self, lightcurve_path: Union[str, Path],
                                              flux_type: TessFluxType = TessFluxType.PDCSAP,
                                              remove_nans: bool = True) -> (np.ndarray, np.ndarray):
         """
         Extract the flux and time values from a TESS FITS file.
 
-        :param example_path: The path to the FITS file.
+        :param lightcurve_path: The path to the FITS file.
         :param flux_type: The flux type to extract from the FITS file.
         :param remove_nans: Whether or not to remove nans.
         :return: The flux and times values from the FITS file.
         """
-        with fits.open(example_path) as hdu_list:
-            lightcurve = hdu_list[1].data  # Lightcurve information is in first extension table.
+        lightcurve = self.load_lightcurve_from_fits_file(lightcurve_path)
         fluxes = lightcurve[flux_type.value]
         times = lightcurve['TIME']
         assert times.shape == fluxes.shape
@@ -228,21 +245,19 @@ class TessDataInterface:
             times = np.delete(times, nan_indexes)
         return fluxes, times
 
-    @staticmethod
-    def load_fluxes_flux_errors_and_times_from_fits_file(example_path: Union[str, Path],
+    def load_fluxes_flux_errors_and_times_from_fits_file(self, lightcurve_path: Union[str, Path],
                                                          flux_type: TessFluxType = TessFluxType.PDCSAP,
                                                          remove_nans: bool = True
                                                          ) -> (np.ndarray, np.ndarray, np.ndarray):
         """
         Extract the flux and time values from a TESS FITS file.
 
-        :param example_path: The path to the FITS file.
+        :param lightcurve_path: The path to the FITS file.
         :param flux_type: The flux type to extract from the FITS file.
         :param remove_nans: Whether or not to remove nans.
         :return: The flux and times values from the FITS file.
         """
-        with fits.open(example_path) as hdu_list:
-            lightcurve = hdu_list[1].data  # Lightcurve information is in first extension table.
+        lightcurve = self.load_lightcurve_from_fits_file(lightcurve_path)
         fluxes = lightcurve[flux_type.value]
         flux_errors = lightcurve[flux_type.value + '_ERR']
         times = lightcurve['TIME']
