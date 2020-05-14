@@ -50,7 +50,9 @@ class InjectedWithAdditionalExplicitInjectedNegativeDatabase(TessSyntheticInject
                                                                  output_types=output_types,
                                                                  output_shapes=output_shapes,
                                                                  flat_map=True)
-        batched_training_dataset = lightcurve_training_dataset.batch(self.batch_size)
+        batched_training_dataset = self.window_dataset_for_zipped_example_and_label_dataset(lightcurve_training_dataset,
+                                                                                            self.batch_size,
+                                                                                            self.batch_size // 10)
         prefetch_training_dataset = batched_training_dataset.prefetch(tf.data.experimental.AUTOTUNE)
         shuffled_validation_lightcurve_paths_dataset = validation_lightcurve_paths_dataset.repeat().shuffle(
             buffer_size=self.shuffle_buffer_size)
@@ -101,7 +103,7 @@ class InjectedWithAdditionalExplicitInjectedNegativeDatabase(TessSyntheticInject
         explicit_negative_lightcurve = np.expand_dims(fluxes_with_explicit_negative_signal, axis=-1)
         lightcurve_with_injected_signal = np.expand_dims(fluxes_with_injected_signal, axis=-1)
         examples = (negative_lightcurve, lightcurve_with_injected_signal, explicit_negative_lightcurve)
-        labels = (np.array([0]), np.array([1]), np.array([0.05]))
+        labels = (np.array([0]), np.array([1]), np.array([0]))
         return examples, labels
 
     def get_explicit_negative_synthetic_signal_paths(self) -> Iterable[Path]:
