@@ -91,7 +91,16 @@ class InjectedWithAdditionalExplicitNegativeDatabase(TessSyntheticInjectedDataba
         return examples, labels
 
     def get_explicit_negative_lightcurve_paths(self) -> Iterable[Path]:
-        explicit_negative_lightcurve_data_frame = pd.read_csv(self.explicit_negatives_csv_path, header=None,
-                                                              names='Lightcurve path')
+        explicit_negative_lightcurve_data_frame = pd.read_csv(self.explicit_negatives_csv_path)
         explicit_negative_lightcurve_paths = explicit_negative_lightcurve_data_frame['Lightcurve path'].values
         return explicit_negative_lightcurve_paths
+
+    def load_fluxes_and_times_from_lightcurve_path(self, lightcurve_path: str) -> (np.ndarray, np.ndarray):
+        """
+        Loads the lightcurve from the path given. Should be overridden to fit a specific database's file format.
+
+        :param lightcurve_path: The path to the lightcurve file.
+        :return: The fluxes and times of the lightcurve
+        """
+        fluxes, times = self.tess_data_interface.load_fluxes_and_times_from_fits_file(lightcurve_path, TessFluxType.SAP)
+        return fluxes, times
