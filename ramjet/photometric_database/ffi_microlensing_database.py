@@ -1,10 +1,10 @@
 """
 Code to represent a database to find microlensing events in FFI data.
 """
-from pathlib import Path
-
 import numpy as np
 import pandas as pd
+import pyarrow
+from pathlib import Path
 from typing import Iterable
 
 from ramjet.data_interface.tess_ffi_data_interface import TessFfiDataInterface, FfiDataIndexes
@@ -17,7 +17,7 @@ class FfiMicrolensingDatabase(InjectedWithAdditionalExplicitNegativeDatabase):
     A class to represent a database to find microlensing events in FFI data.
     """
 
-    def __init__(self, data_directory='data/microlensing'):
+    def __init__(self, data_directory='data/ffi_microlensing_database'):
         super().__init__(data_directory=data_directory)
         self.time_steps_per_example = 1296  # 27 days / 30 minutes.
         self.batch_size = 1000
@@ -31,7 +31,10 @@ class FfiMicrolensingDatabase(InjectedWithAdditionalExplicitNegativeDatabase):
         :param synthetic_signal_path: The path to the synthetic signal data file.
         :return: The magnifications and relative times of the synthetic signal.
         """
-        synthetic_signal = pd.read_feather(synthetic_signal_path)
+        try:
+            synthetic_signal = pd.read_feather(synthetic_signal_path)
+        except pyarrow.lib.ArrowInvalid:
+            synthetic_signal = pd.read_feather(self.synthetic_signal_directory.joinpath('PSPL_lightcurve2977.feather'))
         synthetic_magnifications, synthetic_times = synthetic_signal['Magnification'], synthetic_signal['Time']
         synthetic_times += np.random.random() * 30  # Synthetic data goes from -30 to 30.
         return synthetic_magnifications, synthetic_times
