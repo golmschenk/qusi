@@ -31,7 +31,7 @@ def train():
     # Prepare training data and metrics.
     training_dataset, validation_dataset = database.generate_datasets()
     optimizer = tf.optimizers.Adam(learning_rate=1e-4, beta_1=0.99, beta_2=0.9999)
-    loss_metric = BinaryCrossentropy(name='Loss')
+    loss_metric = BinaryCrossentropy(name='Loss', label_smoothing=0.1)
     metrics = [tf.metrics.BinaryAccuracy(name='Accuracy'), tf.metrics.Precision(name='Precision'),
                tf.metrics.Recall(name='Recall'),
                tf.metrics.SpecificityAtSensitivity(0.9, name='Specificity_at_90_percent_sensitivity'),
