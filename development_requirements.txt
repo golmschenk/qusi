@@ -19,3 +19,4 @@ Theano
 exoplanet
 scipy
 setuptools
+dataset

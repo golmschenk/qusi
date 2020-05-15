@@ -45,7 +45,7 @@ class ToiDatabase(TessSyntheticInjectedWithNegativeInjectionDatabase):
         synthetic_magnifications, synthetic_times = self.generate_synthetic_signal_from_real_data(fluxes, times)
         return synthetic_magnifications, synthetic_times
 
-    def download_limited_exofop_toi_database(self, number_of_negative_lightcurves_to_download=10000):
+    def download_exofop_toi_database(self, number_of_negative_lightcurves_to_download=10000):
         """
         Downloads the `ExoFOP database <https://exofop.ipac.caltech.edu/tess/view_toi.php>`_.
         """
@@ -108,4 +108,4 @@ class ToiDatabase(TessSyntheticInjectedWithNegativeInjectionDatabase):
 
 if __name__ == '__main__':
     toi_database = ToiDatabase()
-    toi_database.download_limited_exofop_toi_database()
+    toi_database.download_exofop_toi_database(number_of_negative_lightcurves_to_download=1000000)
