@@ -49,3 +49,16 @@ class TestTessFfiDataInterface:
         assert mock_open.called
         assert np.array_equal(fluxes, ffi_pickle_contents[6])
         assert np.array_equal(times, ffi_pickle_contents[4])
+
+    def test_can_get_tic_id_and_sector_from_ffi_style_file_path(self, data_interface):
+        tic_id0, sector0 = data_interface.get_tic_id_and_sector_from_file_path(
+            'tesslcs_sector_12/tesslcs_tmag_1_2/tesslc_290374453')
+        assert tic_id0 == 290374453
+        assert sector0 == 12
+        tic_id1, sector1 = data_interface.get_tic_id_and_sector_from_file_path(
+            'data/ffi_microlensing_database/lightcurves/tesslcs_sector_1/tesslcs_tmag_12_13/tesslc_1234567.pkl')
+        assert tic_id1 == 1234567
+        assert sector1 == 1
+        tic_id2, sector2 = data_interface.get_tic_id_and_sector_from_file_path('tesslc_12345678.pkl')
+        assert tic_id2 == 12345678
+        assert sector2 is None
