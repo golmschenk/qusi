@@ -29,6 +29,7 @@ class TessFfiDataInterface:
     """
     A class for interfacing with Brian Powell's TESS full frame image (FFI) data.
     """
+
     @staticmethod
     def load_fluxes_and_times_from_pickle_file(file_path: Union[Path, str],
                                                flux_type_index: FfiDataIndexes = FfiDataIndexes.CORRECTED_FLUX
@@ -37,6 +38,7 @@ class TessFfiDataInterface:
         Loads the fluxes and times from one of Brian Powell's FFI pickle files.
 
         :param file_path: The path to the pickle file to load.
+        :param flux_type_index: The flux type to load.
         :return: The fluxes and the times.
         """
         if not isinstance(file_path, Path):
@@ -47,6 +49,28 @@ class TessFfiDataInterface:
         times = lightcurve[FfiDataIndexes.TIME.value]
         assert times.shape == fluxes.shape
         return fluxes, times
+
+    @staticmethod
+    def load_fluxes_flux_errors_and_times_from_pickle_file(
+                file_path: Union[Path, str], flux_type_index: FfiDataIndexes = FfiDataIndexes.CORRECTED_FLUX
+            ) -> (np.ndarray, np.ndarray):
+        """
+        Loads the fluxes, flux errors, and times from one of Brian Powell's FFI pickle files.
+
+        :param file_path: The path to the pickle file to load.
+        :param flux_type_index: The flux type to load.
+        :return: The fluxes and the times.
+        """
+        if not isinstance(file_path, Path):
+            file_path = Path(file_path)
+        with file_path.open('rb') as pickle_file:
+            lightcurve = pickle.load(pickle_file)
+        fluxes = lightcurve[flux_type_index.value]
+        flux_errors = lightcurve[FfiDataIndexes.FLUX_ERROR.value]
+        times = lightcurve[FfiDataIndexes.TIME.value]
+        assert times.shape == fluxes.shape
+        assert times.shape == flux_errors.shape
+        return fluxes, flux_errors, times
 
     @staticmethod
     def get_tic_id_and_sector_from_file_path(file_path: Union[Path, str]):
