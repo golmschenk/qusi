@@ -100,7 +100,10 @@ class ResultsViewer:
         self.parameters_table_data_source = ColumnDataSource(pd.DataFrame())
         run_fitting_button = Button(label='Run fitting')
         initial_fit_figure, parameters_table = self.create_mcmc_fit_figures(run_fitting_button)
+        self.add_to_negatives_button = self.create_add_to_negatives_button()
 
+        self.add_to_negatives_button.name = 'add_to_negatives_button'
+        bokeh_document.add_root(self.add_to_negatives_button)
         self.previous_button.name = 'previous_button'
         bokeh_document.add_root(self.previous_button)
         self.next_button.name = 'next_button'
@@ -498,3 +501,16 @@ class ResultsViewer:
         previous_button.on_click(display_previous_target)
         previous_button.sizing_mode = 'stretch_width'
         return previous_button, next_button
+
+    def create_add_to_negatives_button(self):
+        add_to_negatives_button = Button(label='Add to negatives')
+        negatives_csv_file_path = Path('negatives.csv')
+        def add_to_negatives():
+            lightcurve_path = self.results_data_frame['Lightcurve path'].iloc[self.current_target_index]
+            negative_data_frame = pd.DataFrame({'Lightcurve path': [lightcurve_path]})
+            if negatives_csv_file_path.exists():
+                negative_data_frame.to_csv(negatives_csv_file_path, mode='a', header=False)
+            else:
+                negative_data_frame.to_csv(negatives_csv_file_path)
+        add_to_negatives_button.on_click(add_to_negatives)
+        return add_to_negatives_button

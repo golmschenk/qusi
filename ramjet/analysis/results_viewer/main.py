@@ -2,6 +2,7 @@ import sys
 from bokeh import plotting
 from bokeh.io import curdoc
 
+from ramjet.analysis.results_viewer.ffi_results_viewer import FfiResultsViewer
 from ramjet.analysis.results_viewer.results_viewer import ResultsViewer
 
 plotting.output_notebook.__doc__ = ''
