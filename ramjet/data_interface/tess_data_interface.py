@@ -507,7 +507,7 @@ class TessDataInterface:
     @staticmethod
     def get_tic_id_and_sector_from_file_path(file_path: Union[Path, str]):
         """
-        Add general purpose function to get the TIC ID and sector from commonly encountered file name patterns.
+        Gets the TIC ID and sector from commonly encountered file name patterns.
 
         :param file_path: The path of the file to extract the TIC ID and sector.
         :return: The TIC ID and sector. The sector might be omitted (as None).

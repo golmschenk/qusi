@@ -70,6 +70,7 @@ class Target:
 class ResultsViewer:
     def __init__(self, bokeh_document, results_path):
         self.bokeh_document = bokeh_document
+        self.target_type = Target
         self.pool_executor = ThreadPoolExecutor()
         self.results_data_frame = pd.read_feather(results_path)
         self.current_target_index = 0
@@ -81,7 +82,6 @@ class ResultsViewer:
         self.target_title_div = Div()
         self.target_title_div.sizing_mode = 'stretch_width'
         self.lightcurve_figure, self.lightcurve_data_source = self.create_flux_comparison_lightcurve_figure()
-        self.load_surrounding_lightcurves()
         self.known_planet_div = Div(text='This target has a known ExoFOP disposition',
                                     css_classes=['notification', 'is-warning', 'is-hidden', 'is-fullwidth'])
 
@@ -129,8 +129,14 @@ class ResultsViewer:
         bokeh_document.add_root(initial_fit_figure)
         bokeh_document.add_root(parameters_table)
 
-        self.display_current_target()
-        
+
+    @classmethod
+    def attach_document(cls, bokeh_document, results_path):
+        viewer = cls(bokeh_document, results_path)
+        viewer.load_surrounding_lightcurves()
+        viewer.display_current_target()
+        return viewer
+
     def create_mcmc_fit_figures(self, run_fitting_button):
         self_ = self
         initial_fit_figure = Figure(x_axis_label='Folded time (days)', y_axis_label='Relative flux',
@@ -408,7 +414,7 @@ class ResultsViewer:
         for index_to_load in indexes_to_load:
             if index_to_load not in self.target_future_dictionary:
                 lightcurve_path = self.results_data_frame['Lightcurve path'].iloc[index_to_load]
-                target_pool_apply_result = self.pool_executor.submit(Target, lightcurve_path)
+                target_pool_apply_result = self.pool_executor.submit(self.target_type, lightcurve_path)
                 self.target_future_dictionary[index_to_load] = target_pool_apply_result
         for index_to_delete in indexes_to_delete:
             if index_to_delete in self.target_future_dictionary:
