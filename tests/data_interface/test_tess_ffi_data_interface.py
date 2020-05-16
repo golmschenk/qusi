@@ -59,3 +59,23 @@ class TestTessFfiDataInterface:
         ]
         pickle_directories = data_interface.get_pickle_directories(ffi_root_directory)
         assert sorted(pickle_directories) == sorted(expected_directories)
+
+    def test_can_create_repeating_pickle_glob_dictionary_generator(self, data_interface):
+        class MockPath(type(Path())):
+            def glob(self, pattern):
+                if self.name == 'a':
+                    return (item for item in ['1.pkl', '2.pkl'])
+                elif self.name == 'b':
+                    return (item for item in ['3.pkl'])
+                else:
+                    return (item for item in [])
+
+        path_a = MockPath('a')
+        path_b = MockPath('b')
+        path_c = MockPath('c')
+        paths = [path_a, path_b, path_c]
+        generator = data_interface.create_path_list_pickle_repeating_generator(paths)
+        results = []
+        for _ in range(8):
+            results.append(next(generator))
+        assert sorted(results) == ['1.pkl', '1.pkl', '2.pkl', '2.pkl', '3.pkl', '3.pkl', '3.pkl', '3.pkl']
