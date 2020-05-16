@@ -68,8 +68,8 @@ class TessFfiDataInterface:
         generator_dictionary = {}
         for path in paths:  # Create a generator for each, so long as there's at least 1 pickle file.
             try:
-                next(path.glob('.pkl'))  # If this doesn't fail, there's at least 1 pickle file in the directory.
-                generator_dictionary[path] = path.glob('.pkl')
+                next(path.glob('*.pkl'))  # If this doesn't fail, there's at least 1 pickle file in the directory.
+                generator_dictionary[path] = path.glob('*.pkl')
             except StopIteration:
                 continue
 
@@ -82,7 +82,7 @@ class TessFfiDataInterface:
                     try:
                         yield next(glob_generator)
                     except StopIteration:  # Repeat the generator if it ran out.
-                        glob_generator = path_.glob('.pkl')
+                        glob_generator = path_.glob('*.pkl')
                         yield next(glob_generator)
                     next_loop_generator_dictionary[path_] = glob_generator
                 current_loop_generator_dictionary = next_loop_generator_dictionary
