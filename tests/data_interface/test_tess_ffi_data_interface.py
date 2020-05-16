@@ -49,3 +49,13 @@ class TestTessFfiDataInterface:
         assert mock_open.called
         assert np.array_equal(fluxes, ffi_pickle_contents[6])
         assert np.array_equal(times, ffi_pickle_contents[4])
+
+    def test_can_obtain_ffi_pickle_directories(self, data_interface):
+        ffi_root_directory = Path('tests/data_interface/test_tess_ffi_data_interface_resources/ffi_lightcurves')
+        expected_directories = [
+            ffi_root_directory.joinpath('tesslcs_sector_1/tesslcs_tmag_5_6'),
+            ffi_root_directory.joinpath('tesslcs_sector_1/tesslcs_tmag_12_13'),
+            ffi_root_directory.joinpath('tesslcs_sector_22/tesslcs_tmag_12_13')
+        ]
+        pickle_directories = data_interface.get_pickle_directories(ffi_root_directory)
+        assert sorted(pickle_directories) == sorted(expected_directories)
