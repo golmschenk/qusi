@@ -170,9 +170,9 @@ class ResultsViewer:
                     step=xo.get_dense_nuts_step(target_accept=0.9),
                 )
             trace_summary = pm.summary(trace, round_to='none')  # Not a typo. PyMC3 wants 'none' as a string here.
-            epoch = round(trace_summary['mean']['t0'], 3)  # Round the epoch differently, as BTJD needs more digits.
+            epoch = round(trace_summary['mean']['Transit epoch (BTJD)'], 3)  # Round the epoch differently, as BTJD needs more digits.
             trace_summary['mean'] = self_.round_series_to_significant_figures(trace_summary['mean'], 5)
-            trace_summary['mean']['t0'] = epoch
+            trace_summary['mean']['Transit epoch (BTJD)'] = epoch
             self.bokeh_document.add_next_tick_callback(partial(self.update_parameters_table, trace_summary))
             with pd.option_context('display.max_columns', None, 'display.max_rows', None):
                 print(trace_summary)
@@ -193,12 +193,12 @@ class ResultsViewer:
             #         break
             # worksheet.update_cell(empty_row_index, 1, self_.tic_id)
             # worksheet.update_cell(empty_row_index, 2, str(self_.sectors).replace('[', '').replace(']', '')),
-            # worksheet.update_cell(empty_row_index, 3, trace_summary['mean']['t0'])
+            # worksheet.update_cell(empty_row_index, 3, trace_summary['mean']['Transit epoch (BTJD)'])
             # worksheet.update_cell(empty_row_index, 4, trace_summary['mean']['period'])
-            # worksheet.update_cell(empty_row_index, 5, trace_summary['mean']['depth'])
-            # worksheet.update_cell(empty_row_index, 6, trace_summary['mean']['dur'])
+            # worksheet.update_cell(empty_row_index, 5, trace_summary['mean']['Transit depth (relative flux)'])
+            # worksheet.update_cell(empty_row_index, 6, trace_summary['mean']['Transit duration (days)'])
             # worksheet.update_cell(empty_row_index, 7, self_.star_radius)
-            # worksheet.update_cell(empty_row_index, 8, trace_summary['mean']['ror'] * self_.star_radius)
+            # worksheet.update_cell(empty_row_index, 8, trace_summary['mean']['Planet radius (solar radii)'] * self_.star_radius)
 
         @gen.coroutine
         @without_document_lock
@@ -229,16 +229,17 @@ class ResultsViewer:
                 # Planet parameters
                 log_ror = pm.Normal("log_ror", mu=0.5 * np.log(self_.depth), sigma=10.0 * 1e-3)
                 ror = pm.Deterministic("ror", tt.exp(log_ror))
-                depth = pm.Deterministic("depth", tt.square(ror))
+                depth = pm.Deterministic('Transit depth (relative flux)', tt.square(ror))
+                planet_radius = pm.Deterministic('Planet radius (solar radii)', ror * self_.star_radius)
 
                 # Orbital parameters
                 log_period = pm.Normal("log_period", mu=np.log(self_.period), sigma=1.0)
-                t0 = pm.Normal("t0", mu=self_.transit_epoch, sigma=1.0)
+                t0 = pm.Normal('Transit epoch (BTJD)', mu=self_.transit_epoch, sigma=1.0)
                 log_dur = pm.Normal("log_dur", mu=np.log(0.1), sigma=10.0)
                 b = xo.distributions.ImpactParameter("b", ror=ror)
 
-                period = pm.Deterministic("period", tt.exp(log_period))
-                dur = pm.Deterministic("dur", tt.exp(log_dur))
+                period = pm.Deterministic('Transit period (days)', tt.exp(log_period))
+                dur = pm.Deterministic('Transit duration (days)', tt.exp(log_dur))
 
                 # Set up the orbit
                 orbit = xo.orbits.KeplerianOrbit(period=period, duration=dur, t0=t0, b=b, r_star=self.star_radius)
@@ -272,9 +273,9 @@ class ResultsViewer:
             with model:
                 gp_pred, lc_pred = xo.eval_in_model([gp.predict(), lc_model(times)], map_soln)
 
-            x_fold = (times - map_soln["t0"] + 0.5 * map_soln["period"]) % map_soln[
-                "period"
-            ] - 0.5 * map_soln["period"]
+            x_fold = (times - map_soln['Transit epoch (BTJD)'] + 0.5 * map_soln['Transit period (days)']) % map_soln[
+                'Transit period (days)'
+            ] - 0.5 * map_soln['Transit period (days)']
             inds = np.argsort(x_fold)
             bokeh_document.add_next_tick_callback(partial(update_initial_fit_figure, fluxes, gp_pred, inds,
                                                           lc_pred, map_soln, relative_times, times, x_fold))
@@ -422,7 +423,10 @@ class ResultsViewer:
 
     def display_current_target(self):
         target = self.target_future_dictionary[self.current_target_index].result()
-        self.target_title_div.text = f'<h1 class="title">TIC {target.tic_id} sector {target.sector} - {self.results_data_frame["Prediction"].iloc[self.current_target_index]}</h1>'
+        self.target_title_div.text = (f'<h1 class="title">TIC {target.tic_id} sector {target.sector}</h1>' +
+                                      f'<p>Network confidence: {self.results_data_frame["Prediction"].iloc[self.current_target_index]}</p>' +
+                                      f'<p>Result index: {self.current_target_index}</p>' +
+                                      f'<p>Star radius (solar radii): {target.star_radius}</p>')
         if target.has_known_exofop_disposition:
             self.known_planet_div.css_classes = list(set(self.known_planet_div.css_classes) - {'is-hidden'})
         else:
