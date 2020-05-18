@@ -68,12 +68,12 @@ class Target:
 
 
 class ResultsViewer:
-    def __init__(self, bokeh_document, results_path):
+    def __init__(self, bokeh_document, results_path, starting_index: int = 0):
         self.bokeh_document = bokeh_document
         self.target_type = Target
         self.pool_executor = ThreadPoolExecutor()
         self.results_data_frame = pd.read_feather(results_path)
-        self.current_target_index = 0
+        self.current_target_index = starting_index
         self.number_of_indexes_before_and_after_to_load = 2
         self.number_of_indexes_before_and_after_to_delete = 5
         self.target_future_dictionary: Dict[Future] = {}
@@ -131,8 +131,8 @@ class ResultsViewer:
 
 
     @classmethod
-    def attach_document(cls, bokeh_document, results_path):
-        viewer = cls(bokeh_document, results_path)
+    def attach_document(cls, bokeh_document, results_path, starting_index: int = 0):
+        viewer = cls(bokeh_document, results_path, starting_index)
         viewer.load_surrounding_lightcurves()
         viewer.display_current_target()
         return viewer
