@@ -16,5 +16,5 @@ def run_viewer(results_path: Union[Path, str], port: int = 5007, starting_index:
 
 
 if __name__ == '__main__':
-    run_viewer('/Users/golmschenk/Downloads/TOI anti EB corrected 2min windowed betas cont ac 2020-05-13-17-46-29 2020-05-15-16-04-34.feather')
+    run_viewer('path/to/results/file.feather')
     # run_viewer('path/to/results/file.feather', starting_index=100)  # Will start at the 100th result.
