@@ -50,6 +50,6 @@ class FfiResultsViewer(ResultsViewer):
     """
     A viewer inspecting FFI lightcurves of inference candidates.
     """
-    def __init__(self, bokeh_document, results_path):
-        super().__init__(bokeh_document, results_path)
+    def __init__(self, bokeh_document, results_path, starting_index: int = 0):
+        super().__init__(bokeh_document, results_path, starting_index)
         self.target_type = Target
