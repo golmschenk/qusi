@@ -1,8 +1,11 @@
 from pathlib import Path
 from typing import Union
+from bokeh import plotting
 from bokeh.application import Application
 from bokeh.application.handlers import DirectoryHandler
 from bokeh.server.server import Server
+
+plotting.output_notebook.__doc__ = ''
 
 
 def run_viewer(results_path: Union[Path, str], port: int = 5007, starting_index: int = 0):
