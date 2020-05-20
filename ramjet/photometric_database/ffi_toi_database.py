@@ -82,7 +82,10 @@ class FfiToiDatabase(InjectedWithAdditionalExplicitInjectedNegativeDatabase):
 
         :return: The list of lightcurves.
         """
-        lightcurve_paths = self.lightcurve_directory.glob('**/*.pkl')
+        lightcurve_paths = self.tess_ffi_data_interface.glob_pickle_path_for_magnitude(self.lightcurve_directory, 9)
+        # lightcurve_paths = self.lightcurve_directory.glob('**/*.pkl')
+        # lightcurve_paths = self.tess_ffi_data_interface.create_subdirectories_pickle_repeating_generator(
+        #     self.lightcurve_directory)
         return lightcurve_paths
 
     def get_all_synthetic_signal_paths(self) -> Iterable[Path]:
@@ -115,7 +118,10 @@ class FfiToiDatabase(InjectedWithAdditionalExplicitInjectedNegativeDatabase):
         :param synthetic_signal_path: The path to the synthetic signal data file.
         :return: The magnifications and relative times of the synthetic signal.
         """
-        fluxes, times = self.tess_data_interface.load_fluxes_and_times_from_fits_file(synthetic_signal_path)
+        if synthetic_signal_path.endswith('.pkl'):
+            fluxes, times = self.tess_ffi_data_interface.load_fluxes_and_times_from_pickle_file(synthetic_signal_path)
+        else:
+            fluxes, times = self.tess_data_interface.load_fluxes_and_times_from_fits_file(synthetic_signal_path)
         synthetic_magnifications, synthetic_times = self.generate_synthetic_signal_from_real_data(fluxes, times)
         return synthetic_magnifications, synthetic_times
 
@@ -124,6 +130,16 @@ class FfiToiDatabase(InjectedWithAdditionalExplicitInjectedNegativeDatabase):
         fluxes, times = self.tess_ffi_data_interface.load_fluxes_and_times_from_pickle_file(synthetic_signal_path)
         synthetic_magnifications, synthetic_times = self.generate_synthetic_signal_from_real_data(fluxes, times)
         return synthetic_magnifications, synthetic_times
+
+    def get_explicit_negative_synthetic_signal_paths(self) -> Iterable[Path]:
+        explicit_negative_lightcurve_paths = list(self.data_directory.joinpath('explicit_negative').glob('**/*.fits'))
+        synthetic_signal_names = [path.name for path in self.synthetic_signal_directory.glob('**/*.fits')]
+        explicit_negative_lightcurve_paths = [path for path in explicit_negative_lightcurve_paths if path.name
+                                              not in synthetic_signal_names]
+        hand_selected_negative_data_frame = pd.read_csv(self.data_directory.joinpath('explicit_negatives.csv'))
+        hand_selected_negative_paths = list(hand_selected_negative_data_frame['Lightcurve path'].values)
+        explicit_negative_lightcurve_paths += hand_selected_negative_paths
+        return explicit_negative_lightcurve_paths
 
 
 if __name__ == '__main__':
