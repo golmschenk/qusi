@@ -58,6 +58,10 @@ class TessFfiDataInterface:
         return list(ffi_root_directory.glob('tesslcs_sector_*/tesslcs_tmag_*_*/'))
 
     @staticmethod
+    def glob_pickle_path_for_magnitude(ffi_root_directory: Path, magnitude: int) -> Iterable[Path]:
+        return ffi_root_directory.glob(f'tesslcs_sector_*/tesslcs_tmag_{magnitude}_{magnitude+1}/*.pkl')
+
+    @staticmethod
     def create_path_list_pickle_repeating_generator(paths: List[Path]) -> Iterable[Path]:
         """
         Creates a generator for a list of paths, where each path has it's pickle files repeatedly iterated over.
@@ -75,17 +79,14 @@ class TessFfiDataInterface:
 
         def glob_dictionary_generator():
             """The generator to return."""
-            current_loop_generator_dictionary = generator_dictionary
             while True:
-                next_loop_generator_dictionary = {}
-                for path_, glob_generator in current_loop_generator_dictionary.items():
+                for path_, glob_generator in generator_dictionary.items():
                     try:
                         yield next(glob_generator)
                     except StopIteration:  # Repeat the generator if it ran out.
                         glob_generator = path_.glob('*.pkl')
+                        generator_dictionary[path_] = glob_generator
                         yield next(glob_generator)
-                    next_loop_generator_dictionary[path_] = glob_generator
-                current_loop_generator_dictionary = next_loop_generator_dictionary
 
         return glob_dictionary_generator()
 

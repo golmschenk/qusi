@@ -79,3 +79,12 @@ class TestTessFfiDataInterface:
         for _ in range(8):
             results.append(next(generator))
         assert sorted(results) == ['1.pkl', '1.pkl', '2.pkl', '2.pkl', '3.pkl', '3.pkl', '3.pkl', '3.pkl']
+
+    def test_can_glob_lightcurves_by_magnitude(self, data_interface):
+        ffi_root_directory = Path('tests/data_interface/test_tess_ffi_data_interface_resources/ffi_lightcurves')
+        expected_paths = [
+            ffi_root_directory.joinpath('tesslcs_sector_1/tesslcs_tmag_12_13/fake0.pkl'),
+            ffi_root_directory.joinpath('tesslcs_sector_22/tesslcs_tmag_12_13/fake0.pkl')
+        ]
+        magnitude_filtered_paths = list(data_interface.glob_pickle_path_for_magnitude(ffi_root_directory, 12))
+        assert sorted(magnitude_filtered_paths) == sorted(expected_paths)
