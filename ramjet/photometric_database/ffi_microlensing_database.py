@@ -36,6 +36,7 @@ class FfiMicrolensingDatabase(InjectedWithAdditionalExplicitNegativeDatabase):
         except pyarrow.lib.ArrowInvalid:
             synthetic_signal = pd.read_feather(self.synthetic_signal_directory.joinpath('PSPL_lightcurve2977.feather'))
         synthetic_magnifications, synthetic_times = synthetic_signal['Magnification'], synthetic_signal['Time']
+        synthetic_magnifications *= (np.random.random() * 0.5) + 0.5
         synthetic_times += np.random.random() * 30  # Synthetic data goes from -30 to 30.
         return synthetic_magnifications, synthetic_times
 
@@ -45,7 +46,8 @@ class FfiMicrolensingDatabase(InjectedWithAdditionalExplicitNegativeDatabase):
 
         :return: The list of lightcurves.
         """
-        lightcurve_paths = self.lightcurve_directory.glob('**/*.pkl')
+        # lightcurve_paths = self.lightcurve_directory.glob('**/*.pkl')
+        lightcurve_paths = self.tess_ffi_data_interface.glob_pickle_path_for_magnitude(self.lightcurve_directory, 10)
         return lightcurve_paths
 
     def load_fluxes_and_times_from_lightcurve_path(self, lightcurve_path: str) -> (np.ndarray, np.ndarray):
