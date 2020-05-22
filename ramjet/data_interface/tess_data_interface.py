@@ -439,7 +439,17 @@ class TessDataInterface:
         directory.mkdir(parents=True, exist_ok=True)
         for file_path_string in suspected_planet_download_manifest['Local Path']:
             file_path = Path(file_path_string)
-            file_path.rename(directory.joinpath(file_path.name))
+            lightcurve_path = directory.joinpath(file_path.name)
+            file_path.rename(lightcurve_path)
+            try:
+                hdu_list = fits.open(str(lightcurve_path))
+                lightcurve = hdu_list[1].data
+                _ = lightcurve['TIME'][0]
+            except TypeError:
+                print(f'{file_path} seems to be corrupt. Re-downloading and replacing.')
+                sector = tess_data_interface.get_sector_from_single_sector_obs_id(str(lightcurve_path.stem))
+                tic_id = tess_data_interface.get_tic_id_from_single_sector_obs_id(str(lightcurve_path.stem))
+                tess_data_interface.download_lightcurve(tic_id, sector, save_directory=lightcurve_path.parent)
 
     @staticmethod
     def get_tic_id_and_sector_from_file_path(file_path: Union[Path, str]):
