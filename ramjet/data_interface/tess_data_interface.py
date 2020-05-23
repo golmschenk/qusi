@@ -36,7 +36,7 @@ def is_common_mast_connection_error(exception: Exception) -> bool:
     :param exception: The exception to check.
     :return: A boolean stating if the exception is a common MAST connection error.
     """
-    return isinstance(exception, AstroQueryTimeoutError)
+    return isinstance(exception, AstroQueryTimeoutError) or isinstance(exception, requests.exceptions.ReadTimeout)
 
 
 class TessDataInterface:
