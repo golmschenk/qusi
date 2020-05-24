@@ -30,8 +30,10 @@ class TessFfiDataInterface:
     A class for interfacing with Brian Powell's TESS full frame image (FFI) data.
     """
 
-    def __init__(self, lightcurve_root_directory:str = 'data/tess_ffi_lightcurves'):
+    def __init__(self, lightcurve_root_directory: Path = Path('data/tess_ffi_lightcurves'),
+                 database_path: Path = Path('data/tess_ffi_database.sqlite3')):
         self.lightcurve_root_directory = lightcurve_root_directory
+        self.database_path = database_path
 
     @staticmethod
     def load_fluxes_and_times_from_pickle_file(file_path: Union[Path, str],
@@ -66,7 +68,7 @@ class TessFfiDataInterface:
 
     @staticmethod
     def glob_pickle_path_for_magnitude(ffi_root_directory: Path, magnitude: int) -> Iterable[Path]:
-        return ffi_root_directory.glob(f'tesslcs_sector_*/tesslcs_tmag_{magnitude}_{magnitude+1}/*.pkl')
+        return ffi_root_directory.glob(f'tesslcs_sector_*/tesslcs_tmag_{magnitude}_{magnitude + 1}/*.pkl')
 
     @staticmethod
     def create_path_list_pickle_repeating_generator(paths: List[Path]) -> Iterable[Path]:
@@ -111,8 +113,8 @@ class TessFfiDataInterface:
 
     @staticmethod
     def load_fluxes_flux_errors_and_times_from_pickle_file(
-                file_path: Union[Path, str], flux_type_index: FfiDataIndexes = FfiDataIndexes.CORRECTED_FLUX
-            ) -> (np.ndarray, np.ndarray):
+            file_path: Union[Path, str], flux_type_index: FfiDataIndexes = FfiDataIndexes.CORRECTED_FLUX
+    ) -> (np.ndarray, np.ndarray):
         """
         Loads the fluxes, flux errors, and times from one of Brian Powell's FFI pickle files.
 

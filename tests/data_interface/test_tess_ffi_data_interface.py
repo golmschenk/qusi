@@ -117,6 +117,13 @@ class TestTessFfiDataInterface:
 
     def test_has_a_path_to_lightcurves_directory_with_default(self):
         data_interface0 = TessFfiDataInterface()
-        assert data_interface0.lightcurve_root_directory == 'data/tess_ffi_lightcurves'
-        data_interface0 = TessFfiDataInterface(lightcurve_root_directory='specified/path')
-        assert data_interface0.lightcurve_root_directory == 'specified/path'
+        assert data_interface0.lightcurve_root_directory == Path('data/tess_ffi_lightcurves')
+        data_interface0 = TessFfiDataInterface(lightcurve_root_directory=Path('specified/path'))
+        assert data_interface0.lightcurve_root_directory == Path('specified/path')
+
+    def test_has_a_path_to_database_organization_with_default(self):
+        data_interface0 = TessFfiDataInterface()
+        assert data_interface0.database_path == Path('data/tess_ffi_database.sqlite3')
+        data_interface0 = TessFfiDataInterface(database_path=Path('specified/path.sqlite3'))
+        assert data_interface0.database_path == Path('specified/path.sqlite3')
+
