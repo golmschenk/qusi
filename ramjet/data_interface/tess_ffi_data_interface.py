@@ -30,6 +30,9 @@ class TessFfiDataInterface:
     A class for interfacing with Brian Powell's TESS full frame image (FFI) data.
     """
 
+    def __init__(self, lightcurve_root_directory:str = 'data/tess_ffi_lightcurves'):
+        self.lightcurve_root_directory = lightcurve_root_directory
+
     @staticmethod
     def load_fluxes_and_times_from_pickle_file(file_path: Union[Path, str],
                                                flux_type_index: FfiDataIndexes = FfiDataIndexes.CORRECTED_FLUX
