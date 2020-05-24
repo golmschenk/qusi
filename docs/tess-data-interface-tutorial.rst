@@ -52,18 +52,6 @@ The lightcurve is downloaded to a temporary directory, so you don't need to worr
 :code:`base_data_point_size=10` to increase the point plotting size (10 can be swapped with any size). This helps when
 zooming into a view that will have much less data points.
 
-Checking for known planets
---------------------------
-
-Running
-
-.. code-block:: python
-
-    tess_data_interface.print_exofop_planet_dispositions_for_tic_target(tic_id=425997655)
-
-will print any known `Exoplanet Follow-up Observing Program <https://exofop.ipac.caltech.edu/tess/>`_ planet
-dispositions for the passed TIC ID.
-
 Checking for known variability
 ------------------------------
 
@@ -75,3 +63,17 @@ Running
 
 will print any known stellar variability source near the TIC target. This information is based on the
 `General Catalogue of Variable Stars <http://www.sai.msu.su/gcvs/gcvs/>`_.
+
+Checking for known planets
+--------------------------
+
+Checking for known planets requires a separate data interface. Running
+
+.. code-block:: python
+
+    from ramjet.data_interface.tess_toi_data_interface import TessToiDataInterface
+    tess_toi_data_interface = TessToiDataInterface()
+    tess_toi_data_interface.print_exofop_planet_dispositions_for_tic_target(tic_id=425997655)
+
+will print any known `Exoplanet Follow-up Observing Program <https://exofop.ipac.caltech.edu/tess/>`_ planet
+dispositions for the passed TIC ID.

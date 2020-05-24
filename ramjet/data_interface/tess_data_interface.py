@@ -8,7 +8,7 @@ import tempfile
 import time
 from enum import Enum
 from pathlib import Path
-from typing import Union, List
+from typing import Union, List, Dict
 import numpy as np
 import pandas as pd
 import requests
@@ -18,9 +18,11 @@ from astropy.table import Table
 from astroquery.mast import Observations, Catalogs
 from astroquery.exceptions import TimeoutError as AstroQueryTimeoutError
 from astroquery.vizier import Vizier
+from bokeh.io import show
 from retrying import retry
+from bokeh.plotting import Figure
 
-from ramjet.analysis.lightcurve_visualizer import plot_lightcurve
+from ramjet.analysis.lightcurve_visualizer import plot_lightcurve, create_dual_lightcurve_figure
 from ramjet.data_interface.tess_toi_data_interface import TessToiDataInterface, ToiColumns
 
 
@@ -202,26 +204,72 @@ class TessDataInterface:
         observations['Sector'] = observations['obs_id'].map(self.get_sector_from_single_sector_obs_id)
         return observations
 
-    @staticmethod
-    def load_fluxes_and_times_from_fits_file(example_path: Union[str, Path],
-                                             flux_type: TessFluxType = TessFluxType.PDCSAP) -> (np.ndarray, np.ndarray):
+    def load_lightcurve_from_fits_file(self, lightcurve_path: Union[str, Path]) -> Dict[str, np.ndarray]:
+        """
+        Loads a lightcurve from a FITS file in a dictionary form with the structure of the FITS arrays.
+
+        :param lightcurve_path: The path to the FITS file.
+        :return: The lightcurve.
+        """
+        try:
+            with fits.open(lightcurve_path) as hdu_list:
+                lightcurve = hdu_list[1].data  # Lightcurve information is in first extension table.
+        except OSError:  # If the FITS file is corrupt, re-download (seems to happen often enough).
+            lightcurve_path = Path(lightcurve_path)  # In case it's currently a string.
+            lightcurve_path.unlink()
+            tic_id, sector = self.get_tic_id_and_sector_from_file_path(lightcurve_path)
+            self.download_lightcurve(tic_id=tic_id, sector=sector, save_directory=lightcurve_path.parent)
+            with fits.open(lightcurve_path) as hdu_list:
+                lightcurve = hdu_list[1].data  # Lightcurve information is in first extension table.
+        return lightcurve
+
+    def load_fluxes_and_times_from_fits_file(self, lightcurve_path: Union[str, Path],
+                                             flux_type: TessFluxType = TessFluxType.PDCSAP,
+                                             remove_nans: bool = True) -> (np.ndarray, np.ndarray):
         """
         Extract the flux and time values from a TESS FITS file.
 
-        :param example_path: The path to the FITS file.
+        :param lightcurve_path: The path to the FITS file.
         :param flux_type: The flux type to extract from the FITS file.
+        :param remove_nans: Whether or not to remove nans.
         :return: The flux and times values from the FITS file.
         """
-        with fits.open(example_path) as hdu_list:
-            lightcurve = hdu_list[1].data  # Lightcurve information is in first extension table.
+        lightcurve = self.load_lightcurve_from_fits_file(lightcurve_path)
         fluxes = lightcurve[flux_type.value]
         times = lightcurve['TIME']
         assert times.shape == fluxes.shape
-        # noinspection PyUnresolvedReferences
-        nan_indexes = np.union1d(np.argwhere(np.isnan(fluxes)), np.argwhere(np.isnan(times)))
-        fluxes = np.delete(fluxes, nan_indexes)
-        times = np.delete(times, nan_indexes)
+        if remove_nans:
+            # noinspection PyUnresolvedReferences
+            nan_indexes = np.union1d(np.argwhere(np.isnan(fluxes)), np.argwhere(np.isnan(times)))
+            fluxes = np.delete(fluxes, nan_indexes)
+            times = np.delete(times, nan_indexes)
         return fluxes, times
+
+    def load_fluxes_flux_errors_and_times_from_fits_file(self, lightcurve_path: Union[str, Path],
+                                                         flux_type: TessFluxType = TessFluxType.PDCSAP,
+                                                         remove_nans: bool = True
+                                                         ) -> (np.ndarray, np.ndarray, np.ndarray):
+        """
+        Extract the flux and time values from a TESS FITS file.
+
+        :param lightcurve_path: The path to the FITS file.
+        :param flux_type: The flux type to extract from the FITS file.
+        :param remove_nans: Whether or not to remove nans.
+        :return: The flux and times values from the FITS file.
+        """
+        lightcurve = self.load_lightcurve_from_fits_file(lightcurve_path)
+        fluxes = lightcurve[flux_type.value]
+        flux_errors = lightcurve[flux_type.value + '_ERR']
+        times = lightcurve['TIME']
+        assert times.shape == fluxes.shape
+        if remove_nans:
+            # noinspection PyUnresolvedReferences
+            nan_indexes = np.union1d(np.argwhere(np.isnan(fluxes)), np.union1d(np.argwhere(np.isnan(times)),
+                                                                               np.argwhere(np.isnan(flux_errors))))
+            fluxes = np.delete(fluxes, nan_indexes)
+            flux_errors = np.delete(flux_errors, nan_indexes)
+            times = np.delete(times, nan_indexes)
+        return fluxes, flux_errors, times
 
     def download_lightcurve(self, tic_id: int, sector: int = None, save_directory: Union[Path, str] = None) -> Path:
         """
@@ -242,7 +290,7 @@ class TessDataInterface:
             observations_with_sectors = observations_with_sectors.head(1)
         product_list = self.get_product_list(observations_with_sectors)
         lightcurves_product_list = product_list[product_list['productSubGroupDescription'] == 'LC']
-        manifest = self.download_products(lightcurves_product_list, data_directory=tempfile.gettempdir())
+        manifest = self.download_products(lightcurves_product_list, data_directory=Path(tempfile.gettempdir()))
         lightcurve_path = Path(manifest['Local Path'].iloc[0])
         if save_directory is not None:
             save_directory = Path(save_directory)
@@ -272,6 +320,38 @@ class TessDataInterface:
         plot_lightcurve(times=times, fluxes=fluxes, exclude_flux_outliers=exclude_flux_outliers, title=title,
                         base_data_point_size=base_data_point_size)
 
+    def create_pdcsap_and_sap_comparison_figure_from_mast(self, tic_id: int, sector: int = None) -> Figure:
+        """
+        Creates a comparison figure containing both the PDCSAP and SAP signals.
+
+        :param tic_id: The TIC ID of the lightcurve to plot.
+        :param sector: The sector of the lightcurve to plot.
+        :return: The generated figure.
+        """
+        lightcurve_path = self.download_lightcurve(tic_id, sector)
+        pdcsap_fluxes, pdcsap_times = self.load_fluxes_and_times_from_fits_file(lightcurve_path, TessFluxType.PDCSAP)
+        normalized_pdcsap_fluxes = pdcsap_fluxes / np.median(pdcsap_fluxes)
+        sap_fluxes, sap_times = self.load_fluxes_and_times_from_fits_file(lightcurve_path, TessFluxType.SAP)
+        normalized_sap_fluxes = sap_fluxes / np.median(sap_fluxes)
+        if sector is None:
+            _, sector = self.get_tic_id_and_sector_from_file_path(lightcurve_path)
+        title = f'TIC {tic_id} sector {sector}'
+        figure = create_dual_lightcurve_figure(fluxes0=normalized_pdcsap_fluxes, times0=pdcsap_times, name0='PDCSAP',
+                                               fluxes1=normalized_sap_fluxes, times1=sap_times, name1='SAP',
+                                               title=title, x_axis_label='Time (BTJD)')
+        return figure
+
+    def show_pdcsap_and_sap_comparison_from_mast(self, tic_id: int, sector: int = None):
+        """
+        Shows a comparison figure containing both the PDCSAP and SAP signals.
+
+        :param tic_id: The TIC ID of the lightcurve to plot.
+        :param sector: The sector of the lightcurve to plot.
+        """
+        comparison_figure = self.create_pdcsap_and_sap_comparison_figure_from_mast(tic_id, sector)
+        comparison_figure.sizing_mode = 'stretch_width'
+        show(comparison_figure)
+
     @staticmethod
     def get_target_coordinates(tic_id: int) -> SkyCoord:
         """
@@ -284,6 +364,17 @@ class TessDataInterface:
         ra = target_observations['ra'].iloc[0]
         dec = target_observations['dec'].iloc[0]
         return SkyCoord(ra, dec, unit='deg')
+
+    @staticmethod
+    def get_tess_input_catalog_row(tic_id: int) -> pd.Series:
+        """
+        Get the TIC row for a TIC ID.
+
+        :param tic_id: The target's TIC ID.
+        :return: The row of a the TIC corresponding to the TIC ID.
+        """
+        target_observations = Catalogs.query_criteria(catalog='TIC', ID=tic_id).to_pandas()
+        return target_observations.iloc[0]
 
     @staticmethod
     def get_variable_data_frame_for_coordinates(coordinates, radius='21s') -> pd.DataFrame:
@@ -328,34 +419,6 @@ class TessDataInterface:
         print_data_frame.sort_values('Max magnitude', inplace=True)
         print_data_frame.reset_index(drop=True, inplace=True)
         print(print_data_frame)
-
-    def retrieve_exofop_planet_disposition_for_tic_id(self, tic_id: int) -> pd.DataFrame:
-        """
-        Retrieves the ExoFOP disposition information for a given TIC ID from
-        <https://exofop.ipac.caltech.edu/tess/download_toi.php?sort=toi&output=csv>`_.
-
-        :param tic_id: The TIC ID to get available data for.
-        :return: The disposition data frame.
-        """
-        tess_toi_data_interface = TessToiDataInterface()
-        tess_toi_data_interface.update_toi_dispositions_file()
-        dispositions = tess_toi_data_interface.dispositions
-        tic_target_dispositions = dispositions[dispositions['TIC ID'] == tic_id]
-        return tic_target_dispositions
-
-    def print_exofop_planet_dispositions_for_tic_target(self, tic_id):
-        """
-        Prints all ExoFOP disposition information for a given TESS target.
-
-        :param tic_id: The TIC target to for.
-        """
-        dispositions_data_frame = self.retrieve_exofop_planet_disposition_for_tic_id(tic_id)
-        if dispositions_data_frame.shape[0] == 0:
-            print('No known ExoFOP dispositions found.')
-            return
-        # Use context options to not truncate printed data.
-        with pd.option_context('display.max_rows', None, 'display.max_columns', None, 'display.width', None):
-            print(dispositions_data_frame)
 
     def download_all_two_minute_cadence_lightcurves(self, save_directory: Path):
         """
@@ -411,7 +474,7 @@ class TessDataInterface:
             directory = Path(directory)
         toi_csv_url = 'https://exofop.ipac.caltech.edu/tess/download_toi.php?sort=toi&output=csv'
         response = requests.get(toi_csv_url)
-        with tess_toi_data_interface.dispositions_path.open('wb') as csv_file:
+        with tess_toi_data_interface.toi_dispositions_path.open('wb') as csv_file:
             csv_file.write(response.content)
         toi_dispositions = tess_toi_data_interface.load_toi_dispositions_in_project_format()
         tic_ids = toi_dispositions[ToiColumns.tic_id.value].unique()
@@ -444,7 +507,7 @@ class TessDataInterface:
     @staticmethod
     def get_tic_id_and_sector_from_file_path(file_path: Union[Path, str]):
         """
-        Add general purpose function to get the TIC ID and sector from commonly encountered file name patterns.
+        Gets the TIC ID and sector from commonly encountered file name patterns.
 
         :param file_path: The path of the file to extract the TIC ID and sector.
         :return: The TIC ID and sector. The sector might be omitted (as None).
