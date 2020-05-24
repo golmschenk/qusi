@@ -114,3 +114,9 @@ class TestTessFfiDataInterface:
         tic_id2, sector2 = data_interface.get_tic_id_and_sector_from_file_path('tesslc_12345678.pkl')
         assert tic_id2 == 12345678
         assert sector2 is None
+
+    def test_has_a_path_to_lightcurves_directory_with_default(self):
+        data_interface0 = TessFfiDataInterface()
+        assert data_interface0.lightcurve_root_directory == 'data/tess_ffi_lightcurves'
+        data_interface0 = TessFfiDataInterface(lightcurve_root_directory='specified/path')
+        assert data_interface0.lightcurve_root_directory == 'specified/path'
