@@ -445,7 +445,7 @@ class TessDataInterface:
                 hdu_list = fits.open(str(lightcurve_path))
                 lightcurve = hdu_list[1].data
                 _ = lightcurve['TIME'][0]
-            except TypeError:
+            except (OSError, TypeError):
                 print(f'{file_path} seems to be corrupt. Re-downloading and replacing.')
                 sector = tess_data_interface.get_sector_from_single_sector_obs_id(str(lightcurve_path.stem))
                 tic_id = tess_data_interface.get_tic_id_from_single_sector_obs_id(str(lightcurve_path.stem))
