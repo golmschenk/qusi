@@ -18,9 +18,7 @@ class TestTessFfiDataInterface:
 
         :return: The data interface.
         """
-        data_interface = TessFfiDataInterface()
-        data_interface.database_path = ':memory:'
-        data_interface.database_cursor = sqlite3.connect(data_interface.database_path).cursor()
+        data_interface = TessFfiDataInterface(database_path=':memory:')
         return data_interface
 
     @pytest.fixture
@@ -119,13 +117,17 @@ class TestTessFfiDataInterface:
         assert tic_id2 == 12345678
         assert sector2 is None
 
-    def test_has_a_path_to_lightcurves_directory_with_default(self):
+    @patch.object(ramjet.data_interface.tess_ffi_data_interface.sqlite3, 'connect')
+    def test_has_a_path_to_lightcurves_directory_with_default(self, mock_connect):
+        mock_connect.return_value = Mock(cursor=Mock())
         data_interface0 = TessFfiDataInterface()
         assert data_interface0.lightcurve_root_directory_path == Path('data/tess_ffi_lightcurves')
         data_interface0 = TessFfiDataInterface(lightcurve_root_directory_path=Path('specified/path'))
         assert data_interface0.lightcurve_root_directory_path == Path('specified/path')
 
-    def test_has_a_path_to_database_organization_with_default(self):
+    @patch.object(ramjet.data_interface.tess_ffi_data_interface.sqlite3, 'connect')
+    def test_has_a_path_to_database_organization_with_default(self, mock_connect):
+        mock_connect.return_value = Mock(cursor=Mock())
         data_interface0 = TessFfiDataInterface()
         assert data_interface0.database_path == Path('data/tess_ffi_database.sqlite3')
         data_interface0 = TessFfiDataInterface(database_path=Path('specified/path.sqlite3'))
