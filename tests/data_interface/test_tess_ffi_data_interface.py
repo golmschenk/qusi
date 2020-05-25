@@ -138,4 +138,15 @@ class TestTessFfiDataInterface:
         data_interface.database_cursor.execute('select * from Lightcurve')
         column_names = [description[0] for description in data_interface.database_cursor.description]
         assert 'path' in column_names
+        assert 'magnitude' in column_names
         assert 'dataset_split' in column_names
+
+    def test_can_get_floor_magnitude_from_ffi_style_file_path(self, data_interface):
+        magnitude0 = data_interface.get_floor_magnitude_from_file_path(
+            'tesslcs_sector_12/tesslcs_tmag_2_3/tesslc_290374453')
+        assert magnitude0 == 2
+        magnitude1 = data_interface.get_floor_magnitude_from_file_path(
+            'data/ffi_microlensing_database/lightcurves/tesslcs_sector_1/tesslcs_tmag_14_15/tesslc_1234567.pkl')
+        assert magnitude1 == 14
+        with pytest.raises(ValueError):
+            data_interface.get_floor_magnitude_from_file_path('tesslc_12345678.pkl')

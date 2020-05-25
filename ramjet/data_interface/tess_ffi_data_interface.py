@@ -137,7 +137,7 @@ class TessFfiDataInterface:
         return fluxes, flux_errors, times
 
     @staticmethod
-    def get_tic_id_and_sector_from_file_path(file_path: Union[Path, str]):
+    def get_tic_id_and_sector_from_file_path(file_path: Union[Path, str]) -> (int, int):
         """
         Gets the TIC ID and sector from commonly encountered file name patterns.
 
@@ -159,6 +159,23 @@ class TessFfiDataInterface:
         # Raise an error if none of the patterns matched.
         raise ValueError(f'{file_path} does not match a known pattern to extract TIC ID and sector from.')
 
+    @staticmethod
+    def get_floor_magnitude_from_file_path(file_path: Union[Path, str]) -> int:
+        """
+        Gets the floor magnitude from the FFI file path.
+
+        :param file_path: The path of the file to extract the magnitude.
+        :return: The magnitude floored.
+        """
+        if isinstance(file_path, Path):
+            file_path = str(file_path)
+        # Search for Brian Powell's FFI path convention with directory structure sector, magnitude, target.
+        # E.g., "tesslcs_sector_12/tesslcs_tmag_1_2/tesslc_290374453"
+        match = re.search(r'tesslcs_sector_\d+/tesslcs_tmag_(\d+)_\d+/tesslc_\d+', file_path)
+        if match:
+            return int(match.group(1))
+        raise ValueError(f'{file_path} does not match a known pattern to extract magnitude from.')
+
     def create_database_lightcurve_table(self):
         """
         Creates the SQL database table for the FFI dataset.
@@ -166,6 +183,7 @@ class TessFfiDataInterface:
         self.database_cursor.execute('''CREATE TABLE Lightcurve (
                                             id INTEGER PRIMARY KEY,
                                             path TEXT NOT NULL,
+                                            magnitude INTEGER NOT NULL,
                                             dataset_split INTEGER NOT NULL
                                         )'''
                                      )
