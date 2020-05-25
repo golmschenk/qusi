@@ -1,3 +1,4 @@
+import sqlite3
 from pathlib import Path
 
 import pytest
@@ -17,7 +18,10 @@ class TestTessFfiDataInterface:
 
         :return: The data interface.
         """
-        return TessFfiDataInterface()
+        data_interface = TessFfiDataInterface()
+        data_interface.database_path = ':memory:'
+        data_interface.database_cursor = sqlite3.connect(data_interface.database_path).cursor()
+        return data_interface
 
     @pytest.fixture
     def ffi_pickle_contents(self) -> Tuple[int, float, float, float,
@@ -117,9 +121,9 @@ class TestTessFfiDataInterface:
 
     def test_has_a_path_to_lightcurves_directory_with_default(self):
         data_interface0 = TessFfiDataInterface()
-        assert data_interface0.lightcurve_root_directory == Path('data/tess_ffi_lightcurves')
-        data_interface0 = TessFfiDataInterface(lightcurve_root_directory=Path('specified/path'))
-        assert data_interface0.lightcurve_root_directory == Path('specified/path')
+        assert data_interface0.lightcurve_root_directory_path == Path('data/tess_ffi_lightcurves')
+        data_interface0 = TessFfiDataInterface(lightcurve_root_directory_path=Path('specified/path'))
+        assert data_interface0.lightcurve_root_directory_path == Path('specified/path')
 
     def test_has_a_path_to_database_organization_with_default(self):
         data_interface0 = TessFfiDataInterface()
@@ -127,3 +131,9 @@ class TestTessFfiDataInterface:
         data_interface0 = TessFfiDataInterface(database_path=Path('specified/path.sqlite3'))
         assert data_interface0.database_path == Path('specified/path.sqlite3')
 
+    def test_creation_of_database_lightcurve_table_contains_important_columns(self, data_interface):
+        data_interface.create_database_lightcurve_table()
+        data_interface.database_cursor.execute('select * from Lightcurve')
+        column_names = [description[0] for description in data_interface.database_cursor.description]
+        assert 'path' in column_names
+        assert 'dataset_split' in column_names
