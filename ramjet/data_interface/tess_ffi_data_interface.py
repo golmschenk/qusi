@@ -3,6 +3,8 @@ Code for interfacing with Brian Powell's TESS full frame image (FFI) data.
 """
 import pickle
 import re
+import sqlite3
+from sqlite3 import Cursor
 
 import numpy as np
 from enum import Enum
@@ -30,10 +32,11 @@ class TessFfiDataInterface:
     A class for interfacing with Brian Powell's TESS full frame image (FFI) data.
     """
 
-    def __init__(self, lightcurve_root_directory: Path = Path('data/tess_ffi_lightcurves'),
+    def __init__(self, lightcurve_root_directory_path: Path = Path('data/tess_ffi_lightcurves'),
                  database_path: Path = Path('data/tess_ffi_database.sqlite3')):
-        self.lightcurve_root_directory = lightcurve_root_directory
-        self.database_path = database_path
+        self.lightcurve_root_directory_path: Path = lightcurve_root_directory_path
+        self.database_path: Union[Path, str] = database_path
+        self.database_cursor: Cursor = sqlite3.connect(str(database_path)).cursor()
 
     @staticmethod
     def load_fluxes_and_times_from_pickle_file(file_path: Union[Path, str],
@@ -155,3 +158,14 @@ class TessFfiDataInterface:
             return int(match.group(1)), None
         # Raise an error if none of the patterns matched.
         raise ValueError(f'{file_path} does not match a known pattern to extract TIC ID and sector from.')
+
+    def create_database_lightcurve_table(self):
+        """
+        Creates the SQL database table for the FFI dataset.
+        """
+        self.database_cursor.execute('''CREATE TABLE Lightcurve (
+                                            id INTEGER PRIMARY KEY,
+                                            path TEXT NOT NULL,
+                                            dataset_split INTEGER NOT NULL
+                                        )'''
+                                     )
