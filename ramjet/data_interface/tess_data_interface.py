@@ -437,7 +437,7 @@ class TessDataInterface:
         ]
         suspected_planet_download_manifest = self.download_products(
             suspected_planet_lightcurve_data_products, data_directory=tess_toi_data_interface.data_directory)
-        print(f'Moving lightcurves to {directory}...')
+        print(f'Verifying and moving lightcurves to {directory}...')
         directory.mkdir(parents=True, exist_ok=True)
         for file_path_string in suspected_planet_download_manifest['Local Path']:
             file_path = Path(file_path_string)

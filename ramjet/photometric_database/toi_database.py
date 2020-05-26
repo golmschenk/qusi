@@ -99,7 +99,7 @@ class ToiDatabase(TessSyntheticInjectedWithNegativeInjectionDatabase):
             not_planet_lightcurve_data_products.head(number_of_negative_lightcurves_to_download),
             data_directory=self.data_directory
         )
-        print(f'Moving lightcurves to {self.lightcurve_directory}...')
+        print(f'Verifying and moving lightcurves to {self.lightcurve_directory}...')
         self.lightcurve_directory.mkdir(parents=True, exist_ok=True)
         for file_path_string in not_planet_download_manifest['Local Path']:
             file_path = Path(file_path_string)
