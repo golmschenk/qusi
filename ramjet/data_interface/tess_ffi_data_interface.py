@@ -5,6 +5,7 @@ import pickle
 import re
 import sqlite3
 from sqlite3 import Cursor
+from uuid import uuid4
 
 import numpy as np
 from enum import Enum
@@ -181,9 +182,15 @@ class TessFfiDataInterface:
         Creates the SQL database table for the FFI dataset.
         """
         self.database_cursor.execute('''CREATE TABLE Lightcurve (
-                                            id INTEGER PRIMARY KEY,
+                                            uuid TEXT PRIMARY KEY,
                                             path TEXT NOT NULL,
                                             magnitude INTEGER NOT NULL,
                                             dataset_split INTEGER NOT NULL
                                         )'''
                                      )
+
+    def add_database_lightcurve_row_from_path(self, lightcurve_path: Path, dataset_split: int):
+        uuid = uuid4()
+        magnitude = self.get_floor_magnitude_from_file_path(lightcurve_path)
+        self.database_cursor.execute(f'''INSERT INTO Lightcurve (uuid, path, magnitude, dataset_split)
+                                         VALUES ('{uuid}', '{str(lightcurve_path)}', {magnitude}, {dataset_split})''')
