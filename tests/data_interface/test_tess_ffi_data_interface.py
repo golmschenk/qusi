@@ -150,3 +150,20 @@ class TestTessFfiDataInterface:
         assert magnitude1 == 14
         with pytest.raises(ValueError):
             data_interface.get_floor_magnitude_from_file_path('tesslc_12345678.pkl')
+
+    def test_can_add_sql_database_lightcurve_row_from_path(self, data_interface):
+        data_interface.create_database_lightcurve_table()
+        lightcurve_path0 = Path('tesslcs_sector_1/tesslcs_tmag_7_8/tesslc_1111.pkl')
+        uuid0 = 'mock-uuid-output0'
+        with patch.object(ramjet.data_interface.tess_ffi_data_interface, 'uuid4') as mock_uuid4:
+            mock_uuid4.return_value = uuid0
+            data_interface.add_database_lightcurve_row_from_path(lightcurve_path=lightcurve_path0, dataset_split=2)
+        lightcurve_path1 = Path('tesslcs_sector_1/tesslcs_tmag_14_15/tesslc_1234567.pkl')
+        uuid1 = 'mock-uuid-output1'
+        with patch.object(ramjet.data_interface.tess_ffi_data_interface, 'uuid4') as mock_uuid4:
+            mock_uuid4.return_value = uuid1
+            data_interface.add_database_lightcurve_row_from_path(lightcurve_path=lightcurve_path1, dataset_split=3)
+        data_interface.database_cursor.execute('select uuid, path, magnitude, dataset_split from Lightcurve')
+        query_result = data_interface.database_cursor.fetchall()
+        assert query_result == [(uuid0, str(lightcurve_path0), 7, 2),
+                                (uuid1, str(lightcurve_path1), 14, 3)]
