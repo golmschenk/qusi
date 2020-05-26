@@ -2,11 +2,10 @@
 import os
 import time
 import pytest
-import pydevd
 import numpy as np
 import tensorflow as tf
 
-from ramjet.photometric_database.py_mapper import PyMapper, map_py_function_to_dataset
+from ramjet.py_mapper import PyMapper, map_py_function_to_dataset
 
 
 class TestPyMapper:
@@ -84,6 +83,37 @@ class TestPyMapper:
         batch_array = batch.numpy()
         assert np.array_equal(batch_array, np.array([[1, 1], [11, 11], [21, 21], [31, 31]]))
 
+    def test_py_map_returns_specified_shape(self):
+        dataset = tf.data.Dataset.from_tensor_slices([[0, 0, 0], [1, 1, 1]])
+        py_mapper = PyMapper(add_one, number_of_parallel_calls=4)
+        map_dataset = py_mapper.map_to_dataset(dataset, output_shapes=(3,))
+        assert map_dataset.element_spec.shape == (3,)
+
+    def test_py_map_returns_specified_shape_for_multiple_elements(self):
+        dataset0 = tf.data.Dataset.from_tensor_slices([[0, 0, 0], [1, 1, 1]])
+        dataset1 = tf.data.Dataset.from_tensor_slices([[2, 2], [3, 3]])
+        zipped_dataset = tf.data.Dataset.zip((dataset0, dataset1))
+        py_mapper = PyMapper(add_one, number_of_parallel_calls=4)
+        map_dataset = py_mapper.map_to_dataset(zipped_dataset, output_types=[tf.float32, tf.float32],
+                                               output_shapes=[(3,), (2,)])
+        assert map_dataset.element_spec[0].shape == (3,)
+        assert map_dataset.element_spec[1].shape == (2,)
+
+    def test_py_map_returns_specified_shape_when_shape_passed_in_wrapper(self):
+        dataset = tf.data.Dataset.from_tensor_slices([[0, 0, 0], [1, 1, 1]])
+        map_dataset = map_py_function_to_dataset(dataset=dataset, map_function=add_one, number_of_parallel_calls=4,
+                                                 output_shapes=(3,))
+        assert map_dataset.element_spec.shape == (3,)
+
+    def test_flat_map_with_output_shapes_are_applied_in_the_correct_order(self):
+        dataset = tf.data.Dataset.from_tensor_slices([[[0, 0], [10, 10]], [[20, 20], [30, 30]]])
+        mapped_dataset = map_py_function_to_dataset(dataset=dataset, map_function=add_one, number_of_parallel_calls=4,
+                                                    output_types=tf.float32, flat_map=True, output_shapes=(2,))
+        batch_dataset = mapped_dataset.batch(batch_size=4)
+        batch = next(iter(batch_dataset))
+        batch_array = batch.numpy()
+        assert np.array_equal(batch_array, np.array([[1, 1], [11, 11], [21, 21], [31, 31]]))
+
 
 def sleep_and_get_pid(element_tensor: tf.Tensor) -> int:
     """
@@ -96,6 +126,7 @@ def sleep_and_get_pid(element_tensor: tf.Tensor) -> int:
     return os.getpid()
 
 
+# noinspection PyPackageRequirements
 def add_tensors(element_tensor0: tf.Tensor, element_tensor1: tf.Tensor) -> float:
     """
     Adds two elements together.
@@ -104,7 +135,6 @@ def add_tensors(element_tensor0: tf.Tensor, element_tensor1: tf.Tensor) -> float
     :param element_tensor1: Second input value.
     :return: The added inputs.
     """
-    pydevd.settrace(suspend=False)  # To make debugging in the multi-processes easier (allows breakpoints).
     element0 = element_tensor0.numpy()
     element1 = element_tensor1.numpy()
     return element0 + element1
@@ -117,7 +147,6 @@ def add_one(element_tensor: tf.Tensor) -> float:
     :param element_tensor: Input value.
     :return: Input plus 1.
     """
-    pydevd.settrace(suspend=False)  # To make debugging in the multi-processes easier (allows breakpoints).
     element = element_tensor.numpy()
     return element + 1
 
@@ -129,6 +158,5 @@ def add_one_and_add_two(element_tensor: tf.Tensor) -> (float, float):
     :param element_tensor: Input value.
     :return: Input plus 1 and input plus 2.
     """
-    pydevd.settrace(suspend=False)  # To make debugging in the multi-processes easier (allows breakpoints).
     element = element_tensor.numpy()
     return element + 1, element + 2

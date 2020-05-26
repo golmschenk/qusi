@@ -1,16 +1,14 @@
 """
 Code for a database of transit lightcurves with a label per time step.
 """
-import shutil
 from pathlib import Path
 from typing import List, Union
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-from astropy.io import fits
 
 from ramjet.photometric_database.lightcurve_label_per_time_step_database import LightcurveLabelPerTimeStepDatabase
-from ramjet.photometric_database.tess_data_interface import TessDataInterface
+from ramjet.data_interface.tess_data_interface import TessDataInterface
 
 
 class TransitLightcurveLabelPerTimeStepDatabase(LightcurveLabelPerTimeStepDatabase):
@@ -32,14 +30,6 @@ class TransitLightcurveLabelPerTimeStepDatabase(LightcurveLabelPerTimeStepDataba
         self.data_directory.mkdir(parents=True, exist_ok=True)
         self.lightcurve_directory.mkdir(parents=True, exist_ok=True)
         self.data_validation_directory.mkdir(parents=True, exist_ok=True)
-
-    def clear_data_directory(self):
-        """
-        Empties the data directory.
-        """
-        if self.data_directory.exists():
-            shutil.rmtree(self.data_directory)
-        self.create_data_directories()
 
     def get_lightcurve_file_paths(self) -> List[Path]:
         """

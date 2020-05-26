@@ -22,7 +22,7 @@ using:
 
 .. code-block:: python
 
-    from ramjet.photometric_database.tess_data_interface import TessDataInterface
+    from ramjet.data_interface.tess_data_interface import TessDataInterface
     tess_data_interface = TessDataInterface()
 
 Download a TESS lightcurve

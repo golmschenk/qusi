@@ -9,7 +9,7 @@ import tensorflow as tf
 import requests
 from pathlib import Path
 
-from ramjet.photometric_database.tess_data_interface import TessDataInterface
+from ramjet.data_interface.tess_data_interface import TessDataInterface
 from ramjet.photometric_database.tess_transit_lightcurve_label_per_time_step_database import \
     TransitLightcurveLabelPerTimeStepDatabase
 

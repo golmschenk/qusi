@@ -7,33 +7,24 @@ from unittest.mock import Mock, ANY, patch
 import numpy as np
 import pandas as pd
 from astropy.coordinates import SkyCoord
-
 from astropy.table import Table
 
 import pytest
 from astroquery.utils import TableList
 
-import ramjet.photometric_database.tess_data_interface
-from ramjet.photometric_database.tess_data_interface import TessDataInterface, TessFluxType
+import ramjet.data_interface.tess_data_interface
+from ramjet.data_interface.tess_data_interface import TessDataInterface, TessFluxType
 
 
 class TestTessDataInterface:
     @pytest.fixture
     def tess_data_interface_module(self) -> Any:
-        import ramjet.photometric_database.tess_data_interface as tess_data_interface_module
+        import ramjet.data_interface.tess_data_interface as tess_data_interface_module
         return tess_data_interface_module
 
     @pytest.fixture
     def tess_data_interface(self) -> TessDataInterface:
         return TessDataInterface()
-
-    def test_new_tess_data_interface_sets_astroquery_api_limits(self):
-        from astroquery.mast import Observations
-        assert Observations.TIMEOUT == 600
-        assert Observations.PAGESIZE == 50000
-        TessDataInterface()
-        assert Observations.TIMEOUT == 2000
-        assert Observations.PAGESIZE == 3000
 
     def test_can_request_time_series_observations_from_mast_as_pandas_data_frame(self, tess_data_interface,
                                                                                  tess_data_interface_module):
@@ -42,6 +33,14 @@ class TestTessDataInterface:
         query_result = tess_data_interface.get_all_tess_time_series_observations()
         assert isinstance(query_result, pd.DataFrame)
         assert np.array_equal(query_result['a'].values, [1, 2])
+
+    def test_new_tess_data_interface_sets_astroquery_api_limits(self):
+        from astroquery.mast import Observations
+        Observations.TIMEOUT = 600
+        Observations.PAGESIZE = 50000
+        TessDataInterface()
+        assert Observations.TIMEOUT == 2000
+        assert Observations.PAGESIZE == 3000
 
     def test_can_request_data_products_from_mast_as_pandas_data_frame(self, tess_data_interface,
                                                                       tess_data_interface_module):
@@ -114,7 +113,7 @@ class TestTessDataInterface:
         assert 5 in single_sector_observations['Sector'].values
         assert 1 in single_sector_observations['Sector'].values
 
-    @patch.object(ramjet.photometric_database.tess_data_interface.fits, 'open')
+    @patch.object(ramjet.data_interface.tess_data_interface.fits, 'open')
     def test_can_load_fluxes_and_times_from_tess_fits(self, mock_fits_open, tess_data_interface):
         expected_fluxes = np.array([1, 2, 3], dtype=np.float32)
         expected_times = np.array([4, 5, 6], dtype=np.float32)
@@ -127,7 +126,7 @@ class TestTessDataInterface:
         assert np.array_equal(fluxes, expected_fluxes)
         assert np.array_equal(times, expected_times)
 
-    @patch.object(ramjet.photometric_database.tess_data_interface.fits, 'open')
+    @patch.object(ramjet.data_interface.tess_data_interface.fits, 'open')
     def test_loading_fluxes_and_times_from_fits_drops_nans(self, mock_fits_open, tess_data_interface):
         fits_fluxes = np.array([np.nan, 2, 3], dtype=np.float32)
         fits_times = np.array([4, 5, np.nan], dtype=np.float32)
@@ -139,7 +138,7 @@ class TestTessDataInterface:
         assert np.array_equal(fluxes, np.array([2], dtype=np.float32))
         assert np.array_equal(times, np.array([5], dtype=np.float32))
 
-    @patch.object(ramjet.photometric_database.tess_data_interface.fits, 'open')
+    @patch.object(ramjet.data_interface.tess_data_interface.fits, 'open')
     def test_can_extract_different_flux_types_from_fits(self, mock_fits_open, tess_data_interface):
         fits_sap_fluxes = np.array([1, 2, 3], dtype=np.float32)
         fits_pdcsap_fluxes = np.array([4, 5, 6], dtype=np.float32)
@@ -193,26 +192,17 @@ class TestTessDataInterface:
         assert variable_data_frame['VarType'].iloc[0] == b'RR'
         assert variable_data_frame['VarType'].iloc[1] == b'SNI'
 
-    @pytest.mark.slow
-    @pytest.mark.external
-    def test_can_retrieve_the_tess_toi_dispositions(self, tess_data_interface):
-        dispositions = tess_data_interface.retrieve_toi_dispositions_from_exofop()
-        target_dispositions = dispositions[dispositions['TIC ID'] == 307210830]
-        assert target_dispositions['TFOPWG disposition'].iloc[0] == 'CP'
-        target_planet_sectors = target_dispositions['Sector'].unique()
-        assert np.array_equal(np.sort(np.array(target_planet_sectors)), [2, 5, 8, 9, 10, 11, 12])
-
     def test_can_get_exofop_planet_disposition_for_tic_id(self, tess_data_interface):
-        mock_dispositions = pd.DataFrame({'TIC ID': [231663901, 266980320], 'TFOPWG disposition': ['KP', 'CP']})
+        mock_dispositions = pd.DataFrame({'TIC ID': [231663901, 266980320], 'Disposition': ['KP', 'CP']})
         tess_data_interface.retrieve_toi_dispositions_from_exofop = Mock(return_value=mock_dispositions)
         dispositions0 = tess_data_interface.retrieve_exofop_planet_disposition_for_tic_id(tic_id=231663901)
-        assert dispositions0['TFOPWG disposition'].iloc[0] == 'KP'
+        assert dispositions0['Disposition'].iloc[0] == 'KP'
         dispositions1 = tess_data_interface.retrieve_exofop_planet_disposition_for_tic_id(tic_id=266980320)
-        assert dispositions1['TFOPWG disposition'].iloc[0] == 'CP'
+        assert dispositions1['Disposition'].iloc[0] == 'CP'
         dispositions2 = tess_data_interface.retrieve_exofop_planet_disposition_for_tic_id(tic_id=25132999)
         assert dispositions2.shape[0] == 0
 
-    @patch.object(ramjet.photometric_database.tess_data_interface.Observations, 'query_criteria')
+    @patch.object(ramjet.data_interface.tess_data_interface.Observations, 'query_criteria')
     def test_can_get_list_of_sectors_target_appears_in(self, mock_query, tess_data_interface):
         mock_query_result = Table(
             {'dataURL': ['mast:TESS/product/tess2019006130736-s0007-0000000278956474-0131-s_lc.fits',
@@ -223,3 +213,26 @@ class TestTessDataInterface:
         tic_id = 278956474
         sectors = tess_data_interface.get_sectors_target_appears_in(tic_id)
         assert sorted(sectors) == [5, 7]
+
+    def test_can_get_tic_id_and_sector_from_human_readable_file_name(self, tess_data_interface):
+        tic_id0, sector0 = tess_data_interface.get_tic_id_and_sector_from_file_path(
+            'TIC 289890301 sector 15 second half')
+        assert tic_id0 == 289890301
+        assert sector0 == 15
+        tic_id1, sector1 = tess_data_interface.get_tic_id_and_sector_from_file_path('output/TIC 169480782 sector 5.png')
+        assert tic_id1 == 169480782
+        assert sector1 == 5
+
+    def test_get_tic_id_and_sector_raises_error_with_unknown_pattern(self, tess_data_interface):
+        with pytest.raises(ValueError):
+            tess_data_interface.get_tic_id_and_sector_from_file_path('a b c d e f g')
+
+    def test_can_get_tic_id_and_sector_from_tess_obs_id_style_file_name(self, tess_data_interface):
+        tic_id0, sector0 = tess_data_interface.get_tic_id_and_sector_from_file_path(
+            'mast:TESS/product/tess2019006130736-s0007-0000000278956474-0131-s_lc.fits')
+        assert tic_id0 == 278956474
+        assert sector0 == 7
+        tic_id1, sector1 = tess_data_interface.get_tic_id_and_sector_from_file_path(
+            'tess2018319095959-s0005-0000000278956474-0125-s')
+        assert tic_id1 == 278956474
+        assert sector1 == 5

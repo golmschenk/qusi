@@ -233,3 +233,4 @@ venv.bak/
 ### Project specific
 data/
 logs/
+/ramjet/photometric_database/microlensing_signal_meta_data/moa9yr_events_meta_oct2018.txt

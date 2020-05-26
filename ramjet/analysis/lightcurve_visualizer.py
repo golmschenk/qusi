@@ -32,7 +32,7 @@ def plot_lightcurve(times: np.ndarray, fluxes: np.ndarray, labels: np.ndarray = 
     :param base_data_point_size: The size of the data points to use when plotting (and related sizes).
     """
     with plt.style.context('seaborn-whitegrid'):
-        figure, axes = plt.subplots()
+        figure, axes = plt.subplots(figsize=(16, 10))
         axes.set_xlabel(x_label)
         axes.set_ylabel(y_label)
         color_map = plt.get_cmap('tab10')

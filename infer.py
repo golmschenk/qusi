@@ -1,38 +1,49 @@
 """Code for inference on the contents of a directory."""
+
+import datetime
+import io
+import numpy as np
+import pandas as pd
 import tensorflow as tf
 from pathlib import Path
 
-from ramjet.analysis.lightcurve_visualizer import plot_lightcurve
+from ramjet.py_mapper import map_py_function_to_dataset
 from ramjet.analysis.model_loader import get_latest_log_directory
-from ramjet.models import ConvolutionalLstm
-from ramjet.photometric_database.tess_data_interface import TessDataInterface
-from ramjet.photometric_database.toi_lightcurve_database import ToiLightcurveDatabase
+from ramjet.models import SimpleLightcurveCnn
+from ramjet.photometric_database.toi_database import ToiDatabase
 
-saved_log_directory = get_latest_log_directory('logs')  # Uses the latest log directory's model.
-# saved_log_directory = Path('logs/baseline YYYY-MM-DD-hh-mm-ss')  # Specifies a specific log directory's model to use.
+log_name = get_latest_log_directory(logs_directory='logs')  # Uses the latest model in the log directory.
+# log_name = 'baseline YYYY-MM-DD-hh-mm-ss'  # Specify the path to the model to use.
+saved_log_directory = Path(f'{log_name}')
+datetime_string = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
 
-print('Setting up dataset...')
-database = ToiLightcurveDatabase()
-database.obtain_meta_data_frame_for_available_lightcurves()
-example_paths = [str(database.lightcurve_directory.joinpath('tess2018319095959-s0005-0000000117979897-0125-s_lc.fits'))]
-# Uncomment below to run the inference for all validation files.
-# example_paths = pd.read_csv(saved_log_directory.joinpath('validation.csv'), header=None)[0].values
+print('Setting up dataset...', flush=True)
+database = ToiDatabase()
+example_paths = database.get_all_lightcurve_paths()
+example_paths_dataset = database.paths_dataset_from_list_or_generator_factory(example_paths)
+mapped_dataset = map_py_function_to_dataset(example_paths_dataset, database.infer_preprocessing,
+                                            number_of_parallel_calls=database.number_of_parallel_processes_per_map,
+                                            output_types=(tf.string, tf.float32))
+batch_dataset = mapped_dataset.batch(database.batch_size).prefetch(5)
 
-print('Loading model...')
-model = ConvolutionalLstm()
-model.load_weights(str(saved_log_directory.joinpath('model.ckpt')))
+print('Loading model...', flush=True)
+model = SimpleLightcurveCnn()
+model.load_weights(str(saved_log_directory.joinpath('model.ckpt'))).expect_partial()
 
-print('Inferring and plotting...')
-for example_path in example_paths:
-    example, label = database.evaluation_preprocessing(tf.convert_to_tensor(example_path))
-    prediction = model.predict(tf.expand_dims(example, axis=0))[0]
-    tess_data_interface = TessDataInterface()
-    fluxes, times = tess_data_interface.load_fluxes_and_times_from_fits_file(example_path)
-    label, prediction = database.inference_postprocessing(label, prediction, times.shape[0])
-    tic_id = tess_data_interface.get_tic_id_from_single_sector_obs_id(Path(example_path).stem)
-    sector = tess_data_interface.get_sector_from_single_sector_obs_id(Path(example_path).stem)
-    plot_title = f'TIC {tic_id} sector {sector}'
-    plot_lightcurve(times, fluxes, label, prediction, title=plot_title, save_path=f'{plot_title}.png')
+print('Inferring...', flush=True)
+columns = ['Lightcurve path', 'Prediction']
+dtypes = [str, int]
+predictions_data_frame = pd.read_csv(io.StringIO(''), names=columns, dtype=dict(zip(columns, dtypes)))
+old_top_predictions_data_frame = predictions_data_frame
+for batch_index, (paths, examples) in enumerate(batch_dataset):
+    predictions = model.predict(examples)
+    batch_predictions = pd.DataFrame({'Lightcurve path': paths.numpy().astype(str),
+                                      'Prediction': np.squeeze(predictions, axis=1)})
+    predictions_data_frame = pd.concat([predictions_data_frame, batch_predictions])
+    print(f'{batch_index * database.batch_size} examples inferred on.', flush=True)
+predictions_data_frame.sort_values('Prediction', ascending=False).reset_index(drop=True).to_feather(
+    saved_log_directory.joinpath(f'infer results {datetime_string}.feather')
+)
 print('............')
 print('... Done ...')
 print('............')

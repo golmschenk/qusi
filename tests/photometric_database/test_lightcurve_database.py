@@ -1,12 +1,14 @@
 """
 Tests for the LightcurveDatabase class.
 """
-from typing import Any
-from unittest.mock import Mock
+from pathlib import Path
+from typing import Any, Generator, List
+from unittest.mock import Mock, patch
 import numpy as np
 import tensorflow as tf
 import pytest
 
+import ramjet.photometric_database.lightcurve_database
 from ramjet.photometric_database.lightcurve_database import LightcurveDatabase
 
 
@@ -59,9 +61,77 @@ class TestLightcurveDatabase:
         batch1 = next(padded_window_iterator)
         assert np.array_equal(batch1[0].numpy(), [[3, 3, 0], [4, 4, 4], [5, 5, 5]])
 
-    def test_lightcurve_padding_can_be_made_non_random_for_evaluation(self, database, database_module):
-        database_module.np.random.randint = Mock(return_value=3)
+    @patch.object(ramjet.photometric_database.lightcurve_database.np.random, 'randint')
+    def test_lightcurve_padding_can_be_made_non_random_for_evaluation(self, mock_randint, database, database_module):
+        mock_randint.return_value = 3
         lightcurve0 = database.make_uniform_length(np.array([10, 20, 30, 40, 50]), length=9, randomize=True)
         assert np.array_equal(lightcurve0, [30, 40, 50, 10, 20, 30, 40, 50, 10])
         lightcurve1 = database.make_uniform_length(np.array([10, 20, 30, 40, 50]), length=9, randomize=False)
         assert np.array_equal(lightcurve1, [10, 20, 30, 40, 50, 10, 20, 30, 40])
+        # Should also work for lightcurves with more than just 1 value over time.
+        lightcurve2 = database.make_uniform_length(np.array([[10], [20], [30], [40], [50]]), length=9, randomize=True)
+        assert np.array_equal(lightcurve2, [[30], [40], [50], [10], [20], [30], [40], [50], [10]])
+        lightcurve3 = database.make_uniform_length(np.array([[10], [20], [30], [40], [50]]), length=9, randomize=False)
+        assert np.array_equal(lightcurve3, [[10], [20], [30], [40], [50], [10], [20], [30], [40]])
+
+    def test_splitting_of_training_and_validation_datasets_for_file_paths_with_list_input(self, database):
+        paths = [Path('a'), Path('b'), Path('c'), Path('d'), Path('e'), Path('f')]
+        database.validation_ratio = 1/3
+        datasets = database.get_training_and_validation_datasets_for_file_paths(paths)
+        training_paths_dataset, validation_paths_dataset = datasets
+        assert list(training_paths_dataset) == ['b', 'c', 'e', 'f']
+        assert list(validation_paths_dataset) == ['a', 'd']
+
+    def test_splitting_of_training_and_validation_datasets_for_file_paths_with_generator_factory_input(self, database):
+        def generator_factory():
+            return (Path(string) for string in ['a', 'b', 'c', 'd', 'e', 'f'])
+        database.validation_ratio = 1 / 3
+        datasets = database.get_training_and_validation_datasets_for_file_paths(generator_factory)
+        training_paths_dataset, validation_paths_dataset = datasets
+        assert list(training_paths_dataset) == ['b', 'c', 'e', 'f']
+        assert list(validation_paths_dataset) == ['a', 'd']
+
+    def test_splitting_of_training_and_validation_datasets_for_file_paths_with_list_factory_input(self, database):
+        def generator_factory():
+            return [Path(string) for string in ['a', 'b', 'c', 'd', 'e', 'f']]
+        database.validation_ratio = 1 / 3
+        datasets = database.get_training_and_validation_datasets_for_file_paths(generator_factory)
+        training_paths_dataset, validation_paths_dataset = datasets
+        assert list(training_paths_dataset) == ['b', 'c', 'e', 'f']
+        assert list(validation_paths_dataset) == ['a', 'd']
+
+    def test_training_and_validation_datasets_from_generator_can_repeat(self, database):
+        def generator_factory():
+            return (Path(string) for string in ['a', 'b', 'c'])
+        database.validation_ratio = 1 / 3
+        datasets = database.get_training_and_validation_datasets_for_file_paths(generator_factory)
+        training_paths_dataset, _ = datasets
+        assert list(training_paths_dataset) == ['b', 'c']
+        assert list(training_paths_dataset) == ['b', 'c']  # Force the dataset to resolve a second time.
+
+    def test_training_and_validation_datasets_from_generator_do_not_mix_values_on_repeat(self, database):
+        def generator_factory():
+            return (Path(string) for string in ['a', 'b', 'c', 'd', 'e', 'f', 'g'])
+        database.validation_ratio = 1 / 3
+        datasets = database.get_training_and_validation_datasets_for_file_paths(generator_factory)
+        training_paths_dataset, validation_paths_dataset = datasets
+        training_paths_dataset = training_paths_dataset.repeat(2)
+        validation_paths_dataset = validation_paths_dataset.repeat(2)
+        assert len(list(training_paths_dataset)) == 8
+        assert len(list(validation_paths_dataset)) == 6
+        for element in ['a', 'd', 'g']:
+            assert element not in training_paths_dataset
+        for element in ['b', 'c', 'e', 'f']:
+            assert element not in validation_paths_dataset
+
+    def test_paths_dataset_from_list_or_generator_factory_can_use_a_list(self, database):
+        paths = [Path('a'), Path('b'), Path('c'), Path('d'), Path('e'), Path('f')]
+        paths_dataset = database.paths_dataset_from_list_or_generator_factory(paths)
+        assert list(paths_dataset) == ['a', 'b', 'c', 'd', 'e', 'f']
+
+    def test_paths_dataset_from_list_or_generator_factory_can_use_a_generator_factory(self, database):
+        def generator_factory():
+            return (Path(string) for string in ['a', 'b', 'c'])
+        paths_dataset = database.paths_dataset_from_list_or_generator_factory(generator_factory)
+        assert list(paths_dataset) == ['a', 'b', 'c']
+        assert list(paths_dataset) == ['a', 'b', 'c']  # Check new generator rather than old empty one.

@@ -13,3 +13,10 @@ sphinx-press-theme
 GitPython
 matplotlib
 pipreqs
+bokeh
+pymc3
+Theano
+exoplanet
+scipy
+setuptools
+dataset
