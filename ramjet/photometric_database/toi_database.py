@@ -50,8 +50,8 @@ class ToiDatabase(TessSyntheticInjectedWithNegativeInjectionDatabase):
         """
         Downloads the `ExoFOP database <https://exofop.ipac.caltech.edu/tess/view_toi.php>`_.
         """
-        print('Clearing data directory...')
-        self.clear_data_directory()
+        # print('Clearing data directory...')
+        # self.clear_data_directory()
         print("Downloading ExoFOP TOI disposition CSV...")
         toi_csv_url = 'https://exofop.ipac.caltech.edu/tess/download_toi.php?sort=toi&output=csv'
         response = requests.get(toi_csv_url)
@@ -104,8 +104,8 @@ class ToiDatabase(TessSyntheticInjectedWithNegativeInjectionDatabase):
         for file_path_string in not_planet_download_manifest['Local Path']:
             file_path = Path(file_path_string)
             lightcurve_path = self.lightcurve_directory.joinpath(file_path.name)
-            file_path.rename(lightcurve_path)
             try:
+                file_path.rename(lightcurve_path)
                 hdu_list = fits.open(str(lightcurve_path))
                 lightcurve = hdu_list[1].data
                 _ = lightcurve['TIME'][0]

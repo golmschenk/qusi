@@ -442,8 +442,8 @@ class TessDataInterface:
         for file_path_string in suspected_planet_download_manifest['Local Path']:
             file_path = Path(file_path_string)
             lightcurve_path = directory.joinpath(file_path.name)
-            file_path.rename(lightcurve_path)
             try:
+                file_path.rename(lightcurve_path)
                 hdu_list = fits.open(str(lightcurve_path))
                 lightcurve = hdu_list[1].data
                 _ = lightcurve['TIME'][0]
