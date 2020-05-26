@@ -3,7 +3,7 @@ import datetime
 import os
 import tensorflow as tf
 from tensorflow.python.keras import callbacks
-from tensorflow_core.python.keras.losses import BinaryCrossentropy
+from tensorflow.python.keras.losses import BinaryCrossentropy
 
 from ramjet.models import SimpleLightcurveCnn
 from ramjet.photometric_database.toi_database import ToiDatabase
