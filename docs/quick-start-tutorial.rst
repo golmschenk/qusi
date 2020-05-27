@@ -78,20 +78,21 @@ To use the network to make predictions over all the lightcurves, run:
 
     python infer.py
 
-This script will load the latest trained model (from the `logs` directory), and use it make a prediction about each of
-the lightcurves. A number from 0 to 1 is assigned to each lightcurve which states the network's confidence that the
-lightcurve contains a transit event. 0 meaning the network is confident that the lightcurve contains no transit and 1
-meaning the network is confident the lightcurve contains a transit. These predictions will be saved to a file in the
-same log directory where the trained model is kept. The path to this file from the root `ramjet` directory will be
-`logs/baseline YYYY-MM-DD-hh-mm-ss/infer results YYYY-MM-DD-hh-mm-ss.feather`, where the first datetime is when the
-network training was started, and the second datetime is when the inference run was started. The results will be sorted
-with the most likely transit candidates at the stop of the list. A `feather` file is essentially an efficient CSV file.
-Unfortunately, it is not directly human readable. See the next step for viewing the results.
+This script will load the latest trained model (from the :code:`logs` directory), and use it make a prediction about
+each of the lightcurves. A number from 0 to 1 is assigned to each lightcurve which states the network's confidence that
+the lightcurve contains a transit event. 0 meaning the network is confident that the lightcurve contains no transit and
+1 meaning the network is confident the lightcurve contains a transit. These predictions will be saved to a file in the
+same log directory where the trained model is kept. The path to this file from the root :code:`ramjet` directory will be
+:code:`logs/baseline YYYY-MM-DD-hh-mm-ss/infer results YYYY-MM-DD-hh-mm-ss.feather`, where the first datetime is when
+the network training was started, and the second datetime is when the inference run was started. The results will be
+sorted with the most likely transit candidates at the stop of the list. A :code:`feather` file is essentially an
+efficient CSV file. Unfortunately, it is not directly human readable. See the next step for viewing the results.
 
 Viewing the predictions
 -----------------------
-To view the prediction results, the easiest method is to load the `feather` file into a Pandas dataframe. Open a Python
-console (or add this code to a Python file) in the root `ramjet` project directory:
+To view the prediction results, the easiest method is to load the :code:`feather` file into a Pandas dataframe. Open a
+Python console (or add this code to a Python file) in the root :code:`ramjet` project
+directory:
 
 .. code-block:: bash
 
@@ -103,9 +104,10 @@ This code will list the top 10 results, including their paths and network predic
 explore the Pandas data frame, see `Pandas' tutorial on data frames
 <https://pandas.pydata.org/docs/getting_started/intro_tutorials/02_read_write.html#min-tut-02-read-write>`_.
 If you would prefer to have a standard CSV file, you can save the data frame to a CSV using
-`results_data_frame.to_csv('path/to/desired/output/location.csv')`.
+:code:`results_data_frame.to_csv('path/to/desired/output/location.csv')`.
 
-Finally, to directly view one of the lightcurves, `ramjet` provides an quick viewing interface with something like:
+Finally, to directly view one of the lightcurves, :code:`ramjet` provides an quick viewing interface with something
+like:
 
 .. code-block:: python
 
