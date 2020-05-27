@@ -97,6 +97,7 @@ directory:
 .. code-block:: bash
 
     import pandas as pd
+    pd.set_option('display.max_colwidth', -1)  # Prevents path display truncating.
     results_data_frame = pd.load_feather(`logs/baseline YYYY-MM-DD-hh-mm-ss/infer results YYYY-MM-DD-hh-mm-ss.feather`)
     print(results_data_frame.head(10))
 
