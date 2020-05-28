@@ -4,7 +4,7 @@ Code for interfacing with Brian Powell's TESS full frame image (FFI) data.
 import pickle
 import re
 import sqlite3
-from sqlite3 import Cursor
+from sqlite3 import Cursor, Connection
 from uuid import uuid4
 
 import numpy as np
@@ -37,7 +37,8 @@ class TessFfiDataInterface:
                  database_path: Union[Path, str] = Path('data/tess_ffi_database.sqlite3')):
         self.lightcurve_root_directory_path: Path = lightcurve_root_directory_path
         self.database_path: Union[Path, str] = database_path
-        self.database_cursor: Cursor = sqlite3.connect(str(database_path)).cursor()
+        self.database_connection: Connection = sqlite3.connect(str(database_path))
+        self.database_cursor: Cursor = self.database_connection.cursor()
 
     @staticmethod
     def load_fluxes_and_times_from_pickle_file(file_path: Union[Path, str],
@@ -188,6 +189,17 @@ class TessFfiDataInterface:
                                             dataset_split INTEGER NOT NULL
                                         )'''
                                      )
+        # Index for the use case of training on a specific magnitude, get the training dataset, then
+        # have data shuffled based on the uuid.
+        self.database_cursor.execute('''CREATE INDEX Lightcurve_magnitude_dataset_split_uuid_index
+                                        ON Lightcurve (magnitude, dataset_split, uuid)''')
+        # Index for the use case of training on the entire dataset, get the training dataset, then
+        # have data shuffled based on the uuid.
+        self.database_cursor.execute('''CREATE INDEX Lightcurve_dataset_split_uuid_index
+                                                ON Lightcurve (dataset_split, uuid)''')
+        # Index for the use case of having the entire dataset shuffled.
+        self.database_cursor.execute('''CREATE INDEX Lightcurve_uuid_index
+                                                        ON Lightcurve (uuid)''')
 
     def add_database_lightcurve_row_from_path(self, lightcurve_path: Path, dataset_split: int):
         uuid = uuid4()

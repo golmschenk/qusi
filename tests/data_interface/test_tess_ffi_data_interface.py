@@ -3,6 +3,7 @@ from pathlib import Path
 
 import pytest
 import numpy as np
+import pandas as pd
 from typing import Tuple
 from unittest.mock import patch, Mock
 
@@ -174,3 +175,18 @@ class TestTessFfiDataInterface:
         data_interface.database_cursor.execute('SELECT name FROM pragma_table_info("Lightcurve") WHERE pk=1')
         first_query_result = data_interface.database_cursor.fetchone()
         assert first_query_result[0] == 'uuid'
+
+    def test_indexes_of_sql_database(self, data_interface):
+        data_interface.create_database_lightcurve_table()
+        # noinspection SqlResolve
+        results_data_frame = pd.read_sql_query('''SELECT index_list.name as index_name,
+                                                         seqno as index_sequence_number,
+                                                         index_info.name as column_name
+                                                  FROM pragma_index_list("Lightcurve") index_list,
+                                                       pragma_index_info(index_list.name) index_info;''',
+                                               data_interface.database_connection)
+        sorted_index_groups = results_data_frame.sort_values('index_sequence_number').groupby('index_name')
+        column_lists_of_indexes = list(sorted_index_groups['column_name'].apply(list).values)
+        assert ['magnitude', 'dataset_split', 'uuid'] in column_lists_of_indexes
+        assert ['dataset_split', 'uuid'] in column_lists_of_indexes
+        assert ['uuid'] in column_lists_of_indexes
