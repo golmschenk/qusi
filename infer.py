@@ -13,7 +13,7 @@ from ramjet.models import SimpleLightcurveCnn
 from ramjet.photometric_database.toi_database import ToiDatabase
 
 log_name = get_latest_log_directory(logs_directory='logs')  # Uses the latest model in the log directory.
-# log_name = 'baseline YYYY-MM-DD-hh-mm-ss'  # Specify the path to the model to use.
+# log_name = 'logs/baseline YYYY-MM-DD-hh-mm-ss'  # Specify the path to the model to use.
 saved_log_directory = Path(f'{log_name}')
 datetime_string = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
 
