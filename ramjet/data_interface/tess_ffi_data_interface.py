@@ -218,7 +218,15 @@ class TessFfiDataInterface:
         """
         Populates the SQL database based on the files found in the root FFI data directory.
         """
+        print('Populating TESS FFI SQL database (this may take a while)...')
         path_glob = self.lightcurve_root_directory_path.glob('**/*.pkl')
         for index, path in enumerate(path_glob):
+            print(path)
             dataset_split = index % 10
             self.insert_database_lightcurve_row_from_path(path, dataset_split)
+        print('TESS FFI SQL database populated.')
+
+
+if __name__ == '__main__':
+    tess_ffi_data_interface = TessFfiDataInterface()
+    tess_ffi_data_interface.populate_sql_database()
