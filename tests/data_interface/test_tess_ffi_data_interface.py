@@ -163,7 +163,14 @@ class TestTessFfiDataInterface:
         with patch.object(ramjet.data_interface.tess_ffi_data_interface, 'uuid4') as mock_uuid4:
             mock_uuid4.return_value = uuid1
             data_interface.add_database_lightcurve_row_from_path(lightcurve_path=lightcurve_path1, dataset_split=3)
-        data_interface.database_cursor.execute('select uuid, path, magnitude, dataset_split from Lightcurve')
+        data_interface.database_cursor.execute('SELECT uuid, path, magnitude, dataset_split FROM Lightcurve')
         query_result = data_interface.database_cursor.fetchall()
         assert query_result == [(uuid0, str(lightcurve_path0), 7, 2),
                                 (uuid1, str(lightcurve_path1), 14, 3)]
+
+    def test_uuid_is_primary_key_of_sql_database(self, data_interface):
+        data_interface.create_database_lightcurve_table()
+        # noinspection SqlResolve
+        data_interface.database_cursor.execute('SELECT name FROM pragma_table_info("Lightcurve") WHERE pk=1')
+        first_query_result = data_interface.database_cursor.fetchone()
+        assert first_query_result[0] == 'uuid'
