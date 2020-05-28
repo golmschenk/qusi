@@ -158,12 +158,12 @@ class TestTessFfiDataInterface:
         uuid0 = 'mock-uuid-output0'
         with patch.object(ramjet.data_interface.tess_ffi_data_interface, 'uuid4') as mock_uuid4:
             mock_uuid4.return_value = uuid0
-            data_interface.add_database_lightcurve_row_from_path(lightcurve_path=lightcurve_path0, dataset_split=2)
+            data_interface.insert_database_lightcurve_row_from_path(lightcurve_path=lightcurve_path0, dataset_split=2)
         lightcurve_path1 = Path('tesslcs_sector_1/tesslcs_tmag_14_15/tesslc_1234567.pkl')
         uuid1 = 'mock-uuid-output1'
         with patch.object(ramjet.data_interface.tess_ffi_data_interface, 'uuid4') as mock_uuid4:
             mock_uuid4.return_value = uuid1
-            data_interface.add_database_lightcurve_row_from_path(lightcurve_path=lightcurve_path1, dataset_split=3)
+            data_interface.insert_database_lightcurve_row_from_path(lightcurve_path=lightcurve_path1, dataset_split=3)
         data_interface.database_cursor.execute('SELECT uuid, path, magnitude, dataset_split FROM Lightcurve')
         query_result = data_interface.database_cursor.fetchall()
         assert query_result == [(uuid0, str(lightcurve_path0), 7, 2),

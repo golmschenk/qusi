@@ -180,7 +180,7 @@ class TessFfiDataInterface:
 
     def create_database_lightcurve_table(self):
         """
-        Creates the SQL database table for the FFI dataset.
+        Creates the SQL database table for the FFI dataset, with indexes.
         """
         self.database_cursor.execute('''CREATE TABLE Lightcurve (
                                             uuid TEXT PRIMARY KEY,
@@ -201,7 +201,14 @@ class TessFfiDataInterface:
         self.database_cursor.execute('''CREATE INDEX Lightcurve_uuid_index
                                                         ON Lightcurve (uuid)''')
 
-    def add_database_lightcurve_row_from_path(self, lightcurve_path: Path, dataset_split: int):
+    def insert_database_lightcurve_row_from_path(self, lightcurve_path: Path, dataset_split: int):
+        """
+        Inserts the given lightcurve path into the SQL database with a dataset split tag.
+
+        :param lightcurve_path: The path of the lightcurve to be added.
+        :param dataset_split: The dataset split this path belongs to. That is, an integer which can be used to split
+                              the data into training, validation, and testing. Most often 0-9 to provide 10% splits.
+        """
         uuid = uuid4()
         magnitude = self.get_floor_magnitude_from_file_path(lightcurve_path)
         self.database_cursor.execute(f'''INSERT INTO Lightcurve (uuid, path, magnitude, dataset_split)
