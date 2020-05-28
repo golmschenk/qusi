@@ -40,6 +40,9 @@ class TessFfiDataInterface:
         self.database_connection: Connection = sqlite3.connect(str(database_path))
         self.database_cursor: Cursor = self.database_connection.cursor()
 
+    def __del__(self):
+        self.database_connection.close()
+
     @staticmethod
     def load_fluxes_and_times_from_pickle_file(file_path: Union[Path, str],
                                                flux_type_index: FfiDataIndexes = FfiDataIndexes.CORRECTED_FLUX
@@ -200,6 +203,7 @@ class TessFfiDataInterface:
         # Index for the use case of having the entire dataset shuffled.
         self.database_cursor.execute('''CREATE INDEX Lightcurve_uuid_index
                                                         ON Lightcurve (uuid)''')
+        self.database_connection.commit()
 
     def insert_database_lightcurve_row_from_path(self, lightcurve_path: Path, dataset_split: int):
         """
@@ -224,10 +228,13 @@ class TessFfiDataInterface:
             print(path)
             dataset_split = index % 10
             self.insert_database_lightcurve_row_from_path(path, dataset_split)
+        self.database_connection.commit()
         print('TESS FFI SQL database populated.')
 
 
 if __name__ == '__main__':
     tess_ffi_data_interface = TessFfiDataInterface()
+    tess_ffi_data_interface.database_cursor.execute('DROP TABLE IF EXISTS Lightcurve')
+    tess_ffi_data_interface.database_connection.commit()
     tess_ffi_data_interface.create_database_lightcurve_table()
     tess_ffi_data_interface.populate_sql_database()
