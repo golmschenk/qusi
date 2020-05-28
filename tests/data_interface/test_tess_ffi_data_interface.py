@@ -179,13 +179,13 @@ class TestTessFfiDataInterface:
     def test_indexes_of_sql_database(self, data_interface):
         data_interface.create_database_lightcurve_table()
         # noinspection SqlResolve
-        results_data_frame = pd.read_sql_query('''SELECT index_list.name as index_name,
+        results_data_frame = pd.read_sql_query('''SELECT index_list.seq AS index_sequence,
                                                          seqno as index_sequence_number,
                                                          index_info.name as column_name
                                                   FROM pragma_index_list("Lightcurve") index_list,
                                                        pragma_index_info(index_list.name) index_info;''',
                                                data_interface.database_connection)
-        sorted_index_groups = results_data_frame.sort_values('index_sequence_number').groupby('index_name')
+        sorted_index_groups = results_data_frame.sort_values('index_sequence_number').groupby('index_sequence')
         column_lists_of_indexes = list(sorted_index_groups['column_name'].apply(list).values)
         assert ['magnitude', 'dataset_split', 'uuid'] in column_lists_of_indexes
         assert ['dataset_split', 'uuid'] in column_lists_of_indexes
@@ -204,3 +204,17 @@ class TestTessFfiDataInterface:
         assert len(dataset_split_sizes) == 10
         assert all(dataset_split_sizes.values == 2)
         assert sorted(list(map(str, path_list))) == sorted(list(results_data_frame['path'].values))
+
+    def test_unique_columns_of_sql_table(self, data_interface):
+        data_interface.create_database_lightcurve_table()
+        # noinspection SqlResolve
+        results_data_frame = pd.read_sql_query('''SELECT index_list.seq AS index_sequence,
+                                                         seqno as index_sequence_number,
+                                                         index_info.name as column_name
+                                                  FROM pragma_index_list("Lightcurve") index_list, 
+                                                       pragma_index_info(index_list.name) index_info
+                                                  WHERE index_list.origin='u';''',
+                                               data_interface.database_connection)
+        sorted_index_groups = results_data_frame.sort_values('index_sequence_number').groupby('index_sequence')
+        column_lists_of_unique_indexes = list(sorted_index_groups['column_name'].apply(list).values)
+        assert ['path'] in column_lists_of_unique_indexes

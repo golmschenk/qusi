@@ -187,7 +187,7 @@ class TessFfiDataInterface:
         """
         self.database_cursor.execute('''CREATE TABLE Lightcurve (
                                             uuid TEXT PRIMARY KEY,
-                                            path TEXT NOT NULL,
+                                            path TEXT UNIQUE NOT NULL,
                                             magnitude INTEGER NOT NULL,
                                             dataset_split INTEGER NOT NULL
                                         )'''
