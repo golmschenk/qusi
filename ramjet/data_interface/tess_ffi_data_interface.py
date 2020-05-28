@@ -229,4 +229,5 @@ class TessFfiDataInterface:
 
 if __name__ == '__main__':
     tess_ffi_data_interface = TessFfiDataInterface()
+    tess_ffi_data_interface.create_database_lightcurve_table()
     tess_ffi_data_interface.populate_sql_database()
