@@ -199,10 +199,10 @@ class TessFfiDataInterface:
         # Index for the use case of training on the entire dataset, get the training dataset, then
         # have data shuffled based on the uuid.
         self.database_cursor.execute('''CREATE INDEX Lightcurve_dataset_split_uuid_index
-                                                ON Lightcurve (dataset_split, uuid)''')
+                                        ON Lightcurve (dataset_split, uuid)''')
         # Index for the use case of having the entire dataset shuffled.
         self.database_cursor.execute('''CREATE INDEX Lightcurve_uuid_index
-                                                        ON Lightcurve (uuid)''')
+                                        ON Lightcurve (uuid)''')
         self.database_connection.commit()
 
     def insert_database_lightcurve_row_from_path(self, lightcurve_path: Path, dataset_split: int):
@@ -223,7 +223,7 @@ class TessFfiDataInterface:
         Populates the SQL database based on the files found in the root FFI data directory.
         """
         print('Populating TESS FFI SQL database (this may take a while)...')
-        path_glob = self.lightcurve_root_directory_path.glob('**/*.pkl')
+        path_glob = self.lightcurve_root_directory_path.glob('tesslcs_sector_*/tesslcs_tmag_*_*/tesslc_*/*.pkl')
         for index, path in enumerate(path_glob):
             dataset_split = index % 10
             self.insert_database_lightcurve_row_from_path(path, dataset_split)
