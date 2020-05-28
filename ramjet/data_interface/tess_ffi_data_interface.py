@@ -225,7 +225,6 @@ class TessFfiDataInterface:
         print('Populating TESS FFI SQL database (this may take a while)...')
         path_glob = self.lightcurve_root_directory_path.glob('**/*.pkl')
         for index, path in enumerate(path_glob):
-            print(path)
             dataset_split = index % 10
             self.insert_database_lightcurve_row_from_path(path, dataset_split)
         self.database_connection.commit()
