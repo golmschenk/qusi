@@ -195,7 +195,7 @@ class TestTessFfiDataInterface:
     def test_can_populate_sql_dataset_from_ffi_directory(self, mock_glob, data_interface):
         data_interface.get_floor_magnitude_from_file_path = Mock(return_value=0)
         data_interface.create_database_lightcurve_table()
-        path_list = [Path(f'{index}.pkl') for index in range(20)]
+        path_list = [data_interface.lightcurve_root_directory_path.joinpath(f'{index}.pkl') for index in range(20)]
         mock_glob.return_value = path_list
         data_interface.populate_sql_database()
         results_data_frame = pd.read_sql_query('SELECT path, dataset_split FROM Lightcurve',
@@ -203,7 +203,8 @@ class TestTessFfiDataInterface:
         dataset_split_sizes = results_data_frame.groupby('dataset_split').size()
         assert len(dataset_split_sizes) == 10
         assert all(dataset_split_sizes.values == 2)
-        assert sorted(list(map(str, path_list))) == sorted(list(results_data_frame['path'].values))
+        expected_path_string_list = [f'{index}.pkl' for index in range(20)]
+        assert sorted(expected_path_string_list) == sorted(list(results_data_frame['path'].values))
 
     def test_unique_columns_of_sql_table(self, data_interface):
         data_interface.create_database_lightcurve_table()

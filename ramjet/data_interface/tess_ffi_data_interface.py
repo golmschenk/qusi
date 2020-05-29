@@ -238,13 +238,19 @@ class TessFfiDataInterface:
         print('Populating TESS FFI SQL database (this may take a while)...')
         path_glob = self.lightcurve_root_directory_path.glob('tesslcs_sector_*/tesslcs_tmag_*_*/tesslc_*.pkl')
         row_count = 0
+        batch_paths = []
+        batch_dataset_splits = []
         for index, path in enumerate(path_glob):
-            if index % 1000 == 0:
-                print(f'{index} rows inserted...', end='\r')
-            dataset_split = index % 10
-            path_relative_to_ffi_root_directory = path.relative_to(self.lightcurve_root_directory_path)
-            self.insert_database_lightcurve_row_from_path(path_relative_to_ffi_root_directory, dataset_split)
+            batch_paths.append(path.relative_to(self.lightcurve_root_directory_path))
+            batch_dataset_splits.append(index % 10)
             row_count += 1
+            if index % 1000 == 0:
+                self.insert_multiple_lightcurve_rows_from_paths_into_database(batch_paths, batch_dataset_splits)
+                batch_paths = []
+                batch_dataset_splits = []
+                print(f'{index} rows inserted...', end='\r')
+        if len(batch_paths) > 0:
+            self.insert_multiple_lightcurve_rows_from_paths_into_database(batch_paths, batch_dataset_splits)
         self.database_connection.commit()
         print(f'TESS FFI SQL database populated. {row_count} rows added.')
 
