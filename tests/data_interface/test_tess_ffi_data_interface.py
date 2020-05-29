@@ -218,3 +218,18 @@ class TestTessFfiDataInterface:
         sorted_index_groups = results_data_frame.sort_values('index_sequence_number').groupby('index_sequence')
         column_lists_of_unique_indexes = list(sorted_index_groups['column_name'].apply(list).values)
         assert ['path'] in column_lists_of_unique_indexes
+
+    def test_can_insert_multiple_sql_database_lightcurve_rows_from_paths(self, data_interface):
+        data_interface.create_database_lightcurve_table()
+        lightcurve_path0 = Path('tesslcs_sector_1/tesslcs_tmag_7_8/tesslc_1111.pkl')
+        lightcurve_path1 = Path('tesslcs_sector_1/tesslcs_tmag_14_15/tesslc_1234567.pkl')
+        uuid0 = 'mock-uuid-output0'
+        uuid1 = 'mock-uuid-output1'
+        with patch.object(ramjet.data_interface.tess_ffi_data_interface, 'uuid4') as mock_uuid4:
+            mock_uuid4.side_effect = [uuid0, uuid1]
+            data_interface.insert_multiple_lightcurve_rows_from_paths_into_database(
+                lightcurve_paths=[lightcurve_path0, lightcurve_path1], dataset_splits=[2, 3])
+        data_interface.database_cursor.execute('SELECT uuid, path, magnitude, dataset_split FROM Lightcurve')
+        query_result = data_interface.database_cursor.fetchall()
+        assert query_result == [(uuid0, str(lightcurve_path0), 7, 2),
+                                (uuid1, str(lightcurve_path1), 14, 3)]

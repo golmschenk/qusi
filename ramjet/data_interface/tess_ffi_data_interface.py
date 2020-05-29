@@ -218,6 +218,19 @@ class TessFfiDataInterface:
         self.database_cursor.execute(f'''INSERT INTO Lightcurve (uuid, path, magnitude, dataset_split)
                                          VALUES ('{uuid}', '{str(lightcurve_path)}', {magnitude}, {dataset_split})''')
 
+    def insert_multiple_lightcurve_rows_from_paths_into_database(self, lightcurve_paths: List[Path],
+                                                                 dataset_splits: List[int]):
+        assert len(lightcurve_paths) == len(dataset_splits)
+        sql_values_string_list = []
+        for lightcurve_path, dataset_split in zip(lightcurve_paths, dataset_splits):
+            uuid = uuid4()
+            magnitude = self.get_floor_magnitude_from_file_path(lightcurve_path)
+            sql_values_string_list.append(f"('{uuid}', '{str(lightcurve_path)}', {magnitude}, {dataset_split})")
+
+        sql_query_string = f'''INSERT INTO Lightcurve (uuid, path, magnitude, dataset_split)
+                               VALUES {', '.join(sql_values_string_list)}'''
+        self.database_cursor.execute(sql_query_string)
+
     def populate_sql_database(self):
         """
         Populates the SQL database based on the files found in the root FFI data directory.
