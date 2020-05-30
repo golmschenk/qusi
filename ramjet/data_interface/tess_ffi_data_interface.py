@@ -237,6 +237,9 @@ class TessFfiDataInterface:
         Populates the SQL database based on the files found in the root FFI data directory.
         """
         print('Populating TESS FFI SQL database (this may take a while)...')
+        self.database_cursor.execute(f'PRAGMA cache_size = -{2e6}')  # Set the cache size to 2GB.
+        self.database_cursor.execute(f'PRAGMA synchronous = 0')  # Set the synchronous off for performance purposes.
+        self.database_connection.commit()
         path_glob = self.lightcurve_root_directory_path.glob('tesslcs_sector_*/tesslcs_tmag_*_*/tesslc_*.pkl')
         row_count = 0
         batch_paths = []

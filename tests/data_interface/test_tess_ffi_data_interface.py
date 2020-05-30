@@ -205,6 +205,10 @@ class TestTessFfiDataInterface:
         assert all(dataset_split_sizes.values == 2)
         expected_path_string_list = [f'{index}.pkl' for index in range(20)]
         assert sorted(expected_path_string_list) == sorted(list(results_data_frame['path'].values))
+        data_interface.database_cursor.execute('PRAGMA cache_size')
+        assert data_interface.database_cursor.fetchone()[0] == -2e6
+        data_interface.database_cursor.execute('PRAGMA synchronous')
+        assert data_interface.database_cursor.fetchone()[0] == 0
 
     def test_unique_columns_of_sql_table(self, data_interface):
         data_interface.create_database_lightcurve_table()
