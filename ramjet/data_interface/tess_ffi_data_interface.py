@@ -1,15 +1,14 @@
 """
 Code for interfacing with Brian Powell's TESS full frame image (FFI) data.
 """
-import pickle
 import re
+import pickle
 import sqlite3
-from sqlite3 import Cursor, Connection
-from uuid import uuid4
-
 import numpy as np
+from uuid import uuid4
 from enum import Enum
 from pathlib import Path
+from sqlite3 import Cursor, Connection
 from typing import Union, List, Iterable
 
 
@@ -215,21 +214,23 @@ class TessFfiDataInterface:
         """
         uuid = uuid4()
         magnitude = self.get_floor_magnitude_from_file_path(lightcurve_path)
-        self.database_cursor.execute(f'''INSERT INTO Lightcurve (uuid, path, magnitude, dataset_split)
-                                         VALUES ('{uuid}', '{str(lightcurve_path)}', {magnitude}, {dataset_split})''')
+        self.database_cursor.execute(
+            f'''INSERT INTO Lightcurve (uuid, path, magnitude, dataset_split)
+                VALUES ('{str(uuid)}', '{str(lightcurve_path)}', {magnitude}, {dataset_split})'''
+        )
 
     def insert_multiple_lightcurve_rows_from_paths_into_database(self, lightcurve_paths: List[Path],
                                                                  dataset_splits: List[int]):
         assert len(lightcurve_paths) == len(dataset_splits)
-        sql_values_string_list = []
+        sql_values_tuple_list = []
         for lightcurve_path, dataset_split in zip(lightcurve_paths, dataset_splits):
             uuid = uuid4()
             magnitude = self.get_floor_magnitude_from_file_path(lightcurve_path)
-            sql_values_string_list.append(f"('{uuid}', '{str(lightcurve_path)}', {magnitude}, {dataset_split})")
+            sql_values_tuple_list.append((str(uuid), str(lightcurve_path), magnitude, dataset_split))
 
         sql_query_string = f'''INSERT INTO Lightcurve (uuid, path, magnitude, dataset_split)
-                               VALUES {', '.join(sql_values_string_list)}'''
-        self.database_cursor.execute(sql_query_string)
+                               VALUES (?, ?, ? ,?)'''
+        self.database_cursor.executemany(sql_query_string, sql_values_tuple_list)
 
     def populate_sql_database(self):
         """
