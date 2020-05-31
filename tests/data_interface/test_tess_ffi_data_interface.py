@@ -169,15 +169,9 @@ class TestTessFfiDataInterface:
         assert query_result == [(uuid0, str(lightcurve_path0), 7, 2),
                                 (uuid1, str(lightcurve_path1), 14, 3)]
 
-    def test_uuid_is_primary_key_of_sql_database(self, data_interface):
-        data_interface.create_database_lightcurve_table()
-        # noinspection SqlResolve
-        data_interface.database_cursor.execute('SELECT name FROM pragma_table_info("Lightcurve") WHERE pk=1')
-        first_query_result = data_interface.database_cursor.fetchone()
-        assert first_query_result[0] == 'uuid'
-
     def test_indexes_of_sql_database(self, data_interface):
         data_interface.create_database_lightcurve_table()
+        data_interface.create_database_lightcurve_table_indexes()
         # noinspection SqlResolve
         results_data_frame = pd.read_sql_query('''SELECT index_list.seq AS index_sequence,
                                                          seqno as index_sequence_number,
@@ -212,17 +206,19 @@ class TestTessFfiDataInterface:
 
     def test_unique_columns_of_sql_table(self, data_interface):
         data_interface.create_database_lightcurve_table()
+        data_interface.create_database_lightcurve_table_indexes()
         # noinspection SqlResolve
-        results_data_frame = pd.read_sql_query('''SELECT index_list.seq AS index_sequence,
-                                                         seqno as index_sequence_number,
-                                                         index_info.name as column_name
+        results_data_frame = pd.read_sql_query('''SELECT *
                                                   FROM pragma_index_list("Lightcurve") index_list, 
-                                                       pragma_index_info(index_list.name) index_info
-                                                  WHERE index_list.origin='u';''',
+                                                       pragma_index_info(index_list.name) index_info''',
                                                data_interface.database_connection)
-        sorted_index_groups = results_data_frame.sort_values('index_sequence_number').groupby('index_sequence')
+        results_data_frame.columns = ['index_sequence', 'index_name', 'unique', 'origin', 'partial',
+                                      'index_sequence_number', 'column_id', 'column_name']
+        sorted_index_groups = results_data_frame[results_data_frame['unique'] == 1
+                                                 ].sort_values('index_sequence_number').groupby('index_sequence')
         column_lists_of_unique_indexes = list(sorted_index_groups['column_name'].apply(list).values)
         assert ['path'] in column_lists_of_unique_indexes
+        assert ['uuid'] in column_lists_of_unique_indexes
 
     def test_can_insert_multiple_sql_database_lightcurve_rows_from_paths(self, data_interface):
         data_interface.create_database_lightcurve_table()

@@ -175,7 +175,7 @@ class TessFfiDataInterface:
             file_path = str(file_path)
         # Search for Brian Powell's FFI path convention with directory structure sector, magnitude, target.
         # E.g., "tesslcs_sector_12/tesslcs_tmag_1_2/tesslc_290374453"
-        match = re.search(r'tesslcs_sector_\d+/tesslcs_tmag_(\d+)_\d+/tesslc_\d+', file_path)
+        match = re.search(r'tesslcs_sector_\d+(?:_104)?/tesslcs_tmag_(\d+)_\d+/tesslc_\d+', file_path)
         if match:
             return int(match.group(1))
         raise ValueError(f'{file_path} does not match a known pattern to extract magnitude from.')
@@ -185,23 +185,30 @@ class TessFfiDataInterface:
         Creates the SQL database table for the FFI dataset, with indexes.
         """
         self.database_cursor.execute('''CREATE TABLE Lightcurve (
-                                            uuid TEXT PRIMARY KEY,
-                                            path TEXT UNIQUE NOT NULL,
+                                            uuid TEXT NOT NULL,
+                                            path TEXT NOT NULL,
                                             magnitude INTEGER NOT NULL,
                                             dataset_split INTEGER NOT NULL
                                         )'''
                                      )
-        # Index for the use case of training on a specific magnitude, get the training dataset, then
-        # have data shuffled based on the uuid.
-        self.database_cursor.execute('''CREATE INDEX Lightcurve_magnitude_dataset_split_uuid_index
-                                        ON Lightcurve (magnitude, dataset_split, uuid)''')
+        self.database_connection.commit()
+
+    def create_database_lightcurve_table_indexes(self):
+        print('Creating indexes...')
+        # Index for the use case of having the entire dataset shuffled.
+        self.database_cursor.execute('''CREATE UNIQUE INDEX Lightcurve_uuid_index
+                                        ON Lightcurve (uuid)''')
         # Index for the use case of training on the entire dataset, get the training dataset, then
         # have data shuffled based on the uuid.
         self.database_cursor.execute('''CREATE INDEX Lightcurve_dataset_split_uuid_index
                                         ON Lightcurve (dataset_split, uuid)''')
-        # Index for the use case of having the entire dataset shuffled.
-        self.database_cursor.execute('''CREATE INDEX Lightcurve_uuid_index
-                                        ON Lightcurve (uuid)''')
+        # Index for the use case of training on a specific magnitude, get the training dataset, then
+        # have data shuffled based on the uuid.
+        self.database_cursor.execute('''CREATE INDEX Lightcurve_magnitude_dataset_split_uuid_index
+                                        ON Lightcurve (magnitude, dataset_split, uuid)''')
+        # Paths should be unique.
+        self.database_cursor.execute('''CREATE UNIQUE INDEX Lightcurve_path_index
+                                        ON Lightcurve (path)''')
         self.database_connection.commit()
 
     def insert_database_lightcurve_row_from_path(self, lightcurve_path: Path, dataset_split: int):
@@ -237,8 +244,6 @@ class TessFfiDataInterface:
         Populates the SQL database based on the files found in the root FFI data directory.
         """
         print('Populating TESS FFI SQL database (this may take a while)...')
-        self.database_cursor.execute(f'PRAGMA cache_size = -{2e6}')  # Set the cache size to 2GB.
-        self.database_cursor.execute(f'PRAGMA synchronous = 0')  # Set the synchronous off for performance purposes.
         self.database_connection.commit()
         path_glob = self.lightcurve_root_directory_path.glob('tesslcs_sector_*/tesslcs_tmag_*_*/tesslc_*.pkl')
         row_count = 0
@@ -261,7 +266,10 @@ class TessFfiDataInterface:
 
 if __name__ == '__main__':
     tess_ffi_data_interface = TessFfiDataInterface()
+    tess_ffi_data_interface.database_cursor.execute(f'PRAGMA cache_size = -{2e6}')  # Set the cache size to 2GB.
+    tess_ffi_data_interface.database_connection.commit()
     tess_ffi_data_interface.database_cursor.execute('DROP TABLE IF EXISTS Lightcurve')
     tess_ffi_data_interface.database_connection.commit()
     tess_ffi_data_interface.create_database_lightcurve_table()
     tess_ffi_data_interface.populate_sql_database()
+    tess_ffi_data_interface.create_database_lightcurve_table_indexes()
