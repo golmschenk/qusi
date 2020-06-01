@@ -266,3 +266,24 @@ class TestTessFfiDataInterface:
         assert len(set(training_data_paths_list).intersection(set(validation_data_paths_list))) == 0
         assert len(set(training_data_paths_list).intersection(set(testing_data_paths_list))) == 0
         assert len(set(validation_data_paths_list).intersection(set(testing_data_paths_list))) == 0
+
+    def test_can_retrieve_training_path_generator_filtered_by_magnitude_from_sql_table(
+            self, data_interface_with_sql_rows):
+        paths_generator = data_interface_with_sql_rows.get_paths_generator_from_sql_table(
+            dataset_splits=[0, 1, 2, 3, 4, 5, 6, 7], magnitudes=[10, 11], repeat=False)
+        paths_list = list(paths_generator)
+        # 2 of the training dataset split is 12th magnitude.
+        assert len(paths_list) == 14
+        assert '0.pkl' in paths_list
+        assert '3.pkl' in paths_list
+        assert '4.pkl' not in paths_list  # Excluded because 12th magnitude.
+        assert '8.pkl' not in paths_list  # Excluded because dataset split 8.
+
+    def test_can_retrieve_alls_path_generator_from_sql_table(self, data_interface_with_sql_rows):
+        paths_generator = data_interface_with_sql_rows.get_paths_generator_from_sql_table(repeat=False)
+        paths_list = list(paths_generator)
+        assert len(paths_list) == 20
+        assert '0.pkl' in paths_list
+        assert '3.pkl' in paths_list
+        assert '4.pkl' in paths_list
+        assert '8.pkl' in paths_list

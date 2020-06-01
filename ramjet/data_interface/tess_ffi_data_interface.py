@@ -264,14 +264,24 @@ class TessFfiDataInterface:
         self.database_connection.commit()
         print(f'TESS FFI SQL database populated. {row_count} rows added.')
 
-    def get_paths_generator_from_sql_table(self, dataset_splits: List[int], repeat=True):
+    def get_paths_generator_from_sql_table(self, dataset_splits: Union[List[int], None] = None,
+                                           magnitudes: Union[List[int], None] = None,
+                                           repeat=True):
         batch_size = 1000
-        dataset_split_constraint = f'dataset_split IN ({", ".join(map(str, dataset_splits))})'
+        if dataset_splits is not None:
+            dataset_split_condition = f'dataset_split IN ({", ".join(map(str, dataset_splits))})'
+        else:
+            dataset_split_condition = 'TRUE'
+        if magnitudes is not None:
+            magnitude_condition = f'magnitude IN ({", ".join(map(str, magnitudes))})'
+        else:
+            magnitude_condition = 'TRUE'
         def path_generator():
             while True:
                 self.database_cursor.execute(f'''SELECT path, uuid
                                                  FROM Lightcurve
-                                                 WHERE {dataset_split_constraint}
+                                                 WHERE {dataset_split_condition} AND
+                                                       {magnitude_condition}
                                                  ORDER BY uuid
                                                  LIMIT {batch_size}''')
                 batch = self.database_cursor.fetchall()
@@ -282,13 +292,15 @@ class TessFfiDataInterface:
                     self.database_cursor.execute(f'''SELECT path, uuid
                                                      FROM Lightcurve
                                                      WHERE uuid > '{previous_batch_final_uuid}' AND
-                                                           {dataset_split_constraint}
+                                                           {dataset_split_condition} AND
+                                                           {magnitude_condition}
                                                      ORDER BY uuid
                                                      LIMIT {batch_size}''')
                     batch = self.database_cursor.fetchall()
                 if not repeat:
                     break
         return path_generator()
+
 
 if __name__ == '__main__':
     tess_ffi_data_interface = TessFfiDataInterface()
