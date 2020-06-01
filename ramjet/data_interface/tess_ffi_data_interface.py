@@ -1,7 +1,6 @@
 """
 Code for interfacing with Brian Powell's TESS full frame image (FFI) data.
 """
-import itertools
 import re
 import pickle
 import sqlite3
@@ -37,11 +36,6 @@ class TessFfiDataInterface:
                  database_path: Union[Path, str] = Path('data/tess_ffi_database.sqlite3')):
         self.lightcurve_root_directory_path: Path = lightcurve_root_directory_path
         self.database_path: Union[Path, str] = database_path
-        self.database_connection: Connection = sqlite3.connect(str(database_path))
-        self.database_cursor: Cursor = self.database_connection.cursor()
-
-    def __del__(self):
-        self.database_connection.close()
 
     @staticmethod
     def load_fluxes_and_times_from_pickle_file(file_path: Union[Path, str],
@@ -181,53 +175,66 @@ class TessFfiDataInterface:
             return int(match.group(1))
         raise ValueError(f'{file_path} does not match a known pattern to extract magnitude from.')
 
-    def create_database_lightcurve_table(self):
+    @staticmethod
+    def create_database_lightcurve_table(database_connection: Connection):
         """
         Creates the SQL database table for the FFI dataset, with indexes.
-        """
-        self.database_cursor.execute('''CREATE TABLE Lightcurve (
-                                            uuid TEXT NOT NULL,
-                                            path TEXT NOT NULL,
-                                            magnitude INTEGER NOT NULL,
-                                            dataset_split INTEGER NOT NULL
-                                        )'''
-                                     )
-        self.database_connection.commit()
 
-    def create_database_lightcurve_table_indexes(self):
+        :param database_connection: The database connection to perform the operations on.
+        """
+        database_cursor = database_connection.cursor()
+        database_cursor.execute('''CREATE TABLE Lightcurve (
+                                       uuid TEXT NOT NULL,
+                                       path TEXT NOT NULL,
+                                       magnitude INTEGER NOT NULL,
+                                       dataset_split INTEGER NOT NULL)'''
+                                )
+        database_connection.commit()
+
+    @staticmethod
+    def create_database_lightcurve_table_indexes(database_connection: Connection):
+        """
+        Creates the indexes for the SQL table.
+
+        :param database_connection: The database connection to perform the operations on.
+        """
+        database_cursor = database_connection.cursor()
         print('Creating indexes...')
         # Index for the use case of having the entire dataset shuffled.
-        self.database_cursor.execute('''CREATE UNIQUE INDEX Lightcurve_uuid_index
+        database_cursor.execute('''CREATE UNIQUE INDEX Lightcurve_uuid_index
                                         ON Lightcurve (uuid)''')
         # Index for the use case of training on the entire dataset, get the training dataset, then
         # have data shuffled based on the uuid.
-        self.database_cursor.execute('''CREATE INDEX Lightcurve_dataset_split_uuid_index
+        database_cursor.execute('''CREATE INDEX Lightcurve_dataset_split_uuid_index
                                         ON Lightcurve (dataset_split, uuid)''')
         # Index for the use case of training on a specific magnitude, get the training dataset, then
         # have data shuffled based on the uuid.
-        self.database_cursor.execute('''CREATE INDEX Lightcurve_magnitude_dataset_split_uuid_index
+        database_cursor.execute('''CREATE INDEX Lightcurve_magnitude_dataset_split_uuid_index
                                         ON Lightcurve (magnitude, dataset_split, uuid)''')
         # Paths should be unique.
-        self.database_cursor.execute('''CREATE UNIQUE INDEX Lightcurve_path_index
+        database_cursor.execute('''CREATE UNIQUE INDEX Lightcurve_path_index
                                         ON Lightcurve (path)''')
-        self.database_connection.commit()
+        database_connection.commit()
 
-    def insert_database_lightcurve_row_from_path(self, lightcurve_path: Path, dataset_split: int):
+    def insert_database_lightcurve_row_from_path(self, database_cursor: Cursor, lightcurve_path: Path,
+                                                 dataset_split: int):
         """
         Inserts the given lightcurve path into the SQL database with a dataset split tag.
 
+        :param database_cursor: The cursor of the database to perform the operations on.
         :param lightcurve_path: The path of the lightcurve to be added.
         :param dataset_split: The dataset split this path belongs to. That is, an integer which can be used to split
                               the data into training, validation, and testing. Most often 0-9 to provide 10% splits.
         """
         uuid = uuid4()
         magnitude = self.get_floor_magnitude_from_file_path(lightcurve_path)
-        self.database_cursor.execute(
+        database_cursor.execute(
             f'''INSERT INTO Lightcurve (uuid, path, magnitude, dataset_split)
                 VALUES ('{str(uuid)}', '{str(lightcurve_path)}', {magnitude}, {dataset_split})'''
         )
 
-    def insert_multiple_lightcurve_rows_from_paths_into_database(self, lightcurve_paths: List[Path],
+    def insert_multiple_lightcurve_rows_from_paths_into_database(self, database_cursor: Cursor,
+                                                                 lightcurve_paths: List[Path],
                                                                  dataset_splits: List[int]):
         assert len(lightcurve_paths) == len(dataset_splits)
         sql_values_tuple_list = []
@@ -238,14 +245,14 @@ class TessFfiDataInterface:
 
         sql_query_string = f'''INSERT INTO Lightcurve (uuid, path, magnitude, dataset_split)
                                VALUES (?, ?, ? ,?)'''
-        self.database_cursor.executemany(sql_query_string, sql_values_tuple_list)
+        database_cursor.executemany(sql_query_string, sql_values_tuple_list)
 
-    def populate_sql_database(self):
+    def populate_sql_database(self, database_connection: Connection):
         """
         Populates the SQL database based on the files found in the root FFI data directory.
         """
         print('Populating TESS FFI SQL database (this may take a while)...')
-        self.database_connection.commit()
+        database_cursor = database_connection.cursor()
         path_glob = self.lightcurve_root_directory_path.glob('tesslcs_sector_*/tesslcs_tmag_*_*/tesslc_*.pkl')
         row_count = 0
         batch_paths = []
@@ -255,13 +262,15 @@ class TessFfiDataInterface:
             batch_dataset_splits.append(index % 10)
             row_count += 1
             if index % 1000 == 0:
-                self.insert_multiple_lightcurve_rows_from_paths_into_database(batch_paths, batch_dataset_splits)
+                self.insert_multiple_lightcurve_rows_from_paths_into_database(database_cursor, batch_paths,
+                                                                              batch_dataset_splits)
                 batch_paths = []
                 batch_dataset_splits = []
                 print(f'{index} rows inserted...', end='\r')
         if len(batch_paths) > 0:
-            self.insert_multiple_lightcurve_rows_from_paths_into_database(batch_paths, batch_dataset_splits)
-        self.database_connection.commit()
+            self.insert_multiple_lightcurve_rows_from_paths_into_database(database_cursor, batch_paths,
+                                                                          batch_dataset_splits)
+        database_connection.commit()
         print(f'TESS FFI SQL database populated. {row_count} rows added.')
 
     def paths_generator_from_sql_table(self, dataset_splits: Union[List[int], None] = None,
@@ -276,7 +285,7 @@ class TessFfiDataInterface:
         :return: The generator.
         """
         batch_size = 1000
-        database_cursor = self.database_connection.cursor()
+        database_cursor = sqlite3.connect(str(self.database_path), uri=True, check_same_thread=False).cursor()
         if dataset_splits is not None:
             dataset_split_condition = f'dataset_split IN ({", ".join(map(str, dataset_splits))})'
         else:
@@ -311,10 +320,13 @@ class TessFfiDataInterface:
 
 if __name__ == '__main__':
     tess_ffi_data_interface = TessFfiDataInterface()
-    tess_ffi_data_interface.database_cursor.execute(f'PRAGMA cache_size = -{2e6}')  # Set the cache size to 2GB.
-    tess_ffi_data_interface.database_connection.commit()
-    tess_ffi_data_interface.database_cursor.execute('DROP TABLE IF EXISTS Lightcurve')
-    tess_ffi_data_interface.database_connection.commit()
-    tess_ffi_data_interface.create_database_lightcurve_table()
-    tess_ffi_data_interface.populate_sql_database()
-    tess_ffi_data_interface.create_database_lightcurve_table_indexes()
+    database_connection_ = sqlite3.connect(tess_ffi_data_interface.database_path, uri=True)
+    database_cursor_ = database_connection_.cursor()
+    database_cursor_.execute(f'PRAGMA cache_size = -{2e6}')  # Set the cache size to 2GB.
+    database_connection_.commit()
+    database_cursor_.execute('DROP TABLE IF EXISTS Lightcurve')
+    database_connection_.commit()
+    tess_ffi_data_interface.create_database_lightcurve_table(database_connection_)
+    tess_ffi_data_interface.populate_sql_database(database_connection_)
+    tess_ffi_data_interface.create_database_lightcurve_table_indexes(database_connection_)
+    database_connection_.close()
