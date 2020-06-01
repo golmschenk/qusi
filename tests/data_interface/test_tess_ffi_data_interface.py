@@ -23,6 +23,22 @@ class TestTessFfiDataInterface:
         return data_interface
 
     @pytest.fixture
+    def data_interface_with_sql_rows(self) -> TessFfiDataInterface:
+        """
+        Sets up the data interfaced for use in a test.
+
+        :return: The data interface.
+        """
+        data_interface = TessFfiDataInterface(database_path=':memory:')
+        data_interface.create_database_lightcurve_table()
+        data_interface.create_database_lightcurve_table_indexes()
+        data_interface.get_floor_magnitude_from_file_path = Mock(side_effect=[10, 10, 11, 11, 12] * 4)
+        lightcurve_paths = [Path(f'{index}.pkl') for index in range(20)]
+        dataset_splits = list(range(10)) * 2
+        data_interface.insert_multiple_lightcurve_rows_from_paths_into_database(lightcurve_paths, dataset_splits)
+        return data_interface
+
+    @pytest.fixture
     def ffi_pickle_contents(self) -> Tuple[int, float, float, float,
                                            np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """
@@ -199,10 +215,6 @@ class TestTessFfiDataInterface:
         assert all(dataset_split_sizes.values == 2)
         expected_path_string_list = [f'{index}.pkl' for index in range(20)]
         assert sorted(expected_path_string_list) == sorted(list(results_data_frame['path'].values))
-        data_interface.database_cursor.execute('PRAGMA cache_size')
-        assert data_interface.database_cursor.fetchone()[0] == -2e6
-        data_interface.database_cursor.execute('PRAGMA synchronous')
-        assert data_interface.database_cursor.fetchone()[0] == 0
 
     def test_unique_columns_of_sql_table(self, data_interface):
         data_interface.create_database_lightcurve_table()
@@ -234,3 +246,23 @@ class TestTessFfiDataInterface:
         query_result = data_interface.database_cursor.fetchall()
         assert query_result == [(uuid0, str(lightcurve_path0), 7, 2),
                                 (uuid1, str(lightcurve_path1), 14, 3)]
+
+    def test_can_retrieve_training_and_validation_path_generator_from_sql_table(self, data_interface_with_sql_rows):
+        training_data_paths = data_interface_with_sql_rows.get_paths_generator_from_sql_table(
+            dataset_splits=[0, 1, 2, 3, 4, 5, 6, 7], repeat=False)
+        validation_data_paths = data_interface_with_sql_rows.get_paths_generator_from_sql_table(
+            dataset_splits=[8], repeat=False)
+        testing_data_paths = data_interface_with_sql_rows.get_paths_generator_from_sql_table(
+            dataset_splits=[9], repeat=False)
+        training_data_paths_list = list(training_data_paths)
+        validation_data_paths_list = list(validation_data_paths)
+        testing_data_paths_list = list(testing_data_paths)
+        assert len(training_data_paths_list) == 16
+        assert len(validation_data_paths_list) == 2
+        assert len(testing_data_paths_list) == 2
+        assert '0.pkl' in training_data_paths_list
+        assert '18.pkl' in validation_data_paths_list
+        assert '9.pkl' in testing_data_paths_list
+        assert len(set(training_data_paths_list).intersection(set(validation_data_paths_list))) == 0
+        assert len(set(training_data_paths_list).intersection(set(testing_data_paths_list))) == 0
+        assert len(set(validation_data_paths_list).intersection(set(testing_data_paths_list))) == 0

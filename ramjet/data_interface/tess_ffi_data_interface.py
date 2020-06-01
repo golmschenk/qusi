@@ -1,6 +1,7 @@
 """
 Code for interfacing with Brian Powell's TESS full frame image (FFI) data.
 """
+import itertools
 import re
 import pickle
 import sqlite3
@@ -263,6 +264,31 @@ class TessFfiDataInterface:
         self.database_connection.commit()
         print(f'TESS FFI SQL database populated. {row_count} rows added.')
 
+    def get_paths_generator_from_sql_table(self, dataset_splits: List[int], repeat=True):
+        batch_size = 1000
+        dataset_split_constraint = f'dataset_split IN ({", ".join(map(str, dataset_splits))})'
+        def path_generator():
+            while True:
+                self.database_cursor.execute(f'''SELECT path, uuid
+                                                 FROM Lightcurve
+                                                 WHERE {dataset_split_constraint}
+                                                 ORDER BY uuid
+                                                 LIMIT {batch_size}''')
+                batch = self.database_cursor.fetchall()
+                while batch:
+                    for row in batch:
+                        yield row[0]
+                    previous_batch_final_uuid = batch[-1][1]
+                    self.database_cursor.execute(f'''SELECT path, uuid
+                                                     FROM Lightcurve
+                                                     WHERE uuid > '{previous_batch_final_uuid}' AND
+                                                           {dataset_split_constraint}
+                                                     ORDER BY uuid
+                                                     LIMIT {batch_size}''')
+                    batch = self.database_cursor.fetchall()
+                if not repeat:
+                    break
+        return path_generator()
 
 if __name__ == '__main__':
     tess_ffi_data_interface = TessFfiDataInterface()
