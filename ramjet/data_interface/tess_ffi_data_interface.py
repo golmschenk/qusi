@@ -276,6 +276,7 @@ class TessFfiDataInterface:
         :return: The generator.
         """
         batch_size = 1000
+        database_cursor = self.database_connection.cursor()
         if dataset_splits is not None:
             dataset_split_condition = f'dataset_split IN ({", ".join(map(str, dataset_splits))})'
         else:
@@ -285,25 +286,25 @@ class TessFfiDataInterface:
         else:
             magnitude_condition = 'TRUE'
         while True:
-            self.database_cursor.execute(f'''SELECT path, uuid
-                                             FROM Lightcurve
-                                             WHERE {dataset_split_condition} AND
-                                                   {magnitude_condition}
-                                             ORDER BY uuid
-                                             LIMIT {batch_size}''')
-            batch = self.database_cursor.fetchall()
+            database_cursor.execute(f'''SELECT path, uuid
+                                        FROM Lightcurve
+                                        WHERE {dataset_split_condition} AND
+                                              {magnitude_condition}
+                                        ORDER BY uuid
+                                        LIMIT {batch_size}''')
+            batch = database_cursor.fetchall()
             while batch:
                 for row in batch:
                     yield Path(self.lightcurve_root_directory_path.joinpath(row[0]))
                 previous_batch_final_uuid = batch[-1][1]
-                self.database_cursor.execute(f'''SELECT path, uuid
-                                                 FROM Lightcurve
-                                                 WHERE uuid > '{previous_batch_final_uuid}' AND
-                                                       {dataset_split_condition} AND
-                                                       {magnitude_condition}
-                                                 ORDER BY uuid
-                                                 LIMIT {batch_size}''')
-                batch = self.database_cursor.fetchall()
+                database_cursor.execute(f'''SELECT path, uuid
+                                            FROM Lightcurve
+                                            WHERE uuid > '{previous_batch_final_uuid}' AND
+                                                  {dataset_split_condition} AND
+                                                  {magnitude_condition}
+                                            ORDER BY uuid
+                                            LIMIT {batch_size}''')
+                batch = database_cursor.fetchall()
             if not repeat:
                 break
 

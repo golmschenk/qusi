@@ -33,7 +33,9 @@ class TestTessFfiDataInterface:
         data_interface.get_floor_magnitude_from_file_path = Mock(side_effect=[10, 10, 11, 11, 12] * 4)
         lightcurve_paths = [Path(f'{index}.pkl') for index in range(20)]
         dataset_splits = list(range(10)) * 2
-        data_interface.insert_multiple_lightcurve_rows_from_paths_into_database(lightcurve_paths, dataset_splits)
+        with patch.object(ramjet.data_interface.tess_ffi_data_interface, 'uuid4') as mock_uuid4:
+            mock_uuid4.side_effect = [f'{index:02}' for index in range(20)]
+            data_interface.insert_multiple_lightcurve_rows_from_paths_into_database(lightcurve_paths, dataset_splits)
         return data_interface
 
     @pytest.fixture
@@ -301,3 +303,20 @@ class TestTessFfiDataInterface:
                 _ = next(paths_generator_with_repeat)
         except StopIteration:
             pytest.fail('Generator should have repeated indefinitely, but did not.')
+
+    def test_can_iterate_over_training_and_validation_path_generators_from_sql_table_at_the_same_time(
+            self, data_interface_with_sql_rows):
+        training_data_path_generator = data_interface_with_sql_rows.paths_generator_from_sql_table(
+            dataset_splits=[0, 1, 2, 3, 4, 5, 6, 7])
+        validation_data_path_generator = data_interface_with_sql_rows.paths_generator_from_sql_table(
+            dataset_splits=[8])
+        training_path_list = []
+        validation_path_list = []
+        for _ in range(6):
+            training_path_list.append(next(training_data_path_generator))
+            validation_path_list.append(next(validation_data_path_generator))
+        data_directory = data_interface_with_sql_rows.lightcurve_root_directory_path
+        expected_training_path_list = [data_directory.joinpath(f'{index}.pkl') for index in [0, 1, 2, 3, 4, 5]]
+        assert sorted(training_path_list) == sorted(expected_training_path_list)
+        expected_validation_path_list = [data_directory.joinpath(f'{index}.pkl') for index in [8, 8, 8, 18, 18, 18]]
+        assert sorted(validation_path_list) == sorted(expected_validation_path_list)
