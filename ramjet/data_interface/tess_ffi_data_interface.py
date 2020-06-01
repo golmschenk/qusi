@@ -10,7 +10,7 @@ from uuid import uuid4
 from enum import Enum
 from pathlib import Path
 from sqlite3 import Cursor, Connection
-from typing import Union, List, Iterable
+from typing import Union, List, Iterable, Generator
 
 
 class FfiDataIndexes(Enum):
@@ -264,9 +264,17 @@ class TessFfiDataInterface:
         self.database_connection.commit()
         print(f'TESS FFI SQL database populated. {row_count} rows added.')
 
-    def get_paths_generator_from_sql_table(self, dataset_splits: Union[List[int], None] = None,
-                                           magnitudes: Union[List[int], None] = None,
-                                           repeat=True):
+    def paths_generator_from_sql_table(self, dataset_splits: Union[List[int], None] = None,
+                                       magnitudes: Union[List[int], None] = None, repeat=True
+                                       ) -> Generator[Path, None, None]:
+        """
+        Creates a generator for all the paths from the SQL table, with optional filters.
+
+        :param dataset_splits: The dataset splits to filter on. For splitting training, testing, etc.
+        :param magnitudes: The target floor magnitudes to filter on.
+        :param repeat: Whether or not the generator should repeat indefinitely.
+        :return: The generator.
+        """
         batch_size = 1000
         if dataset_splits is not None:
             dataset_split_condition = f'dataset_split IN ({", ".join(map(str, dataset_splits))})'
@@ -276,30 +284,28 @@ class TessFfiDataInterface:
             magnitude_condition = f'magnitude IN ({", ".join(map(str, magnitudes))})'
         else:
             magnitude_condition = 'TRUE'
-        def path_generator():
-            while True:
+        while True:
+            self.database_cursor.execute(f'''SELECT path, uuid
+                                             FROM Lightcurve
+                                             WHERE {dataset_split_condition} AND
+                                                   {magnitude_condition}
+                                             ORDER BY uuid
+                                             LIMIT {batch_size}''')
+            batch = self.database_cursor.fetchall()
+            while batch:
+                for row in batch:
+                    yield Path(self.lightcurve_root_directory_path.joinpath(row[0]))
+                previous_batch_final_uuid = batch[-1][1]
                 self.database_cursor.execute(f'''SELECT path, uuid
                                                  FROM Lightcurve
-                                                 WHERE {dataset_split_condition} AND
+                                                 WHERE uuid > '{previous_batch_final_uuid}' AND
+                                                       {dataset_split_condition} AND
                                                        {magnitude_condition}
                                                  ORDER BY uuid
                                                  LIMIT {batch_size}''')
                 batch = self.database_cursor.fetchall()
-                while batch:
-                    for row in batch:
-                        yield row[0]
-                    previous_batch_final_uuid = batch[-1][1]
-                    self.database_cursor.execute(f'''SELECT path, uuid
-                                                     FROM Lightcurve
-                                                     WHERE uuid > '{previous_batch_final_uuid}' AND
-                                                           {dataset_split_condition} AND
-                                                           {magnitude_condition}
-                                                     ORDER BY uuid
-                                                     LIMIT {batch_size}''')
-                    batch = self.database_cursor.fetchall()
-                if not repeat:
-                    break
-        return path_generator()
+            if not repeat:
+                break
 
 
 if __name__ == '__main__':

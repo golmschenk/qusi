@@ -1,10 +1,8 @@
-import sqlite3
-from pathlib import Path
-
 import pytest
 import numpy as np
 import pandas as pd
 from typing import Tuple
+from pathlib import Path
 from unittest.mock import patch, Mock
 
 import ramjet.data_interface.tess_ffi_data_interface
@@ -248,42 +246,57 @@ class TestTessFfiDataInterface:
                                 (uuid1, str(lightcurve_path1), 14, 3)]
 
     def test_can_retrieve_training_and_validation_path_generator_from_sql_table(self, data_interface_with_sql_rows):
-        training_data_paths = data_interface_with_sql_rows.get_paths_generator_from_sql_table(
+        training_data_paths = data_interface_with_sql_rows.paths_generator_from_sql_table(
             dataset_splits=[0, 1, 2, 3, 4, 5, 6, 7], repeat=False)
-        validation_data_paths = data_interface_with_sql_rows.get_paths_generator_from_sql_table(
+        validation_data_paths = data_interface_with_sql_rows.paths_generator_from_sql_table(
             dataset_splits=[8], repeat=False)
-        testing_data_paths = data_interface_with_sql_rows.get_paths_generator_from_sql_table(
+        testing_data_paths = data_interface_with_sql_rows.paths_generator_from_sql_table(
             dataset_splits=[9], repeat=False)
         training_data_paths_list = list(training_data_paths)
         validation_data_paths_list = list(validation_data_paths)
         testing_data_paths_list = list(testing_data_paths)
+        data_directory = data_interface_with_sql_rows.lightcurve_root_directory_path
         assert len(training_data_paths_list) == 16
         assert len(validation_data_paths_list) == 2
         assert len(testing_data_paths_list) == 2
-        assert '0.pkl' in training_data_paths_list
-        assert '18.pkl' in validation_data_paths_list
-        assert '9.pkl' in testing_data_paths_list
+        assert data_directory.joinpath('0.pkl') in training_data_paths_list
+        assert data_directory.joinpath('18.pkl') in validation_data_paths_list
+        assert data_directory.joinpath('9.pkl') in testing_data_paths_list
         assert len(set(training_data_paths_list).intersection(set(validation_data_paths_list))) == 0
         assert len(set(training_data_paths_list).intersection(set(testing_data_paths_list))) == 0
         assert len(set(validation_data_paths_list).intersection(set(testing_data_paths_list))) == 0
 
     def test_can_retrieve_training_path_generator_filtered_by_magnitude_from_sql_table(
             self, data_interface_with_sql_rows):
-        paths_generator = data_interface_with_sql_rows.get_paths_generator_from_sql_table(
+        paths_generator = data_interface_with_sql_rows.paths_generator_from_sql_table(
             dataset_splits=[0, 1, 2, 3, 4, 5, 6, 7], magnitudes=[10, 11], repeat=False)
         paths_list = list(paths_generator)
         # 2 of the training dataset split is 12th magnitude.
         assert len(paths_list) == 14
-        assert '0.pkl' in paths_list
-        assert '3.pkl' in paths_list
-        assert '4.pkl' not in paths_list  # Excluded because 12th magnitude.
-        assert '8.pkl' not in paths_list  # Excluded because dataset split 8.
+        data_directory = data_interface_with_sql_rows.lightcurve_root_directory_path
+        assert data_directory.joinpath('0.pkl') in paths_list
+        assert data_directory.joinpath('3.pkl') in paths_list
+        assert data_directory.joinpath('4.pkl') not in paths_list  # Excluded because 12th magnitude.
+        assert data_directory.joinpath('8.pkl') not in paths_list  # Excluded because dataset split 8.
 
-    def test_can_retrieve_alls_path_generator_from_sql_table(self, data_interface_with_sql_rows):
-        paths_generator = data_interface_with_sql_rows.get_paths_generator_from_sql_table(repeat=False)
+    def test_can_retrieve_all_paths_generator_from_sql_table(self, data_interface_with_sql_rows):
+        paths_generator = data_interface_with_sql_rows.paths_generator_from_sql_table(repeat=False)
         paths_list = list(paths_generator)
         assert len(paths_list) == 20
-        assert '0.pkl' in paths_list
-        assert '3.pkl' in paths_list
-        assert '4.pkl' in paths_list
-        assert '8.pkl' in paths_list
+        data_directory = data_interface_with_sql_rows.lightcurve_root_directory_path
+        assert data_directory.joinpath('0.pkl') in paths_list
+        assert data_directory.joinpath('3.pkl') in paths_list
+        assert data_directory.joinpath('4.pkl') in paths_list
+        assert data_directory.joinpath('8.pkl') in paths_list
+
+    def test_all_paths_generator_from_sql_table_can_be_set_to_repeat(self, data_interface_with_sql_rows):
+        paths_generator_without_repeat = data_interface_with_sql_rows.paths_generator_from_sql_table(repeat=False)
+        with pytest.raises(StopIteration):
+            for _ in range(50):
+                _ = next(paths_generator_without_repeat)
+        paths_generator_with_repeat = data_interface_with_sql_rows.paths_generator_from_sql_table(repeat=True)
+        try:
+            for _ in range(50):
+                _ = next(paths_generator_with_repeat)
+        except StopIteration:
+            pytest.fail('Generator should have repeated indefinitely, but did not.')
