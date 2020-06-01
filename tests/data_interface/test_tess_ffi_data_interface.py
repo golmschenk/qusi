@@ -79,7 +79,9 @@ class TestTessFfiDataInterface:
 
     def test_can_create_repeating_pickle_glob_dictionary_generator(self, data_interface):
         class MockPath(type(Path())):
+            """A mock path allowing for read-only method overrides."""
             def glob(self, pattern):
+                """A mock of the glob method."""
                 if self.name == 'a':
                     return (item for item in ['1.pkl', '2.pkl'])
                 elif self.name == 'b':
@@ -105,7 +107,6 @@ class TestTessFfiDataInterface:
         ]
         magnitude_filtered_paths = list(data_interface.glob_pickle_path_for_magnitude(ffi_root_directory, 12))
         assert sorted(magnitude_filtered_paths) == sorted(expected_paths)
-
 
     @patch.object(ramjet.data_interface.tess_ffi_data_interface.pickle, 'load')
     @patch.object(Path, 'open')

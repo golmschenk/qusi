@@ -250,6 +250,6 @@ class LightcurveDatabase(ABC):
                 resolved_example_paths = list_or_generator_factory()
             else:  # Otherwise, the paths are already a resolved list, and can be directly used.
                 resolved_example_paths = list_or_generator_factory
-            for path_string in map(str, resolved_example_paths):
-                yield path_string
+            for path in resolved_example_paths:
+                yield str(path)
         return tf.data.Dataset.from_generator(paths_to_strings_generator, output_types=tf.string)
