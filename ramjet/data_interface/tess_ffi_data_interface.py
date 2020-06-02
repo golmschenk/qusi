@@ -201,7 +201,7 @@ class TessFfiDataInterface:
         """
         print('Populating TESS FFI SQL database (this may take a while)...')
         database_cursor = database_connection.cursor()
-        path_glob = self.lightcurve_root_directory_path.glob('tesslcs_sector_*/tesslcs_tmag_*_*/tesslc_*.pkl')
+        path_glob = self.lightcurve_root_directory_path.glob('tesslcs_sector_*_104/tesslcs_tmag_*_*/tesslc_*.pkl')
         row_count = 0
         batch_paths = []
         batch_dataset_splits = []
