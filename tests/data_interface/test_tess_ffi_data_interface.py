@@ -112,6 +112,19 @@ class TestTessFfiDataInterface:
         assert tic_id2 == 12345678
         assert sector2 is None
 
+    def test_can_get_tic_id_and_sector_from_104_ffi_style_file_path(self, data_interface):
+        tic_id0, sector0 = data_interface.get_tic_id_and_sector_from_file_path(
+            'tesslcs_sector_12_104/tesslcs_tmag_1_2/tesslc_290374453')
+        assert tic_id0 == 290374453
+        assert sector0 == 12
+        tic_id1, sector1 = data_interface.get_tic_id_and_sector_from_file_path(
+            'data/ffi_microlensing_database/lightcurves/tesslcs_sector_1_104/tesslcs_tmag_12_13/tesslc_1234567.pkl')
+        assert tic_id1 == 1234567
+        assert sector1 == 1
+        tic_id2, sector2 = data_interface.get_tic_id_and_sector_from_file_path('tesslc_12345678.pkl')
+        assert tic_id2 == 12345678
+        assert sector2 is None
+
     @patch.object(ramjet.data_interface.tess_ffi_data_interface.sqlite3, 'connect')
     def test_has_a_path_to_lightcurves_directory_with_default(self, mock_connect):
         mock_connect.return_value = Mock(cursor=Mock())
@@ -144,6 +157,16 @@ class TestTessFfiDataInterface:
         assert magnitude0 == 2
         magnitude1 = data_interface.get_floor_magnitude_from_file_path(
             'data/ffi_microlensing_database/lightcurves/tesslcs_sector_1/tesslcs_tmag_14_15/tesslc_1234567.pkl')
+        assert magnitude1 == 14
+        with pytest.raises(ValueError):
+            data_interface.get_floor_magnitude_from_file_path('tesslc_12345678.pkl')
+
+    def test_can_get_floor_magnitude_from_104_ffi_style_file_path(self, data_interface):
+        magnitude0 = data_interface.get_floor_magnitude_from_file_path(
+            'tesslcs_sector_12_104/tesslcs_tmag_2_3/tesslc_290374453')
+        assert magnitude0 == 2
+        magnitude1 = data_interface.get_floor_magnitude_from_file_path(
+            'data/ffi_microlensing_database/lightcurves/tesslcs_sector_1_104/tesslcs_tmag_14_15/tesslc_1234567.pkl')
         assert magnitude1 == 14
         with pytest.raises(ValueError):
             data_interface.get_floor_magnitude_from_file_path('tesslc_12345678.pkl')
