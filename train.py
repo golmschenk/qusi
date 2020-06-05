@@ -5,6 +5,7 @@ import tensorflow as tf
 from tensorflow.python.keras import callbacks
 from tensorflow.python.keras.losses import BinaryCrossentropy
 
+from ramjet.experiments import ToiExperiment
 from ramjet.models import SimpleLightcurveCnn
 from ramjet.photometric_database.toi_database import ToiDatabase
 
@@ -13,11 +14,12 @@ def train():
     """Runs the training."""
     print('Starting training process...', flush=True)
     # Basic training settings.
-    model = SimpleLightcurveCnn()
-    database = ToiDatabase()
+    experiment = ToiExperiment()
+    trial_name = f'{experiment.run_name}'  # Add any desired run name details to this string.
+    model = experiment.model
+    database = experiment.database
     # database.batch_size = 100  # Reducing the batch size may help if you are running out of memory.
     epochs_to_run = 1000
-    trial_name = 'baseline'
     logs_directory = 'logs'
 
     # Setup logging.

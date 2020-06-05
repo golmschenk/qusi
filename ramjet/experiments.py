@@ -4,25 +4,27 @@ Code for common experiment component combinations (e.g., a database goes with a 
 from abc import ABC, abstractmethod
 from tensorflow.keras import Model
 
+from ramjet.models import SimpleLightcurveCnn
 from ramjet.photometric_database.lightcurve_database import LightcurveDatabase
+from ramjet.photometric_database.toi_database import ToiDatabase
 
 
 class Experiment(ABC):
     """
     An abstract class representing the necessary components for an experiment to run.
     """
-    @property
-    @abstractmethod
-    def database(self) -> LightcurveDatabase:
-        """
-        :return: The database to use.
-        """
-        raise NotImplemented
+    def __init__(self):
+        self.run_name: str
+        self.database: LightcurveDatabase
+        self.model: Model
 
-    @property
-    @abstractmethod
-    def model(self) -> Model:
-        """
-        :return: The network model to use.
-        """
-        raise NotImplemented
+
+class ToiExperiment(Experiment):
+    """
+    A class to represent the basic transit experiment.
+    """
+    def __init__(self):
+        super().__init__()
+        self.run_name = 'Transit'
+        self.database = ToiDatabase()
+        self.model = SimpleLightcurveCnn()
