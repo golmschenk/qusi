@@ -3,7 +3,6 @@ import sqlite3
 import numpy as np
 import pandas as pd
 from uuid import uuid4
-from sqlite3 import Connection
 from typing import Tuple
 from pathlib import Path
 from unittest.mock import patch, Mock
@@ -20,7 +19,8 @@ class TestTessFfiDataInterface:
 
         :return: The data interface.
         """
-        data_interface = TessFfiDataInterface(database_path=':memory:')
+        uuid = uuid4()
+        data_interface = TessFfiDataInterface(database_path=f'file:database-{str(uuid)}?mode=memory&cache=shared')
         return data_interface
 
     @pytest.fixture
@@ -147,7 +147,7 @@ class TestTessFfiDataInterface:
         assert data_interface0.database_path == Path('specified/path.sqlite3')
 
     def test_creation_of_database_lightcurve_table_contains_important_columns(self, data_interface):
-        database_connection = Connection(data_interface.database_path)
+        database_connection = sqlite3.connect(data_interface.database_path, uri=True)
         database_cursor = database_connection.cursor()
         data_interface.create_database_lightcurve_table(database_connection)
         database_cursor.execute('select * from Lightcurve')
@@ -177,7 +177,7 @@ class TestTessFfiDataInterface:
             data_interface.get_floor_magnitude_from_file_path('tesslc_12345678.pkl')
 
     def test_can_add_sql_database_lightcurve_row_from_path(self, data_interface):
-        database_connection = Connection(data_interface.database_path)
+        database_connection = sqlite3.connect(data_interface.database_path, uri=True)
         database_cursor = database_connection.cursor()
         data_interface.create_database_lightcurve_table(database_connection)
         lightcurve_path0 = Path('tesslcs_sector_1_104/tesslcs_tmag_7_8/tesslc_1111.pkl')
@@ -198,7 +198,7 @@ class TestTessFfiDataInterface:
                                 (uuid1, str(lightcurve_path1), 14, 3)]
 
     def test_indexes_of_sql_database(self, data_interface):
-        database_connection = Connection(data_interface.database_path)
+        database_connection = sqlite3.connect(data_interface.database_path, uri=True)
         data_interface.create_database_lightcurve_table(database_connection)
         data_interface.create_database_lightcurve_table_indexes(database_connection)
         # noinspection SqlResolve
@@ -216,7 +216,7 @@ class TestTessFfiDataInterface:
 
     @patch.object(Path, 'glob')
     def test_can_populate_sql_dataset_from_ffi_directory(self, mock_glob, data_interface):
-        database_connection = Connection(data_interface.database_path)
+        database_connection = sqlite3.connect(data_interface.database_path, uri=True)
         data_interface.get_floor_magnitude_from_file_path = Mock(return_value=0)
         data_interface.create_database_lightcurve_table(database_connection)
         path_list = [data_interface.lightcurve_root_directory_path.joinpath(f'{index}.pkl') for index in range(20)]
@@ -231,7 +231,7 @@ class TestTessFfiDataInterface:
         assert sorted(expected_path_string_list) == sorted(list(results_data_frame['path'].values))
 
     def test_unique_columns_of_sql_table(self, data_interface):
-        database_connection = Connection(data_interface.database_path)
+        database_connection = sqlite3.connect(data_interface.database_path, uri=True)
         data_interface.create_database_lightcurve_table(database_connection)
         data_interface.create_database_lightcurve_table_indexes(database_connection)
         # noinspection SqlResolve
@@ -248,7 +248,7 @@ class TestTessFfiDataInterface:
         assert ['uuid'] in column_lists_of_unique_indexes
 
     def test_can_insert_multiple_sql_database_lightcurve_rows_from_paths(self, data_interface):
-        database_connection = Connection(data_interface.database_path)
+        database_connection = sqlite3.connect(data_interface.database_path, uri=True)
         database_cursor = database_connection.cursor()
         data_interface.create_database_lightcurve_table(database_connection)
         lightcurve_path0 = Path('tesslcs_sector_1_104/tesslcs_tmag_7_8/tesslc_1111.pkl')
