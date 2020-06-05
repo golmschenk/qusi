@@ -1,9 +1,9 @@
-import sqlite3
-from sqlite3 import Connection
-
 import pytest
+import sqlite3
 import numpy as np
 import pandas as pd
+from uuid import uuid4
+from sqlite3 import Connection
 from typing import Tuple
 from pathlib import Path
 from unittest.mock import patch, Mock
@@ -30,7 +30,8 @@ class TestTessFfiDataInterface:
 
         :return: The data interface.
         """
-        data_interface = TessFfiDataInterface(database_path='file::memory:?cache=shared')
+        uuid = uuid4()
+        data_interface = TessFfiDataInterface(database_path=f'file:database-{str(uuid)}?mode=memory&cache=shared')
         database_connection = sqlite3.connect(data_interface.database_path, uri=True)
         database_cursor = database_connection.cursor()
         data_interface.create_database_lightcurve_table(database_connection)
