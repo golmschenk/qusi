@@ -20,11 +20,14 @@ class FfiDataIndexes(Enum):
     RA = 1
     DEC = 2
     TESS_MAGNITUDE = 3
-    TIME = 4
-    RAW_FLUX = 5
-    CORRECTED_FLUX = 6
-    PCA_FLUX = 7
-    FLUX_ERROR = 8
+    CAMERA = 4
+    CHIP = 5
+    TIME = 6
+    RAW_FLUX = 7
+    CORRECTED_FLUX = 8
+    PCA_FLUX = 9
+    FLUX_ERROR = 10
+    QUALITY = 11
 
 
 class TessFfiDataInterface:
@@ -59,7 +62,7 @@ class TessFfiDataInterface:
 
     @staticmethod
     def glob_pickle_path_for_magnitude(ffi_root_directory: Path, magnitude: int) -> Iterable[Path]:
-        return ffi_root_directory.glob(f'tesslcs_sector_*/tesslcs_tmag_{magnitude}_{magnitude + 1}/*.pkl')
+        return ffi_root_directory.glob(f'tesslcs_sector_*_104/tesslcs_tmag_{magnitude}_{magnitude + 1}/*.pkl')
 
     @staticmethod
     def load_fluxes_flux_errors_and_times_from_pickle_file(

@@ -48,8 +48,8 @@ class TestTessFfiDataInterface:
         return data_interface
 
     @pytest.fixture
-    def ffi_pickle_contents(self) -> Tuple[int, float, float, float,
-                                           np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    def ffi_pickle_contents(self) -> Tuple[int, float, float, float, int, int, np.ndarray, np.ndarray, np.ndarray,
+                                           np.ndarray, np.ndarray, int]:
         """
         Creates a mock content of one of Brian Powell's FFI data files.
 
@@ -60,12 +60,16 @@ class TestTessFfiDataInterface:
         ra = 62.2
         dec = -71.4
         tess_magnitude = 10
+        camera = 1
+        chip = 2
         time = np.arange(0, 100, 10)
         raw_flux = np.arange(10)
         corrected_flux = np.arange(10, 20)
         pca_flux = np.arange(20, 30)
         flux_error = np.arange(0, 1, 0.1)
-        return tic_id, ra, dec, tess_magnitude, time, raw_flux, corrected_flux, pca_flux, flux_error
+        quality = 0
+        return (tic_id, ra, dec, tess_magnitude, camera, chip, time, raw_flux, corrected_flux, pca_flux, flux_error,
+                quality)
 
     @patch.object(ramjet.data_interface.tess_ffi_data_interface.pickle, 'load')
     @patch.object(Path, 'open')
@@ -75,14 +79,14 @@ class TestTessFfiDataInterface:
         fake_file_path = Path('fake_path.pkl')
         fluxes, times = data_interface.load_fluxes_and_times_from_pickle_file(fake_file_path)
         assert mock_open.called
-        assert np.array_equal(fluxes, ffi_pickle_contents[6])
-        assert np.array_equal(times, ffi_pickle_contents[4])
+        assert np.array_equal(fluxes, ffi_pickle_contents[8])
+        assert np.array_equal(times, ffi_pickle_contents[6])
 
     def test_can_glob_lightcurves_by_magnitude(self, data_interface):
         ffi_root_directory = Path('tests/data_interface/test_tess_ffi_data_interface_resources/ffi_lightcurves')
         expected_paths = [
-            ffi_root_directory.joinpath('tesslcs_sector_1/tesslcs_tmag_12_13/fake0.pkl'),
-            ffi_root_directory.joinpath('tesslcs_sector_22/tesslcs_tmag_12_13/fake0.pkl')
+            ffi_root_directory.joinpath('tesslcs_sector_1_104/tesslcs_tmag_12_13/fake0.pkl'),
+            ffi_root_directory.joinpath('tesslcs_sector_22_104/tesslcs_tmag_12_13/fake0.pkl')
         ]
         magnitude_filtered_paths = list(data_interface.glob_pickle_path_for_magnitude(ffi_root_directory, 12))
         assert sorted(magnitude_filtered_paths) == sorted(expected_paths)
@@ -95,9 +99,9 @@ class TestTessFfiDataInterface:
         fake_file_path = Path('fake_path.pkl')
         fluxes, flux_errors, times = data_interface.load_fluxes_flux_errors_and_times_from_pickle_file(fake_file_path)
         assert mock_open.called
-        assert np.array_equal(fluxes, ffi_pickle_contents[6])
-        assert np.array_equal(flux_errors, ffi_pickle_contents[8])
-        assert np.array_equal(times, ffi_pickle_contents[4])
+        assert np.array_equal(fluxes, ffi_pickle_contents[8])
+        assert np.array_equal(flux_errors, ffi_pickle_contents[10])
+        assert np.array_equal(times, ffi_pickle_contents[6])
 
     def test_can_get_tic_id_and_sector_from_ffi_style_file_path(self, data_interface):
         tic_id0, sector0 = data_interface.get_tic_id_and_sector_from_file_path(
@@ -175,13 +179,13 @@ class TestTessFfiDataInterface:
         database_connection = Connection(data_interface.database_path)
         database_cursor = database_connection.cursor()
         data_interface.create_database_lightcurve_table(database_connection)
-        lightcurve_path0 = Path('tesslcs_sector_1/tesslcs_tmag_7_8/tesslc_1111.pkl')
+        lightcurve_path0 = Path('tesslcs_sector_1_104/tesslcs_tmag_7_8/tesslc_1111.pkl')
         uuid0 = 'mock-uuid-output0'
         with patch.object(ramjet.data_interface.tess_ffi_data_interface, 'uuid4') as mock_uuid4:
             mock_uuid4.return_value = uuid0
             data_interface.insert_database_lightcurve_row_from_path(database_cursor, lightcurve_path=lightcurve_path0,
                                                                     dataset_split=2)
-        lightcurve_path1 = Path('tesslcs_sector_1/tesslcs_tmag_14_15/tesslc_1234567.pkl')
+        lightcurve_path1 = Path('tesslcs_sector_1_104/tesslcs_tmag_14_15/tesslc_1234567.pkl')
         uuid1 = 'mock-uuid-output1'
         with patch.object(ramjet.data_interface.tess_ffi_data_interface, 'uuid4') as mock_uuid4:
             mock_uuid4.return_value = uuid1
@@ -246,8 +250,8 @@ class TestTessFfiDataInterface:
         database_connection = Connection(data_interface.database_path)
         database_cursor = database_connection.cursor()
         data_interface.create_database_lightcurve_table(database_connection)
-        lightcurve_path0 = Path('tesslcs_sector_1/tesslcs_tmag_7_8/tesslc_1111.pkl')
-        lightcurve_path1 = Path('tesslcs_sector_1/tesslcs_tmag_14_15/tesslc_1234567.pkl')
+        lightcurve_path0 = Path('tesslcs_sector_1_104/tesslcs_tmag_7_8/tesslc_1111.pkl')
+        lightcurve_path1 = Path('tesslcs_sector_1_104/tesslcs_tmag_14_15/tesslc_1234567.pkl')
         uuid0 = 'mock-uuid-output0'
         uuid1 = 'mock-uuid-output1'
         with patch.object(ramjet.data_interface.tess_ffi_data_interface, 'uuid4') as mock_uuid4:
