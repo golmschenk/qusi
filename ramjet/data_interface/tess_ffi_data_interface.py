@@ -240,11 +240,11 @@ class TessFfiDataInterface:
         if dataset_splits is not None:
             dataset_split_condition = f'dataset_split IN ({", ".join(map(str, dataset_splits))})'
         else:
-            dataset_split_condition = 'TRUE'
+            dataset_split_condition = '1'  # Always true.
         if magnitudes is not None:
             magnitude_condition = f'magnitude IN ({", ".join(map(str, magnitudes))})'
         else:
-            magnitude_condition = 'TRUE'
+            magnitude_condition = '1'  # Always true.
         while True:
             database_cursor.execute(f'''SELECT path, uuid
                                         FROM Lightcurve
