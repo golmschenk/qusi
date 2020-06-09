@@ -199,6 +199,7 @@ class TessSyntheticInjectedDatabase(LightcurveDatabase):
         :param times: The real lightcurve times.
         :return: Fake synthetic magnifications and times.
         """
+        fluxes -= np.minimum(np.min(fluxes), 0)  # Fix negative flux cases if they exist.
         flux_median = np.median(fluxes)
         normalized_fluxes = fluxes / flux_median
         relative_times = times - np.min(times)
