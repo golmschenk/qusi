@@ -54,14 +54,14 @@ class Target:
         lightcurve_path = tess_data_interface.download_lightcurve(self.tic_id, self.sector)
         self.pdcsap_fluxes, self.pdcsap_flux_errors, self.times = tess_data_interface.load_fluxes_flux_errors_and_times_from_fits_file(
             lightcurve_path, TessFluxType.PDCSAP, remove_nans=False)
-        nonnegative_pdcsap_fluxes = self.pdcsap_fluxes - np.minimum(np.min(self.pdcsap_fluxes), 0)
+        nonnegative_pdcsap_fluxes = self.pdcsap_fluxes - np.minimum(np.nanmin(self.pdcsap_fluxes), 0)
         pdcsap_flux_median = np.nanmedian(nonnegative_pdcsap_fluxes)
         self.normalized_pdcsap_fluxes = nonnegative_pdcsap_fluxes / pdcsap_flux_median - 1
         self.normalized_pdcsap_flux_errors = self.pdcsap_flux_errors / pdcsap_flux_median
         self.sap_fluxes, _ = tess_data_interface.load_fluxes_and_times_from_fits_file(lightcurve_path,
                                                                                       TessFluxType.SAP,
                                                                                       remove_nans=False)
-        nonnegative_sap_fluxes = self.sap_fluxes - np.minimum(np.min(self.sap_fluxes), 0)
+        nonnegative_sap_fluxes = self.sap_fluxes - np.minimum(np.nanmin(self.sap_fluxes), 0)
         sap_flux_median = np.nanmedian(nonnegative_sap_fluxes)
         self.normalized_sap_fluxes = nonnegative_sap_fluxes / sap_flux_median - 1
 
