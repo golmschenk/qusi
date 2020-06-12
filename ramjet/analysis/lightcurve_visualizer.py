@@ -122,8 +122,10 @@ def create_dual_lightcurve_figure(fluxes0, times0, name0, fluxes1, times1, name1
 
     def add_lightcurve(times, fluxes, legend_label, color):
         """Adds a lightcurve to the figure."""
-        figure.line(times, fluxes / np.median(fluxes), line_color=color, line_alpha=0.1)
-        figure.circle(times, fluxes / np.median(fluxes), legend_label=legend_label, line_color=color, line_alpha=0.4,
+        fluxes -= np.minimum(np.nanmin(fluxes), 0)
+        flux_median = np.median(fluxes)
+        figure.line(times, fluxes / flux_median, line_color=color, line_alpha=0.1)
+        figure.circle(times, fluxes / flux_median, legend_label=legend_label, line_color=color, line_alpha=0.4,
                       fill_color=color, fill_alpha=0.1)
     add_lightcurve(times0, fluxes0, name0, 'firebrick')
     add_lightcurve(times1, fluxes1, name1, 'mediumblue')
