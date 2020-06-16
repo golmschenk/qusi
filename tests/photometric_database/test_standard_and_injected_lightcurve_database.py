@@ -45,6 +45,7 @@ class TestStandardAndInjectedLightcurveDatabase:
         assert hasattr(database, 'validation_injectee_lightcurve_collection')
         assert hasattr(database, 'validation_injectable_lightcurve_collections')
 
+    @pytest.mark.slow
     @pytest.mark.functional
     def test_database_can_generate_training_and_validation_datasets(self, database):
         training_dataset, validation_dataset = database.generate_datasets()
@@ -71,3 +72,8 @@ class TestStandardAndInjectedLightcurveDatabase:
         assert next(iter(injectee_path_dataset)).numpy() == b'injectee_path.ext'
         assert next(iter(injectable_paths_datasets[0])).numpy() == b'injectable_path0.ext'
         assert next(iter(injectable_paths_datasets[1])).numpy() == b'injectable_path1.ext'
+
+    def test_can_create_tensorflow_dataset_for_lightcurve_collection_paths(self, database):
+        injectee_paths_dataset = database.generate_paths_dataset_from_lightcurve_collection(
+            database.training_injectee_lightcurve_collection)
+        assert next(iter(injectee_paths_dataset)).numpy() == b'injectee_path.ext'
