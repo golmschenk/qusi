@@ -37,6 +37,7 @@ class TestStandardAndInjectedLightcurveDatabase:
         # Setup simplified database settings
         database.batch_size = 4
         database.time_steps_per_example = 3
+        database.number_of_parallel_processes_per_map = 1
         database.normalize = lambda fluxes: fluxes  # Don't normalize values to keep it simple.
         return database
 
@@ -65,17 +66,17 @@ class TestStandardAndInjectedLightcurveDatabase:
         assert np.array_equal(validation_batch[2].numpy(), [1, 2, 3])  # Standard lightcurve 1.
         assert np.array_equal(validation_batch[3].numpy(), [0, 3, 4])  # Injected lightcurve 1, with injectable clipped.
 
-    @pytest.mark.skip(reason='Working on unit tests that make up the parts of this functional test.')
     @pytest.mark.slow
     @pytest.mark.functional
     def test_can_generate_standard_lightcurve_and_label_dataset_from_paths_dataset_and_label(self, database):
         lightcurve_collection = database.training_standard_lightcurve_collections[0]
         paths_dataset = database.generate_paths_dataset_from_lightcurve_collection(lightcurve_collection)
         label = lightcurve_collection.label
-        lightcurve_and_label_dataset = database.generate_standard_lightcurve_and_label_dataset(paths_dataset, label)
+        lightcurve_and_label_dataset = database.generate_standard_lightcurve_and_label_dataset(
+            paths_dataset, lightcurve_collection.load_times_and_fluxes_from_lightcurve_path, label)
         lightcurve_and_label = next(iter(lightcurve_and_label_dataset))
         assert lightcurve_and_label[0].numpy().shape == (3, 1)
-        assert np.array_equal(lightcurve_and_label[0].numpy(), [0, 1, 2])  # Standard lightcurve 0.
+        assert np.array_equal(lightcurve_and_label[0].numpy(), [[0], [1], [2]])  # Standard lightcurve 0.
         assert np.array_equal(lightcurve_and_label[1].numpy(), [0])  # Standard label 0.
 
     def test_can_preprocess_standard_lightcurve(self, database):
