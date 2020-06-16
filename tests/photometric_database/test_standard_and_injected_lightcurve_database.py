@@ -64,19 +64,6 @@ class TestStandardAndInjectedLightcurveDatabase:
         assert np.array_equal(validation_batch[2].numpy(), [1, 2, 3])  # Standard lightcurve 1.
         assert np.array_equal(validation_batch[3].numpy(), [0, 3, 4])  # Injected lightcurve 1, with injectable clipped.
 
-    def test_database_will_create_a_tensorflow_dataset_for_each_lightcurve_path_collection(self, database):
-        paths_dataset_groups = database.generate_paths_datasets_from_lightcurve_collection_group(
-            database.training_standard_lightcurve_collections,
-            database.training_injectee_lightcurve_collection,
-            database.training_injectable_lightcurve_collections
-        )
-        standard_paths_datasets, injectee_path_dataset, injectable_paths_datasets = paths_dataset_groups
-        assert next(iter(standard_paths_datasets[0])).numpy() == b'standard_path0.ext'
-        assert next(iter(standard_paths_datasets[1])).numpy() == b'standard_path1.ext'
-        assert next(iter(injectee_path_dataset)).numpy() == b'injectee_path.ext'
-        assert next(iter(injectable_paths_datasets[0])).numpy() == b'injectable_path0.ext'
-        assert next(iter(injectable_paths_datasets[1])).numpy() == b'injectable_path1.ext'
-
     def test_can_create_tensorflow_dataset_for_lightcurve_collection_paths(self, database):
         injectee_paths_dataset = database.generate_paths_dataset_from_lightcurve_collection(
             database.training_injectee_lightcurve_collection)
