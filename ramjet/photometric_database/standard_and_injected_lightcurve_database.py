@@ -22,6 +22,7 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         self.validation_standard_lightcurve_collections: List[LightcurveCollection] = []
         self.validation_injectee_lightcurve_collection: Union[LightcurveCollection, None] = None
         self.validation_injectable_lightcurve_collections: List[LightcurveCollection] = []
+        self.shuffle_buffer_size = 10000
 
     def generate_datasets(self) -> (tf.data.Dataset, tf.data.Dataset):
         (training_standard_paths_datasets, training_injectee_path_dataset,
@@ -65,6 +66,7 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         :param lightcurve_collection: The lightcurve collection to generate a paths dataset for.
         :return: The paths dataset.
         """
-        paths_dataset = self.paths_dataset_from_list_or_generator_factory(
-            lightcurve_collection.get_lightcurve_paths)
-        return paths_dataset
+        paths_dataset = self.paths_dataset_from_list_or_generator_factory(lightcurve_collection.get_lightcurve_paths)
+        repeated_paths_dataset = paths_dataset.repeat()
+        shuffled_paths_dataset = repeated_paths_dataset.shuffle(self.shuffle_buffer_size)
+        return shuffled_paths_dataset

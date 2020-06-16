@@ -1,7 +1,10 @@
+from unittest.mock import patch
+
 import pytest
 import numpy as np
 from pathlib import Path
 
+import ramjet.photometric_database.standard_and_injected_lightcurve_database as database_module
 from ramjet.photometric_database.lightcurve_collection import LightcurveCollection
 from ramjet.photometric_database.standard_and_injected_lightcurve_database import StandardAndInjectedLightcurveDatabase
 
@@ -45,6 +48,7 @@ class TestStandardAndInjectedLightcurveDatabase:
         assert hasattr(database, 'validation_injectee_lightcurve_collection')
         assert hasattr(database, 'validation_injectable_lightcurve_collections')
 
+    @pytest.mark.skip(reason='Working on unit tests that make up the parts of this functional test.')
     @pytest.mark.slow
     @pytest.mark.functional
     def test_database_can_generate_training_and_validation_datasets(self, database):
@@ -77,3 +81,18 @@ class TestStandardAndInjectedLightcurveDatabase:
         injectee_paths_dataset = database.generate_paths_dataset_from_lightcurve_collection(
             database.training_injectee_lightcurve_collection)
         assert next(iter(injectee_paths_dataset)).numpy() == b'injectee_path.ext'
+
+    def test_lightcurve_collection_paths_dataset_is_repeated(self, database):
+        with patch.object(database_module.tf.data.Dataset, 'repeat',
+                          side_effect=lambda dataset: dataset, autospec=True) as mock_repeat:
+            _ = database.generate_paths_dataset_from_lightcurve_collection(
+                database.training_injectee_lightcurve_collection)
+            assert mock_repeat.called
+
+    def test_lightcurve_collection_paths_dataset_is_shuffled(self, database):
+        with patch.object(database_module.tf.data.Dataset, 'shuffle',
+                          side_effect=lambda dataset, buffer_size: dataset, autospec=True) as mock_shuffle:
+            _ = database.generate_paths_dataset_from_lightcurve_collection(
+                database.training_injectee_lightcurve_collection)
+            assert mock_shuffle.called
+            assert mock_shuffle.call_args[0][1] == database.shuffle_buffer_size
