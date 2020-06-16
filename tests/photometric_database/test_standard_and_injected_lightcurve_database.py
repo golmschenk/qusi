@@ -96,3 +96,9 @@ class TestStandardAndInjectedLightcurveDatabase:
                 database.training_injectee_lightcurve_collection)
             assert mock_shuffle.called
             assert mock_shuffle.call_args[0][1] == database.shuffle_buffer_size
+
+    def test_can_create_tensorflow_datasets_for_multiple_lightcurve_collections_paths(self, database):
+        standard_paths_datasets = database.generate_paths_datasets_from_lightcurve_collection_list(
+            database.training_standard_lightcurve_collections)
+        assert next(iter(standard_paths_datasets[0])).numpy() == b'standard_path0.ext'
+        assert next(iter(standard_paths_datasets[1])).numpy() == b'standard_path1.ext'

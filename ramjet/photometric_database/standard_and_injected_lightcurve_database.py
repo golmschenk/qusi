@@ -70,3 +70,14 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         repeated_paths_dataset = paths_dataset.repeat()
         shuffled_paths_dataset = repeated_paths_dataset.shuffle(self.shuffle_buffer_size)
         return shuffled_paths_dataset
+
+    def generate_paths_datasets_from_lightcurve_collection_list(self, lightcurve_collections: List[LightcurveCollection]
+                                                                ) -> List[tf.data.Dataset]:
+        """
+        Generates a paths dataset for each lightcurve collection in a list.
+
+        :param lightcurve_collections: The list of lightcurve collections.
+        :return: The list of paths datasets.
+        """
+        return [self.generate_paths_dataset_from_lightcurve_collection(lightcurve_collection)
+                for lightcurve_collection in lightcurve_collections]
