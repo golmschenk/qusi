@@ -8,6 +8,8 @@ import tensorflow as tf
 from pathlib import Path
 from typing import List, Union, Callable, Tuple
 
+from scipy.interpolate import interp1d
+
 from ramjet.photometric_database.lightcurve_collection import LightcurveCollection
 from ramjet.photometric_database.lightcurve_database import LightcurveDatabase
 from ramjet.py_mapper import map_py_function_to_dataset
@@ -29,6 +31,7 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         self.validation_injectable_lightcurve_collections: List[LightcurveCollection] = []
         self.shuffle_buffer_size = 10000
         self.time_steps_per_example = 20000
+        self.allow_out_of_bounds_injection = False
 
     def generate_datasets(self) -> (tf.data.Dataset, tf.data.Dataset):
         training_standard_paths_datasets = self.generate_paths_datasets_from_lightcurve_collection_list(
@@ -137,8 +140,72 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         """
         lightcurve_path = Path(lightcurve_path_tensor.numpy().decode('utf-8'))
         times, fluxes = load_times_and_fluxes_from_path_function(lightcurve_path)
-        fluxes = self.flux_preprocessing(fluxes)
-        example = np.expand_dims(fluxes, axis=-1)
+        preprocessed_fluxes = self.flux_preprocessing(fluxes)
+        example = np.expand_dims(preprocessed_fluxes, axis=-1)
+        return example, np.array([label])
+
+    def generate_injected_lightcurve_and_label_dataset(
+            self, injectee_paths_dataset: tf.data.Dataset,
+            injectee_load_times_and_fluxes_from_path_function: Callable[[Path], Tuple[np.ndarray, np.ndarray]],
+            injectable_paths_dataset: tf.data.Dataset,
+            injectable_load_times_and_fluxes_from_path_function: Callable[[Path], Tuple[np.ndarray, np.ndarray]],
+            label: float):
+        """
+        Generates a lightcurve and label dataset from an injectee and injectable paths dataset, using passed functions
+        defining how to load the values from the lightcurve files for each and the label value to use.
+
+        :param injectee_paths_dataset: The dataset of paths to use for the injectee lightcurves.
+        :param injectee_load_times_and_fluxes_from_path_function: The function defining how to load the times and fluxes
+                                                                  of an injectee lightcurve from a path.
+        :param injectable_paths_dataset: The dataset of paths to use for the injectable lightcurves.
+        :param injectable_load_times_and_fluxes_from_path_function: The function defining how to load the times and
+                                                                    fluxes of an injectable lightcurve from a path.
+        :param label: The label to use for the lightcurves in this dataset.
+        :return: The resulting lightcurve example and label dataset.
+        """
+        preprocess_map_function = partial(self.preprocess_injected_lightcurve,
+                                          injectee_load_times_and_fluxes_from_path_function,
+                                          injectable_load_times_and_fluxes_from_path_function,
+                                          label)
+        output_types = (tf.float32, tf.float32)
+        output_shapes = [(self.time_steps_per_example, 1), (1,)]
+        zipped_paths_dataset = tf.data.Dataset.zip((injectee_paths_dataset, injectable_paths_dataset))
+        example_and_label_dataset = map_py_function_to_dataset(zipped_paths_dataset,
+                                                               preprocess_map_function,
+                                                               self.number_of_parallel_processes_per_map,
+                                                               output_types=output_types,
+                                                               output_shapes=output_shapes)
+        return example_and_label_dataset
+
+    def preprocess_injected_lightcurve(
+            self, injectee_load_times_and_fluxes_from_path_function: Callable[[Path], Tuple[np.ndarray, np.ndarray]],
+            injectable_load_times_and_fluxes_from_path_function: Callable[[Path], Tuple[np.ndarray, np.ndarray]],
+            label: float, injectee_lightcurve_path_tensor: tf.Tensor, injectable_lightcurve_path_tensor: tf.Tensor
+            ) -> (np.ndarray, np.ndarray):
+        """
+        Preprocesses a individual injected lightcurve from an injectee and an injectable lightcurve path tensor,
+        using a passed function defining how to load the values from each lightcurve file and the label value to use.
+        Designed to be used with `partial` to prepare a function which will just require the lightcurve path tensor, and
+        can then be mapped to a dataset.
+
+        :param injectee_load_times_and_fluxes_from_path_function: The function to load the injectee lightcurve times and
+                                                                  fluxes from a file.
+        :param injectable_load_times_and_fluxes_from_path_function: The function to load the injectee lightcurve times
+                                                                    and signal from a file.
+        :param label: The label to assign to the lightcurve.
+        :param injectee_lightcurve_path_tensor: The tensor containing the path to the injectee lightcurve file.
+        :param injectable_lightcurve_path_tensor: The tensor containing the path to the injectable lightcurve file.
+        :return: The injected example and label arrays shaped for use as single example for the network.
+        """
+        injectee_lightcurve_path = Path(injectee_lightcurve_path_tensor.numpy().decode('utf-8'))
+        injectee_times, injectee_fluxes = injectee_load_times_and_fluxes_from_path_function(injectee_lightcurve_path)
+        injectable_lightcurve_path = Path(injectable_lightcurve_path_tensor.numpy().decode('utf-8'))
+        injectable_times, injectable_magnification = injectable_load_times_and_fluxes_from_path_function(
+            injectable_lightcurve_path)
+        fluxes = self.inject_signal_into_lightcurve(injectee_fluxes, injectee_times, injectable_magnification,
+                                                    injectable_times)
+        preprocessed_fluxes = self.flux_preprocessing(fluxes)
+        example = np.expand_dims(preprocessed_fluxes, axis=-1)
         return example, np.array([label])
 
     def flux_preprocessing(self, fluxes: np.ndarray, evaluation_mode: bool = False, seed: int = None) -> np.ndarray:
@@ -154,3 +221,40 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         uniform_length_fluxes = self.make_uniform_length(normalized_fluxes, self.time_steps_per_example,
                                                          randomize=not evaluation_mode, seed=seed)
         return uniform_length_fluxes
+
+    def inject_signal_into_lightcurve(self, lightcurve_fluxes: np.ndarray, lightcurve_times: np.ndarray,
+                                      signal_magnifications: np.ndarray, signal_times: np.ndarray):
+        """
+        Injects a synthetic magnification signal into real lightcurve fluxes.
+
+        :param lightcurve_fluxes: The fluxes of the lightcurve to be injected into.
+        :param lightcurve_times: The times of the flux observations of the lightcurve.
+        :param signal_magnifications: The synthetic magnifications to inject.
+        :param signal_times: The times of the synthetic magnifications.
+        :return: The fluxes with the injected signal.
+        """
+        median_flux = np.median(lightcurve_fluxes)
+        signal_fluxes = (signal_magnifications * median_flux) - median_flux
+        if self.allow_out_of_bounds_injection:
+            signal_flux_interpolator = interp1d(signal_times, signal_fluxes, bounds_error=False, fill_value=0)
+        else:
+            signal_flux_interpolator = interp1d(signal_times, signal_fluxes, bounds_error=True)
+        lightcurve_relative_times = lightcurve_times - np.min(lightcurve_times)
+        interpolated_signal_fluxes = signal_flux_interpolator(lightcurve_relative_times)
+        fluxes_with_injected_signal = lightcurve_fluxes + interpolated_signal_fluxes
+        return fluxes_with_injected_signal
+
+    @staticmethod
+    def generate_synthetic_signal_from_real_data(fluxes: np.ndarray, times: np.ndarray) -> (np.ndarray, np.ndarray):
+        """
+        Takes real lightcurve data and converts it to a form that can be used for synthetic lightcurve injection.
+
+        :param fluxes: The real lightcurve fluxes.
+        :param times: The real lightcurve times.
+        :return: Fake synthetic magnifications and times.
+        """
+        fluxes -= np.minimum(np.min(fluxes), 0)  # Fix negative flux cases if they exist.
+        flux_median = np.median(fluxes)
+        normalized_fluxes = fluxes / flux_median
+        relative_times = times - np.min(times)
+        return normalized_fluxes, relative_times

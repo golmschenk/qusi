@@ -92,6 +92,42 @@ class TestStandardAndInjectedLightcurveDatabase:
         assert np.array_equal(lightcurve, [[0], [1], [2]])  # Standard lightcurve 0.
         assert np.array_equal(label, [expected_label])  # Standard label 0.
 
+    @pytest.mark.slow
+    @pytest.mark.functional
+    def test_can_generate_standard_lightcurve_and_label_dataset_from_paths_dataset_and_label(self, database):
+        injectee_lightcurve_collection = database.training_injectee_lightcurve_collection
+        injectable_lightcurve_collection = database.training_injectable_lightcurve_collections[0]
+        injectee_paths_dataset = database.generate_paths_dataset_from_lightcurve_collection(
+            injectee_lightcurve_collection)
+        injectable_paths_dataset = database.generate_paths_dataset_from_lightcurve_collection(
+            injectable_lightcurve_collection)
+        label = injectable_lightcurve_collection.label
+        lightcurve_and_label_dataset = database.generate_injected_lightcurve_and_label_dataset(
+            injectee_paths_dataset, injectee_lightcurve_collection.load_times_and_fluxes_from_lightcurve_path,
+            injectable_paths_dataset, injectable_lightcurve_collection.load_times_and_fluxes_from_lightcurve_path,
+            label)
+        lightcurve_and_label = next(iter(lightcurve_and_label_dataset))
+        assert lightcurve_and_label[0].numpy().shape == (3, 1)
+        assert np.array_equal(lightcurve_and_label[0].numpy(), [[0.5], [3], [5.5]])  # Injected lightcurve 0
+        assert np.array_equal(lightcurve_and_label[1].numpy(), [0])  # Injected label 0.
+
+    def test_can_preprocess_injected_lightcurve(self, database):
+        injectee_lightcurve_collection = database.training_injectee_lightcurve_collection
+        injectable_lightcurve_collection = database.training_injectable_lightcurve_collections[0]
+        # noinspection PyUnresolvedReferences
+        injectee_lightcurve_path = injectee_lightcurve_collection.get_lightcurve_paths()[0]
+        injectee_load_from_path_function = injectee_lightcurve_collection.load_times_and_fluxes_from_lightcurve_path
+        # noinspection PyUnresolvedReferences
+        injectable_lightcurve_path = injectable_lightcurve_collection.get_lightcurve_paths()[0]
+        injectable_expected_label = injectable_lightcurve_collection.label
+        injectable_load_from_path_function = injectable_lightcurve_collection.load_times_and_fluxes_from_lightcurve_path
+        lightcurve, label = database.preprocess_injected_lightcurve(
+            injectee_load_from_path_function, injectable_load_from_path_function, injectable_expected_label,
+            tf.convert_to_tensor(str(injectee_lightcurve_path)), tf.convert_to_tensor(str(injectable_lightcurve_path)))
+        assert lightcurve.shape == (3, 1)
+        assert np.array_equal(lightcurve, [[0.5], [3], [5.5]])  # Injected lightcurve 0.
+        assert np.array_equal(label, [injectable_expected_label])  # Injected label 0.
+
     def test_can_create_tensorflow_dataset_for_lightcurve_collection_paths(self, database):
         injectee_paths_dataset = database.generate_paths_dataset_from_lightcurve_collection(
             database.training_injectee_lightcurve_collection)
@@ -117,3 +153,45 @@ class TestStandardAndInjectedLightcurveDatabase:
             database.training_standard_lightcurve_collections)
         assert next(iter(standard_paths_datasets[0])).numpy() == b'standard_path0.ext'
         assert next(iter(standard_paths_datasets[1])).numpy() == b'standard_path1.ext'
+
+    def test_can_inject_signal_into_fluxes(self, database):
+        lightcurve_fluxes = np.array([1, 2, 3, 4, 5])
+        lightcurve_times = np.array([10, 20, 30, 40, 50])
+        signal_magnifications = np.array([1, 3, 1])
+        signal_times = np.array([0, 20, 40])
+        fluxes_with_injected_signal = database.inject_signal_into_lightcurve(lightcurve_fluxes, lightcurve_times,
+                                                                             signal_magnifications, signal_times)
+        assert np.array_equal(fluxes_with_injected_signal, np.array([1, 5, 9, 7, 5]))
+
+    def test_inject_signal_errors_on_out_of_bounds(self, database):
+        lightcurve_fluxes = np.array([1, 2, 3, 4, 5, 3])
+        lightcurve_times = np.array([10, 20, 30, 40, 50, 60])
+        signal_magnifications = np.array([1, 3, 1])
+        signal_times = np.array([0, 20, 40])
+        with pytest.raises(ValueError):
+            database.inject_signal_into_lightcurve(lightcurve_fluxes, lightcurve_times,
+                                                   signal_magnifications, signal_times)
+
+    def test_inject_signal_can_be_told_to_allow_out_of_bounds(self, database):
+        lightcurve_fluxes = np.array([1, 2, 3, 4, 5, 3])
+        lightcurve_times = np.array([10, 20, 30, 40, 50, 60])
+        signal_magnifications = np.array([1, 3, 1])
+        signal_times = np.array([0, 20, 40])
+        database.allow_out_of_bounds_injection = True
+        fluxes_with_injected_signal = database.inject_signal_into_lightcurve(lightcurve_fluxes, lightcurve_times,
+                                                                             signal_magnifications, signal_times)
+        assert np.array_equal(fluxes_with_injected_signal, np.array([1, 5, 9, 7, 5, 3]))
+
+    def test_generating_a_synthetic_signal_from_a_real_signal_does_not_invert_negative_lightcurve_shapes(
+            self, database):
+        times = np.arange(5, dtype=np.float32)
+        unnormalized_positive_lightcurve_fluxes = np.array([10, 20, 30, 25, 15], dtype=np.float32)
+        normalized_positive_lightcurve_fluxes, _ = database.generate_synthetic_signal_from_real_data(
+            unnormalized_positive_lightcurve_fluxes, times)
+        assert normalized_positive_lightcurve_fluxes.argmax() == 2
+        assert normalized_positive_lightcurve_fluxes.argmin() == 0
+        unnormalized_negative_lightcurve_fluxes = np.array([-30, -20, -10, -15, -25], dtype=np.float32)
+        normalized_negative_lightcurve_fluxes, _ = database.generate_synthetic_signal_from_real_data(
+            unnormalized_negative_lightcurve_fluxes, times)
+        assert normalized_negative_lightcurve_fluxes.argmax() == 2
+        assert normalized_negative_lightcurve_fluxes.argmin() == 0
