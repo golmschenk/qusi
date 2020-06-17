@@ -50,21 +50,32 @@ class TestStandardAndInjectedLightcurveDatabase:
         assert hasattr(database, 'validation_injectee_lightcurve_collection')
         assert hasattr(database, 'validation_injectable_lightcurve_collections')
 
-    @pytest.mark.skip(reason='Working on unit tests that make up the parts of this functional test.')
     @pytest.mark.slow
     @pytest.mark.functional
     def test_database_can_generate_training_and_validation_datasets(self, database):
         training_dataset, validation_dataset = database.generate_datasets()
         training_batch = next(iter(training_dataset))
-        assert np.array_equal(training_batch[0].numpy(), [0, 1, 2])  # Standard lightcurve 0.
-        assert np.array_equal(training_batch[1].numpy(), [1, 2, 3])  # Standard lightcurve 1.
-        assert np.array_equal(training_batch[2].numpy(), [1, 3, 6])  # Injected lightcurve 0.
-        assert np.array_equal(training_batch[3].numpy(), [0, 3, 4])  # Injected lightcurve 1, with injectable clipped.
+        training_batch_examples = training_batch[0]
+        training_batch_labels = training_batch[1]
+        assert training_batch_examples.shape == (database.batch_size, 3, 1)
+        assert training_batch_labels.shape == (database.batch_size, 1)
+        assert np.array_equal(training_batch_examples[0].numpy(), [[0], [1], [2]])  # Standard lightcurve 0.
+        assert np.array_equal(training_batch_labels[0].numpy(), [0])  # Standard label 0.
+        assert np.array_equal(training_batch_examples[1].numpy(), [[1], [2], [3]])  # Standard lightcurve 1.
+        assert np.array_equal(training_batch_labels[1].numpy(), [1])  # Standard label 1.
+        assert np.array_equal(training_batch_examples[2].numpy(), [[0.5], [3], [5.5]])  # Injected lightcurve 0.
+        assert np.array_equal(training_batch_examples[3].numpy(), [[-1], [3], [4]])  # Injected lightcurve 1.
         validation_batch = next(iter(validation_dataset))
-        assert np.array_equal(validation_batch[0].numpy(), [1, 2, 3])  # Standard lightcurve 1.
-        assert np.array_equal(validation_batch[1].numpy(), [0, 3, 4])  # Injected lightcurve 1, with injectable clipped.
-        assert np.array_equal(validation_batch[2].numpy(), [1, 2, 3])  # Standard lightcurve 1.
-        assert np.array_equal(validation_batch[3].numpy(), [0, 3, 4])  # Injected lightcurve 1, with injectable clipped.
+        validation_batch_examples = validation_batch[0]
+        validation_batch_labels = validation_batch[1]
+        assert validation_batch_examples.shape == (database.batch_size, 3, 1)
+        assert validation_batch_labels.shape == (database.batch_size, 1)
+        assert np.array_equal(validation_batch_examples[0].numpy(), [[1], [2], [3]])  # Standard lightcurve 1.
+        assert np.array_equal(validation_batch_labels[0].numpy(), [1])  # Standard label 1.
+        assert np.array_equal(validation_batch_examples[1].numpy(), [[-1], [3], [4]])  # Injected lightcurve 1.
+        assert np.array_equal(validation_batch_labels[1].numpy(), [1])  # Injected label 1.
+        assert np.array_equal(validation_batch_examples[2].numpy(), [[1], [2], [3]])  # Standard lightcurve 1.
+        assert np.array_equal(validation_batch_examples[3].numpy(), [[-1], [3], [4]])  # Injected lightcurve 1.
 
     @pytest.mark.slow
     @pytest.mark.functional
@@ -195,3 +206,28 @@ class TestStandardAndInjectedLightcurveDatabase:
             unnormalized_negative_lightcurve_fluxes, times)
         assert normalized_negative_lightcurve_fluxes.argmax() == 2
         assert normalized_negative_lightcurve_fluxes.argmin() == 0
+
+    def test_can_intersperse_datasets(self, database):
+        dataset0 = tf.data.Dataset.from_tensor_slices([[0], [2], [4]])
+        dataset1 = tf.data.Dataset.from_tensor_slices([[1], [3], [5]])
+        interspersed_dataset = database.intersperse_datasets([dataset0, dataset1])
+        assert list(interspersed_dataset) == [[0], [1], [2], [3], [4], [5]]
+
+    def test_can_intersperse_zipped_example_label_datasets(self, database):
+        examples_dataset0 = tf.data.Dataset.from_tensor_slices([[0, 0], [2, 2], [4, 4]])
+        labels_dataset0 = tf.data.Dataset.from_tensor_slices([[0], [-2], [-4]])
+        dataset0 = tf.data.Dataset.zip((examples_dataset0, labels_dataset0))
+        examples_dataset1 = tf.data.Dataset.from_tensor_slices([[1, 1], [3, 3], [5, 5]])
+        labels_dataset1 = tf.data.Dataset.from_tensor_slices([[-1], [-3], [-5]])
+        dataset1 = tf.data.Dataset.zip((examples_dataset1, labels_dataset1))
+        interspersed_dataset = database.intersperse_datasets([dataset0, dataset1])
+        interspersed_dataset_iterator = iter(interspersed_dataset)
+        examples_and_labels0 = next(interspersed_dataset_iterator)
+        assert np.array_equal(examples_and_labels0[0], [0, 0])
+        assert examples_and_labels0[1] == [0]
+        examples_and_labels1 = next(interspersed_dataset_iterator)
+        assert np.array_equal(examples_and_labels1[0], [1, 1])
+        assert examples_and_labels1[1] == [-1]
+        examples_and_labels2 = next(interspersed_dataset_iterator)
+        assert np.array_equal(examples_and_labels2[0], [2, 2])
+        assert examples_and_labels2[1] == [-2]

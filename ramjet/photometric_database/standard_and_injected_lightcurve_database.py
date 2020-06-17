@@ -34,6 +34,11 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         self.allow_out_of_bounds_injection = False
 
     def generate_datasets(self) -> (tf.data.Dataset, tf.data.Dataset):
+        """
+        Generates the training and validation datasets for the database.
+
+        :return: The training and validation dataset.
+        """
         training_standard_paths_datasets = self.generate_paths_datasets_from_lightcurve_collection_list(
             self.training_standard_lightcurve_collections)
         training_injectee_path_dataset = self.generate_paths_dataset_from_lightcurve_collection(
@@ -50,30 +55,38 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         for paths_dataset, lightcurve_collection in zip(training_standard_paths_datasets,
                                                         self.training_standard_lightcurve_collections):
             lightcurve_and_label_dataset = self.generate_standard_lightcurve_and_label_dataset(
-                paths_dataset, lightcurve_collection.label
+                paths_dataset, lightcurve_collection.load_times_and_fluxes_from_lightcurve_path,
+                lightcurve_collection.label
             )
             training_lightcurve_and_label_datasets.append(lightcurve_and_label_dataset)
         for paths_dataset, injectable_lightcurve_collection in zip(training_injectable_paths_datasets,
                                                                    self.training_injectable_lightcurve_collections):
             lightcurve_and_label_dataset = self.generate_injected_lightcurve_and_label_dataset(
-                training_injectee_path_dataset, paths_dataset, injectable_lightcurve_collection.label
+                training_injectee_path_dataset,
+                self.training_injectee_lightcurve_collection.load_times_and_fluxes_from_lightcurve_path,
+                paths_dataset, injectable_lightcurve_collection.load_times_and_fluxes_from_lightcurve_path,
+                injectable_lightcurve_collection.label
             )
             training_lightcurve_and_label_datasets.append(lightcurve_and_label_dataset)
-        training_dataset = tf.data.Dataset.zip(training_lightcurve_and_label_datasets)
+        training_dataset = self.intersperse_datasets(training_lightcurve_and_label_datasets).batch(self.batch_size)
         validation_lightcurve_and_label_datasets = []
         for paths_dataset, lightcurve_collection in zip(validation_standard_paths_datasets,
                                                         self.validation_standard_lightcurve_collections):
             lightcurve_and_label_dataset = self.generate_standard_lightcurve_and_label_dataset(
-                paths_dataset, lightcurve_collection.label
+                paths_dataset, lightcurve_collection.load_times_and_fluxes_from_lightcurve_path,
+                lightcurve_collection.label
             )
             validation_lightcurve_and_label_datasets.append(lightcurve_and_label_dataset)
         for paths_dataset, injectable_lightcurve_collection in zip(validation_injectable_paths_datasets,
                                                                    self.validation_injectable_lightcurve_collections):
             lightcurve_and_label_dataset = self.generate_injected_lightcurve_and_label_dataset(
-                validation_injectee_path_dataset, paths_dataset, injectable_lightcurve_collection.label
+                validation_injectee_path_dataset,
+                self.validation_injectee_lightcurve_collection.load_times_and_fluxes_from_lightcurve_path,
+                paths_dataset, injectable_lightcurve_collection.load_times_and_fluxes_from_lightcurve_path,
+                injectable_lightcurve_collection.label
             )
             validation_lightcurve_and_label_datasets.append(lightcurve_and_label_dataset)
-        validation_dataset = tf.data.Dataset.zip(validation_lightcurve_and_label_datasets)
+        validation_dataset = self.intersperse_datasets(validation_lightcurve_and_label_datasets).batch(self.batch_size)
         return training_dataset, validation_dataset
 
     def generate_paths_dataset_from_lightcurve_collection(self, lightcurve_collection: LightcurveCollection
@@ -108,8 +121,8 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         how to load the values from the lightcurve file and the label value to use.
 
         :param paths_dataset: The dataset of paths to use.
-        :param load_times_and_fluxes_from_path_function: The function defining how to load the times and fluxes of a lightcurve from a
-                                        path.
+        :param load_times_and_fluxes_from_path_function: The function defining how to load the times and fluxes of a
+                                                         lightcurve from a path.
         :param label: The label to use for the lightcurves in this dataset.
         :return: The resulting lightcurve example and label dataset.
         """
@@ -258,3 +271,24 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         normalized_fluxes = fluxes / flux_median
         relative_times = times - np.min(times)
         return normalized_fluxes, relative_times
+
+    @staticmethod
+    def intersperse_datasets(dataset_list: List[tf.data.Dataset]) -> tf.data.Dataset:
+        """
+        Intersperses a list of datasets into one joint dataset. (e.g., [0, 2, 4] and [1, 3, 5] to [0, 1, 2, 3, 4, 5]).
+
+        :param dataset_list: The datasets to intersperse.
+        :return: The interspersed dataset.
+        """
+        dataset_tuple = tuple(dataset_list)
+        zipped_dataset = tf.data.Dataset.zip(dataset_tuple)
+
+        def flat_map_interspersing_function(*elements):
+            """Intersperses an individual element from each dataset. To be used by flat_map."""
+            concatenated_element = tf.data.Dataset.from_tensors(elements[0])
+            for element in elements[1:]:
+                concatenated_element = concatenated_element.concatenate(tf.data.Dataset.from_tensors(element))
+            return concatenated_element
+
+        flat_mapped_dataset = zipped_dataset.flat_map(flat_map_interspersing_function)
+        return flat_mapped_dataset
