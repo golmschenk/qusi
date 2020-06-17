@@ -38,6 +38,9 @@ class TestStandardAndInjectedLightcurveDatabase:
         database.batch_size = 4
         database.time_steps_per_example = 3
         database.number_of_parallel_processes_per_map = 1
+        def mock_window(dataset, batch_size, window_shift):
+            return dataset.batch(batch_size)
+        database.window_dataset_for_zipped_example_and_label_dataset = mock_window  # Disable windowing.
         database.normalize = lambda fluxes: fluxes  # Don't normalize values to keep it simple.
         return database
 
