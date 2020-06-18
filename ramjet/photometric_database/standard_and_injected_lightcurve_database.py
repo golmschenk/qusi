@@ -64,7 +64,7 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
             lightcurve_and_label_dataset = self.generate_injected_lightcurve_and_label_dataset(
                 training_injectee_path_dataset,
                 self.training_injectee_lightcurve_collection.load_times_and_fluxes_from_path,
-                paths_dataset, injectable_lightcurve_collection.load_times_and_fluxes_from_path,
+                paths_dataset, injectable_lightcurve_collection.load_times_and_magnifications_from_path,
                 injectable_lightcurve_collection.label
             )
             training_lightcurve_and_label_datasets.append(lightcurve_and_label_dataset)
@@ -84,7 +84,7 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
             lightcurve_and_label_dataset = self.generate_injected_lightcurve_and_label_dataset(
                 validation_injectee_path_dataset,
                 self.validation_injectee_lightcurve_collection.load_times_and_fluxes_from_path,
-                paths_dataset, injectable_lightcurve_collection.load_times_and_fluxes_from_path,
+                paths_dataset, injectable_lightcurve_collection.load_times_and_magnifications_from_path,
                 injectable_lightcurve_collection.label
             )
             validation_lightcurve_and_label_datasets.append(lightcurve_and_label_dataset)
@@ -166,7 +166,7 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
             self, injectee_paths_dataset: tf.data.Dataset,
             injectee_load_times_and_fluxes_from_path_function: Callable[[Path], Tuple[np.ndarray, np.ndarray]],
             injectable_paths_dataset: tf.data.Dataset,
-            injectable_load_times_and_fluxes_from_path_function: Callable[[Path], Tuple[np.ndarray, np.ndarray]],
+            injectable_load_times_and_magnifications_from_path_function: Callable[[Path], Tuple[np.ndarray, np.ndarray]],
             label: float):
         """
         Generates a lightcurve and label dataset from an injectee and injectable paths dataset, using passed functions
@@ -176,14 +176,15 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         :param injectee_load_times_and_fluxes_from_path_function: The function defining how to load the times and fluxes
                                                                   of an injectee lightcurve from a path.
         :param injectable_paths_dataset: The dataset of paths to use for the injectable lightcurves.
-        :param injectable_load_times_and_fluxes_from_path_function: The function defining how to load the times and
-                                                                    fluxes of an injectable lightcurve from a path.
+        :param injectable_load_times_and_magnifications_from_path_function: The function defining how to load the times
+                                                                            and magnifications of an injectable
+                                                                            signal from a path.
         :param label: The label to use for the lightcurves in this dataset.
         :return: The resulting lightcurve example and label dataset.
         """
         preprocess_map_function = partial(self.preprocess_injected_lightcurve,
                                           injectee_load_times_and_fluxes_from_path_function,
-                                          injectable_load_times_and_fluxes_from_path_function,
+                                          injectable_load_times_and_magnifications_from_path_function,
                                           label)
         output_types = (tf.float32, tf.float32)
         output_shapes = [(self.time_steps_per_example, 1), (1,)]
@@ -197,7 +198,7 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
 
     def preprocess_injected_lightcurve(
             self, injectee_load_times_and_fluxes_from_path_function: Callable[[Path], Tuple[np.ndarray, np.ndarray]],
-            injectable_load_times_and_fluxes_from_path_function: Callable[[Path], Tuple[np.ndarray, np.ndarray]],
+            injectable_load_times_and_magnifications_from_path_function: Callable[[Path], Tuple[np.ndarray, np.ndarray]],
             label: float, injectee_lightcurve_path_tensor: tf.Tensor, injectable_lightcurve_path_tensor: tf.Tensor
             ) -> (np.ndarray, np.ndarray):
         """
@@ -208,8 +209,8 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
 
         :param injectee_load_times_and_fluxes_from_path_function: The function to load the injectee lightcurve times and
                                                                   fluxes from a file.
-        :param injectable_load_times_and_fluxes_from_path_function: The function to load the injectee lightcurve times
-                                                                    and signal from a file.
+        :param injectable_load_times_and_magnifications_from_path_function: The function to load the injectee lightcurve
+                                                                            times and signal from a file.
         :param label: The label to assign to the lightcurve.
         :param injectee_lightcurve_path_tensor: The tensor containing the path to the injectee lightcurve file.
         :param injectable_lightcurve_path_tensor: The tensor containing the path to the injectable lightcurve file.
@@ -218,9 +219,9 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         injectee_lightcurve_path = Path(injectee_lightcurve_path_tensor.numpy().decode('utf-8'))
         injectee_times, injectee_fluxes = injectee_load_times_and_fluxes_from_path_function(injectee_lightcurve_path)
         injectable_lightcurve_path = Path(injectable_lightcurve_path_tensor.numpy().decode('utf-8'))
-        injectable_times, injectable_magnification = injectable_load_times_and_fluxes_from_path_function(
+        injectable_times, injectable_magnifications = injectable_load_times_and_magnifications_from_path_function(
             injectable_lightcurve_path)
-        fluxes = self.inject_signal_into_lightcurve(injectee_fluxes, injectee_times, injectable_magnification,
+        fluxes = self.inject_signal_into_lightcurve(injectee_fluxes, injectee_times, injectable_magnifications,
                                                     injectable_times)
         preprocessed_fluxes = self.flux_preprocessing(fluxes)
         example = np.expand_dims(preprocessed_fluxes, axis=-1)

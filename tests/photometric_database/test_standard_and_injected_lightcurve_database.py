@@ -17,15 +17,27 @@ class TestStandardAndInjectedLightcurveDatabase:
         database = StandardAndInjectedLightcurveDatabase()
         # Setup mock lightcurve collections.
         standard_lightcurve_collection0 = LightcurveCollection(
-            lambda: [Path('standard_path0.ext')], lambda path: (np.array([10, 20, 30]), np.array([0, 1, 2])), 0)
+            function_to_get_paths=lambda: [Path('standard_path0.ext')],
+            function_to_load_times_and_fluxes_from_path=lambda path: (np.array([10, 20, 30]), np.array([0, 1, 2])),
+            label=0)
         standard_lightcurve_collection1 = LightcurveCollection(
-            lambda: [Path('standard_path1.ext')], lambda path: (np.array([20, 30, 40]), np.array([1, 2, 3])), 1)
+            function_to_get_paths=lambda: [Path('standard_path1.ext')],
+            function_to_load_times_and_fluxes_from_path=lambda path: (np.array([20, 30, 40]), np.array([1, 2, 3])),
+            label=1)
         injectee_lightcurve_collection = LightcurveCollection(
-            lambda: [Path('injectee_path.ext')], lambda path: (np.array([30, 40, 50]), np.array([2, 3, 4])), 0)
+            function_to_get_paths=lambda: [Path('injectee_path.ext')],
+            function_to_load_times_and_fluxes_from_path=lambda path: (np.array([30, 40, 50]), np.array([2, 3, 4])),
+            label=0)
         injectable_lightcurve_collection0 = LightcurveCollection(
-            lambda: [Path('injectable_path0.ext')], lambda path: (np.array([0, 10, 20]), np.array([0.5, 1, 1.5])), 0)
+            function_to_get_paths=lambda: [Path('injectable_path0.ext')],
+            function_to_load_times_and_magnifications_from_path=lambda path: (np.array([0, 10, 20]),
+                                                                              np.array([0.5, 1, 1.5])),
+            label=0)
         injectable_lightcurve_collection1 = LightcurveCollection(
-            lambda: [Path('injectable_path1.ext')], lambda path: (np.array([0, 10, 20, 30]), np.array([0, 1, 1, 0])), 1)
+            function_to_get_paths=lambda: [Path('injectable_path1.ext')],
+            function_to_load_times_and_magnifications_from_path=lambda path: (np.array([0, 10, 20, 30]),
+                                                                              np.array([0, 1, 1, 0])),
+            label=1)
         database.training_standard_lightcurve_collections = [standard_lightcurve_collection0,
                                                              standard_lightcurve_collection1]
         database.training_injectee_lightcurve_collection = injectee_lightcurve_collection
@@ -108,7 +120,7 @@ class TestStandardAndInjectedLightcurveDatabase:
 
     @pytest.mark.slow
     @pytest.mark.functional
-    def test_can_generate_standard_lightcurve_and_label_dataset_from_paths_dataset_and_label(self, database):
+    def test_can_generate_injected_lightcurve_and_label_dataset_from_paths_dataset_and_label(self, database):
         injectee_lightcurve_collection = database.training_injectee_lightcurve_collection
         injectable_lightcurve_collection = database.training_injectable_lightcurve_collections[0]
         injectee_paths_dataset = database.generate_paths_dataset_from_lightcurve_collection(
@@ -118,7 +130,7 @@ class TestStandardAndInjectedLightcurveDatabase:
         label = injectable_lightcurve_collection.label
         lightcurve_and_label_dataset = database.generate_injected_lightcurve_and_label_dataset(
             injectee_paths_dataset, injectee_lightcurve_collection.load_times_and_fluxes_from_path,
-            injectable_paths_dataset, injectable_lightcurve_collection.load_times_and_fluxes_from_path,
+            injectable_paths_dataset, injectable_lightcurve_collection.load_times_and_magnifications_from_path,
             label)
         lightcurve_and_label = next(iter(lightcurve_and_label_dataset))
         assert lightcurve_and_label[0].numpy().shape == (3, 1)
@@ -134,7 +146,7 @@ class TestStandardAndInjectedLightcurveDatabase:
         # noinspection PyUnresolvedReferences
         injectable_lightcurve_path = injectable_lightcurve_collection.get_paths()[0]
         injectable_expected_label = injectable_lightcurve_collection.label
-        injectable_load_from_path_function = injectable_lightcurve_collection.load_times_and_fluxes_from_path
+        injectable_load_from_path_function = injectable_lightcurve_collection.load_times_and_magnifications_from_path
         lightcurve, label = database.preprocess_injected_lightcurve(
             injectee_load_from_path_function, injectable_load_from_path_function, injectable_expected_label,
             tf.convert_to_tensor(str(injectee_lightcurve_path)), tf.convert_to_tensor(str(injectable_lightcurve_path)))
