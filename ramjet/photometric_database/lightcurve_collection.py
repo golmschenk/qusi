@@ -7,17 +7,52 @@ class LightcurveCollection:
     """
     A class representing a collection of lightcurves. Used to define how to find, load, and label a set of lightcurves.
     """
-    def __init__(self, function_to_get_lightcurve_paths: Callable[[], Iterable[Path]],
-                 function_to_load_times_and_fluxes_from_lightcurve_path: Callable[[Path],
-                                                                                  Tuple[np.ndarray, np.ndarray]],
-                 label: Union[float, None] = None):
+    def __init__(self, label: Union[float, None] = None,
+                 function_to_get_paths: Union[Callable[[], Iterable[Path]], None] = None,
+                 function_to_load_times_and_fluxes_from_path: Union[
+                     Callable[[Path], Tuple[np.ndarray, np.ndarray]], None] = None,
+                 function_to_load_times_and_magnifications_from_path: Union[
+                     Callable[[Path], Tuple[np.ndarray, np.ndarray]], None] = None):
         """
-        :param function_to_get_lightcurve_paths: A function which returns an iterable of the lightcurve paths.
-        :param function_to_load_times_and_fluxes_from_lightcurve_path: A function which, given a lightcurve path, will
-                                                                       load the fluxes and times of the lightcurve.
         :param label: The label corresponding to the lightcurves in the collection.
+        :param function_to_get_paths: A function which returns an iterable of the lightcurve paths.
+        :param function_to_load_times_and_fluxes_from_path: A function which, given a lightcurve path, will
+                                                            load the times and fluxes of the lightcurve.
+        :param function_to_load_times_and_magnifications_from_path: A function which, given a lightcurve path, will
+                                                                    load the times and magnifications of the lightcurve.
         """
-        self.get_lightcurve_paths: Callable[[], Iterable[Path]] = function_to_get_lightcurve_paths
-        self.load_times_and_fluxes_from_lightcurve_path: Callable[
-            [Path], Tuple[np.ndarray, np.ndarray]] = function_to_load_times_and_fluxes_from_lightcurve_path
+        if function_to_get_paths is not None:
+            self.get_paths: Callable[[], Iterable[Path]] = function_to_get_paths
+        if function_to_load_times_and_fluxes_from_path is not None:
+            self.load_times_and_fluxes_from_path: Callable[
+                [Path], Tuple[np.ndarray, np.ndarray]] = function_to_load_times_and_fluxes_from_path
+        if function_to_load_times_and_magnifications_from_path is not None:
+            self.load_times_and_magnifications_from_path: Callable[
+                [Path], Tuple[np.ndarray, np.ndarray]] = function_to_load_times_and_magnifications_from_path
         self.label: Union[float, None] = label
+
+    def get_paths(self) -> Iterable[Path]:
+        """
+        Gets the paths for the lightcurves in the collection.
+
+        :return: An iterable of the lightcurve paths.
+        """
+        raise NotImplementedError
+
+    def load_times_and_fluxes_from_path(self, path: Path) -> (np.ndarray, np.ndarray):
+        """
+        Loads the times and fluxes from a given lightcurve path.
+
+        :param path: The path to the lightcurve file.
+        :return: The times and the fluxes of the lightcurve.
+        """
+        raise NotImplementedError
+
+    def load_times_and_magnifications_from_path(self, path: Path) -> (np.ndarray, np.ndarray):
+        """
+        Loads the times and magnifications from a given path as an injectable signal.
+
+        :param path: The path to the lightcurve/signal file.
+        :return: The times and the magnifications of the lightcurve/signal.
+        """
+        raise NotImplementedError

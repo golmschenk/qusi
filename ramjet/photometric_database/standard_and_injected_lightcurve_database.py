@@ -55,7 +55,7 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         for paths_dataset, lightcurve_collection in zip(training_standard_paths_datasets,
                                                         self.training_standard_lightcurve_collections):
             lightcurve_and_label_dataset = self.generate_standard_lightcurve_and_label_dataset(
-                paths_dataset, lightcurve_collection.load_times_and_fluxes_from_lightcurve_path,
+                paths_dataset, lightcurve_collection.load_times_and_fluxes_from_path,
                 lightcurve_collection.label
             )
             training_lightcurve_and_label_datasets.append(lightcurve_and_label_dataset)
@@ -63,8 +63,8 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
                                                                    self.training_injectable_lightcurve_collections):
             lightcurve_and_label_dataset = self.generate_injected_lightcurve_and_label_dataset(
                 training_injectee_path_dataset,
-                self.training_injectee_lightcurve_collection.load_times_and_fluxes_from_lightcurve_path,
-                paths_dataset, injectable_lightcurve_collection.load_times_and_fluxes_from_lightcurve_path,
+                self.training_injectee_lightcurve_collection.load_times_and_fluxes_from_path,
+                paths_dataset, injectable_lightcurve_collection.load_times_and_fluxes_from_path,
                 injectable_lightcurve_collection.label
             )
             training_lightcurve_and_label_datasets.append(lightcurve_and_label_dataset)
@@ -75,7 +75,7 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         for paths_dataset, lightcurve_collection in zip(validation_standard_paths_datasets,
                                                         self.validation_standard_lightcurve_collections):
             lightcurve_and_label_dataset = self.generate_standard_lightcurve_and_label_dataset(
-                paths_dataset, lightcurve_collection.load_times_and_fluxes_from_lightcurve_path,
+                paths_dataset, lightcurve_collection.load_times_and_fluxes_from_path,
                 lightcurve_collection.label
             )
             validation_lightcurve_and_label_datasets.append(lightcurve_and_label_dataset)
@@ -83,8 +83,8 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
                                                                    self.validation_injectable_lightcurve_collections):
             lightcurve_and_label_dataset = self.generate_injected_lightcurve_and_label_dataset(
                 validation_injectee_path_dataset,
-                self.validation_injectee_lightcurve_collection.load_times_and_fluxes_from_lightcurve_path,
-                paths_dataset, injectable_lightcurve_collection.load_times_and_fluxes_from_lightcurve_path,
+                self.validation_injectee_lightcurve_collection.load_times_and_fluxes_from_path,
+                paths_dataset, injectable_lightcurve_collection.load_times_and_fluxes_from_path,
                 injectable_lightcurve_collection.label
             )
             validation_lightcurve_and_label_datasets.append(lightcurve_and_label_dataset)
@@ -102,7 +102,7 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         :param lightcurve_collection: The lightcurve collection to generate a paths dataset for.
         :return: The paths dataset.
         """
-        paths_dataset = self.paths_dataset_from_list_or_generator_factory(lightcurve_collection.get_lightcurve_paths)
+        paths_dataset = self.paths_dataset_from_list_or_generator_factory(lightcurve_collection.get_paths)
         repeated_paths_dataset = paths_dataset.repeat()
         shuffled_paths_dataset = repeated_paths_dataset.shuffle(self.shuffle_buffer_size)
         return shuffled_paths_dataset

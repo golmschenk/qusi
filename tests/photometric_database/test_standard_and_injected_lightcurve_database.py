@@ -87,7 +87,7 @@ class TestStandardAndInjectedLightcurveDatabase:
         paths_dataset = database.generate_paths_dataset_from_lightcurve_collection(lightcurve_collection)
         label = lightcurve_collection.label
         lightcurve_and_label_dataset = database.generate_standard_lightcurve_and_label_dataset(
-            paths_dataset, lightcurve_collection.load_times_and_fluxes_from_lightcurve_path, label)
+            paths_dataset, lightcurve_collection.load_times_and_fluxes_from_path, label)
         lightcurve_and_label = next(iter(lightcurve_and_label_dataset))
         assert lightcurve_and_label[0].numpy().shape == (3, 1)
         assert np.array_equal(lightcurve_and_label[0].numpy(), [[0], [1], [2]])  # Standard lightcurve 0.
@@ -96,9 +96,9 @@ class TestStandardAndInjectedLightcurveDatabase:
     def test_can_preprocess_standard_lightcurve(self, database):
         lightcurve_collection = database.training_standard_lightcurve_collections[0]
         # noinspection PyUnresolvedReferences
-        lightcurve_path = lightcurve_collection.get_lightcurve_paths()[0]
+        lightcurve_path = lightcurve_collection.get_paths()[0]
         expected_label = lightcurve_collection.label
-        load_from_path_function = lightcurve_collection.load_times_and_fluxes_from_lightcurve_path
+        load_from_path_function = lightcurve_collection.load_times_and_fluxes_from_path
         lightcurve, label = database.preprocess_standard_lightcurve(load_from_path_function,
                                                                     expected_label,
                                                                     tf.convert_to_tensor(str(lightcurve_path)))
@@ -117,8 +117,8 @@ class TestStandardAndInjectedLightcurveDatabase:
             injectable_lightcurve_collection)
         label = injectable_lightcurve_collection.label
         lightcurve_and_label_dataset = database.generate_injected_lightcurve_and_label_dataset(
-            injectee_paths_dataset, injectee_lightcurve_collection.load_times_and_fluxes_from_lightcurve_path,
-            injectable_paths_dataset, injectable_lightcurve_collection.load_times_and_fluxes_from_lightcurve_path,
+            injectee_paths_dataset, injectee_lightcurve_collection.load_times_and_fluxes_from_path,
+            injectable_paths_dataset, injectable_lightcurve_collection.load_times_and_fluxes_from_path,
             label)
         lightcurve_and_label = next(iter(lightcurve_and_label_dataset))
         assert lightcurve_and_label[0].numpy().shape == (3, 1)
@@ -129,12 +129,12 @@ class TestStandardAndInjectedLightcurveDatabase:
         injectee_lightcurve_collection = database.training_injectee_lightcurve_collection
         injectable_lightcurve_collection = database.training_injectable_lightcurve_collections[0]
         # noinspection PyUnresolvedReferences
-        injectee_lightcurve_path = injectee_lightcurve_collection.get_lightcurve_paths()[0]
-        injectee_load_from_path_function = injectee_lightcurve_collection.load_times_and_fluxes_from_lightcurve_path
+        injectee_lightcurve_path = injectee_lightcurve_collection.get_paths()[0]
+        injectee_load_from_path_function = injectee_lightcurve_collection.load_times_and_fluxes_from_path
         # noinspection PyUnresolvedReferences
-        injectable_lightcurve_path = injectable_lightcurve_collection.get_lightcurve_paths()[0]
+        injectable_lightcurve_path = injectable_lightcurve_collection.get_paths()[0]
         injectable_expected_label = injectable_lightcurve_collection.label
-        injectable_load_from_path_function = injectable_lightcurve_collection.load_times_and_fluxes_from_lightcurve_path
+        injectable_load_from_path_function = injectable_lightcurve_collection.load_times_and_fluxes_from_path
         lightcurve, label = database.preprocess_injected_lightcurve(
             injectee_load_from_path_function, injectable_load_from_path_function, injectable_expected_label,
             tf.convert_to_tensor(str(injectee_lightcurve_path)), tf.convert_to_tensor(str(injectable_lightcurve_path)))
