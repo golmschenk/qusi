@@ -98,3 +98,16 @@ class TestLightcurveCollection:
         except NotImplementedError:
             pytest.fail('`NotImplementedError` raised when it should be considered implemented.')
 
+    def test_generating_a_synthetic_signal_from_a_real_signal_does_not_invert_negative_lightcurve_shapes(
+            self, database):
+        times = np.arange(5, dtype=np.float32)
+        unnormalized_positive_lightcurve_fluxes = np.array([10, 20, 30, 25, 15], dtype=np.float32)
+        normalized_positive_lightcurve_fluxes, _ = database.generate_synthetic_signal_from_real_data(
+            unnormalized_positive_lightcurve_fluxes, times)
+        assert normalized_positive_lightcurve_fluxes.argmax() == 2
+        assert normalized_positive_lightcurve_fluxes.argmin() == 0
+        unnormalized_negative_lightcurve_fluxes = np.array([-30, -20, -10, -15, -25], dtype=np.float32)
+        normalized_negative_lightcurve_fluxes, _ = database.generate_synthetic_signal_from_real_data(
+            unnormalized_negative_lightcurve_fluxes, times)
+        assert normalized_negative_lightcurve_fluxes.argmax() == 2
+        assert normalized_negative_lightcurve_fluxes.argmin() == 0

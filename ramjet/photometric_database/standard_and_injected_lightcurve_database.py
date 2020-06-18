@@ -263,21 +263,6 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         return fluxes_with_injected_signal
 
     @staticmethod
-    def generate_synthetic_signal_from_real_data(fluxes: np.ndarray, times: np.ndarray) -> (np.ndarray, np.ndarray):
-        """
-        Takes real lightcurve data and converts it to a form that can be used for synthetic lightcurve injection.
-
-        :param fluxes: The real lightcurve fluxes.
-        :param times: The real lightcurve times.
-        :return: Fake synthetic magnifications and times.
-        """
-        fluxes -= np.minimum(np.min(fluxes), 0)  # Fix negative flux cases if they exist.
-        flux_median = np.median(fluxes)
-        normalized_fluxes = fluxes / flux_median
-        relative_times = times - np.min(times)
-        return normalized_fluxes, relative_times
-
-    @staticmethod
     def intersperse_datasets(dataset_list: List[tf.data.Dataset]) -> tf.data.Dataset:
         """
         Intersperses a list of datasets into one joint dataset. (e.g., [0, 2, 4] and [1, 3, 5] to [0, 1, 2, 3, 4, 5]).

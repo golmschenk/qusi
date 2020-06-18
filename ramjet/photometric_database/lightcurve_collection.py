@@ -56,3 +56,18 @@ class LightcurveCollection:
         :return: The times and the magnifications of the lightcurve/signal.
         """
         raise NotImplementedError
+
+    @staticmethod
+    def generate_synthetic_signal_from_real_data(fluxes: np.ndarray, times: np.ndarray) -> (np.ndarray, np.ndarray):
+        """
+        Takes real lightcurve data and converts it to a form that can be used for synthetic lightcurve injection.
+
+        :param fluxes: The real lightcurve fluxes.
+        :param times: The real lightcurve times.
+        :return: Fake synthetic magnifications and times.
+        """
+        fluxes -= np.minimum(np.min(fluxes), 0)  # Fix negative flux cases if they exist.
+        flux_median = np.median(fluxes)
+        normalized_fluxes = fluxes / flux_median
+        relative_times = times - np.min(times)
+        return normalized_fluxes, relative_times
