@@ -232,3 +232,23 @@ class TestStandardAndInjectedLightcurveDatabase:
         examples_and_labels2 = next(interspersed_dataset_iterator)
         assert np.array_equal(examples_and_labels2[0], [2, 2])
         assert examples_and_labels2[1] == [-2]
+
+    @pytest.mark.slow
+    @pytest.mark.functional
+    def test_database_can_generate_training_and_validation_datasets_with_only_standard_collections(self, database):
+        database.training_injectee_lightcurve_collection = None
+        database.training_injectable_lightcurve_collections = []
+        database.validation_injectee_lightcurve_collection = None
+        database.validation_injectable_lightcurve_collections = []
+        training_dataset, validation_dataset = database.generate_datasets()
+        training_batch = next(iter(training_dataset))
+        training_batch_examples = training_batch[0]
+        training_batch_labels = training_batch[1]
+        assert training_batch_examples.shape == (database.batch_size, 3, 1)
+        assert training_batch_labels.shape == (database.batch_size, 1)
+        assert np.array_equal(training_batch_examples[0].numpy(), [[0], [1], [2]])  # Standard lightcurve 0.
+        assert np.array_equal(training_batch_labels[0].numpy(), [0])  # Standard label 0.
+        assert np.array_equal(training_batch_examples[1].numpy(), [[1], [2], [3]])  # Standard lightcurve 1.
+        assert np.array_equal(training_batch_labels[1].numpy(), [1])  # Standard label 1.
+        assert np.array_equal(training_batch_examples[2].numpy(), [[0], [1], [2]])  # Standard lightcurve 0.
+        assert np.array_equal(training_batch_examples[3].numpy(), [[1], [2], [3]])  # Standard lightcurve 1.

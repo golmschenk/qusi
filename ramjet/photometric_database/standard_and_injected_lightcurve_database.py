@@ -41,14 +41,18 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         """
         training_standard_paths_datasets = self.generate_paths_datasets_from_lightcurve_collection_list(
             self.training_standard_lightcurve_collections)
-        training_injectee_path_dataset = self.generate_paths_dataset_from_lightcurve_collection(
-            self.training_injectee_lightcurve_collection)
+        training_injectee_path_dataset = None
+        if self.training_injectee_lightcurve_collection is not None:
+            training_injectee_path_dataset = self.generate_paths_dataset_from_lightcurve_collection(
+                self.training_injectee_lightcurve_collection)
         training_injectable_paths_datasets = self.generate_paths_datasets_from_lightcurve_collection_list(
             self.training_injectable_lightcurve_collections)
         validation_standard_paths_datasets = self.generate_paths_datasets_from_lightcurve_collection_list(
             self.validation_standard_lightcurve_collections)
-        validation_injectee_path_dataset = self.generate_paths_dataset_from_lightcurve_collection(
-            self.validation_injectee_lightcurve_collection)
+        validation_injectee_path_dataset = None
+        if self.validation_injectee_lightcurve_collection is not None:
+            validation_injectee_path_dataset = self.generate_paths_dataset_from_lightcurve_collection(
+                self.validation_injectee_lightcurve_collection)
         validation_injectable_paths_datasets = self.generate_paths_datasets_from_lightcurve_collection_list(
             self.validation_injectable_lightcurve_collections)
         training_lightcurve_and_label_datasets = []
