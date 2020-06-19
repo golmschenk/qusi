@@ -252,3 +252,42 @@ class TestStandardAndInjectedLightcurveDatabase:
         assert np.array_equal(training_batch_labels[1].numpy(), [1])  # Standard label 1.
         assert np.array_equal(training_batch_examples[2].numpy(), [[0], [1], [2]])  # Standard lightcurve 0.
         assert np.array_equal(training_batch_examples[3].numpy(), [[1], [2], [3]])  # Standard lightcurve 1.
+
+    @pytest.mark.slow
+    @pytest.mark.functional
+    def test_can_generate_infer_path_and_lightcurve_dataset_from_paths_dataset_and_label(self, database):
+        lightcurve_collection = database.training_standard_lightcurve_collections[0]
+        paths_dataset = database.generate_paths_dataset_from_lightcurve_collection(lightcurve_collection)
+        path_and_lightcurve_dataset = database.generate_infer_path_and_lightcurve_dataset(
+            paths_dataset, lightcurve_collection.load_times_and_fluxes_from_path)
+        path_and_lightcurve = next(iter(path_and_lightcurve_dataset))
+        assert np.array_equal(path_and_lightcurve[0].numpy(), b'standard_path0.ext')  # Standard path 0.
+        assert path_and_lightcurve[1].numpy().shape == (3, 1)
+        assert np.array_equal(path_and_lightcurve[1].numpy(), [[0], [1], [2]])  # Standard lightcurve 0.
+
+    def test_can_preprocess_infer_lightcurve(self, database):
+        lightcurve_collection = database.training_standard_lightcurve_collections[0]
+        # noinspection PyUnresolvedReferences
+        lightcurve_path = lightcurve_collection.get_paths()[0]
+        expected_label = lightcurve_collection.label
+        load_from_path_function = lightcurve_collection.load_times_and_fluxes_from_path
+        path, lightcurve = database.preprocess_infer_lightcurve(load_from_path_function,
+                                                                 tf.convert_to_tensor(str(lightcurve_path)))
+        assert np.array_equal(path, 'standard_path0.ext')  # Standard path 0.
+        assert lightcurve.shape == (3, 1)
+        assert np.array_equal(lightcurve, [[0], [1], [2]])  # Standard lightcurve 0.
+
+    @pytest.mark.slow
+    @pytest.mark.functional
+    def test_generated_standard_and_infer_datasets_return_the_same_lightcurve(self, database):
+        lightcurve_collection = database.training_standard_lightcurve_collections[0]
+        paths_dataset0 = database.generate_paths_dataset_from_lightcurve_collection(lightcurve_collection)
+        label = lightcurve_collection.label
+        lightcurve_and_label_dataset = database.generate_standard_lightcurve_and_label_dataset(
+            paths_dataset0, lightcurve_collection.load_times_and_fluxes_from_path, label)
+        lightcurve_and_label = next(iter(lightcurve_and_label_dataset))
+        paths_dataset1 = database.generate_paths_dataset_from_lightcurve_collection(lightcurve_collection)
+        path_and_lightcurve_dataset = database.generate_infer_path_and_lightcurve_dataset(
+            paths_dataset1, lightcurve_collection.load_times_and_fluxes_from_path)
+        path_and_lightcurve = next(iter(path_and_lightcurve_dataset))
+        assert np.array_equal(lightcurve_and_label[0].numpy(), path_and_lightcurve[1].numpy())

@@ -166,6 +166,49 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         example = np.expand_dims(preprocessed_fluxes, axis=-1)
         return example, np.array([label])
 
+    def generate_infer_path_and_lightcurve_dataset(
+            self, paths_dataset: tf.data.Dataset,
+            load_times_and_fluxes_from_path_function: Callable[[Path], Tuple[np.ndarray, np.ndarray]]):
+        """
+        Generates a path and lightcurve dataset from a paths dataset using a passed function defining
+        how to load the values from the lightcurve file.
+
+        :param paths_dataset: The dataset of paths to use.
+        :param load_times_and_fluxes_from_path_function: The function defining how to load the times and fluxes of a
+                                                         lightcurve from a path.
+        :return: The resulting lightcurve example and label dataset.
+        """
+        preprocess_map_function = partial(self.preprocess_infer_lightcurve, load_times_and_fluxes_from_path_function)
+        output_types = (tf.string, tf.float32)
+        output_shapes = [(), (self.time_steps_per_example, 1)]
+        example_and_label_dataset = map_py_function_to_dataset(paths_dataset,
+                                                               preprocess_map_function,
+                                                               self.number_of_parallel_processes_per_map,
+                                                               output_types=output_types,
+                                                               output_shapes=output_shapes)
+        return example_and_label_dataset
+
+    def preprocess_infer_lightcurve(
+            self, load_times_and_fluxes_from_path_function: Callable[[Path], Tuple[np.ndarray, np.ndarray]],
+            lightcurve_path_tensor: tf.Tensor) -> (np.ndarray, np.ndarray):
+        """
+        Preprocesses a individual standard lightcurve from a lightcurve path tensor, using a passed function defining
+        how to load the values from the lightcurve file and returns the path and lightcurve. Designed to be used with
+        `partial` to prepare a function which will just require the lightcurve path tensor, and can then be mapped to a
+        dataset.
+
+        :param load_times_and_fluxes_from_path_function: The function to load the lightcurve times and fluxes from a
+                                                         file.
+        :param lightcurve_path_tensor: The tensor containing the path to the lightcurve file.
+        :return: The path and example array shaped for use as single example for the network.
+        """
+        lightcurve_path_string = lightcurve_path_tensor.numpy().decode('utf-8')
+        lightcurve_path = Path(lightcurve_path_string)
+        times, fluxes = load_times_and_fluxes_from_path_function(lightcurve_path)
+        preprocessed_fluxes = self.flux_preprocessing(fluxes)
+        example = np.expand_dims(preprocessed_fluxes, axis=-1)
+        return lightcurve_path_string, example
+
     def generate_injected_lightcurve_and_label_dataset(
             self, injectee_paths_dataset: tf.data.Dataset,
             injectee_load_times_and_fluxes_from_path_function: Callable[[Path], Tuple[np.ndarray, np.ndarray]],
