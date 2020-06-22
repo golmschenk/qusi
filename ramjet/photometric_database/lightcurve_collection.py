@@ -3,6 +3,15 @@ from pathlib import Path
 from typing import Callable, Iterable, Union, Tuple
 
 
+class LightcurveCollectionMethodNotImplementedError(RuntimeError):
+    """
+    An error to raise if a collection method that is not implemented is attempted to be used.
+    Note, the standard NotImplementedError is not supposed to be used for cases when non-implemented functions are
+    meant to be allowed, which is why a custom class is needed.
+    """
+    pass
+
+
 class LightcurveCollection:
     """
     A class representing a collection of lightcurves. Used to define how to find, load, and label a set of lightcurves.
@@ -37,7 +46,7 @@ class LightcurveCollection:
 
         :return: An iterable of the lightcurve paths.
         """
-        raise NotImplementedError
+        raise LightcurveCollectionMethodNotImplementedError
 
     def load_times_and_fluxes_from_path(self, path: Path) -> (np.ndarray, np.ndarray):
         """
@@ -46,7 +55,7 @@ class LightcurveCollection:
         :param path: The path to the lightcurve file.
         :return: The times and the fluxes of the lightcurve.
         """
-        raise NotImplementedError
+        raise LightcurveCollectionMethodNotImplementedError
 
     def load_times_and_magnifications_from_path(self, path: Path) -> (np.ndarray, np.ndarray):
         """
@@ -55,7 +64,7 @@ class LightcurveCollection:
         :param path: The path to the lightcurve/signal file.
         :return: The times and the magnifications of the lightcurve/signal.
         """
-        raise NotImplementedError
+        raise LightcurveCollectionMethodNotImplementedError
 
     @staticmethod
     def generate_synthetic_signal_from_real_data(fluxes: np.ndarray, times: np.ndarray) -> (np.ndarray, np.ndarray):

@@ -3,7 +3,8 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from ramjet.photometric_database.lightcurve_collection import LightcurveCollection
+from ramjet.photometric_database.lightcurve_collection import LightcurveCollection, \
+    LightcurveCollectionMethodNotImplementedError
 
 
 class TestLightcurveCollection:
@@ -16,21 +17,21 @@ class TestLightcurveCollection:
 
     def test_calling_load_times_and_fluxes_from_path_without_setting_raises_error(self):
         lightcurve_collection = LightcurveCollection()
-        with pytest.raises(NotImplementedError):
+        with pytest.raises(LightcurveCollectionMethodNotImplementedError):
             _ = lightcurve_collection.load_times_and_fluxes_from_path(Path('path.ext'))
         lightcurve_collection.load_times_and_fluxes_from_path = lambda path: (np.array([]), np.array([]))
         try:
             _ = lightcurve_collection.load_times_and_fluxes_from_path(Path('path.ext'))
-        except NotImplementedError:
-            pytest.fail('`NotImplementedError` raised when it should be considered implemented.')
+        except LightcurveCollectionMethodNotImplementedError:
+            pytest.fail('`LightcurveCollectionMethodNotImplementedError` raised when it should not be.')
             
     def test_load_times_and_fluxes_from_path_can_be_set_by_passing_to_init(self):
         lightcurve_collection = LightcurveCollection(
             function_to_load_times_and_fluxes_from_path=lambda path: (np.array([]), np.array([])))
         try:
             _ = lightcurve_collection.load_times_and_fluxes_from_path(Path('path.ext'))
-        except NotImplementedError:
-            pytest.fail('`NotImplementedError` raised when it should be considered implemented.')
+        except LightcurveCollectionMethodNotImplementedError:
+            pytest.fail('`LightcurveCollectionMethodNotImplementedError` raised when it should not be.')
             
     def test_load_times_and_fluxes_from_path_can_be_set_by_subclassing(self):
         class SubclassLightcurveCollection(LightcurveCollection):
@@ -39,26 +40,26 @@ class TestLightcurveCollection:
         lightcurve_collection = SubclassLightcurveCollection()
         try:
             _ = lightcurve_collection.load_times_and_fluxes_from_path(Path('path.ext'))
-        except NotImplementedError:
-            pytest.fail('`NotImplementedError` raised when it should be considered implemented.')
+        except LightcurveCollectionMethodNotImplementedError:
+            pytest.fail('`LightcurveCollectionMethodNotImplementedError` raised when it should not be.')
 
     def test_calling_load_times_and_magnifications_from_path_without_setting_raises_error(self):
         lightcurve_collection = LightcurveCollection()
-        with pytest.raises(NotImplementedError):
+        with pytest.raises(LightcurveCollectionMethodNotImplementedError):
             _ = lightcurve_collection.load_times_and_magnifications_from_path(Path('path.ext'))
         lightcurve_collection.load_times_and_magnifications_from_path = lambda path: (np.array([]), np.array([]))
         try:
             _ = lightcurve_collection.load_times_and_magnifications_from_path(Path('path.ext'))
-        except NotImplementedError:
-            pytest.fail('`NotImplementedError` raised when it should be considered implemented.')
+        except LightcurveCollectionMethodNotImplementedError:
+            pytest.fail('`LightcurveCollectionMethodNotImplementedError` raised when it should not be.')
 
     def test_load_times_and_magnifications_from_path_can_be_set_by_passing_to_init(self):
         lightcurve_collection = LightcurveCollection(
             function_to_load_times_and_magnifications_from_path=lambda path: (np.array([]), np.array([])))
         try:
             _ = lightcurve_collection.load_times_and_magnifications_from_path(Path('path.ext'))
-        except NotImplementedError:
-            pytest.fail('`NotImplementedError` raised when it should be considered implemented.')
+        except LightcurveCollectionMethodNotImplementedError:
+            pytest.fail('`LightcurveCollectionMethodNotImplementedError` raised when it should not be.')
 
     def test_load_times_and_magnifications_from_path_can_be_set_by_subclassing(self):
         class SubclassLightcurveCollection(LightcurveCollection):
@@ -68,25 +69,25 @@ class TestLightcurveCollection:
         lightcurve_collection = SubclassLightcurveCollection()
         try:
             _ = lightcurve_collection.load_times_and_magnifications_from_path(Path('path.ext'))
-        except NotImplementedError:
-            pytest.fail('`NotImplementedError` raised when it should be considered implemented.')
+        except LightcurveCollectionMethodNotImplementedError:
+            pytest.fail('`LightcurveCollectionMethodNotImplementedError` raised when it should not be.')
 
     def test_calling_get_paths_without_setting_raises_error(self):
         lightcurve_collection = LightcurveCollection()
-        with pytest.raises(NotImplementedError):
+        with pytest.raises(LightcurveCollectionMethodNotImplementedError):
             _ = lightcurve_collection.get_paths()
         lightcurve_collection.get_paths = lambda: []
         try:
             _ = lightcurve_collection.get_paths()
-        except NotImplementedError:
-            pytest.fail('`NotImplementedError` raised when it should be considered implemented.')
+        except LightcurveCollectionMethodNotImplementedError:
+            pytest.fail('`LightcurveCollectionMethodNotImplementedError` raised when it should not be.')
 
     def test_get_paths_can_be_set_by_passing_to_init(self):
         lightcurve_collection = LightcurveCollection(function_to_get_paths=lambda: [])
         try:
             _ = lightcurve_collection.get_paths()
-        except NotImplementedError:
-            pytest.fail('`NotImplementedError` raised when it should be considered implemented.')
+        except LightcurveCollectionMethodNotImplementedError:
+            pytest.fail('`LightcurveCollectionMethodNotImplementedError` raised when it should not be.')
 
     def test_get_paths_can_be_set_by_subclassing(self):
         class SubclassLightcurveCollection(LightcurveCollection):
@@ -95,8 +96,8 @@ class TestLightcurveCollection:
         lightcurve_collection = SubclassLightcurveCollection()
         try:
             _ = lightcurve_collection.get_paths()
-        except NotImplementedError:
-            pytest.fail('`NotImplementedError` raised when it should be considered implemented.')
+        except LightcurveCollectionMethodNotImplementedError:
+            pytest.fail('`LightcurveCollectionMethodNotImplementedError` raised when it should not be.')
 
     def test_generating_a_synthetic_signal_from_a_real_signal_does_not_invert_negative_lightcurve_shapes(self):
         lightcurve_collection = LightcurveCollection()
