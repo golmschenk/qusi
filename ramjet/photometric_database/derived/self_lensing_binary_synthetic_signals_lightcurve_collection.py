@@ -1,8 +1,10 @@
 """
 Code for a lightcurve collection of Agnieszka Cieplak's synthetic signals.
 """
+import re
 import tarfile
 import urllib.request
+import pandas as pd
 from pathlib import Path
 
 from ramjet.photometric_database.lightcurve_collection import LightcurveCollection
@@ -32,9 +34,21 @@ class SelfLensingBinarySyntheticSignalsLightcurveCollection(LightcurveCollection
             path.rename(self.data_directory.joinpath(path.name))
         csv_uncompressed_directory.rmdir()
 
+    def convert_csv_files_to_project_format(self):
+        """
+        Converts Agnieszka Cieplak's synthetic signal CSV files to the project format feather files.
+        """
+        out_paths = self.data_directory.glob('*.out')
+        synthetic_signal_csv_paths = [path for path in out_paths if re.match(r'lc_\d+\.out', path.name)]
+        for synthetic_signal_csv_path in synthetic_signal_csv_paths:
+            synthetic_signal = pd.read_csv(synthetic_signal_csv_path, names=['time__days', 'magnification'],
+                                           delim_whitespace=True, skipinitialspace=True)
+            synthetic_signal.to_feather(self.data_directory.joinpath(f'{synthetic_signal_csv_path.stem}.feather'))
+            synthetic_signal_csv_path.unlink()
 
 
 if __name__ == '__main__':
     lightcurve_collection = SelfLensingBinarySyntheticSignalsLightcurveCollection()
     lightcurve_collection.data_directory.mkdir(parents=True, exist_ok=True)
     lightcurve_collection.download_csv_files()
+    lightcurve_collection.convert_csv_files_to_project_format()
