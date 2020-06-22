@@ -101,7 +101,7 @@ class TessFfiDataInterface:
         match = re.search(r'tesslcs_sector_(\d+)(?:_104)?/tesslcs_tmag_\d+_\d+/tesslc_(\d+)', file_path)
         if match:
             return int(match.group(2)), int(match.group(1))
-        # Search for Brian Powell's FFI path convention with only the file name containing the taret.
+        # Search for Brian Powell's FFI path convention with only the file name containing the target.
         # E.g., "tesslc_290374453"
         match = re.search(r'tesslc_(\d+)', file_path)
         if match:
