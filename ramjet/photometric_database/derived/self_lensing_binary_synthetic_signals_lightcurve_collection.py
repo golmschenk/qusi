@@ -42,6 +42,7 @@ class SelfLensingBinarySyntheticSignalsLightcurveCollection(LightcurveCollection
         """
         Converts Agnieszka Cieplak's synthetic signal CSV files to the project format feather files.
         """
+        print('Converting synthetic signals to project format...')
         out_paths = self.data_directory.glob('*.out')
         synthetic_signal_csv_paths = [path for path in out_paths if re.match(r'lc_\d+\.out', path.name)]
         for synthetic_signal_csv_path in synthetic_signal_csv_paths:
@@ -112,3 +113,4 @@ if __name__ == '__main__':
     lightcurve_collection.data_directory.mkdir(parents=True, exist_ok=True)
     lightcurve_collection.download_csv_files()
     lightcurve_collection.convert_csv_files_to_project_format()
+    print('Self lensing binary synthetic signal lightcurve collection ready.')
