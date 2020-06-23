@@ -23,7 +23,7 @@ class TessTwoMinuteLightcurveCollection(LightcurveCollection):
 
         :return: An iterable of the lightcurve paths.
         """
-        return Path('data/toi_database/lightcurves').glob('*.fits')
+        return Path('data/tess_two_minute_cadence_lightcurves').glob('*.fits')
 
     def load_times_and_fluxes_from_path(self, path: Path) -> (np.ndarray, np.ndarray):
         """
