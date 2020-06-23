@@ -16,6 +16,7 @@ class SelfLensingBinarySyntheticSignalsLightcurveCollection(LightcurveCollection
     """
     A lightcurve collection for Agnieszka Cieplak's synthetic signals.
     """
+
     def __init__(self):
         super().__init__()
         self.data_directory: Path = Path('data/self_lensing_binary_synthetic_signals')
@@ -67,6 +68,42 @@ class SelfLensingBinarySyntheticSignalsLightcurveCollection(LightcurveCollection
         synthetic_signal_data_frame = pd.read_feather(path)
         times = synthetic_signal_data_frame['time__days'].values
         magnifications = synthetic_signal_data_frame['magnification'].values
+        return times, magnifications
+
+
+class ReversedSelfLensingBinarySyntheticSignalsLightcurveCollection(
+    SelfLensingBinarySyntheticSignalsLightcurveCollection):
+    """
+    A lightcurve collection for a time reversed version Agnieszka Cieplak's synthetic signals. Useful as a negative
+    training dataset, as the lensing signals will only occur in a specific order relative to the other signal
+    components.
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.data_directory: Path = Path('data/self_lensing_binary_synthetic_signals')
+        self.label = 0
+
+    @staticmethod
+    def reverse_signal(times: np.ndarray, magnitudes: np.ndarray) -> (np.ndarray, np.ndarray):
+        """
+        Reverses the signal (i.e., the original first magnitude is in the last position and vice versa).
+
+        :param times: The times of the original signal.
+        :param magnitudes: The magnitudes of the original signal.
+        :return: The reversed signal times and magnitudes.
+        """
+        return times, magnitudes[::-1]
+
+    def load_times_and_magnifications_from_path(self, path: Path) -> (np.ndarray, np.ndarray):
+        """
+        Loads the times and magnifications from a given path as an injectable signal.
+
+        :param path: The path to the lightcurve/signal file.
+        :return: The times and the magnifications of the lightcurve/signal.
+        """
+        original_times, original_magnitudes = super().load_times_and_magnifications_from_path(path)
+        times, magnifications = self.reverse_signal(original_times, original_magnitudes)
         return times, magnifications
 
 

@@ -1,3 +1,4 @@
+import numpy as np
 from unittest.mock import patch, Mock
 
 import ramjet.photometric_database.derived.self_lensing_binary_synthetic_signals_lightcurve_collection as module
@@ -24,3 +25,13 @@ class TestSelfLensingBinarySyntheticSignalsLightcurveCollection:
                 assert mock_open.call_args[0][0] == expected_save_path
                 assert mock_extractall.called
                 assert mock_extractall.call_args[0][0] == lightcurve_collection.data_directory
+
+
+class TestReversedSelfLensingBinarySyntheticSignalsLightcurveCollection:
+    def test_reversal_of_signals(self):
+        times = np.array([0, 10, 20, 30, 40, 50])
+        magnitudes = np.array([0, 1, 2, 3, 4, 5])
+        lightcurve_collection = module.ReversedSelfLensingBinarySyntheticSignalsLightcurveCollection()
+        reversed_times, reversed_magnitudes = lightcurve_collection.reverse_signal(times, magnitudes)
+        assert np.array_equal(reversed_times, [0, 10, 20, 30, 40, 50])
+        assert np.array_equal(reversed_magnitudes, [5, 4, 3, 2, 1, 0])
