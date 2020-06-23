@@ -9,7 +9,7 @@ from ramjet.photometric_database.lightcurve_collection import LightcurveCollecti
 tess_data_interface = TessDataInterface()
 
 
-class TessTwoMinuteLightcurveCollection(LightcurveCollection):
+class TessTwoMinuteCadenceLightcurveCollection(LightcurveCollection):
     """
     A lightcurve collection of the TESS two minute cadence data.
     """

@@ -1,6 +1,6 @@
 from ramjet.photometric_database.derived.self_lensing_binary_synthetic_signals_lightcurve_collection import \
     SelfLensingBinarySyntheticSignalsLightcurveCollection, ReversedSelfLensingBinarySyntheticSignalsLightcurveCollection
-from ramjet.photometric_database.derived.tess_two_minute_lightcurve_collection import TessTwoMinuteLightcurveCollection
+from ramjet.photometric_database.derived.tess_two_minute_lightcurve_collection import TessTwoMinuteCadenceLightcurveCollection
 from ramjet.photometric_database.standard_and_injected_lightcurve_database import StandardAndInjectedLightcurveDatabase
 
 
@@ -10,8 +10,8 @@ class SelfLensingBinaryDatabase(StandardAndInjectedLightcurveDatabase):
     """
     def __init__(self):
         super().__init__()
-        self.training_standard_lightcurve_collections = [TessTwoMinuteLightcurveCollection()]
-        self.training_injectee_lightcurve_collection = TessTwoMinuteLightcurveCollection()
+        self.training_standard_lightcurve_collections = [TessTwoMinuteCadenceLightcurveCollection()]
+        self.training_injectee_lightcurve_collection = TessTwoMinuteCadenceLightcurveCollection()
         self.training_injectable_lightcurve_collections = [
             SelfLensingBinarySyntheticSignalsLightcurveCollection(),
             ReversedSelfLensingBinarySyntheticSignalsLightcurveCollection()
