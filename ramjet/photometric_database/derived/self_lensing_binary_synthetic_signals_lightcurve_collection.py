@@ -4,8 +4,10 @@ Code for a lightcurve collection of Agnieszka Cieplak's synthetic signals.
 import re
 import tarfile
 import urllib.request
+import numpy as np
 import pandas as pd
 from pathlib import Path
+from typing import Iterable
 
 from ramjet.photometric_database.lightcurve_collection import LightcurveCollection
 
@@ -17,6 +19,7 @@ class SelfLensingBinarySyntheticSignalsLightcurveCollection(LightcurveCollection
     def __init__(self):
         super().__init__()
         self.data_directory: Path = Path('data/self_lensing_binary_synthetic_signals')
+        self.label = 1
 
     def download_csv_files(self):
         """
@@ -45,6 +48,26 @@ class SelfLensingBinarySyntheticSignalsLightcurveCollection(LightcurveCollection
                                            delim_whitespace=True, skipinitialspace=True)
             synthetic_signal.to_feather(self.data_directory.joinpath(f'{synthetic_signal_csv_path.stem}.feather'))
             synthetic_signal_csv_path.unlink()
+
+    def get_paths(self) -> Iterable[Path]:
+        """
+        Gets the paths for the lightcurves in the collection.
+
+        :return: An iterable of the lightcurve paths.
+        """
+        return self.data_directory.glob('*.feather')
+
+    def load_times_and_magnifications_from_path(self, path: Path) -> (np.ndarray, np.ndarray):
+        """
+        Loads the times and magnifications from a given path as an injectable signal.
+
+        :param path: The path to the lightcurve/signal file.
+        :return: The times and the magnifications of the lightcurve/signal.
+        """
+        synthetic_signal_data_frame = pd.read_feather(path)
+        times = synthetic_signal_data_frame['time__days'].values
+        magnifications = synthetic_signal_data_frame['magnification'].values
+        return times, magnifications
 
 
 if __name__ == '__main__':

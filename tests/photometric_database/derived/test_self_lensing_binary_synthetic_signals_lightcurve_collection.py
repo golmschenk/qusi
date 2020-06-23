@@ -1,4 +1,4 @@
-from unittest.mock import patch, Mock, MagicMock
+from unittest.mock import patch, Mock
 
 import ramjet.photometric_database.derived.self_lensing_binary_synthetic_signals_lightcurve_collection as module
 from ramjet.photometric_database.derived.self_lensing_binary_synthetic_signals_lightcurve_collection import \
