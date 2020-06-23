@@ -1,0 +1,2 @@
+class SelfLensingBinaryDatabase():
+    pass

@@ -6,9 +6,12 @@ from ramjet.photometric_database.derived.self_lensing_binary_synthetic_signals_l
 
 
 class TestSelfLensingBinarySyntheticSignalsLightcurveCollection:
-    def test_can_request_download_of_synthetic_csv_data_from_http(self):
+    @patch.object(module, 'Path')
+    def test_can_request_download_of_synthetic_csv_data_from_http(self, mock_path):
         with patch.object(module.urllib.request, 'urlretrieve') as mock_urlretrieve:
             with patch.object(module.tarfile, 'open') as mock_open:
+                mock_path.open = Mock()
+                mock_path.glob = Mock(return_value=[])
                 mock_extractall = Mock()
                 # Mock the tarfile open context manager.
                 mock_open.return_value.__enter__.return_value.extractall = mock_extractall
