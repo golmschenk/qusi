@@ -208,6 +208,40 @@ class TestStandardAndInjectedLightcurveDatabase:
                                                                              signal_magnifications, signal_times)
         assert np.array_equal(fluxes_with_injected_signal, np.array([1, 5, 9, 7, 5, 3]))
 
+    def test_injected_signal_randomly_varies_injectable_portion_used_when_injectable_larger_than_injectee(self,
+                                                                                                          database):
+        injectee_fluxes = np.array([1, 2, 3])
+        injectee_times = np.array([10, 20, 30])
+        injectable_magnifications = np.array([1, 3, 1])
+        injectable_times = np.array([0, 20, 40])
+        with patch.object(database_module.np.random, 'random') as mock_random:
+            mock_random.return_value = 0
+            injected = database.inject_signal_into_lightcurve(injectee_fluxes, injectee_times,
+                                                              injectable_magnifications, injectable_times)
+            assert np.array_equal(injected, np.array([1, 4, 7]))
+        with patch.object(database_module.np.random, 'random') as mock_random:
+            mock_random.return_value = 1
+            injected = database.inject_signal_into_lightcurve(injectee_fluxes, injectee_times,
+                                                              injectable_magnifications, injectable_times)
+            assert np.array_equal(injected, np.array([5, 4, 3]))
+
+    def test_injected_signal_randomly_varies_injection_location_when_injectee_larger_than_injectable(self, database):
+        injectee_fluxes = np.array([1, 2, 3, 4, 5])
+        injectee_times = np.array([10, 20, 30, 40, 50])
+        injectable_magnifications = np.array([1, 3, 1])
+        injectable_times = np.array([0, 10, 20])
+        database.allow_out_of_bounds_injection = True
+        with patch.object(database_module.np.random, 'random') as mock_random:
+            mock_random.return_value = 0
+            injected = database.inject_signal_into_lightcurve(injectee_fluxes, injectee_times,
+                                                              injectable_magnifications, injectable_times)
+            assert np.array_equal(injected, np.array([1, 8, 3, 4, 5]))
+        with patch.object(database_module.np.random, 'random') as mock_random:
+            mock_random.return_value = 1
+            injected = database.inject_signal_into_lightcurve(injectee_fluxes, injectee_times,
+                                                              injectable_magnifications, injectable_times)
+            assert np.array_equal(injected, np.array([1, 2, 3, 10, 5]))
+
     def test_can_intersperse_datasets(self, database):
         dataset0 = tf.data.Dataset.from_tensor_slices([[0], [2], [4]])
         dataset1 = tf.data.Dataset.from_tensor_slices([[1], [3], [5]])

@@ -299,14 +299,17 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         :param signal_times: The times of the synthetic magnifications.
         :return: The fluxes with the injected signal.
         """
+        relative_lightcurve_times = lightcurve_times - np.min(lightcurve_times)
+        relative_signal_times = signal_times - np.min(signal_times)
+        time_length_difference = np.max(relative_signal_times) - np.max(relative_lightcurve_times)
+        offset_signal_times = relative_signal_times - (np.random.random() * time_length_difference)
         median_flux = np.median(lightcurve_fluxes)
         signal_fluxes = (signal_magnifications * median_flux) - median_flux
         if self.allow_out_of_bounds_injection:
-            signal_flux_interpolator = interp1d(signal_times, signal_fluxes, bounds_error=False, fill_value=0)
+            signal_flux_interpolator = interp1d(offset_signal_times, signal_fluxes, bounds_error=False, fill_value=0)
         else:
-            signal_flux_interpolator = interp1d(signal_times, signal_fluxes, bounds_error=True)
-        lightcurve_relative_times = lightcurve_times - np.min(lightcurve_times)
-        interpolated_signal_fluxes = signal_flux_interpolator(lightcurve_relative_times)
+            signal_flux_interpolator = interp1d(offset_signal_times, signal_fluxes, bounds_error=True)
+        interpolated_signal_fluxes = signal_flux_interpolator(relative_lightcurve_times)
         fluxes_with_injected_signal = lightcurve_fluxes + interpolated_signal_fluxes
         return fluxes_with_injected_signal
 
