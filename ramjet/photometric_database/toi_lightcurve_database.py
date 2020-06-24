@@ -159,11 +159,11 @@ class ToiLightcurveDatabase(TransitLightcurveLabelPerTimeStepDatabase):
 
         :return:
         """
-        columns_to_use = ['TIC ID', 'TFOPWG Disposition', 'Planet Num', 'Epoch (BJD)', 'Period (days)',
+        columns_to_use = ['TIC ID', 'TFOPWG Disposition', 'Epoch (BJD)', 'Period (days)',
                           'Duration (hours)', 'Sectors']
         dispositions = pd.read_csv(self.toi_dispositions_path, usecols=columns_to_use)
         dispositions.rename(columns={'TFOPWG Disposition': 'disposition',
-                                     'Planet Num': 'planet_number', 'Epoch (BJD)': 'transit_epoch',
+                                     'Epoch (BJD)': 'transit_epoch',
                                      'Period (days)': 'transit_period', 'Duration (hours)': 'transit_duration',
                                      'Sectors': 'Sector'}, inplace=True)
         dispositions['disposition'] = dispositions['disposition'].fillna('')
