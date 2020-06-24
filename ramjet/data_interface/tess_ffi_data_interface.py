@@ -22,7 +22,7 @@ class FfiDataIndexes(Enum):
     TESS_MAGNITUDE = 3
     CAMERA = 4
     CHIP = 5
-    TIME = 6
+    TIME__BTJD = 6
     RAW_FLUX = 7
     CORRECTED_FLUX = 8
     PCA_FLUX = 9
@@ -56,7 +56,7 @@ class TessFfiDataInterface:
         with file_path.open('rb') as pickle_file:
             lightcurve = pickle.load(pickle_file)
         fluxes = lightcurve[flux_type_index.value]
-        times = lightcurve[FfiDataIndexes.TIME.value]
+        times = lightcurve[FfiDataIndexes.TIME__BTJD.value]
         assert times.shape == fluxes.shape
         return fluxes, times
 
@@ -81,7 +81,7 @@ class TessFfiDataInterface:
             lightcurve = pickle.load(pickle_file)
         fluxes = lightcurve[flux_type_index.value]
         flux_errors = lightcurve[FfiDataIndexes.FLUX_ERROR.value]
-        times = lightcurve[FfiDataIndexes.TIME.value]
+        times = lightcurve[FfiDataIndexes.TIME__BTJD.value]
         assert times.shape == fluxes.shape
         assert times.shape == flux_errors.shape
         return fluxes, flux_errors, times
