@@ -11,7 +11,6 @@ class ToiColumns(Enum):
     """
     tic_id = 'TIC ID'
     disposition = 'Disposition'
-    planet_number = 'Planet number'
     transit_epoch__bjd = 'Transit epoch (BJD)'
     transit_period__days = 'Transit period (days)'
     transit_duration = 'Transit duration (hours)'
@@ -83,11 +82,9 @@ class TessToiDataInterface:
 
         :return: The data frame of the TOI dispositions table.
         """
-        columns_to_use = ['TIC ID', 'TFOPWG Disposition', 'Planet Num', 'Epoch (BJD)', 'Period (days)',
-                          'Duration (hours)', 'Sectors']
+        columns_to_use = ['TIC ID', 'TFOPWG Disposition', 'Epoch (BJD)', 'Period (days)', 'Duration (hours)', 'Sectors']
         dispositions = pd.read_csv(self.toi_dispositions_path, usecols=columns_to_use)
         dispositions.rename(columns={'TFOPWG Disposition': ToiColumns.disposition.value,
-                                     'Planet Num': ToiColumns.planet_number.value,
                                      'Epoch (BJD)': ToiColumns.transit_epoch__bjd.value,
                                      'Period (days)': ToiColumns.transit_period__days.value,
                                      'Duration (hours)': ToiColumns.transit_duration.value,
