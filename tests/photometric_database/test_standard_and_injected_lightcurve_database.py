@@ -67,7 +67,8 @@ class TestStandardAndInjectedLightcurveDatabase:
 
     @pytest.mark.slow
     @pytest.mark.functional
-    def test_database_can_generate_training_and_validation_datasets(self, database):
+    @patch.object(database_module.np.random, 'random', return_value=0)
+    def test_database_can_generate_training_and_validation_datasets(self, mock_random, database):
         training_dataset, validation_dataset = database.generate_datasets()
         training_batch = next(iter(training_dataset))
         training_batch_examples = training_batch[0]
@@ -120,7 +121,9 @@ class TestStandardAndInjectedLightcurveDatabase:
 
     @pytest.mark.slow
     @pytest.mark.functional
-    def test_can_generate_injected_lightcurve_and_label_dataset_from_paths_dataset_and_label(self, database):
+    @patch.object(database_module.np.random, 'random', return_value=0)
+    def test_can_generate_injected_lightcurve_and_label_dataset_from_paths_dataset_and_label(self, mock_random,
+                                                                                             database):
         injectee_lightcurve_collection = database.training_injectee_lightcurve_collection
         injectable_lightcurve_collection = database.training_injectable_lightcurve_collections[0]
         injectee_paths_dataset = database.generate_paths_dataset_from_lightcurve_collection(
@@ -204,8 +207,10 @@ class TestStandardAndInjectedLightcurveDatabase:
         signal_magnifications = np.array([1, 3, 1])
         signal_times = np.array([0, 20, 40])
         database.allow_out_of_bounds_injection = True
-        fluxes_with_injected_signal = database.inject_signal_into_lightcurve(lightcurve_fluxes, lightcurve_times,
-                                                                             signal_magnifications, signal_times)
+        with patch.object(database_module.np.random, 'random') as mock_random:
+            mock_random.return_value = 0
+            fluxes_with_injected_signal = database.inject_signal_into_lightcurve(lightcurve_fluxes, lightcurve_times,
+                                                                                 signal_magnifications, signal_times)
         assert np.array_equal(fluxes_with_injected_signal, np.array([1, 5, 9, 7, 5, 3]))
 
     def test_injected_signal_randomly_varies_injectable_portion_used_when_injectable_larger_than_injectee(self,
