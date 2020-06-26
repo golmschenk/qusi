@@ -46,3 +46,12 @@ class TestTessToiDataInterface:
             _ = data_interface.toi_dispositions
             assert mock_get.called
 
+    def test_ctoi_file_is_not_updated_from_exofop_until_first_ctoi_table_access(self):
+        with patch.object(module.requests, 'get') as mock_get:
+            data_interface = TessToiDataInterface()
+            data_interface.ctoi_dispositions_path = MagicMock()
+            data_interface.load_ctoi_dispositions_in_project_format = Mock()
+            assert not mock_get.called
+            _ = data_interface.ctoi_dispositions
+            assert mock_get.called
+
