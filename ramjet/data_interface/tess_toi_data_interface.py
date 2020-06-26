@@ -27,44 +27,21 @@ class TessToiDataInterface:
         self.toi_dispositions_path = self.data_directory.joinpath('toi_dispositions.csv')
         self.ctoi_dispositions_path = self.data_directory.joinpath('ctoi_dispositions.csv')
         self.lightcurves_directory = self.data_directory.joinpath('lightcurves')
-        self.update_toi_dispositions_file()
-        self.update_ctoi_dispositions_file()
         self.toi_dispositions_: Union[pd.DataFrame, None] = None
         self.ctoi_dispositions_: Union[pd.DataFrame, None] = None
 
     @property
     def toi_dispositions(self):
         """
-        The TOI dispositions data frame property. Will load as a single class attribute on first access. If the
-        data file does not exists, downloads it first.
+        The TOI dispositions data frame property. Will load as an instance attribute on first access. Updates from
+        ExoFOP on first access.
 
         :return: The TOI dispositions data frame.
         """
         if self.toi_dispositions_ is None:
-            if not self.toi_dispositions_path.exists():
-                toi_csv_url = 'https://exofop.ipac.caltech.edu/tess/download_toi.php?sort=toi&output=csv'
-                response = requests.get(toi_csv_url)
-                with self.toi_dispositions_path.open('wb') as csv_file:
-                    csv_file.write(response.content)
+            self.update_toi_dispositions_file()
             self.toi_dispositions_ = self.load_toi_dispositions_in_project_format()
         return self.toi_dispositions_
-
-    @property
-    def ctoi_dispositions(self):
-        """
-        The CTOI dispositions data frame property. Will load as a single class attribute on first access. If the
-        data file does not exists, downloads it first.
-
-        :return: The CTOI dispositions data frame.
-        """
-        if self.ctoi_dispositions_ is None:
-            if not self.ctoi_dispositions_path.exists():
-                ctoi_csv_url = 'https://exofop.ipac.caltech.edu/tess/download_ctoi.php?sort=ctoi&output=csv'
-                response = requests.get(ctoi_csv_url)
-                with self.ctoi_dispositions_path.open('wb') as csv_file:
-                    csv_file.write(response.content)
-            self.ctoi_dispositions_ = self.load_ctoi_dispositions_in_project_format()
-        return self.ctoi_dispositions_
 
     def update_toi_dispositions_file(self):
         """
@@ -74,7 +51,28 @@ class TessToiDataInterface:
         response = requests.get(toi_csv_url)
         with self.toi_dispositions_path.open('wb') as csv_file:
             csv_file.write(response.content)
-        self.toi_dispositions_ = self.load_toi_dispositions_in_project_format()
+
+    @property
+    def ctoi_dispositions(self):
+        """
+        The CTOI dispositions data frame property. Will load as an instance attribute on first access. Updates from
+        ExoFOP on first access.
+
+        :return: The CTOI dispositions data frame.
+        """
+        if self.ctoi_dispositions_ is None:
+            self.update_ctoi_dispositions_file()
+            self.ctoi_dispositions_ = self.load_ctoi_dispositions_in_project_format()
+        return self.ctoi_dispositions_
+
+    def update_ctoi_dispositions_file(self):
+        """
+        Downloads the latest CTOI dispositions file.
+        """
+        ctoi_csv_url = 'https://exofop.ipac.caltech.edu/tess/download_ctoi.php?sort=ctoi&output=csv'
+        response = requests.get(ctoi_csv_url)
+        with self.ctoi_dispositions_path.open('wb') as csv_file:
+            csv_file.write(response.content)
 
     def load_toi_dispositions_in_project_format(self) -> pd.DataFrame:
         """
@@ -96,16 +94,6 @@ class TessToiDataInterface:
         dispositions[ToiColumns.sector.value] = pd.to_numeric(dispositions[ToiColumns.sector.value]
                                                               ).astype(pd.Int64Dtype())
         return dispositions
-
-    def update_ctoi_dispositions_file(self):
-        """
-        Downloads the latest CTOI dispositions file.
-        """
-        ctoi_csv_url = 'https://exofop.ipac.caltech.edu/tess/download_ctoi.php?sort=ctoi&output=csv'
-        response = requests.get(ctoi_csv_url)
-        with self.ctoi_dispositions_path.open('wb') as csv_file:
-            csv_file.write(response.content)
-        self.ctoi_dispositions_ = self.load_ctoi_dispositions_in_project_format()
 
     def load_ctoi_dispositions_in_project_format(self) -> pd.DataFrame:
         """

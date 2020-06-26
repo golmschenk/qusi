@@ -1,15 +1,21 @@
-from unittest.mock import Mock
+from unittest.mock import Mock, patch, MagicMock
 
 import pytest
 import numpy as np
 import pandas as pd
 
+import ramjet.data_interface.tess_toi_data_interface as module
 from ramjet.data_interface.tess_toi_data_interface import TessToiDataInterface
 
 
 class TestTessToiDataInterface:
     @pytest.fixture
     def data_interface(self) -> TessToiDataInterface:
+        """
+        A fixture of the data interface under test.
+
+        :return: The data interface.
+        """
         return TessToiDataInterface()
 
     @pytest.mark.slow
@@ -30,3 +36,13 @@ class TestTessToiDataInterface:
         assert dispositions1['Disposition'].iloc[0] == 'CP'
         dispositions2 = data_interface.retrieve_exofop_toi_and_ctoi_planet_disposition_for_tic_id(tic_id=25132999)
         assert dispositions2.shape[0] == 0
+
+    def test_toi_file_is_not_updated_from_exofop_until_first_toi_table_access(self):
+        with patch.object(module.requests, 'get') as mock_get:
+            data_interface = TessToiDataInterface()
+            data_interface.toi_dispositions_path = MagicMock()
+            data_interface.load_toi_dispositions_in_project_format = Mock()
+            assert not mock_get.called
+            _ = data_interface.toi_dispositions
+            assert mock_get.called
+
