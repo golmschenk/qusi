@@ -18,6 +18,7 @@ class TessTwoMinuteCadenceLightcurveCollection(LightcurveCollection):
     """
     def __init__(self):
         super().__init__()
+        self.data_directory: Path = Path('data/tess_two_minute_cadence_lightcurves')
         self.label = 0
 
     def get_paths(self) -> Iterable[Path]:
@@ -48,3 +49,9 @@ class TessTwoMinuteCadenceLightcurveCollection(LightcurveCollection):
         fluxes, times = tess_data_interface.load_fluxes_and_times_from_fits_file(path)
         magnifications, times = self.generate_synthetic_signal_from_real_data(fluxes, times)
         return times, magnifications
+
+    def download(self):
+        """
+        Downloads the lightcurve collection.
+        """
+        tess_data_interface.download_all_two_minute_cadence_lightcurves(self.data_directory)
