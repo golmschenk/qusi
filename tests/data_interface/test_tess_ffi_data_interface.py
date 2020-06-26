@@ -150,7 +150,7 @@ class TestTessFfiDataInterface:
         database_connection = sqlite3.connect(data_interface.database_path, uri=True)
         database_cursor = database_connection.cursor()
         data_interface.create_database_lightcurve_table(database_connection)
-        database_cursor.execute('select * from Lightcurve')
+        database_cursor.execute('select * from TessFfiLightcurve')
         column_names = [description[0] for description in database_cursor.description]
         assert 'path' in column_names
         assert 'magnitude' in column_names
@@ -192,7 +192,7 @@ class TestTessFfiDataInterface:
             mock_uuid4.return_value = uuid1
             data_interface.insert_database_lightcurve_row_from_path(database_cursor, lightcurve_path=lightcurve_path1,
                                                                     dataset_split=3)
-        database_cursor.execute('SELECT uuid, path, magnitude, dataset_split FROM Lightcurve')
+        database_cursor.execute('SELECT uuid, path, magnitude, dataset_split FROM TessFfiLightcurve')
         query_result = database_cursor.fetchall()
         assert query_result == [(uuid0, str(lightcurve_path0), 7, 2),
                                 (uuid1, str(lightcurve_path1), 14, 3)]
@@ -205,7 +205,7 @@ class TestTessFfiDataInterface:
         results_data_frame = pd.read_sql_query('''SELECT index_list.seq AS index_sequence,
                                                          seqno as index_sequence_number,
                                                          index_info.name as column_name
-                                                  FROM pragma_index_list("Lightcurve") index_list,
+                                                  FROM pragma_index_list("TessFfiLightcurve") index_list,
                                                        pragma_index_info(index_list.name) index_info;''',
                                                database_connection)
         sorted_index_groups = results_data_frame.sort_values('index_sequence_number').groupby('index_sequence')
@@ -222,7 +222,7 @@ class TestTessFfiDataInterface:
         path_list = [data_interface.lightcurve_root_directory_path.joinpath(f'{index}.pkl') for index in range(20)]
         mock_glob.return_value = path_list
         data_interface.populate_sql_database(database_connection)
-        results_data_frame = pd.read_sql_query('SELECT path, dataset_split FROM Lightcurve',
+        results_data_frame = pd.read_sql_query('SELECT path, dataset_split FROM TessFfiLightcurve',
                                                database_connection)
         dataset_split_sizes = results_data_frame.groupby('dataset_split').size()
         assert len(dataset_split_sizes) == 10
@@ -236,7 +236,7 @@ class TestTessFfiDataInterface:
         data_interface.create_database_lightcurve_table_indexes(database_connection)
         # noinspection SqlResolve
         results_data_frame = pd.read_sql_query('''SELECT *
-                                                  FROM pragma_index_list("Lightcurve") index_list, 
+                                                  FROM pragma_index_list("TessFfiLightcurve") index_list, 
                                                        pragma_index_info(index_list.name) index_info''',
                                                database_connection)
         results_data_frame.columns = ['index_sequence', 'index_name', 'unique', 'origin', 'partial',
@@ -259,7 +259,7 @@ class TestTessFfiDataInterface:
             mock_uuid4.side_effect = [uuid0, uuid1]
             data_interface.insert_multiple_lightcurve_rows_from_paths_into_database(
                 database_cursor, lightcurve_paths=[lightcurve_path0, lightcurve_path1], dataset_splits=[2, 3])
-        database_cursor.execute('SELECT uuid, path, magnitude, dataset_split FROM Lightcurve')
+        database_cursor.execute('SELECT uuid, path, magnitude, dataset_split FROM TessFfiLightcurve')
         query_result = database_cursor.fetchall()
         assert query_result == [(uuid0, str(lightcurve_path0), 7, 2),
                                 (uuid1, str(lightcurve_path1), 14, 3)]

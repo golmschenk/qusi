@@ -134,7 +134,7 @@ class TessFfiDataInterface:
         :param database_connection: The database connection to perform the operations on.
         """
         database_cursor = database_connection.cursor()
-        database_cursor.execute('''CREATE TABLE Lightcurve (
+        database_cursor.execute('''CREATE TABLE TessFfiLightcurve (
                                        uuid TEXT NOT NULL,
                                        path TEXT NOT NULL,
                                        magnitude INTEGER NOT NULL,
@@ -153,18 +153,18 @@ class TessFfiDataInterface:
         print('Creating indexes...')
         # Index for the use case of having the entire dataset shuffled.
         database_cursor.execute('''CREATE UNIQUE INDEX Lightcurve_uuid_index
-                                        ON Lightcurve (uuid)''')
+                                        ON TessFfiLightcurve (uuid)''')
         # Index for the use case of training on the entire dataset, get the training dataset, then
         # have data shuffled based on the uuid.
         database_cursor.execute('''CREATE INDEX Lightcurve_dataset_split_uuid_index
-                                        ON Lightcurve (dataset_split, uuid)''')
+                                        ON TessFfiLightcurve (dataset_split, uuid)''')
         # Index for the use case of training on a specific magnitude, get the training dataset, then
         # have data shuffled based on the uuid.
         database_cursor.execute('''CREATE INDEX Lightcurve_magnitude_dataset_split_uuid_index
-                                        ON Lightcurve (magnitude, dataset_split, uuid)''')
+                                        ON TessFfiLightcurve (magnitude, dataset_split, uuid)''')
         # Paths should be unique.
         database_cursor.execute('''CREATE UNIQUE INDEX Lightcurve_path_index
-                                        ON Lightcurve (path)''')
+                                        ON TessFfiLightcurve (path)''')
         database_connection.commit()
 
     def insert_database_lightcurve_row_from_path(self, database_cursor: Cursor, lightcurve_path: Path,
@@ -180,7 +180,7 @@ class TessFfiDataInterface:
         uuid = uuid4()
         magnitude = self.get_floor_magnitude_from_file_path(lightcurve_path)
         database_cursor.execute(
-            f'''INSERT INTO Lightcurve (uuid, path, magnitude, dataset_split)
+            f'''INSERT INTO TessFfiLightcurve (uuid, path, magnitude, dataset_split)
                 VALUES ('{str(uuid)}', '{str(lightcurve_path)}', {magnitude}, {dataset_split})'''
         )
 
@@ -194,7 +194,7 @@ class TessFfiDataInterface:
             magnitude = self.get_floor_magnitude_from_file_path(lightcurve_path)
             sql_values_tuple_list.append((str(uuid), str(lightcurve_path), magnitude, dataset_split))
 
-        sql_query_string = f'''INSERT INTO Lightcurve (uuid, path, magnitude, dataset_split)
+        sql_query_string = f'''INSERT INTO TessFfiLightcurve (uuid, path, magnitude, dataset_split)
                                VALUES (?, ?, ? ,?)'''
         database_cursor.executemany(sql_query_string, sql_values_tuple_list)
 
@@ -247,7 +247,7 @@ class TessFfiDataInterface:
             magnitude_condition = '1'  # Always true.
         while True:
             database_cursor.execute(f'''SELECT path, uuid
-                                        FROM Lightcurve
+                                        FROM TessFfiLightcurve
                                         WHERE {dataset_split_condition} AND
                                               {magnitude_condition}
                                         ORDER BY uuid
@@ -258,12 +258,12 @@ class TessFfiDataInterface:
                     yield Path(self.lightcurve_root_directory_path.joinpath(row[0]))
                 previous_batch_final_uuid = batch[-1][1]
                 database_cursor.execute(f'''SELECT path, uuid
-                                            FROM Lightcurve
+                                            FROM TessFfiLightcurve
                                             WHERE uuid > '{previous_batch_final_uuid}' AND
                                                   {dataset_split_condition} AND
                                                   {magnitude_condition}
                                             ORDER BY uuid
-                                            LIMIT {batch_size}''')
+                                            LIMIT {batch_size}''' )
                 batch = database_cursor.fetchall()
             if not repeat:
                 break
@@ -275,7 +275,7 @@ if __name__ == '__main__':
     database_cursor_ = database_connection_.cursor()
     database_cursor_.execute(f'PRAGMA cache_size = -{2e6}')  # Set the cache size to 2GB.
     database_connection_.commit()
-    database_cursor_.execute('DROP TABLE IF EXISTS Lightcurve')
+    database_cursor_.execute('DROP TABLE IF EXISTS TessFfiLightcurve')
     database_connection_.commit()
     tess_ffi_data_interface.create_database_lightcurve_table(database_connection_)
     tess_ffi_data_interface.populate_sql_database(database_connection_)
