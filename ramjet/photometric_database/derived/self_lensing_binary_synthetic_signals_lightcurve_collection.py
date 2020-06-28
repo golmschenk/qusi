@@ -46,8 +46,10 @@ class SelfLensingBinarySyntheticSignalsLightcurveCollection(LightcurveCollection
         out_paths = self.data_directory.glob('*.out')
         synthetic_signal_csv_paths = [path for path in out_paths if re.match(r'lc_\d+\.out', path.name)]
         for synthetic_signal_csv_path in synthetic_signal_csv_paths:
-            synthetic_signal = pd.read_csv(synthetic_signal_csv_path, names=['time__days', 'magnification'],
+            synthetic_signal = pd.read_csv(synthetic_signal_csv_path, names=['time__hours', 'magnification'],
                                            delim_whitespace=True, skipinitialspace=True)
+            synthetic_signal['time__days'] = synthetic_signal['time__hours'] / 24
+            synthetic_signal.drop('time__hours', axis=1, inplace=True)
             synthetic_signal.to_feather(self.data_directory.joinpath(f'{synthetic_signal_csv_path.stem}.feather'))
             synthetic_signal_csv_path.unlink()
 
