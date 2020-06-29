@@ -36,7 +36,7 @@ class TessFfiDataInterface:
     """
 
     def __init__(self, lightcurve_root_directory_path: Path = Path('data/tess_ffi_lightcurves'),
-                 database_path: Union[Path, str] = Path('data/meta_database.sqlite3')):
+                 database_path: Union[Path, str] = Path('data/metadatabase.sqlite3')):
         self.lightcurve_root_directory_path: Path = lightcurve_root_directory_path
         self.database_path: Union[Path, str] = database_path
 

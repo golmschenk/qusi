@@ -17,7 +17,7 @@ class TessTwoMinuteCadenceMetadataManger:
     tess_data_interface = TessDataInterface()
 
     def __init__(self):
-        self.database_path = Path('data/meta_database.sqlite3')
+        self.database_path = Path('data/metadatabase.sqlite3')
         self.lightcurve_root_directory_path = Path('data/tess_two_minute_cadence_lightcurves')
 
     @staticmethod

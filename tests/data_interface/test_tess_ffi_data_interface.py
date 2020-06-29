@@ -142,7 +142,7 @@ class TestTessFfiDataInterface:
     def test_has_a_path_to_database_organization_with_default(self, mock_connect):
         mock_connect.return_value = Mock(cursor=Mock())
         data_interface0 = TessFfiDataInterface()
-        assert data_interface0.database_path == Path('data/tess_ffi_database.sqlite3')
+        assert data_interface0.database_path == Path('data/metadatabase.sqlite3')
         data_interface0 = TessFfiDataInterface(database_path=Path('specified/path.sqlite3'))
         assert data_interface0.database_path == Path('specified/path.sqlite3')
 
