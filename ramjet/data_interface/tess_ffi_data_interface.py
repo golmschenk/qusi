@@ -36,7 +36,7 @@ class TessFfiDataInterface:
     """
 
     def __init__(self, lightcurve_root_directory_path: Path = Path('data/tess_ffi_lightcurves'),
-                 database_path: Union[Path, str] = Path('data/tess_ffi_database.sqlite3')):
+                 database_path: Union[Path, str] = Path('data/meta_database.sqlite3')):
         self.lightcurve_root_directory_path: Path = lightcurve_root_directory_path
         self.database_path: Union[Path, str] = database_path
 
@@ -195,7 +195,7 @@ class TessFfiDataInterface:
             sql_values_tuple_list.append((str(uuid), str(lightcurve_path), magnitude, dataset_split))
 
         sql_query_string = f'''INSERT INTO TessFfiLightcurve (random_order_uuid, path, magnitude, dataset_split)
-                               VALUES (?, ?, ? ,?)'''
+                               VALUES (?, ?, ?, ?)'''
         database_cursor.executemany(sql_query_string, sql_values_tuple_list)
 
     def populate_sql_database(self, database_connection: Connection):
