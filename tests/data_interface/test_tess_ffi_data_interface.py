@@ -192,7 +192,7 @@ class TestTessFfiDataInterface:
             mock_uuid4.return_value = uuid1
             data_interface.insert_database_lightcurve_row_from_path(database_cursor, lightcurve_path=lightcurve_path1,
                                                                     dataset_split=3)
-        database_cursor.execute('SELECT uuid, path, magnitude, dataset_split FROM TessFfiLightcurve')
+        database_cursor.execute('SELECT random_order_uuid, path, magnitude, dataset_split FROM TessFfiLightcurve')
         query_result = database_cursor.fetchall()
         assert query_result == [(uuid0, str(lightcurve_path0), 7, 2),
                                 (uuid1, str(lightcurve_path1), 14, 3)]
@@ -210,9 +210,9 @@ class TestTessFfiDataInterface:
                                                database_connection)
         sorted_index_groups = results_data_frame.sort_values('index_sequence_number').groupby('index_sequence')
         column_lists_of_indexes = list(sorted_index_groups['column_name'].apply(list).values)
-        assert ['magnitude', 'dataset_split', 'uuid'] in column_lists_of_indexes
-        assert ['dataset_split', 'uuid'] in column_lists_of_indexes
-        assert ['uuid'] in column_lists_of_indexes
+        assert ['magnitude', 'dataset_split', 'random_order_uuid'] in column_lists_of_indexes
+        assert ['dataset_split', 'random_order_uuid'] in column_lists_of_indexes
+        assert ['random_order_uuid'] in column_lists_of_indexes
 
     @patch.object(Path, 'glob')
     def test_can_populate_sql_dataset_from_ffi_directory(self, mock_glob, data_interface):
@@ -245,7 +245,7 @@ class TestTessFfiDataInterface:
                                                  ].sort_values('index_sequence_number').groupby('index_sequence')
         column_lists_of_unique_indexes = list(sorted_index_groups['column_name'].apply(list).values)
         assert ['path'] in column_lists_of_unique_indexes
-        assert ['uuid'] in column_lists_of_unique_indexes
+        assert ['random_order_uuid'] in column_lists_of_unique_indexes
 
     def test_can_insert_multiple_sql_database_lightcurve_rows_from_paths(self, data_interface):
         database_connection = sqlite3.connect(data_interface.database_path, uri=True)
@@ -259,7 +259,7 @@ class TestTessFfiDataInterface:
             mock_uuid4.side_effect = [uuid0, uuid1]
             data_interface.insert_multiple_lightcurve_rows_from_paths_into_database(
                 database_cursor, lightcurve_paths=[lightcurve_path0, lightcurve_path1], dataset_splits=[2, 3])
-        database_cursor.execute('SELECT uuid, path, magnitude, dataset_split FROM TessFfiLightcurve')
+        database_cursor.execute('SELECT random_order_uuid, path, magnitude, dataset_split FROM TessFfiLightcurve')
         query_result = database_cursor.fetchall()
         assert query_result == [(uuid0, str(lightcurve_path0), 7, 2),
                                 (uuid1, str(lightcurve_path1), 14, 3)]

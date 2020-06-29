@@ -135,7 +135,7 @@ class TessFfiDataInterface:
         """
         database_cursor = database_connection.cursor()
         database_cursor.execute('''CREATE TABLE TessFfiLightcurve (
-                                       uuid TEXT NOT NULL,
+                                       random_order_uuid TEXT NOT NULL,
                                        path TEXT NOT NULL,
                                        magnitude INTEGER NOT NULL,
                                        dataset_split INTEGER NOT NULL)'''
@@ -152,16 +152,16 @@ class TessFfiDataInterface:
         database_cursor = database_connection.cursor()
         print('Creating indexes...')
         # Index for the use case of having the entire dataset shuffled.
-        database_cursor.execute('''CREATE UNIQUE INDEX Lightcurve_uuid_index
-                                        ON TessFfiLightcurve (uuid)''')
+        database_cursor.execute('''CREATE UNIQUE INDEX Lightcurve_random_order_uuid_index
+                                        ON TessFfiLightcurve (random_order_uuid)''')
         # Index for the use case of training on the entire dataset, get the training dataset, then
         # have data shuffled based on the uuid.
-        database_cursor.execute('''CREATE INDEX Lightcurve_dataset_split_uuid_index
-                                        ON TessFfiLightcurve (dataset_split, uuid)''')
+        database_cursor.execute('''CREATE INDEX Lightcurve_dataset_split_random_order_uuid_index
+                                        ON TessFfiLightcurve (dataset_split, random_order_uuid)''')
         # Index for the use case of training on a specific magnitude, get the training dataset, then
         # have data shuffled based on the uuid.
-        database_cursor.execute('''CREATE INDEX Lightcurve_magnitude_dataset_split_uuid_index
-                                        ON TessFfiLightcurve (magnitude, dataset_split, uuid)''')
+        database_cursor.execute('''CREATE INDEX Lightcurve_magnitude_dataset_split_random_order_uuid_index
+                                        ON TessFfiLightcurve (magnitude, dataset_split, random_order_uuid)''')
         # Paths should be unique.
         database_cursor.execute('''CREATE UNIQUE INDEX Lightcurve_path_index
                                         ON TessFfiLightcurve (path)''')
@@ -180,7 +180,7 @@ class TessFfiDataInterface:
         uuid = uuid4()
         magnitude = self.get_floor_magnitude_from_file_path(lightcurve_path)
         database_cursor.execute(
-            f'''INSERT INTO TessFfiLightcurve (uuid, path, magnitude, dataset_split)
+            f'''INSERT INTO TessFfiLightcurve (random_order_uuid, path, magnitude, dataset_split)
                 VALUES ('{str(uuid)}', '{str(lightcurve_path)}', {magnitude}, {dataset_split})'''
         )
 
@@ -194,7 +194,7 @@ class TessFfiDataInterface:
             magnitude = self.get_floor_magnitude_from_file_path(lightcurve_path)
             sql_values_tuple_list.append((str(uuid), str(lightcurve_path), magnitude, dataset_split))
 
-        sql_query_string = f'''INSERT INTO TessFfiLightcurve (uuid, path, magnitude, dataset_split)
+        sql_query_string = f'''INSERT INTO TessFfiLightcurve (random_order_uuid, path, magnitude, dataset_split)
                                VALUES (?, ?, ? ,?)'''
         database_cursor.executemany(sql_query_string, sql_values_tuple_list)
 
@@ -246,23 +246,23 @@ class TessFfiDataInterface:
         else:
             magnitude_condition = '1'  # Always true.
         while True:
-            database_cursor.execute(f'''SELECT path, uuid
+            database_cursor.execute(f'''SELECT path, random_order_uuid
                                         FROM TessFfiLightcurve
                                         WHERE {dataset_split_condition} AND
                                               {magnitude_condition}
-                                        ORDER BY uuid
+                                        ORDER BY random_order_uuid
                                         LIMIT {batch_size}''')
             batch = database_cursor.fetchall()
             while batch:
                 for row in batch:
                     yield Path(self.lightcurve_root_directory_path.joinpath(row[0]))
                 previous_batch_final_uuid = batch[-1][1]
-                database_cursor.execute(f'''SELECT path, uuid
+                database_cursor.execute(f'''SELECT path, random_order_uuid
                                             FROM TessFfiLightcurve
-                                            WHERE uuid > '{previous_batch_final_uuid}' AND
+                                            WHERE random_order_uuid > '{previous_batch_final_uuid}' AND
                                                   {dataset_split_condition} AND
                                                   {magnitude_condition}
-                                            ORDER BY uuid
+                                            ORDER BY random_order_uuid
                                             LIMIT {batch_size}''' )
                 batch = database_cursor.fetchall()
             if not repeat:
