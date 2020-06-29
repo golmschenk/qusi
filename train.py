@@ -34,10 +34,11 @@ def train():
     training_dataset, validation_dataset = database.generate_datasets()
     optimizer = tf.optimizers.Adam(learning_rate=1e-4, beta_1=0.99, beta_2=0.9999)
     loss_metric = BinaryCrossentropy(name='Loss', label_smoothing=0.1)
-    metrics = [tf.metrics.BinaryAccuracy(name='Accuracy'), tf.metrics.Precision(name='Precision'),
-               tf.metrics.Recall(name='Recall'),
+    metrics = [tf.keras.metrics.AUC(num_thresholds=20, name='Area_under_ROC_curve'),
                tf.metrics.SpecificityAtSensitivity(0.9, name='Specificity_at_90_percent_sensitivity'),
-               tf.metrics.SensitivityAtSpecificity(0.9, name='Sensitivity_at_90_percent_specificity')]
+               tf.metrics.SensitivityAtSpecificity(0.9, name='Sensitivity_at_90_percent_specificity'),
+               tf.metrics.BinaryAccuracy(name='Accuracy'), tf.metrics.Precision(name='Precision'),
+               tf.metrics.Recall(name='Recall')]
 
     # Compile and train model.
     model.compile(optimizer=optimizer, loss=loss_metric, metrics=metrics)
