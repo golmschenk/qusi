@@ -1,15 +1,16 @@
 """
 Code for managing the meta data of the two minute cadence TESS lightcurves.
 """
+import sqlite3
 from pathlib import Path
 from sqlite3 import Connection, Cursor
-from typing import List
+from typing import List, Union, Generator
 from uuid import uuid4
 
 from ramjet.data_interface.tess_data_interface import TessDataInterface
 
 
-class TessTwoMinuteCadenceMetaDataManger:
+class TessTwoMinuteCadenceMetadataManger:
     """
     A class for managing the meta data of the two minute cadence TESS lightcurves.
     """
@@ -102,3 +103,39 @@ class TessTwoMinuteCadenceMetaDataManger:
                                                                batch_dataset_splits)
         database_connection.commit()
         print(f'TESS two minute cadence lightcurve meta data table populated. {row_count} rows added.')
+
+    def create_paths_generator(self, dataset_splits: Union[List[int], None] = None, repeat=True
+                               ) -> Generator[Path, None, None]:
+        """
+        Creates a generator for all the paths from the SQL table, with optional filters.
+
+        :param dataset_splits: The dataset splits to filter on. For splitting training, testing, etc.
+        :param repeat: Whether or not the generator should repeat indefinitely.
+        :return: The generator.
+        """
+        batch_size = 1000
+        database_cursor = sqlite3.connect(str(self.database_path), uri=True, check_same_thread=False).cursor()
+        if dataset_splits is not None:
+            dataset_split_condition = f'dataset_split IN ({", ".join(map(str, dataset_splits))})'
+        else:
+            dataset_split_condition = '1'  # Always true.
+        while True:
+            database_cursor.execute(f'''SELECT path, random_order_uuid
+                                        FROM TessTwoMinuteCadenceLightcurve
+                                        WHERE {dataset_split_condition}
+                                        ORDER BY random_order_uuid
+                                        LIMIT {batch_size}''')
+            batch = database_cursor.fetchall()
+            while batch:
+                for row in batch:
+                    yield Path(self.lightcurve_root_directory_path.joinpath(row[0]))
+                previous_batch_final_uuid = batch[-1][1]
+                database_cursor.execute(f'''SELECT path, random_order_uuid
+                                            FROM TessTwoMinuteCadenceLightcurve
+                                            WHERE random_order_uuid > '{previous_batch_final_uuid}' AND
+                                                  {dataset_split_condition}
+                                            ORDER BY random_order_uuid
+                                            LIMIT {batch_size}''')
+                batch = database_cursor.fetchall()
+            if not repeat:
+                break
