@@ -67,6 +67,13 @@ class TessTwoMinuteCadenceMetadataManger:
     def insert_multiple_rows_from_paths_into_database(self, database_cursor: Cursor,
                                                       lightcurve_paths: List[Path],
                                                       dataset_splits: List[int]):
+        """
+        Inserts sets of lightcurve paths into the table.
+
+        :param database_cursor: The database cursor to use for the insert.
+        :param lightcurve_paths: The list of paths to insert.
+        :param dataset_splits: The dataset splits to assign to each path.
+        """
         assert len(lightcurve_paths) == len(dataset_splits)
         sql_values_tuple_list = []
         for lightcurve_path, dataset_split in zip(lightcurve_paths, dataset_splits):
@@ -139,3 +146,22 @@ class TessTwoMinuteCadenceMetadataManger:
                 batch = database_cursor.fetchall()
             if not repeat:
                 break
+
+    def build_table(self):
+        """
+        Builds the SQL table.
+        """
+        database_connection_ = sqlite3.connect(self.database_path, uri=True)
+        database_cursor_ = database_connection_.cursor()
+        database_cursor_.execute(f'PRAGMA cache_size = -{2e6}')  # Set the cache size to 2GB.
+        database_connection_.commit()
+        database_cursor_.execute('DROP TABLE IF EXISTS TessTwoMinuteCadenceLightcurve')
+        database_connection_.commit()
+        self.create_database_table(database_connection_)
+        self.populate_sql_database(database_connection_)
+        self.create_database_table_indexes(database_connection_)
+        database_connection_.close()
+
+if __name__ == '__main__':
+    manager = TessTwoMinuteCadenceMetadataManger()
+    manager.build_table()
