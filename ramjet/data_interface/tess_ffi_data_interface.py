@@ -127,9 +127,9 @@ class TessFfiDataInterface:
         raise ValueError(f'{file_path} does not match a known pattern to extract magnitude from.')
 
     @staticmethod
-    def create_database_lightcurve_table(database_connection: Connection):
+    def create_database_table(database_connection: Connection):
         """
-        Creates the SQL database table for the FFI dataset, with indexes.
+        Creates the SQL database table for the FFI dataset.
 
         :param database_connection: The database connection to perform the operations on.
         """
@@ -143,7 +143,7 @@ class TessFfiDataInterface:
         database_connection.commit()
 
     @staticmethod
-    def create_database_lightcurve_table_indexes(database_connection: Connection):
+    def create_database_table_indexes(database_connection: Connection):
         """
         Creates the indexes for the SQL table.
 
@@ -167,8 +167,8 @@ class TessFfiDataInterface:
                                         ON TessFfiLightcurve (path)''')
         database_connection.commit()
 
-    def insert_database_lightcurve_row_from_path(self, database_cursor: Cursor, lightcurve_path: Path,
-                                                 dataset_split: int):
+    def insert_database_row_from_path(self, database_cursor: Cursor, lightcurve_path: Path,
+                                      dataset_split: int):
         """
         Inserts the given lightcurve path into the SQL database with a dataset split tag.
 
@@ -184,9 +184,9 @@ class TessFfiDataInterface:
                 VALUES ('{str(uuid)}', '{str(lightcurve_path)}', {magnitude}, {dataset_split})'''
         )
 
-    def insert_multiple_lightcurve_rows_from_paths_into_database(self, database_cursor: Cursor,
-                                                                 lightcurve_paths: List[Path],
-                                                                 dataset_splits: List[int]):
+    def insert_multiple_rows_from_paths_into_database(self, database_cursor: Cursor,
+                                                      lightcurve_paths: List[Path],
+                                                      dataset_splits: List[int]):
         assert len(lightcurve_paths) == len(dataset_splits)
         sql_values_tuple_list = []
         for lightcurve_path, dataset_split in zip(lightcurve_paths, dataset_splits):
@@ -213,14 +213,14 @@ class TessFfiDataInterface:
             batch_dataset_splits.append(index % 10)
             row_count += 1
             if index % 1000 == 0:
-                self.insert_multiple_lightcurve_rows_from_paths_into_database(database_cursor, batch_paths,
-                                                                              batch_dataset_splits)
+                self.insert_multiple_rows_from_paths_into_database(database_cursor, batch_paths,
+                                                                   batch_dataset_splits)
                 batch_paths = []
                 batch_dataset_splits = []
                 print(f'{index} rows inserted...', end='\r')
         if len(batch_paths) > 0:
-            self.insert_multiple_lightcurve_rows_from_paths_into_database(database_cursor, batch_paths,
-                                                                          batch_dataset_splits)
+            self.insert_multiple_rows_from_paths_into_database(database_cursor, batch_paths,
+                                                               batch_dataset_splits)
         database_connection.commit()
         print(f'TESS FFI SQL database populated. {row_count} rows added.')
 
@@ -263,7 +263,7 @@ class TessFfiDataInterface:
                                                   {dataset_split_condition} AND
                                                   {magnitude_condition}
                                             ORDER BY random_order_uuid
-                                            LIMIT {batch_size}''' )
+                                            LIMIT {batch_size}''')
                 batch = database_cursor.fetchall()
             if not repeat:
                 break
@@ -277,7 +277,7 @@ if __name__ == '__main__':
     database_connection_.commit()
     database_cursor_.execute('DROP TABLE IF EXISTS TessFfiLightcurve')
     database_connection_.commit()
-    tess_ffi_data_interface.create_database_lightcurve_table(database_connection_)
+    tess_ffi_data_interface.create_database_table(database_connection_)
     tess_ffi_data_interface.populate_sql_database(database_connection_)
-    tess_ffi_data_interface.create_database_lightcurve_table_indexes(database_connection_)
+    tess_ffi_data_interface.create_database_table_indexes(database_connection_)
     database_connection_.close()

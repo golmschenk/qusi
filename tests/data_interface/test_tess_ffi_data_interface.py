@@ -34,15 +34,15 @@ class TestTessFfiDataInterface:
         data_interface = TessFfiDataInterface(database_path=f'file:database-{str(uuid)}?mode=memory&cache=shared')
         database_connection = sqlite3.connect(data_interface.database_path, uri=True)
         database_cursor = database_connection.cursor()
-        data_interface.create_database_lightcurve_table(database_connection)
-        data_interface.create_database_lightcurve_table_indexes(database_connection)
+        data_interface.create_database_table(database_connection)
+        data_interface.create_database_table_indexes(database_connection)
         data_interface.get_floor_magnitude_from_file_path = Mock(side_effect=[10, 10, 11, 11, 12] * 4)
         lightcurve_paths = [Path(f'{index}.pkl') for index in range(20)]
         dataset_splits = list(range(10)) * 2
         with patch.object(ramjet.data_interface.tess_ffi_data_interface, 'uuid4') as mock_uuid4:
             mock_uuid4.side_effect = [f'{index:02}' for index in range(20)]
-            data_interface.insert_multiple_lightcurve_rows_from_paths_into_database(database_cursor,
-                                                                                    lightcurve_paths, dataset_splits)
+            data_interface.insert_multiple_rows_from_paths_into_database(database_cursor,
+                                                                         lightcurve_paths, dataset_splits)
         database_connection.commit()
         # Keep a link to the database connection to force the shared memory database to persist for the test.
         data_interface.force_memory_database_connection_test_persistence = database_connection
@@ -149,7 +149,7 @@ class TestTessFfiDataInterface:
     def test_creation_of_database_lightcurve_table_contains_important_columns(self, data_interface):
         database_connection = sqlite3.connect(data_interface.database_path, uri=True)
         database_cursor = database_connection.cursor()
-        data_interface.create_database_lightcurve_table(database_connection)
+        data_interface.create_database_table(database_connection)
         database_cursor.execute('select * from TessFfiLightcurve')
         column_names = [description[0] for description in database_cursor.description]
         assert 'path' in column_names
@@ -179,19 +179,19 @@ class TestTessFfiDataInterface:
     def test_can_add_sql_database_lightcurve_row_from_path(self, data_interface):
         database_connection = sqlite3.connect(data_interface.database_path, uri=True)
         database_cursor = database_connection.cursor()
-        data_interface.create_database_lightcurve_table(database_connection)
+        data_interface.create_database_table(database_connection)
         lightcurve_path0 = Path('tesslcs_sector_1_104/tesslcs_tmag_7_8/tesslc_1111.pkl')
         uuid0 = 'mock-uuid-output0'
         with patch.object(ramjet.data_interface.tess_ffi_data_interface, 'uuid4') as mock_uuid4:
             mock_uuid4.return_value = uuid0
-            data_interface.insert_database_lightcurve_row_from_path(database_cursor, lightcurve_path=lightcurve_path0,
-                                                                    dataset_split=2)
+            data_interface.insert_database_row_from_path(database_cursor, lightcurve_path=lightcurve_path0,
+                                                         dataset_split=2)
         lightcurve_path1 = Path('tesslcs_sector_1_104/tesslcs_tmag_14_15/tesslc_1234567.pkl')
         uuid1 = 'mock-uuid-output1'
         with patch.object(ramjet.data_interface.tess_ffi_data_interface, 'uuid4') as mock_uuid4:
             mock_uuid4.return_value = uuid1
-            data_interface.insert_database_lightcurve_row_from_path(database_cursor, lightcurve_path=lightcurve_path1,
-                                                                    dataset_split=3)
+            data_interface.insert_database_row_from_path(database_cursor, lightcurve_path=lightcurve_path1,
+                                                         dataset_split=3)
         database_cursor.execute('SELECT random_order_uuid, path, magnitude, dataset_split FROM TessFfiLightcurve')
         query_result = database_cursor.fetchall()
         assert query_result == [(uuid0, str(lightcurve_path0), 7, 2),
@@ -199,8 +199,8 @@ class TestTessFfiDataInterface:
 
     def test_indexes_of_sql_database(self, data_interface):
         database_connection = sqlite3.connect(data_interface.database_path, uri=True)
-        data_interface.create_database_lightcurve_table(database_connection)
-        data_interface.create_database_lightcurve_table_indexes(database_connection)
+        data_interface.create_database_table(database_connection)
+        data_interface.create_database_table_indexes(database_connection)
         # noinspection SqlResolve
         results_data_frame = pd.read_sql_query('''SELECT index_list.seq AS index_sequence,
                                                          seqno as index_sequence_number,
@@ -218,7 +218,7 @@ class TestTessFfiDataInterface:
     def test_can_populate_sql_dataset_from_ffi_directory(self, mock_glob, data_interface):
         database_connection = sqlite3.connect(data_interface.database_path, uri=True)
         data_interface.get_floor_magnitude_from_file_path = Mock(return_value=0)
-        data_interface.create_database_lightcurve_table(database_connection)
+        data_interface.create_database_table(database_connection)
         path_list = [data_interface.lightcurve_root_directory_path.joinpath(f'{index}.pkl') for index in range(20)]
         mock_glob.return_value = path_list
         data_interface.populate_sql_database(database_connection)
@@ -232,8 +232,8 @@ class TestTessFfiDataInterface:
 
     def test_unique_columns_of_sql_table(self, data_interface):
         database_connection = sqlite3.connect(data_interface.database_path, uri=True)
-        data_interface.create_database_lightcurve_table(database_connection)
-        data_interface.create_database_lightcurve_table_indexes(database_connection)
+        data_interface.create_database_table(database_connection)
+        data_interface.create_database_table_indexes(database_connection)
         # noinspection SqlResolve
         results_data_frame = pd.read_sql_query('''SELECT *
                                                   FROM pragma_index_list("TessFfiLightcurve") index_list, 
@@ -250,14 +250,14 @@ class TestTessFfiDataInterface:
     def test_can_insert_multiple_sql_database_lightcurve_rows_from_paths(self, data_interface):
         database_connection = sqlite3.connect(data_interface.database_path, uri=True)
         database_cursor = database_connection.cursor()
-        data_interface.create_database_lightcurve_table(database_connection)
+        data_interface.create_database_table(database_connection)
         lightcurve_path0 = Path('tesslcs_sector_1_104/tesslcs_tmag_7_8/tesslc_1111.pkl')
         lightcurve_path1 = Path('tesslcs_sector_1_104/tesslcs_tmag_14_15/tesslc_1234567.pkl')
         uuid0 = 'mock-uuid-output0'
         uuid1 = 'mock-uuid-output1'
         with patch.object(ramjet.data_interface.tess_ffi_data_interface, 'uuid4') as mock_uuid4:
             mock_uuid4.side_effect = [uuid0, uuid1]
-            data_interface.insert_multiple_lightcurve_rows_from_paths_into_database(
+            data_interface.insert_multiple_rows_from_paths_into_database(
                 database_cursor, lightcurve_paths=[lightcurve_path0, lightcurve_path1], dataset_splits=[2, 3])
         database_cursor.execute('SELECT random_order_uuid, path, magnitude, dataset_split FROM TessFfiLightcurve')
         query_result = database_cursor.fetchall()
