@@ -17,7 +17,7 @@ class TestTessTwoMinuteCadenceMetaDataManger:
         """
         return TessTwoMinuteCadenceMetaDataManger()
 
-    def test_can_insert_multiple_sql_database_lightcurve_rows_from_paths(self, meta_data_manger):
+    def test_can_insert_multiple_sql_database_rows_from_paths(self, meta_data_manger):
         database_cursor = Mock()
         mock_executemany = Mock()
         database_cursor.executemany = mock_executemany
@@ -32,3 +32,14 @@ class TestTessTwoMinuteCadenceMetaDataManger:
         expected_insert_values = [(str(lightcurve_path0), 382068171, 13, 2, uuid0),
                                   (str(lightcurve_path1), 280909647, 11, 3, uuid1)]
         assert mock_executemany.call_args[0][1] == expected_insert_values
+
+    @patch.object(Path, 'glob')
+    def test_can_populate_sql_dataset(self, mock_glob, meta_data_manger):
+        path_list = [meta_data_manger.lightcurve_root_directory_path.joinpath(f'{index}.fits') for index in range(20)]
+        mock_glob.return_value = path_list
+        database_connection = Mock()
+        mock_insert = Mock()
+        meta_data_manger.insert_multiple_rows_from_paths_into_database = mock_insert
+        meta_data_manger.populate_sql_database(database_connection)
+        assert mock_insert.call_args[0][1] == [Path(f'{index}.fits') for index in range(20)]
+        assert mock_insert.call_args[0][2] == list(range(10)) * 2

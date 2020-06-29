@@ -202,7 +202,7 @@ class TessFfiDataInterface:
         """
         Populates the SQL database based on the files found in the root FFI data directory.
         """
-        print('Populating TESS FFI SQL database (this may take a while)...')
+        print('Populating TESS FFI lightcurve meta data table (this may take a while)...')
         database_cursor = database_connection.cursor()
         path_glob = self.lightcurve_root_directory_path.glob('tesslcs_sector_*_104/tesslcs_tmag_*_*/tesslc_*.pkl')
         row_count = 0
@@ -222,7 +222,7 @@ class TessFfiDataInterface:
             self.insert_multiple_rows_from_paths_into_database(database_cursor, batch_paths,
                                                                batch_dataset_splits)
         database_connection.commit()
-        print(f'TESS FFI SQL database populated. {row_count} rows added.')
+        print(f'TESS FFI lightcurve meta data table populated. {row_count} rows added.')
 
     def paths_generator_from_sql_table(self, dataset_splits: Union[List[int], None] = None,
                                        magnitudes: Union[List[int], None] = None, repeat=True

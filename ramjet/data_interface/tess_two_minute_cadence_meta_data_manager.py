@@ -17,6 +17,7 @@ class TessTwoMinuteCadenceMetaDataManger:
 
     def __init__(self):
         self.database_path = Path('data/meta_database.sqlite3')
+        self.lightcurve_root_directory_path = Path('data/tess_two_minute_cadence_lightcurves')
 
     @staticmethod
     def create_database_table(database_connection: Connection):
@@ -75,3 +76,29 @@ class TessTwoMinuteCadenceMetaDataManger:
                                    (path, tic_id, sector, dataset_split, random_order_uuid)
                                VALUES (?, ?, ?, ?, ?)'''
         database_cursor.executemany(sql_query_string, sql_values_tuple_list)
+
+    def populate_sql_database(self, database_connection: Connection):
+        """
+        Populates the SQL database based on the lightcurve files.
+        """
+        print('Populating the TESS two minute cadence lightcurve meta data table...')
+        database_cursor = database_connection.cursor()
+        path_glob = self.lightcurve_root_directory_path.glob('**/*.fits')
+        row_count = 0
+        batch_paths = []
+        batch_dataset_splits = []
+        for index, path in enumerate(path_glob):
+            batch_paths.append(path.relative_to(self.lightcurve_root_directory_path))
+            batch_dataset_splits.append(index % 10)
+            row_count += 1
+            if index % 1000 == 0 and index != 0:
+                self.insert_multiple_rows_from_paths_into_database(database_cursor, batch_paths,
+                                                                   batch_dataset_splits)
+                batch_paths = []
+                batch_dataset_splits = []
+                print(f'{index} rows inserted...', end='\r')
+        if len(batch_paths) > 0:
+            self.insert_multiple_rows_from_paths_into_database(database_cursor, batch_paths,
+                                                               batch_dataset_splits)
+        database_connection.commit()
+        print(f'TESS two minute cadence lightcurve meta data table populated. {row_count} rows added.')
