@@ -2,7 +2,7 @@ import pandas as pd
 from unittest.mock import patch, Mock, PropertyMock
 
 import ramjet.data_interface.tess_transit_metadata_manager as module
-from ramjet.data_interface.tess_transit_metadata_manager import TessTransitDispositionMetadataManager, Disposition
+from ramjet.data_interface.tess_transit_metadata_manager import TessTransitMetadataManager, Disposition
 from ramjet.data_interface.tess_toi_data_interface import ToiColumns
 
 
@@ -11,7 +11,7 @@ class TestTessTargetTransitDisposition:
     @patch.object(module, 'TessTargetTransitDisposition')
     def test_table_building_creates_rows_based_on_toi_dispositions(self, mock_tess_target_transit_disposition,
                                                                    mock_metadatabase):
-        tess_transit_disposition_metadata_manager = TessTransitDispositionMetadataManager()
+        tess_transit_disposition_metadata_manager = TessTransitMetadataManager()
         toi_dispositions = pd.DataFrame({ToiColumns.tic_id.value: [1, 2, 3],
                                          ToiColumns.disposition.value: ['KP', '', 'FP']})
         ctoi_dispositions = pd.DataFrame({ToiColumns.tic_id.value: [],

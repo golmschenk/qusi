@@ -18,7 +18,7 @@ class Disposition(Enum):
     FALSE_POSITIVE = 'False positive'
 
 
-class TessTargetTransitDisposition(MetadatabaseModel):
+class TessTransit(MetadatabaseModel):
     """
     A model for the TESS target transit metadatabase table.
     """
@@ -26,7 +26,7 @@ class TessTargetTransitDisposition(MetadatabaseModel):
     disposition = CharField(index=True, choices=Disposition)
 
 
-class TessTransitDispositionMetadataManager:
+class TessTransitMetadataManager:
     """
     A class for managing the TESS transit metadata.
     """
@@ -45,8 +45,8 @@ class TessTransitDispositionMetadataManager:
         target_grouped_dispositions = all_dispositions.groupby(ToiColumns.tic_id.value)[ToiColumns.disposition.value
                                                                                         ].apply(set)
         row_count = 0
-        metadatabase.drop_tables([TessTargetTransitDisposition])
-        metadatabase.create_tables([TessTargetTransitDisposition])
+        metadatabase.drop_tables([TessTransit])
+        metadatabase.create_tables([TessTransit])
         for tic_id, disposition_set in target_grouped_dispositions.iteritems():
             # As a target can have multiple planet dispositions, use the most forgiving available planet disposition.
             if 'KP' in disposition_set or 'CP' in disposition_set:
@@ -57,13 +57,13 @@ class TessTransitDispositionMetadataManager:
                 database_disposition = Disposition.FALSE_POSITIVE.value
             else:
                 raise ValueError(f'{disposition_set} does not contain a known disposition.')
-            row = TessTargetTransitDisposition(tic_id=tic_id, disposition=database_disposition)
+            row = TessTransit(tic_id=tic_id, disposition=database_disposition)
             row.save()
             row_count += 1
         print(f'Table built. {row_count} rows added.')
 
 
 if __name__ == '__main__':
-    tess_transit_metadata_manager = TessTransitDispositionMetadataManager()
+    tess_transit_metadata_manager = TessTransitMetadataManager()
     tess_transit_metadata_manager.build_table()
 
