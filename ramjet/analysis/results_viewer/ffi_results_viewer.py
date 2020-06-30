@@ -34,12 +34,15 @@ class Target:
         lightcurve_path = self.lightcurve_path
         self.pdcsap_fluxes, self.pdcsap_flux_errors, self.times = tess_ffi_data_interface.load_fluxes_flux_errors_and_times_from_pickle_file(
             lightcurve_path, FfiDataIndexes.CORRECTED_FLUX)
-        pdcsap_flux_median = np.nanmedian(self.pdcsap_fluxes)
-        self.normalized_pdcsap_fluxes = self.pdcsap_fluxes / pdcsap_flux_median - 1
+        nonnegative_pdcsap_fluxes = self.pdcsap_fluxes - np.minimum(np.nanmin(self.pdcsap_fluxes), 0)
+        pdcsap_flux_median = np.nanmedian(nonnegative_pdcsap_fluxes)
+        self.normalized_pdcsap_fluxes = nonnegative_pdcsap_fluxes / pdcsap_flux_median - 1
         self.normalized_pdcsap_flux_errors = self.pdcsap_flux_errors / pdcsap_flux_median
         self.sap_fluxes, _ = tess_ffi_data_interface.load_fluxes_and_times_from_pickle_file(lightcurve_path,
                                                                                             FfiDataIndexes.RAW_FLUX)
-        self.normalized_sap_fluxes = self.sap_fluxes / np.nanmedian(self.sap_fluxes) - 1
+        nonnegative_sap_fluxes = self.sap_fluxes - np.minimum(np.nanmin(self.sap_fluxes), 0)
+        sap_flux_median = np.nanmedian(nonnegative_sap_fluxes)
+        self.normalized_sap_fluxes = nonnegative_sap_fluxes / sap_flux_median - 1
 
     def check_for_known_exofop_dispositions(self):
         dispositions = tess_toi_data_interface.retrieve_exofop_toi_and_ctoi_planet_disposition_for_tic_id(self.tic_id)

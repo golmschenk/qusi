@@ -113,6 +113,7 @@ class ToiLightcurveDatabase(TransitLightcurveLabelPerTimeStepDatabase):
         suspected_planet_download_manifest = tess_data_interface.download_products(
             suspected_planet_lightcurve_data_products, data_directory=self.data_directory)
         print(f'Moving lightcurves to {self.lightcurve_directory}...')
+        self.lightcurve_directory.mkdir(parents=True, exist_ok=True)
         for file_path_string in suspected_planet_download_manifest['Local Path']:
             file_path = Path(file_path_string)
             file_path.rename(self.lightcurve_directory.joinpath(file_path.name))
@@ -146,6 +147,7 @@ class ToiLightcurveDatabase(TransitLightcurveLabelPerTimeStepDatabase):
             data_directory=self.data_directory
         )
         print(f'Moving lightcurves to {self.lightcurve_directory}...')
+        self.lightcurve_directory.mkdir(parents=True, exist_ok=True)
         for file_path_string in not_planet_download_manifest['Local Path']:
             file_path = Path(file_path_string)
             file_path.rename(self.lightcurve_directory.joinpath(file_path.name))
@@ -157,11 +159,11 @@ class ToiLightcurveDatabase(TransitLightcurveLabelPerTimeStepDatabase):
 
         :return:
         """
-        columns_to_use = ['TIC ID', 'TFOPWG Disposition', 'Planet Num', 'Epoch (BJD)', 'Period (days)',
+        columns_to_use = ['TIC ID', 'TFOPWG Disposition', 'Epoch (BJD)', 'Period (days)',
                           'Duration (hours)', 'Sectors']
         dispositions = pd.read_csv(self.toi_dispositions_path, usecols=columns_to_use)
         dispositions.rename(columns={'TFOPWG Disposition': 'disposition',
-                                     'Planet Num': 'planet_number', 'Epoch (BJD)': 'transit_epoch',
+                                     'Epoch (BJD)': 'transit_epoch',
                                      'Period (days)': 'transit_period', 'Duration (hours)': 'transit_duration',
                                      'Sectors': 'Sector'}, inplace=True)
         dispositions['disposition'] = dispositions['disposition'].fillna('')

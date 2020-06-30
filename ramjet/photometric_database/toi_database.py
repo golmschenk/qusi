@@ -6,6 +6,7 @@ from pathlib import Path
 import numpy as np
 from typing import Iterable
 import requests
+from astropy.io import fits
 
 from ramjet.data_interface.tess_data_interface import TessDataInterface
 from ramjet.data_interface.tess_toi_data_interface import TessToiDataInterface
@@ -49,8 +50,8 @@ class ToiDatabase(TessSyntheticInjectedWithNegativeInjectionDatabase):
         """
         Downloads the `ExoFOP database <https://exofop.ipac.caltech.edu/tess/view_toi.php>`_.
         """
-        print('Clearing data directory...')
-        self.clear_data_directory()
+        # print('Clearing data directory...')
+        # self.clear_data_directory()
         print("Downloading ExoFOP TOI disposition CSV...")
         toi_csv_url = 'https://exofop.ipac.caltech.edu/tess/download_toi.php?sort=toi&output=csv'
         response = requests.get(toi_csv_url)
@@ -98,11 +99,21 @@ class ToiDatabase(TessSyntheticInjectedWithNegativeInjectionDatabase):
             not_planet_lightcurve_data_products.head(number_of_negative_lightcurves_to_download),
             data_directory=self.data_directory
         )
-        print(f'Moving lightcurves to {self.lightcurve_directory}...')
+        print(f'Verifying and moving lightcurves to {self.lightcurve_directory}...')
         self.lightcurve_directory.mkdir(parents=True, exist_ok=True)
         for file_path_string in not_planet_download_manifest['Local Path']:
             file_path = Path(file_path_string)
-            file_path.rename(self.lightcurve_directory.joinpath(file_path.name))
+            lightcurve_path = self.lightcurve_directory.joinpath(file_path.name)
+            try:
+                file_path.rename(lightcurve_path)
+                hdu_list = fits.open(str(lightcurve_path))
+                lightcurve = hdu_list[1].data
+                _ = lightcurve['TIME'][0]
+            except (OSError, TypeError):
+                print(f'{file_path} seems to be corrupt. Re-downloading and replacing.')
+                sector = tess_data_interface.get_sector_from_single_sector_obs_id(str(lightcurve_path.stem))
+                tic_id = tess_data_interface.get_tic_id_from_single_sector_obs_id(str(lightcurve_path.stem))
+                tess_data_interface.download_lightcurve(tic_id, sector, save_directory=lightcurve_path.parent)
         print('Database ready.')
 
 

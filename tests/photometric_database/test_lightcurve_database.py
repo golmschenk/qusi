@@ -2,7 +2,7 @@
 Tests for the LightcurveDatabase class.
 """
 from pathlib import Path
-from typing import Any, Generator, List
+from typing import Any
 from unittest.mock import Mock, patch
 import numpy as np
 import tensorflow as tf
@@ -135,3 +135,28 @@ class TestLightcurveDatabase:
         paths_dataset = database.paths_dataset_from_list_or_generator_factory(generator_factory)
         assert list(paths_dataset) == ['a', 'b', 'c']
         assert list(paths_dataset) == ['a', 'b', 'c']  # Check new generator rather than old empty one.
+
+    def test_normalization_does_not_invert_lightcurve_shape_when_there_are_negative_values(self, database):
+        unnormalized_positive_lightcurve_fluxes = np.array([10, 20, 30, 25, 15], dtype=np.float32)
+        normalized_positive_lightcurve_fluxes = database.normalize(unnormalized_positive_lightcurve_fluxes)
+        assert normalized_positive_lightcurve_fluxes.argmax() == 2
+        assert normalized_positive_lightcurve_fluxes.argmin() == 0
+        unnormalized_negative_lightcurve_fluxes = np.array([-30, -20, -10, -15, -25], dtype=np.float32)
+        normalized_negative_lightcurve_fluxes = database.normalize(unnormalized_negative_lightcurve_fluxes)
+        assert normalized_negative_lightcurve_fluxes.argmax() == 2
+        assert normalized_negative_lightcurve_fluxes.argmin() == 0
+
+    def test_normalization_brings_values_close_to_negative_one_to_one_range(self, database):
+        epsilon = 0.6
+        unnormalized_positive_lightcurve_fluxes = np.array([10, 20, 30, 20, 10], dtype=np.float32)
+        normalized_positive_lightcurve_fluxes = database.normalize(unnormalized_positive_lightcurve_fluxes)
+        assert (normalized_positive_lightcurve_fluxes > (-1 - epsilon)).all()
+        assert (normalized_positive_lightcurve_fluxes < (1 + epsilon)).all()
+        assert np.min(normalized_positive_lightcurve_fluxes) < (-1 + epsilon)
+        assert np.max(normalized_positive_lightcurve_fluxes) > (1 - epsilon)
+        unnormalized_negative_lightcurve_fluxes = np.array([-30, -20, -10, -20, -30], dtype=np.float32)
+        normalized_negative_lightcurve_fluxes = database.normalize(unnormalized_negative_lightcurve_fluxes)
+        assert (normalized_negative_lightcurve_fluxes > (-1 - epsilon)).all()
+        assert (normalized_negative_lightcurve_fluxes < (1 + epsilon)).all()
+        assert np.min(normalized_negative_lightcurve_fluxes) < (-1 + epsilon)
+        assert np.max(normalized_negative_lightcurve_fluxes) > (1 - epsilon)

@@ -1,16 +1,15 @@
 """
 Code for interfacing with Brian Powell's TESS full frame image (FFI) data.
 """
-import pickle
 import re
+import pickle
 import sqlite3
-from sqlite3 import Cursor
-from uuid import uuid4
-
 import numpy as np
+from uuid import uuid4
 from enum import Enum
 from pathlib import Path
-from typing import Union, List, Iterable
+from sqlite3 import Cursor, Connection
+from typing import Union, List, Iterable, Generator
 
 
 class FfiDataIndexes(Enum):
@@ -21,11 +20,14 @@ class FfiDataIndexes(Enum):
     RA = 1
     DEC = 2
     TESS_MAGNITUDE = 3
-    TIME = 4
-    RAW_FLUX = 5
-    CORRECTED_FLUX = 6
-    PCA_FLUX = 7
-    FLUX_ERROR = 8
+    CAMERA = 4
+    CHIP = 5
+    TIME__BTJD = 6
+    RAW_FLUX = 7
+    CORRECTED_FLUX = 8
+    PCA_FLUX = 9
+    FLUX_ERROR = 10
+    QUALITY = 11
 
 
 class TessFfiDataInterface:
@@ -34,10 +36,9 @@ class TessFfiDataInterface:
     """
 
     def __init__(self, lightcurve_root_directory_path: Path = Path('data/tess_ffi_lightcurves'),
-                 database_path: Union[Path, str] = Path('data/tess_ffi_database.sqlite3')):
+                 database_path: Union[Path, str] = Path('data/metadatabase.sqlite3')):
         self.lightcurve_root_directory_path: Path = lightcurve_root_directory_path
         self.database_path: Union[Path, str] = database_path
-        self.database_cursor: Cursor = sqlite3.connect(str(database_path)).cursor()
 
     @staticmethod
     def load_fluxes_and_times_from_pickle_file(file_path: Union[Path, str],
@@ -55,65 +56,13 @@ class TessFfiDataInterface:
         with file_path.open('rb') as pickle_file:
             lightcurve = pickle.load(pickle_file)
         fluxes = lightcurve[flux_type_index.value]
-        times = lightcurve[FfiDataIndexes.TIME.value]
+        times = lightcurve[FfiDataIndexes.TIME__BTJD.value]
         assert times.shape == fluxes.shape
         return fluxes, times
 
     @staticmethod
-    def get_pickle_directories(ffi_root_directory: Path) -> List[Path]:
-        """
-        Gets the list of pickle containing directories based on the root FFI directory. This function assumes
-        Brian Powell's FFI directory structure.
-
-        :param ffi_root_directory: The root FFI directory.
-        :return: The list of subdirectories containing the pickle files.
-        """
-        return list(ffi_root_directory.glob('tesslcs_sector_*/tesslcs_tmag_*_*/'))
-
-    @staticmethod
     def glob_pickle_path_for_magnitude(ffi_root_directory: Path, magnitude: int) -> Iterable[Path]:
-        return ffi_root_directory.glob(f'tesslcs_sector_*/tesslcs_tmag_{magnitude}_{magnitude + 1}/*.pkl')
-
-    @staticmethod
-    def create_path_list_pickle_repeating_generator(paths: List[Path]) -> Iterable[Path]:
-        """
-        Creates a generator for a list of paths, where each path has it's pickle files repeatedly iterated over.
-
-        :param paths: The list of paths containing pickle files.
-        :return: The resulting generator.
-        """
-        generator_dictionary = {}
-        for path in paths:  # Create a generator for each, so long as there's at least 1 pickle file.
-            try:
-                next(path.glob('*.pkl'))  # If this doesn't fail, there's at least 1 pickle file in the directory.
-                generator_dictionary[path] = path.glob('*.pkl')
-            except StopIteration:
-                continue
-
-        def glob_dictionary_generator():
-            """The generator to return."""
-            while True:
-                for path_, glob_generator in generator_dictionary.items():
-                    try:
-                        yield next(glob_generator)
-                    except StopIteration:  # Repeat the generator if it ran out.
-                        glob_generator = path_.glob('*.pkl')
-                        generator_dictionary[path_] = glob_generator
-                        yield next(glob_generator)
-
-        return glob_dictionary_generator()
-
-    def create_subdirectories_pickle_repeating_generator(self, ffi_root_directory: Path) -> Iterable[Path]:
-        """
-        Creates a generator for the pickle subdirectories, where each path has it's pickle files repeatedly iterated
-        over. Each directory is sampled from equally. This function assumes Brian Powell's FFI directory structure.
-
-        :param ffi_root_directory: The root FFI directory.
-        :return: The resulting generator.
-        """
-        pickle_subdirectories = self.get_pickle_directories(ffi_root_directory)
-        generator = self.create_path_list_pickle_repeating_generator(pickle_subdirectories)
-        return generator
+        return ffi_root_directory.glob(f'tesslcs_sector_*_104/tesslcs_tmag_{magnitude}_{magnitude + 1}/*.pkl')
 
     @staticmethod
     def load_fluxes_flux_errors_and_times_from_pickle_file(
@@ -132,7 +81,7 @@ class TessFfiDataInterface:
             lightcurve = pickle.load(pickle_file)
         fluxes = lightcurve[flux_type_index.value]
         flux_errors = lightcurve[FfiDataIndexes.FLUX_ERROR.value]
-        times = lightcurve[FfiDataIndexes.TIME.value]
+        times = lightcurve[FfiDataIndexes.TIME__BTJD.value]
         assert times.shape == fluxes.shape
         assert times.shape == flux_errors.shape
         return fluxes, flux_errors, times
@@ -149,10 +98,10 @@ class TessFfiDataInterface:
             file_path = str(file_path)
         # Search for Brian Powell's FFI path convention with directory structure sector, magnitude, target.
         # E.g., "tesslcs_sector_12/tesslcs_tmag_1_2/tesslc_290374453"
-        match = re.search(r'tesslcs_sector_(\d+)/tesslcs_tmag_\d+_\d+/tesslc_(\d+)', file_path)
+        match = re.search(r'tesslcs_sector_(\d+)(?:_104)?/tesslcs_tmag_\d+_\d+/tesslc_(\d+)', file_path)
         if match:
             return int(match.group(2)), int(match.group(1))
-        # Search for Brian Powell's FFI path convention with only the file name containing the taret.
+        # Search for Brian Powell's FFI path convention with only the file name containing the target.
         # E.g., "tesslc_290374453"
         match = re.search(r'tesslc_(\d+)', file_path)
         if match:
@@ -172,25 +121,163 @@ class TessFfiDataInterface:
             file_path = str(file_path)
         # Search for Brian Powell's FFI path convention with directory structure sector, magnitude, target.
         # E.g., "tesslcs_sector_12/tesslcs_tmag_1_2/tesslc_290374453"
-        match = re.search(r'tesslcs_sector_\d+/tesslcs_tmag_(\d+)_\d+/tesslc_\d+', file_path)
+        match = re.search(r'tesslcs_sector_\d+(?:_104)?/tesslcs_tmag_(\d+)_\d+/tesslc_\d+', file_path)
         if match:
             return int(match.group(1))
         raise ValueError(f'{file_path} does not match a known pattern to extract magnitude from.')
 
-    def create_database_lightcurve_table(self):
+    @staticmethod
+    def create_database_table(database_connection: Connection):
         """
         Creates the SQL database table for the FFI dataset.
-        """
-        self.database_cursor.execute('''CREATE TABLE Lightcurve (
-                                            uuid TEXT PRIMARY KEY,
-                                            path TEXT NOT NULL,
-                                            magnitude INTEGER NOT NULL,
-                                            dataset_split INTEGER NOT NULL
-                                        )'''
-                                     )
 
-    def add_database_lightcurve_row_from_path(self, lightcurve_path: Path, dataset_split: int):
+        :param database_connection: The database connection to perform the operations on.
+        """
+        database_cursor = database_connection.cursor()
+        database_cursor.execute('''CREATE TABLE TessFfiLightcurve (
+                                       random_order_uuid TEXT NOT NULL,
+                                       path TEXT NOT NULL,
+                                       magnitude INTEGER NOT NULL,
+                                       dataset_split INTEGER NOT NULL)'''
+                                )
+        database_connection.commit()
+
+    @staticmethod
+    def create_database_table_indexes(database_connection: Connection):
+        """
+        Creates the indexes for the SQL table.
+
+        :param database_connection: The database connection to perform the operations on.
+        """
+        database_cursor = database_connection.cursor()
+        print('Creating indexes...')
+        # Index for the use case of having the entire dataset shuffled.
+        database_cursor.execute('''CREATE UNIQUE INDEX Lightcurve_random_order_uuid_index
+                                        ON TessFfiLightcurve (random_order_uuid)''')
+        # Index for the use case of training on the entire dataset, get the training dataset, then
+        # have data shuffled based on the uuid.
+        database_cursor.execute('''CREATE INDEX Lightcurve_dataset_split_random_order_uuid_index
+                                        ON TessFfiLightcurve (dataset_split, random_order_uuid)''')
+        # Index for the use case of training on a specific magnitude, get the training dataset, then
+        # have data shuffled based on the uuid.
+        database_cursor.execute('''CREATE INDEX Lightcurve_magnitude_dataset_split_random_order_uuid_index
+                                        ON TessFfiLightcurve (magnitude, dataset_split, random_order_uuid)''')
+        # Paths should be unique.
+        database_cursor.execute('''CREATE UNIQUE INDEX Lightcurve_path_index
+                                        ON TessFfiLightcurve (path)''')
+        database_connection.commit()
+
+    def insert_database_row_from_path(self, database_cursor: Cursor, lightcurve_path: Path,
+                                      dataset_split: int):
+        """
+        Inserts the given lightcurve path into the SQL database with a dataset split tag.
+
+        :param database_cursor: The cursor of the database to perform the operations on.
+        :param lightcurve_path: The path of the lightcurve to be added.
+        :param dataset_split: The dataset split this path belongs to. That is, an integer which can be used to split
+                              the data into training, validation, and testing. Most often 0-9 to provide 10% splits.
+        """
         uuid = uuid4()
         magnitude = self.get_floor_magnitude_from_file_path(lightcurve_path)
-        self.database_cursor.execute(f'''INSERT INTO Lightcurve (uuid, path, magnitude, dataset_split)
-                                         VALUES ('{uuid}', '{str(lightcurve_path)}', {magnitude}, {dataset_split})''')
+        database_cursor.execute(
+            f'''INSERT INTO TessFfiLightcurve (random_order_uuid, path, magnitude, dataset_split)
+                VALUES ('{str(uuid)}', '{str(lightcurve_path)}', {magnitude}, {dataset_split})'''
+        )
+
+    def insert_multiple_rows_from_paths_into_database(self, database_cursor: Cursor,
+                                                      lightcurve_paths: List[Path],
+                                                      dataset_splits: List[int]):
+        assert len(lightcurve_paths) == len(dataset_splits)
+        sql_values_tuple_list = []
+        for lightcurve_path, dataset_split in zip(lightcurve_paths, dataset_splits):
+            uuid = uuid4()
+            magnitude = self.get_floor_magnitude_from_file_path(lightcurve_path)
+            sql_values_tuple_list.append((str(uuid), str(lightcurve_path), magnitude, dataset_split))
+
+        sql_query_string = f'''INSERT INTO TessFfiLightcurve (random_order_uuid, path, magnitude, dataset_split)
+                               VALUES (?, ?, ?, ?)'''
+        database_cursor.executemany(sql_query_string, sql_values_tuple_list)
+
+    def populate_sql_database(self, database_connection: Connection):
+        """
+        Populates the SQL database based on the files found in the root FFI data directory.
+        """
+        print('Populating TESS FFI lightcurve meta data table (this may take a while)...')
+        database_cursor = database_connection.cursor()
+        path_glob = self.lightcurve_root_directory_path.glob('tesslcs_sector_*_104/tesslcs_tmag_*_*/tesslc_*.pkl')
+        row_count = 0
+        batch_paths = []
+        batch_dataset_splits = []
+        for index, path in enumerate(path_glob):
+            batch_paths.append(path.relative_to(self.lightcurve_root_directory_path))
+            batch_dataset_splits.append(index % 10)
+            row_count += 1
+            if index % 1000 == 0:
+                self.insert_multiple_rows_from_paths_into_database(database_cursor, batch_paths,
+                                                                   batch_dataset_splits)
+                batch_paths = []
+                batch_dataset_splits = []
+                print(f'{index} rows inserted...', end='\r')
+        if len(batch_paths) > 0:
+            self.insert_multiple_rows_from_paths_into_database(database_cursor, batch_paths,
+                                                               batch_dataset_splits)
+        database_connection.commit()
+        print(f'TESS FFI lightcurve meta data table populated. {row_count} rows added.')
+
+    def paths_generator_from_sql_table(self, dataset_splits: Union[List[int], None] = None,
+                                       magnitudes: Union[List[int], None] = None, repeat=True
+                                       ) -> Generator[Path, None, None]:
+        """
+        Creates a generator for all the paths from the SQL table, with optional filters.
+
+        :param dataset_splits: The dataset splits to filter on. For splitting training, testing, etc.
+        :param magnitudes: The target floor magnitudes to filter on.
+        :param repeat: Whether or not the generator should repeat indefinitely.
+        :return: The generator.
+        """
+        batch_size = 1000
+        database_cursor = sqlite3.connect(str(self.database_path), uri=True, check_same_thread=False).cursor()
+        if dataset_splits is not None:
+            dataset_split_condition = f'dataset_split IN ({", ".join(map(str, dataset_splits))})'
+        else:
+            dataset_split_condition = '1'  # Always true.
+        if magnitudes is not None:
+            magnitude_condition = f'magnitude IN ({", ".join(map(str, magnitudes))})'
+        else:
+            magnitude_condition = '1'  # Always true.
+        while True:
+            database_cursor.execute(f'''SELECT path, random_order_uuid
+                                        FROM TessFfiLightcurve
+                                        WHERE {dataset_split_condition} AND
+                                              {magnitude_condition}
+                                        ORDER BY random_order_uuid
+                                        LIMIT {batch_size}''')
+            batch = database_cursor.fetchall()
+            while batch:
+                for row in batch:
+                    yield Path(self.lightcurve_root_directory_path.joinpath(row[0]))
+                previous_batch_final_uuid = batch[-1][1]
+                database_cursor.execute(f'''SELECT path, random_order_uuid
+                                            FROM TessFfiLightcurve
+                                            WHERE random_order_uuid > '{previous_batch_final_uuid}' AND
+                                                  {dataset_split_condition} AND
+                                                  {magnitude_condition}
+                                            ORDER BY random_order_uuid
+                                            LIMIT {batch_size}''')
+                batch = database_cursor.fetchall()
+            if not repeat:
+                break
+
+
+if __name__ == '__main__':
+    tess_ffi_data_interface = TessFfiDataInterface()
+    database_connection_ = sqlite3.connect(tess_ffi_data_interface.database_path, uri=True)
+    database_cursor_ = database_connection_.cursor()
+    database_cursor_.execute(f'PRAGMA cache_size = -{2e6}')  # Set the cache size to 2GB.
+    database_connection_.commit()
+    database_cursor_.execute('DROP TABLE IF EXISTS TessFfiLightcurve')
+    database_connection_.commit()
+    tess_ffi_data_interface.create_database_table(database_connection_)
+    tess_ffi_data_interface.populate_sql_database(database_connection_)
+    tess_ffi_data_interface.create_database_table_indexes(database_connection_)
+    database_connection_.close()

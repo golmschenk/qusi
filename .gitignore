@@ -231,6 +231,7 @@ venv.bak/
 .mypy_cache/
 
 ### Project specific
-data/
+data/**
+!/data/.template_metadatabase.sqlite3
 logs/
 /ramjet/photometric_database/microlensing_signal_meta_data/moa9yr_events_meta_oct2018.txt
