@@ -16,3 +16,4 @@ pymc3==3.8
 Theano==1.0.4
 bokeh==2.0.1
 pathos==0.2.6
+peewee==3.13.3

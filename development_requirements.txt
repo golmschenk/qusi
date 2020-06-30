@@ -21,3 +21,4 @@ scipy
 setuptools
 dataset
 pathos
+peewee
