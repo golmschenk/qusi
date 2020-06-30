@@ -3,19 +3,19 @@ import sqlite3
 from pathlib import Path
 from unittest.mock import patch, Mock
 
-from ramjet.data_interface.tess_two_minute_cadence_metadata_manager import TessTwoMinuteCadenceMetadataManger
-import ramjet.data_interface.tess_two_minute_cadence_metadata_manager as module
+from ramjet.data_interface.tess_two_minute_cadence_lightcurve_metadata_manager import TessTwoMinuteCadenceLightcurveMetadataManger
+import ramjet.data_interface.tess_two_minute_cadence_lightcurve_metadata_manager as module
 
 
-class TestTessTwoMinuteCadenceMetadataManger:
+class TestTessTwoMinuteCadenceLightcurveMetadataManger:
     @pytest.fixture
-    def metadata_manger(self) -> TessTwoMinuteCadenceMetadataManger:
+    def metadata_manger(self) -> TessTwoMinuteCadenceLightcurveMetadataManger:
         """
         The meta data manager class instance under test.
 
         :return: The meta data manager.
         """
-        return TessTwoMinuteCadenceMetadataManger()
+        return TessTwoMinuteCadenceLightcurveMetadataManger()
 
     def test_can_insert_multiple_sql_database_rows_from_paths(self, metadata_manger):
         database_cursor = Mock()

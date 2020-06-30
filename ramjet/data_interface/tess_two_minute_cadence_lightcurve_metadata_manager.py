@@ -10,7 +10,7 @@ from uuid import uuid4
 from ramjet.data_interface.tess_data_interface import TessDataInterface
 
 
-class TessTwoMinuteCadenceMetadataManger:
+class TessTwoMinuteCadenceLightcurveMetadataManger:
     """
     A class for managing the meta data of the two minute cadence TESS lightcurves.
     """
@@ -163,5 +163,5 @@ class TessTwoMinuteCadenceMetadataManger:
         database_connection_.close()
 
 if __name__ == '__main__':
-    manager = TessTwoMinuteCadenceMetadataManger()
+    manager = TessTwoMinuteCadenceLightcurveMetadataManger()
     manager.build_table()
