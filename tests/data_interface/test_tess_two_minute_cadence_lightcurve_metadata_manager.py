@@ -18,7 +18,7 @@ class TestTessTwoMinuteCadenceLightcurveMetadataManger:
         return TessTwoMinuteCadenceLightcurveMetadataManger()
 
     @patch.object(module, 'metadatabase')
-    @patch.object(module.TessTwoMinuteCadenceLightcurve, 'insert_many')
+    @patch.object(module.TessTwoMinuteCadenceLightcurveMetadata, 'insert_many')
     def test_can_insert_multiple_sql_database_rows_from_paths(self, mock_insert_many, mock_metadatabase,
                                                               metadata_manger):
         lightcurve_path0 = Path('lightcurves/tess2019169103026-s0013-0000000382068171-0146-s_lc.fits')

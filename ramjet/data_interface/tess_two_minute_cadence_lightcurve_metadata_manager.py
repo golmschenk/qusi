@@ -12,7 +12,7 @@ from ramjet.data_interface.metadatabase import MetadatabaseModel, metadatabase
 from ramjet.data_interface.tess_data_interface import TessDataInterface
 
 
-class TessTwoMinuteCadenceLightcurve(MetadatabaseModel):
+class TessTwoMinuteCadenceLightcurveMetadata(MetadatabaseModel):
     """
     A model for the TESS two minute cadence lightcurve metadatabase table.
     """
@@ -51,12 +51,12 @@ class TessTwoMinuteCadenceLightcurveMetadataManger:
         row_dictionary_list = []
         for lightcurve_path, dataset_split in zip(lightcurve_paths, dataset_splits):
             tic_id, sector = self.tess_data_interface.get_tic_id_and_sector_from_file_path(lightcurve_path)
-            row_dictionary_list.append({TessTwoMinuteCadenceLightcurve.path.name: str(lightcurve_path),
-                                        TessTwoMinuteCadenceLightcurve.tic_id.name: tic_id,
-                                        TessTwoMinuteCadenceLightcurve.sector.name: sector,
-                                        TessTwoMinuteCadenceLightcurve.dataset_split.name: dataset_split})
+            row_dictionary_list.append({TessTwoMinuteCadenceLightcurveMetadata.path.name: str(lightcurve_path),
+                                        TessTwoMinuteCadenceLightcurveMetadata.tic_id.name: tic_id,
+                                        TessTwoMinuteCadenceLightcurveMetadata.sector.name: sector,
+                                        TessTwoMinuteCadenceLightcurveMetadata.dataset_split.name: dataset_split})
         with metadatabase.atomic():
-            TessTwoMinuteCadenceLightcurve.insert_many(row_dictionary_list).execute()
+            TessTwoMinuteCadenceLightcurveMetadata.insert_many(row_dictionary_list).execute()
 
     def populate_sql_database(self):
         """
@@ -123,11 +123,11 @@ class TessTwoMinuteCadenceLightcurveMetadataManger:
         """
         database_connection_ = sqlite3.connect(self.database_path, uri=True)
         database_cursor_ = database_connection_.cursor()
-        TessTwoMinuteCadenceLightcurve.drop_table()
-        TessTwoMinuteCadenceLightcurve.create_table()
-        SchemaManager(TessTwoMinuteCadenceLightcurve).drop_indexes()  # To allow for fast insert.
+        TessTwoMinuteCadenceLightcurveMetadata.drop_table()
+        TessTwoMinuteCadenceLightcurveMetadata.create_table()
+        SchemaManager(TessTwoMinuteCadenceLightcurveMetadata).drop_indexes()  # To allow for fast insert.
         self.populate_sql_database(database_connection_)
-        SchemaManager(TessTwoMinuteCadenceLightcurve).create_indexes()  # Since we dropped them before.
+        SchemaManager(TessTwoMinuteCadenceLightcurveMetadata).create_indexes()  # Since we dropped them before.
 
 if __name__ == '__main__':
     manager = TessTwoMinuteCadenceLightcurveMetadataManger()

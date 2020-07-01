@@ -6,9 +6,9 @@ from ramjet.data_interface.tess_transit_metadata_manager import TessTransitMetad
 from ramjet.data_interface.tess_toi_data_interface import ToiColumns
 
 
-class TestTessTargetTransitDisposition:
+class TestTessTransitMetadata:
     @patch.object(module, 'metadatabase')
-    @patch.object(module, 'TessTransit')
+    @patch.object(module, 'TessTransitMetadata')
     def test_table_building_creates_rows_based_on_toi_dispositions(self, mock_tess_target_transit_disposition,
                                                                    mock_metadatabase):
         tess_transit_disposition_metadata_manager = TessTransitMetadataManager()
