@@ -17,10 +17,10 @@ class TestTessTwoMinuteCadenceLightcurveMetadataManger:
         """
         return TessTwoMinuteCadenceLightcurveMetadataManger()
 
-    def test_can_insert_multiple_sql_database_rows_from_paths(self, metadata_manger):
-        database_cursor = Mock()
-        mock_executemany = Mock()
-        database_cursor.executemany = mock_executemany
+    @patch.object(module, 'metadatabase')
+    @patch.object(module.TessTwoMinuteCadenceLightcurve, 'insert_many')
+    def test_can_insert_multiple_sql_database_rows_from_paths(self, mock_insert_many, mock_metadatabase,
+                                                              metadata_manger):
         lightcurve_path0 = Path('lightcurves/tess2019169103026-s0013-0000000382068171-0146-s_lc.fits')
         lightcurve_path1 = Path('lightcurves/tess2019112060037-s0011-0000000280909647-0143-s_lc.fits')
         uuid0 = 'mock-uuid-output0'
@@ -28,18 +28,17 @@ class TestTessTwoMinuteCadenceLightcurveMetadataManger:
         with patch.object(module, 'uuid4') as mock_uuid4:
             mock_uuid4.side_effect = [uuid0, uuid1]
             metadata_manger.insert_multiple_rows_from_paths_into_database(
-                database_cursor, lightcurve_paths=[lightcurve_path0, lightcurve_path1], dataset_splits=[2, 3])
-        expected_insert_values = [(str(lightcurve_path0), 382068171, 13, 2, uuid0),
-                                  (str(lightcurve_path1), 280909647, 11, 3, uuid1)]
-        assert mock_executemany.call_args[0][1] == expected_insert_values
+                lightcurve_paths=[lightcurve_path0, lightcurve_path1], dataset_splits=[2, 3])
+        expected_insert = [{'path': str(lightcurve_path0), 'tic_id': 382068171, 'sector': 13, 'dataset_split': 2},
+                           {'path': str(lightcurve_path1), 'tic_id': 280909647, 'sector': 11, 'dataset_split': 3}]
+        assert mock_insert_many.call_args[0][0] == expected_insert
 
     @patch.object(Path, 'glob')
     def test_can_populate_sql_dataset(self, mock_glob, metadata_manger):
         path_list = [metadata_manger.lightcurve_root_directory_path.joinpath(f'{index}.fits') for index in range(20)]
         mock_glob.return_value = path_list
-        database_connection = Mock()
         mock_insert = Mock()
         metadata_manger.insert_multiple_rows_from_paths_into_database = mock_insert
-        metadata_manger.populate_sql_database(database_connection)
-        assert mock_insert.call_args[0][1] == [Path(f'{index}.fits') for index in range(20)]
-        assert mock_insert.call_args[0][2] == list(range(10)) * 2
+        metadata_manger.populate_sql_database()
+        assert mock_insert.call_args[0][0] == [Path(f'{index}.fits') for index in range(20)]
+        assert mock_insert.call_args[0][1] == list(range(10)) * 2

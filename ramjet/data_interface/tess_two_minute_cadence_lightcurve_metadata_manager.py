@@ -6,8 +6,28 @@ from pathlib import Path
 from sqlite3 import Connection, Cursor
 from typing import List, Union, Generator
 from uuid import uuid4
+from peewee import IntegerField, CharField, SchemaManager
 
+from ramjet.data_interface.metadatabase import MetadatabaseModel, metadatabase
 from ramjet.data_interface.tess_data_interface import TessDataInterface
+
+
+class TessTwoMinuteCadenceLightcurve(MetadatabaseModel):
+    """
+    A model for the TESS two minute cadence lightcurve metadatabase table.
+    """
+    tic_id = IntegerField(index=True)
+    sector = IntegerField(index=True)
+    path = CharField(unique=True)
+    dataset_split = IntegerField()
+    random_order_uuid = CharField(unique=True, index=True, default=uuid4())
+
+    class Meta:
+        """Schema meta data for the model."""
+        indexes = (
+            (('dataset_split', 'random_order_uuid'), False),  # Useful for training data split with random order.
+            (('tic_id', 'sector'), True),  # Ensures TIC ID and sector entry is unique.
+        )
 
 
 class TessTwoMinuteCadenceLightcurveMetadataManger:
@@ -20,95 +40,45 @@ class TessTwoMinuteCadenceLightcurveMetadataManger:
         self.database_path = Path('data/metadatabase.sqlite3')
         self.lightcurve_root_directory_path = Path('data/tess_two_minute_cadence_lightcurves')
 
-    @staticmethod
-    def create_database_table(database_connection: Connection):
-        """
-        Creates the SQL database table.
-
-        :param database_connection: The database connection to perform the operations on.
-        """
-        database_cursor = database_connection.cursor()
-        database_cursor.execute('''CREATE TABLE TessTwoMinuteCadenceLightcurve (
-                                       path TEXT NOT NULL,
-                                       tic_id INTEGER NOT NULL,
-                                       sector INTEGER NOT NULL,
-                                       dataset_split INTEGER NOT NULL,
-                                       random_order_uuid TEXT NOT NULL)'''
-                                )
-        database_connection.commit()
-
-    @staticmethod
-    def create_database_table_indexes(database_connection: Connection):
-        """
-        Creates the indexes for the SQL table.
-
-        :param database_connection: The database connection to perform the operations on.
-        """
-        database_cursor = database_connection.cursor()
-        print('Creating indexes...')
-        # Index for the use case of having the entire dataset shuffled.
-        database_cursor.execute('''CREATE UNIQUE INDEX TessTwoMinuteCadenceLightcurve_random_order_uuid_index
-                                       ON TessTwoMinuteCadenceLightcurve (random_order_uuid)''')
-        # Index for the use case of training on the training dataset, then
-        # have data shuffled based on the uuid.
-        database_cursor.execute('''CREATE INDEX TessTwoMinuteCadenceLightcurve_dataset_split_random_order_uuid_index
-                                       ON TessTwoMinuteCadenceLightcurve (dataset_split, random_order_uuid)''')
-        # TIC IDs should be fast to index.
-        database_cursor.execute('''CREATE INDEX TessTwoMinuteCadenceLightcurve_tic_id_index
-                                       ON TessTwoMinuteCadenceLightcurve (tic_id)''')
-        # TIC ID and sector together should be unique.
-        database_cursor.execute('''CREATE INDEX TessTwoMinuteCadenceLightcurve_tic_id_sector_index
-                                               ON TessTwoMinuteCadenceLightcurve (tic_id, sector)''')
-        # Paths should be unique.
-        database_cursor.execute('''CREATE UNIQUE INDEX TessTwoMinuteCadenceLightcurve_path_index
-                                       ON TessTwoMinuteCadenceLightcurve (path)''')
-        database_connection.commit()
-
-    def insert_multiple_rows_from_paths_into_database(self, database_cursor: Cursor,
-                                                      lightcurve_paths: List[Path],
-                                                      dataset_splits: List[int]):
+    def insert_multiple_rows_from_paths_into_database(self, lightcurve_paths: List[Path], dataset_splits: List[int]):
         """
         Inserts sets of lightcurve paths into the table.
 
-        :param database_cursor: The database cursor to use for the insert.
         :param lightcurve_paths: The list of paths to insert.
         :param dataset_splits: The dataset splits to assign to each path.
         """
         assert len(lightcurve_paths) == len(dataset_splits)
-        sql_values_tuple_list = []
+        row_dictionary_list = []
         for lightcurve_path, dataset_split in zip(lightcurve_paths, dataset_splits):
-            random_order_uuid = uuid4()
             tic_id, sector = self.tess_data_interface.get_tic_id_and_sector_from_file_path(lightcurve_path)
-            sql_values_tuple_list.append((str(lightcurve_path), tic_id, sector, dataset_split, str(random_order_uuid)))
-        sql_query_string = f'''INSERT INTO TessTwoMinuteCadenceLightcurve
-                                   (path, tic_id, sector, dataset_split, random_order_uuid)
-                               VALUES (?, ?, ?, ?, ?)'''
-        database_cursor.executemany(sql_query_string, sql_values_tuple_list)
+            row_dictionary_list.append({TessTwoMinuteCadenceLightcurve.path.name: str(lightcurve_path),
+                                        TessTwoMinuteCadenceLightcurve.tic_id.name: tic_id,
+                                        TessTwoMinuteCadenceLightcurve.sector.name: sector,
+                                        TessTwoMinuteCadenceLightcurve.dataset_split.name: dataset_split})
+        with metadatabase.atomic():
+            TessTwoMinuteCadenceLightcurve.insert_many(row_dictionary_list).execute()
 
-    def populate_sql_database(self, database_connection: Connection):
+    def populate_sql_database(self):
         """
         Populates the SQL database based on the lightcurve files.
         """
         print('Populating the TESS two minute cadence lightcurve meta data table...')
-        database_cursor = database_connection.cursor()
         path_glob = self.lightcurve_root_directory_path.glob('**/*.fits')
         row_count = 0
         batch_paths = []
         batch_dataset_splits = []
-        for index, path in enumerate(path_glob):
-            batch_paths.append(path.relative_to(self.lightcurve_root_directory_path))
-            batch_dataset_splits.append(index % 10)
-            row_count += 1
-            if index % 1000 == 0 and index != 0:
-                self.insert_multiple_rows_from_paths_into_database(database_cursor, batch_paths,
-                                                                   batch_dataset_splits)
-                batch_paths = []
-                batch_dataset_splits = []
-                print(f'{index} rows inserted...', end='\r')
-        if len(batch_paths) > 0:
-            self.insert_multiple_rows_from_paths_into_database(database_cursor, batch_paths,
-                                                               batch_dataset_splits)
-        database_connection.commit()
+        with metadatabase.atomic():
+            for index, path in enumerate(path_glob):
+                batch_paths.append(path.relative_to(self.lightcurve_root_directory_path))
+                batch_dataset_splits.append(index % 10)
+                row_count += 1
+                if index % 1000 == 0 and index != 0:
+                    self.insert_multiple_rows_from_paths_into_database(batch_paths, batch_dataset_splits)
+                    batch_paths = []
+                    batch_dataset_splits = []
+                    print(f'{index} rows inserted...', end='\r')
+            if len(batch_paths) > 0:
+                self.insert_multiple_rows_from_paths_into_database(batch_paths, batch_dataset_splits)
         print(f'TESS two minute cadence lightcurve meta data table populated. {row_count} rows added.')
 
     def create_paths_generator(self, dataset_splits: Union[List[int], None] = None, repeat=True
@@ -153,14 +123,11 @@ class TessTwoMinuteCadenceLightcurveMetadataManger:
         """
         database_connection_ = sqlite3.connect(self.database_path, uri=True)
         database_cursor_ = database_connection_.cursor()
-        database_cursor_.execute(f'PRAGMA cache_size = -{2e6}')  # Set the cache size to 2GB.
-        database_connection_.commit()
-        database_cursor_.execute('DROP TABLE IF EXISTS TessTwoMinuteCadenceLightcurve')
-        database_connection_.commit()
-        self.create_database_table(database_connection_)
+        TessTwoMinuteCadenceLightcurve.drop_table()
+        TessTwoMinuteCadenceLightcurve.create_table()
+        SchemaManager(TessTwoMinuteCadenceLightcurve).drop_indexes()  # To allow for fast insert.
         self.populate_sql_database(database_connection_)
-        self.create_database_table_indexes(database_connection_)
-        database_connection_.close()
+        SchemaManager(TessTwoMinuteCadenceLightcurve).create_indexes()  # Since we dropped them before.
 
 if __name__ == '__main__':
     manager = TessTwoMinuteCadenceLightcurveMetadataManger()

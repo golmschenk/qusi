@@ -8,7 +8,7 @@ from ramjet.data_interface.tess_toi_data_interface import ToiColumns
 
 class TestTessTargetTransitDisposition:
     @patch.object(module, 'metadatabase')
-    @patch.object(module, 'TessTargetTransitDisposition')
+    @patch.object(module, 'TessTransit')
     def test_table_building_creates_rows_based_on_toi_dispositions(self, mock_tess_target_transit_disposition,
                                                                    mock_metadatabase):
         tess_transit_disposition_metadata_manager = TessTransitMetadataManager()
