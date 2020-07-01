@@ -3,7 +3,6 @@ Code for managing the meta data of the two minute cadence TESS lightcurves.
 """
 import sqlite3
 from pathlib import Path
-from sqlite3 import Connection, Cursor
 from typing import List, Union, Generator
 from uuid import uuid4
 from peewee import IntegerField, CharField, SchemaManager
@@ -121,13 +120,12 @@ class TessTwoMinuteCadenceLightcurveMetadataManger:
         """
         Builds the SQL table.
         """
-        database_connection_ = sqlite3.connect(self.database_path, uri=True)
-        database_cursor_ = database_connection_.cursor()
         TessTwoMinuteCadenceLightcurveMetadata.drop_table()
         TessTwoMinuteCadenceLightcurveMetadata.create_table()
         SchemaManager(TessTwoMinuteCadenceLightcurveMetadata).drop_indexes()  # To allow for fast insert.
-        self.populate_sql_database(database_connection_)
+        self.populate_sql_database()
         SchemaManager(TessTwoMinuteCadenceLightcurveMetadata).create_indexes()  # Since we dropped them before.
+
 
 if __name__ == '__main__':
     manager = TessTwoMinuteCadenceLightcurveMetadataManger()
