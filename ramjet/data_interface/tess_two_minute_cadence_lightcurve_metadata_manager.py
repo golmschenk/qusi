@@ -19,7 +19,7 @@ class TessTwoMinuteCadenceLightcurveMetadata(MetadatabaseModel):
     sector = IntegerField(index=True)
     path = CharField(unique=True)
     dataset_split = IntegerField()
-    random_order_uuid = CharField(unique=True, index=True, default=uuid4())
+    random_order_uuid = CharField(unique=True, index=True, default=uuid4)
 
     class Meta:
         """Schema meta data for the model."""
