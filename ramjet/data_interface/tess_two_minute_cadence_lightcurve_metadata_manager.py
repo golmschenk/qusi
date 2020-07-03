@@ -1,6 +1,7 @@
 """
 Code for managing the meta data of the two minute cadence TESS lightcurves.
 """
+import itertools
 import sqlite3
 from pathlib import Path
 from typing import List, Union, Generator
@@ -89,30 +90,19 @@ class TessTwoMinuteCadenceLightcurveMetadataManger:
         :param repeat: Whether or not the generator should repeat indefinitely.
         :return: The generator.
         """
-        batch_size = 1000
-        database_cursor = sqlite3.connect(str(self.database_path), uri=True, check_same_thread=False).cursor()
+        page_size = 1000
+        query = TessTwoMinuteCadenceLightcurveMetadata().select().order_by(
+            TessTwoMinuteCadenceLightcurveMetadata.random_order_uuid)
         if dataset_splits is not None:
-            dataset_split_condition = f'dataset_split IN ({", ".join(map(str, dataset_splits))})'
-        else:
-            dataset_split_condition = '1'  # Always true.
+            query = query.where(TessTwoMinuteCadenceLightcurveMetadata.dataset_split.in_(dataset_splits))
         while True:
-            database_cursor.execute(f'''SELECT path, random_order_uuid
-                                        FROM TessTwoMinuteCadenceLightcurve
-                                        WHERE {dataset_split_condition}
-                                        ORDER BY random_order_uuid
-                                        LIMIT {batch_size}''')
-            batch = database_cursor.fetchall()
-            while batch:
-                for row in batch:
-                    yield Path(self.lightcurve_root_directory_path.joinpath(row[0]))
-                previous_batch_final_uuid = batch[-1][1]
-                database_cursor.execute(f'''SELECT path, random_order_uuid
-                                            FROM TessTwoMinuteCadenceLightcurve
-                                            WHERE random_order_uuid > '{previous_batch_final_uuid}' AND
-                                                  {dataset_split_condition}
-                                            ORDER BY random_order_uuid
-                                            LIMIT {batch_size}''')
-                batch = database_cursor.fetchall()
+            for page_number in itertools.count(start=1, step=1):  # Peewee pages start on 1.
+                page = query.paginate(page_number, paginate_by=page_size)
+                if len(page) > 0:
+                    for row in page:
+                        yield Path(self.lightcurve_root_directory_path.joinpath(row.path))
+                else:
+                    break
             if not repeat:
                 break
 
