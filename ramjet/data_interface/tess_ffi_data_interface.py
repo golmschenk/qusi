@@ -127,6 +127,19 @@ class TessFfiDataInterface:
         raise ValueError(f'{file_path} does not match a known pattern to extract magnitude from.')
 
     @staticmethod
+    def get_magnitude_from_file(file_path: Union[Path, str]) -> float:
+        """
+        Loads the magnitude from the file.
+
+        :param file_path: The path to the file.
+        :return: The magnitude of the target.
+        """
+        with file_path.open('rb') as pickle_file:
+            lightcurve = pickle.load(pickle_file)
+        magnitude = lightcurve[FfiDataIndexes.TESS_MAGNITUDE.value]
+        return magnitude
+
+    @staticmethod
     def create_database_table(database_connection: Connection):
         """
         Creates the SQL database table for the FFI dataset.
