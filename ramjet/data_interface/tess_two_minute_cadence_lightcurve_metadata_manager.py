@@ -37,7 +37,6 @@ class TessTwoMinuteCadenceLightcurveMetadataManger:
     tess_data_interface = TessDataInterface()
 
     def __init__(self):
-        self.database_path = Path('data/metadatabase.sqlite3')
         self.lightcurve_root_directory_path = Path('data/tess_two_minute_cadence_lightcurves')
 
     def insert_multiple_rows_from_paths_into_database(self, lightcurve_paths: List[Path], dataset_splits: List[int]):
@@ -81,6 +80,16 @@ class TessTwoMinuteCadenceLightcurveMetadataManger:
                 self.insert_multiple_rows_from_paths_into_database(batch_paths, batch_dataset_splits)
         print(f'TESS two minute cadence lightcurve meta data table populated. {row_count} rows added.')
 
+    def build_table(self):
+        """
+        Builds the SQL table.
+        """
+        TessTwoMinuteCadenceLightcurveMetadata.drop_table()
+        TessTwoMinuteCadenceLightcurveMetadata.create_table()
+        SchemaManager(TessTwoMinuteCadenceLightcurveMetadata).drop_indexes()  # To allow for fast insert.
+        self.populate_sql_database()
+        SchemaManager(TessTwoMinuteCadenceLightcurveMetadata).create_indexes()  # Since we dropped them before.
+
     def create_paths_generator(self, dataset_splits: Union[List[int], None] = None, repeat=True
                                ) -> Generator[Path, None, None]:
         """
@@ -105,16 +114,6 @@ class TessTwoMinuteCadenceLightcurveMetadataManger:
                     break
             if not repeat:
                 break
-
-    def build_table(self):
-        """
-        Builds the SQL table.
-        """
-        TessTwoMinuteCadenceLightcurveMetadata.drop_table()
-        TessTwoMinuteCadenceLightcurveMetadata.create_table()
-        SchemaManager(TessTwoMinuteCadenceLightcurveMetadata).drop_indexes()  # To allow for fast insert.
-        self.populate_sql_database()
-        SchemaManager(TessTwoMinuteCadenceLightcurveMetadata).create_indexes()  # Since we dropped them before.
 
 
 if __name__ == '__main__':

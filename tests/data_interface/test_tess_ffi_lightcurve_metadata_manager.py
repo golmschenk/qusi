@@ -1,5 +1,5 @@
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 
 import pytest
 
@@ -31,3 +31,13 @@ class TestTessFfiLightcurveMetadataManager:
             {'path': str(lightcurve_path1), 'tic_id': 1234567, 'sector': 12, 'dataset_split': 3, 'magnitude': 5.5}
         ]
         assert mock_insert_many.call_args[0][0] == expected_insert
+
+    @patch.object(Path, 'glob')
+    def test_can_populate_sql_dataset(self, mock_glob, metadata_manger):
+        path_list = [metadata_manger.lightcurve_root_directory_path.joinpath(f'{index}.fits') for index in range(20)]
+        mock_glob.return_value = path_list
+        mock_insert = Mock()
+        metadata_manger.insert_multiple_rows_from_paths_into_database = mock_insert
+        metadata_manger.populate_sql_database()
+        assert mock_insert.call_args[0][0] == [Path(f'{index}.fits') for index in range(20)]
+        assert mock_insert.call_args[0][1] == list(range(10)) * 2
