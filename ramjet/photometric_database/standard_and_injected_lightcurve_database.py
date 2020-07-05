@@ -1,12 +1,13 @@
 """
 An abstract class allowing for any number and combination of standard and injectable/injectee lightcurve collections.
 """
+from collections import namedtuple
 from functools import partial
 
 import numpy as np
 import tensorflow as tf
 from pathlib import Path
-from typing import List, Union, Callable, Tuple
+from typing import List, Union, Callable, Tuple, Dict
 
 from scipy.interpolate import interp1d
 
@@ -39,22 +40,16 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
 
         :return: The training and validation dataset.
         """
-        training_standard_paths_datasets = self.generate_paths_datasets_from_lightcurve_collection_list(
-            self.training_standard_lightcurve_collections)
-        training_injectee_path_dataset = None
-        if self.training_injectee_lightcurve_collection is not None:
-            training_injectee_path_dataset = self.generate_paths_dataset_from_lightcurve_collection(
-                self.training_injectee_lightcurve_collection)
-        training_injectable_paths_datasets = self.generate_paths_datasets_from_lightcurve_collection_list(
-            self.training_injectable_lightcurve_collections)
-        validation_standard_paths_datasets = self.generate_paths_datasets_from_lightcurve_collection_list(
-            self.validation_standard_lightcurve_collections)
-        validation_injectee_path_dataset = None
-        if self.validation_injectee_lightcurve_collection is not None:
-            validation_injectee_path_dataset = self.generate_paths_dataset_from_lightcurve_collection(
-                self.validation_injectee_lightcurve_collection)
-        validation_injectable_paths_datasets = self.generate_paths_datasets_from_lightcurve_collection_list(
-            self.validation_injectable_lightcurve_collections)
+        training_standard_paths_datasets, training_injectee_path_dataset, training_injectable_paths_datasets = \
+            self.generate_paths_datasets_group_from_lightcurve_collections_group(
+                self.training_standard_lightcurve_collections, self.training_injectee_lightcurve_collection,
+                self.training_injectable_lightcurve_collections
+            )
+        validation_standard_paths_datasets, validation_injectee_path_dataset, validation_injectable_paths_datasets = \
+            self.generate_paths_datasets_group_from_lightcurve_collections_group(
+                self.validation_standard_lightcurve_collections, self.validation_injectee_lightcurve_collection,
+                self.validation_injectable_lightcurve_collections
+            )
         training_lightcurve_and_label_datasets = []
         for paths_dataset, lightcurve_collection in zip(training_standard_paths_datasets,
                                                         self.training_standard_lightcurve_collections):
@@ -97,6 +92,44 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
                                                                                       self.batch_size,
                                                                                       self.batch_size // 10)
         return training_dataset, validation_dataset
+
+    def generate_paths_datasets_group_from_lightcurve_collections_group(
+            self, standard_lightcurve_collections: List[LightcurveCollection],
+            injectee_lightcurve_collection: LightcurveCollection,
+            injectable_lightcurve_collections: List[LightcurveCollection]
+    ) -> (List[tf.data.Dataset], tf.data.Dataset, List[tf.data.Dataset]):
+        """
+        Create the path dataset for each lightcurve collection in the standard, injectee, and injectable sets.
+
+        :param standard_lightcurve_collections: The standard lightcurve collections.
+        :param injectee_lightcurve_collection: The injectee lightcurve collection.
+        :param injectable_lightcurve_collections: The injectable lightcurve collections.
+        :return: The standard, injectee, and injectable paths datasets.
+        """
+        injectee_collection_index_in_standard_collection_list: Union[int, None] = None
+        for index, standard_lightcurve_collection in enumerate(standard_lightcurve_collections):
+            if standard_lightcurve_collection is injectee_lightcurve_collection:
+                injectee_collection_index_in_standard_collection_list = index
+        if injectee_collection_index_in_standard_collection_list is not None:
+            standard_lightcurve_collections.pop(injectee_collection_index_in_standard_collection_list)
+        standard_paths_datasets = self.generate_paths_datasets_from_lightcurve_collection_list(
+            standard_lightcurve_collections)
+        injectee_path_dataset = None
+        if injectee_lightcurve_collection is not None:
+            injectee_path_dataset = self.generate_paths_dataset_from_lightcurve_collection(
+                injectee_lightcurve_collection)
+            number_of_elements_repeated_in_a_row = len(injectable_lightcurve_collections)
+            if injectee_collection_index_in_standard_collection_list is not None:
+                number_of_elements_repeated_in_a_row += 1
+            def repeat_each_element(element):
+                return tf.data.Dataset.from_tensors(element).repeat(number_of_elements_repeated_in_a_row)
+            injectee_path_dataset = injectee_path_dataset.flat_map(repeat_each_element)
+            if injectee_collection_index_in_standard_collection_list is not None:
+                standard_lightcurve_collections.insert(injectee_collection_index_in_standard_collection_list,
+                                                       injectee_path_dataset)
+        injectable_paths_datasets = self.generate_paths_datasets_from_lightcurve_collection_list(
+            injectable_lightcurve_collections)
+        return standard_paths_datasets, injectee_path_dataset, injectable_paths_datasets
 
     def generate_paths_dataset_from_lightcurve_collection(self, lightcurve_collection: LightcurveCollection
                                                           ) -> tf.data.Dataset:
@@ -213,7 +246,8 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
             self, injectee_paths_dataset: tf.data.Dataset,
             injectee_load_times_and_fluxes_from_path_function: Callable[[Path], Tuple[np.ndarray, np.ndarray]],
             injectable_paths_dataset: tf.data.Dataset,
-            injectable_load_times_and_magnifications_from_path_function: Callable[[Path], Tuple[np.ndarray, np.ndarray]],
+            injectable_load_times_and_magnifications_from_path_function: Callable[
+                [Path], Tuple[np.ndarray, np.ndarray]],
             label: float):
         """
         Generates a lightcurve and label dataset from an injectee and injectable paths dataset, using passed functions
@@ -245,9 +279,10 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
 
     def preprocess_injected_lightcurve(
             self, injectee_load_times_and_fluxes_from_path_function: Callable[[Path], Tuple[np.ndarray, np.ndarray]],
-            injectable_load_times_and_magnifications_from_path_function: Callable[[Path], Tuple[np.ndarray, np.ndarray]],
+            injectable_load_times_and_magnifications_from_path_function: Callable[
+                [Path], Tuple[np.ndarray, np.ndarray]],
             label: float, injectee_lightcurve_path_tensor: tf.Tensor, injectable_lightcurve_path_tensor: tf.Tensor
-            ) -> (np.ndarray, np.ndarray):
+    ) -> (np.ndarray, np.ndarray):
         """
         Preprocesses a individual injected lightcurve from an injectee and an injectable lightcurve path tensor,
         using a passed function defining how to load the values from each lightcurve file and the label value to use.
