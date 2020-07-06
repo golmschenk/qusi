@@ -91,7 +91,7 @@ class MicrolensingSyntheticPSPLSignalCollection(LightcurveCollection):
         return times, magnifications
 
 
-class MicrolensingSyntheticGeneratedDuringRunningLightcurveCollection(LightcurveCollection):
+class MicrolensingSyntheticGeneratedDuringRunningSignalCollection(LightcurveCollection):
     def __init__(self):
         super().__init__()
         self.label = 1
