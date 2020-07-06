@@ -35,8 +35,8 @@ class MOAPositiveMicrolensingLightcurveCollection(LightcurveCollection):
         :return: The times and the fluxes of the lightcurve.
         """
         lightcurve_dataframe = pd.read_feather(path)
-        times = lightcurve_dataframe['Time'].values
-        fluxes = lightcurve_dataframe['Flux'].values
+        times = lightcurve_dataframe['HJD'].values
+        fluxes = lightcurve_dataframe['flux'].values
         return times, fluxes
 
 
@@ -59,8 +59,8 @@ class MOANegativeMicrolensingLightcurveCollection(LightcurveCollection):
 
     def load_times_and_fluxes_from_path(self, path: Path) -> (np.ndarray, np.ndarray):
         lightcurve_dataframe = pd.read_feather(path)
-        times = lightcurve_dataframe['Time'].values
-        fluxes = lightcurve_dataframe['Flux'].values
+        times = lightcurve_dataframe['HJD'].values
+        fluxes = lightcurve_dataframe['flux'].values
         return times, fluxes
 
 
