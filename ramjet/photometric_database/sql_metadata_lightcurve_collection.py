@@ -15,9 +15,9 @@ class SqlMetadataLightcurveCollection(LightcurveCollection):
     """
     Class for a lightcurve collection that stores its metadata in the SQL database.
     """
-    def __init__(self, repeat=True):
+    def __init__(self, repeat: bool = True):
         super().__init__()
-        self.repeat = repeat
+        self.repeat: bool = repeat
 
     def get_sql_query(self) -> Select:
         """
