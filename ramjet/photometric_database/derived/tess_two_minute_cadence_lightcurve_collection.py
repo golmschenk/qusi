@@ -5,7 +5,7 @@ import numpy as np
 from pathlib import Path
 from typing import Iterable
 
-from ramjet.data_interface.tess_data_interface import TessDataInterface
+from ramjet.data_interface.tess_data_interface import TessDataInterface, TessFluxType
 from ramjet.photometric_database.lightcurve_collection import LightcurveCollection
 
 
@@ -20,6 +20,7 @@ class TessTwoMinuteCadenceLightcurveCollection(LightcurveCollection):
         super().__init__()
         self.data_directory: Path = Path('data/tess_two_minute_cadence_lightcurves')
         self.label = 0
+        self.flux_type: TessFluxType = TessFluxType.PDCSAP
 
     def get_paths(self) -> Iterable[Path]:
         """
@@ -36,7 +37,7 @@ class TessTwoMinuteCadenceLightcurveCollection(LightcurveCollection):
         :param path: The path to the lightcurve file.
         :return: The times and the fluxes of the lightcurve.
         """
-        fluxes, times = tess_data_interface.load_fluxes_and_times_from_fits_file(path)
+        fluxes, times = tess_data_interface.load_fluxes_and_times_from_fits_file(path, self.flux_type)
         return times, fluxes
 
     def load_times_and_magnifications_from_path(self, path: Path) -> (np.ndarray, np.ndarray):
@@ -46,7 +47,7 @@ class TessTwoMinuteCadenceLightcurveCollection(LightcurveCollection):
         :param path: The path to the lightcurve/signal file.
         :return: The times and the magnifications of the lightcurve/signal.
         """
-        fluxes, times = tess_data_interface.load_fluxes_and_times_from_fits_file(path)
+        fluxes, times = tess_data_interface.load_fluxes_and_times_from_fits_file(path, self.flux_type)
         magnifications, times = self.generate_synthetic_signal_from_real_data(fluxes, times)
         return times, magnifications
 
