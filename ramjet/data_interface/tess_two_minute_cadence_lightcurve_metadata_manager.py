@@ -88,6 +88,7 @@ class TessTwoMinuteCadenceLightcurveMetadataManger:
         TessTwoMinuteCadenceLightcurveMetadata.create_table()
         SchemaManager(TessTwoMinuteCadenceLightcurveMetadata).drop_indexes()  # To allow for fast insert.
         self.populate_sql_database()
+        print('Building indexes...')
         SchemaManager(TessTwoMinuteCadenceLightcurveMetadata).create_indexes()  # Since we dropped them before.
 
     def create_paths_generator(self, dataset_splits: Union[List[int], None] = None, repeat=True

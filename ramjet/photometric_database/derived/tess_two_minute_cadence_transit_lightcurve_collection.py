@@ -48,7 +48,7 @@ class TessTwoMinuteCadenceNonTransitLightcurveCollection(TessTwoMinuteCadenceLig
         """
         query = super().get_sql_query()
         transit_candidate_tic_id_query = TessTransitMetadata.select(TessTransitMetadata.tic_id).where(
-            TessTransitMetadata.disposition == Disposition.CONFIRMED.value |
-            TessTransitMetadata.disposition == Disposition.CANDIDATE.value)
+            (TessTransitMetadata.disposition == Disposition.CONFIRMED.value) |
+            (TessTransitMetadata.disposition == Disposition.CANDIDATE.value))
         query = query.where(TessTwoMinuteCadenceLightcurveMetadata.tic_id.not_in(transit_candidate_tic_id_query))
         return query
