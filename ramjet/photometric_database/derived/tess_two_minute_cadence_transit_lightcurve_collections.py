@@ -11,7 +11,7 @@ from ramjet.photometric_database.derived.tess_two_minute_cadence_lightcurve_coll
     TessTwoMinuteCadenceLightcurveCollection
 
 
-class TessTwoMinuteCadenceTransitLightcurveCollection(TessTwoMinuteCadenceLightcurveCollection):
+class TessTwoMinuteCadenceConfirmedTransitLightcurveCollection(TessTwoMinuteCadenceLightcurveCollection):
     """
     A class representing the collection of TESS two minute cadence lightcurves containing transits.
     """
@@ -28,6 +28,28 @@ class TessTwoMinuteCadenceTransitLightcurveCollection(TessTwoMinuteCadenceLightc
         query = super().get_sql_query()
         transit_tic_id_query = TessTransitMetadata.select(TessTransitMetadata.tic_id).where(
             TessTransitMetadata.disposition == Disposition.CONFIRMED.value)
+        query = query.where(TessTwoMinuteCadenceLightcurveMetadata.tic_id.in_(transit_tic_id_query))
+        return query
+
+
+class TessTwoMinuteCadenceConfirmedAndCandidateTransitLightcurveCollection(TessTwoMinuteCadenceLightcurveCollection):
+    """
+    A class representing the collection of TESS two minute cadence lightcurves containing transits.
+    """
+    def __init__(self, dataset_splits: Union[List[int], None] = None, repeat: bool = True):
+        super().__init__(dataset_splits=dataset_splits, repeat=repeat)
+        self.label = 1
+
+    def get_sql_query(self) -> Select:
+        """
+        Gets the SQL query for the database models for the lightcurve collection.
+
+        :return: The SQL query.
+        """
+        query = super().get_sql_query()
+        transit_tic_id_query = TessTransitMetadata.select(TessTransitMetadata.tic_id).where(
+            (TessTransitMetadata.disposition == Disposition.CONFIRMED.value) |
+            (TessTransitMetadata.disposition == Disposition.CANDIDATE.value))
         query = query.where(TessTwoMinuteCadenceLightcurveMetadata.tic_id.in_(transit_tic_id_query))
         return query
 
