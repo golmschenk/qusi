@@ -42,11 +42,12 @@ class LightcurveDatabase(ABC):
 
     @staticmethod
     def normalize(lightcurve: np.ndarray) -> np.ndarray:
-        """Normalizes light curve using quantile. quantile_10 (10%) at -1 and quantile_90 (90%) at 1.
         """
-        quantile_10 = np.percentile(lightcurve, 10)
-        quantile_90 = np.percentile(lightcurve, 90)
-        lightcurve = ((lightcurve - quantile_10) / ((quantile_90 - quantile_10) / 2)) - 1
+        Normalizes light curve using percentiles. The 10th percentile is normalized to -1, the 90th to 1.
+        """
+        percentile_10 = np.percentile(lightcurve, 10)
+        percentile_90 = np.percentile(lightcurve, 90)
+        lightcurve = ((lightcurve - percentile_10) / ((percentile_90 - percentile_10) / 2)) - 1
         return lightcurve
 
     @staticmethod
