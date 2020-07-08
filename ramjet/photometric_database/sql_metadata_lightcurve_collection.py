@@ -27,6 +27,14 @@ class SqlMetadataLightcurveCollection(LightcurveCollection):
         """
         raise LightcurveCollectionMethodNotImplementedError
 
+    def sql_count(self) -> int:
+        """
+        Gets the count of the rows returned by the SQL query.
+
+        :return: The count.
+        """
+        return self.get_sql_query().count()
+
     def get_path_from_model(self, model: MetadatabaseModel) -> Path:
         """
         Gets the lightcurve path from the SQL database model.
