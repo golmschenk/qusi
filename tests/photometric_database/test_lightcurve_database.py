@@ -160,3 +160,18 @@ class TestLightcurveDatabase:
         assert (normalized_negative_lightcurve_fluxes < (1 + epsilon)).all()
         assert np.min(normalized_negative_lightcurve_fluxes) < (-1 + epsilon)
         assert np.max(normalized_negative_lightcurve_fluxes) > (1 - epsilon)
+
+    def test_normalization_brings_values_close_to_negative_one_to_one_range(self, database):
+        epsilon = 0.6
+        unnormalized_positive_lightcurve_fluxes = np.array([10, 20, 30, 20, 10], dtype=np.float32)
+        normalized_positive_lightcurve_fluxes = database.normalize(unnormalized_positive_lightcurve_fluxes)
+        assert (normalized_positive_lightcurve_fluxes > (-1 - epsilon)).all()
+        assert (normalized_positive_lightcurve_fluxes < (1 + epsilon)).all()
+        assert np.min(normalized_positive_lightcurve_fluxes) < (-1 + epsilon)
+        assert np.max(normalized_positive_lightcurve_fluxes) > (1 - epsilon)
+        unnormalized_negative_lightcurve_fluxes = np.array([-30, -20, -10, -20, -30], dtype=np.float32)
+        normalized_negative_lightcurve_fluxes = database.normalize(unnormalized_negative_lightcurve_fluxes)
+        assert (normalized_negative_lightcurve_fluxes > (-1 - epsilon)).all()
+        assert (normalized_negative_lightcurve_fluxes < (1 + epsilon)).all()
+        assert np.min(normalized_negative_lightcurve_fluxes) < (-1 + epsilon)
+        assert np.max(normalized_negative_lightcurve_fluxes) > (1 - epsilon)

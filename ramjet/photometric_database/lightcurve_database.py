@@ -40,8 +40,17 @@ class LightcurveDatabase(ABC):
             lightcurve /= array_max
         return lightcurve
 
+    def normalize(self, lightcurve: np.ndarray) -> np.ndarray:
+        """
+        Normalizes the lightcurve.
+
+        :param lightcurve: The lightcurve to normalize.
+        :return: The normalized lightcurve.
+        """
+        return self.normalize_on_percentiles(lightcurve)
+
     @staticmethod
-    def normalize(lightcurve: np.ndarray) -> np.ndarray:
+    def normalize_on_percentiles(lightcurve: np.ndarray) -> np.ndarray:
         """
         Normalizes light curve using percentiles. The 10th percentile is normalized to -1, the 90th to 1.
         """
