@@ -56,8 +56,12 @@ class LightcurveDatabase(ABC):
         """
         percentile_10 = np.percentile(lightcurve, 10)
         percentile_90 = np.percentile(lightcurve, 90)
-        lightcurve = ((lightcurve - percentile_10) / ((percentile_90 - percentile_10) / 2)) - 1
-        return lightcurve
+        percentile_difference = percentile_90 - percentile_10
+        if percentile_difference == 0:
+            normalized_lightcurve = np.zeros_like(lightcurve)
+        else:
+            normalized_lightcurve = ((lightcurve - percentile_10) / (percentile_difference / 2)) - 1
+        return normalized_lightcurve
 
     @staticmethod
     def shuffle_in_unison(a, b, seed=None):
