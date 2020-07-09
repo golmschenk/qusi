@@ -15,8 +15,8 @@ class TessTwoMinuteCadenceConfirmedTransitLightcurveCollection(TessTwoMinuteCade
     """
     A class representing the collection of TESS two minute cadence lightcurves containing transits.
     """
-    def __init__(self, dataset_splits: Union[List[int], None] = None, repeat: bool = True):
-        super().__init__(dataset_splits=dataset_splits, repeat=repeat)
+    def __init__(self, dataset_splits: Union[List[int], None] = None):
+        super().__init__(dataset_splits=dataset_splits)
         self.label = 1
 
     def get_sql_query(self) -> Select:
@@ -36,8 +36,8 @@ class TessTwoMinuteCadenceConfirmedAndCandidateTransitLightcurveCollection(TessT
     """
     A class representing the collection of TESS two minute cadence lightcurves containing transits.
     """
-    def __init__(self, dataset_splits: Union[List[int], None] = None, repeat: bool = True):
-        super().__init__(dataset_splits=dataset_splits, repeat=repeat)
+    def __init__(self, dataset_splits: Union[List[int], None] = None):
+        super().__init__(dataset_splits=dataset_splits)
         self.label = 1
 
     def get_sql_query(self) -> Select:
@@ -58,8 +58,8 @@ class TessTwoMinuteCadenceNonTransitLightcurveCollection(TessTwoMinuteCadenceLig
     """
     A class representing the collection of TESS two minute cadence lightcurves containing transits.
     """
-    def __init__(self, dataset_splits: Union[List[int], None] = None, repeat=True):
-        super().__init__(dataset_splits=dataset_splits, repeat=repeat)
+    def __init__(self, dataset_splits: Union[List[int], None] = None):
+        super().__init__(dataset_splits=dataset_splits)
         self.label = 0
 
     def get_sql_query(self) -> Select:

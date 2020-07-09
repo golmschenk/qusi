@@ -1,5 +1,5 @@
 from ramjet.photometric_database.derived.tess_two_minute_cadence_transit_lightcurve_collections import \
-    TessTwoMinuteCadenceNonTransitLightcurveCollection, TessTwoMinuteCadenceConfirmedTransitLightcurveCollection, \
+    TessTwoMinuteCadenceNonTransitLightcurveCollection, \
     TessTwoMinuteCadenceConfirmedAndCandidateTransitLightcurveCollection
 from ramjet.photometric_database.standard_and_injected_lightcurve_database import StandardAndInjectedLightcurveDatabase
 
@@ -26,6 +26,7 @@ class TessTwoMinuteCadenceInjectedTransitDatabase(StandardAndInjectedLightcurveD
     """
     def __init__(self):
         super().__init__()
+        self.allow_out_of_bounds_injection = True
         self.training_injectee_lightcurve_collection = TessTwoMinuteCadenceNonTransitLightcurveCollection(
             dataset_splits=list(range(8)))
         self.training_injectable_lightcurve_collections = [

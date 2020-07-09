@@ -15,9 +15,8 @@ class SqlMetadataLightcurveCollection(LightcurveCollection):
     """
     Class for a lightcurve collection that stores its metadata in the SQL database.
     """
-    def __init__(self, repeat: bool = True):
+    def __init__(self):
         super().__init__()
-        self.repeat: bool = repeat
 
     def get_sql_query(self) -> Select:
         """
@@ -51,13 +50,10 @@ class SqlMetadataLightcurveCollection(LightcurveCollection):
         """
         page_size = 1000
         query = self.get_sql_query()
-        while True:
-            for page_number in itertools.count(start=1, step=1):  # Peewee pages start on 1.
-                page = query.paginate(page_number, paginate_by=page_size)
-                if len(page) > 0:
-                    for model in page:
-                        yield Path(self.get_path_from_model(model))
-                else:
-                    break
-            if not self.repeat:
+        for page_number in itertools.count(start=1, step=1):  # Peewee pages start on 1.
+            page = query.paginate(page_number, paginate_by=page_size)
+            if len(page) > 0:
+                for model in page:
+                    yield Path(self.get_path_from_model(model))
+            else:
                 break
