@@ -444,9 +444,10 @@ class TessDataInterface:
         lightcurve_data_products = data_products[data_products['productFilename'].str.endswith('lc.fits')]
         download_manifest = self.download_products(lightcurve_data_products, data_directory=save_directory)
         print(f'Moving lightcurves to {save_directory}...')
-        for file_path_string in download_manifest['Local Path']:
-            file_path = Path(file_path_string)
-            file_path.rename(save_directory.joinpath(file_path.name))
+        for _, manifest_row in download_manifest.iterrows():
+            if manifest_row['Status'] == 'COMPLETE':
+                file_path = Path(manifest_row['Local Path'])
+                file_path.rename(save_directory.joinpath(file_path.name))
         print('Database ready.')
 
     def get_sectors_target_appears_in(self, tic_id: int) -> List:
