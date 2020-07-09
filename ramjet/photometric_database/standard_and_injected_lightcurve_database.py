@@ -69,7 +69,7 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
             training_lightcurve_and_label_datasets.append(lightcurve_and_label_dataset)
         training_dataset = self.intersperse_datasets(training_lightcurve_and_label_datasets)
         training_dataset = self.window_dataset_for_zipped_example_and_label_dataset(training_dataset, self.batch_size,
-                                                                                    self.batch_size // 10)
+                                                                                    self.window_shift)
         validation_lightcurve_and_label_datasets = []
         for paths_dataset, lightcurve_collection in zip(validation_standard_paths_datasets,
                                                         self.validation_standard_lightcurve_collections):
@@ -90,7 +90,7 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         validation_dataset = self.intersperse_datasets(validation_lightcurve_and_label_datasets)
         validation_dataset = self.window_dataset_for_zipped_example_and_label_dataset(validation_dataset,
                                                                                       self.batch_size,
-                                                                                      self.batch_size // 10)
+                                                                                      self.window_shift)
         return training_dataset, validation_dataset
 
     def generate_paths_datasets_group_from_lightcurve_collections_group(
