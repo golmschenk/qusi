@@ -1,7 +1,9 @@
 """
 An abstract class allowing for any number and combination of standard and injectable/injectee lightcurve collections.
 """
+import math
 from collections import namedtuple
+from enum import Enum
 from functools import partial
 
 import numpy as np
@@ -14,6 +16,15 @@ from scipy.interpolate import interp1d
 from ramjet.photometric_database.lightcurve_collection import LightcurveCollection
 from ramjet.photometric_database.lightcurve_database import LightcurveDatabase
 from ramjet.py_mapper import map_py_function_to_dataset
+
+
+class OutOfBoundsInjectionHandlingMethod(Enum):
+    """
+    An enum of approaches for handling cases where the injectable signal is shorter than the injectee signal.
+    """
+    ERROR = 'error'
+    REPEAT_SIGNAL = 'repeat_signal'
+    RANDOM_INJECTION_LOCATION = 'random_inject_location'
 
 
 class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
@@ -32,7 +43,8 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         self.validation_injectable_lightcurve_collections: List[LightcurveCollection] = []
         self.shuffle_buffer_size = 10000
         self.time_steps_per_example = 20000
-        self.allow_out_of_bounds_injection = False
+        self.out_of_bounds_injection_handling: OutOfBoundsInjectionHandlingMethod = \
+            OutOfBoundsInjectionHandlingMethod.ERROR
 
     def generate_datasets(self) -> (tf.data.Dataset, tf.data.Dataset):
         """
@@ -334,17 +346,38 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         :param signal_times: The times of the synthetic magnifications.
         :return: The fluxes with the injected signal.
         """
-        relative_lightcurve_times = lightcurve_times - np.min(lightcurve_times)
+        minimum_lightcurve_time = np.min(lightcurve_times)
+        relative_lightcurve_times = lightcurve_times - minimum_lightcurve_time
         relative_signal_times = signal_times - np.min(signal_times)
-        time_length_difference = np.max(relative_signal_times) - np.max(relative_lightcurve_times)
-        offset_signal_times = relative_signal_times - (np.random.random() * time_length_difference)
+        signal_time_length = np.max(relative_signal_times)
+        lightcurve_time_length = np.max(relative_lightcurve_times)
+        time_length_difference = lightcurve_time_length - signal_time_length
+        signal_start_offset = (np.random.random() * time_length_difference) + minimum_lightcurve_time
+        offset_signal_times = relative_signal_times + signal_start_offset
         median_flux = np.median(lightcurve_fluxes)
         signal_fluxes = (signal_magnifications * median_flux) - median_flux
-        if self.allow_out_of_bounds_injection:
+        if self.out_of_bounds_injection_handling is OutOfBoundsInjectionHandlingMethod.RANDOM_INJECTION_LOCATION:
             signal_flux_interpolator = interp1d(offset_signal_times, signal_fluxes, bounds_error=False, fill_value=0)
+        elif (self.out_of_bounds_injection_handling is OutOfBoundsInjectionHandlingMethod.REPEAT_SIGNAL and
+              time_length_difference > 0):
+            before_signal_gap = signal_start_offset - minimum_lightcurve_time
+            after_signal_gap = time_length_difference - before_signal_gap
+            minimum_signal_time_step = np.min(np.diff(offset_signal_times))
+            before_repeats_needed = math.ceil(before_signal_gap / (signal_time_length + minimum_signal_time_step))
+            after_repeats_needed = math.ceil(after_signal_gap / (signal_time_length + minimum_signal_time_step))
+            repeated_signal_fluxes = np.tile(signal_fluxes, before_repeats_needed + 1 + after_repeats_needed)
+            repeated_signal_times = None
+            for repeat_index in range(-before_repeats_needed, after_repeats_needed + 1):
+                repeat_signal_start_offset = (signal_time_length + minimum_signal_time_step) * repeat_index
+                if repeated_signal_times is None:
+                    repeated_signal_times = offset_signal_times + repeat_signal_start_offset
+                else:
+                    repeat_index_signal_times = offset_signal_times + repeat_signal_start_offset
+                    repeated_signal_times = np.concatenate([repeated_signal_times, repeat_index_signal_times])
+            signal_flux_interpolator = interp1d(repeated_signal_times, repeated_signal_fluxes, bounds_error=True)
         else:
             signal_flux_interpolator = interp1d(offset_signal_times, signal_fluxes, bounds_error=True)
-        interpolated_signal_fluxes = signal_flux_interpolator(relative_lightcurve_times)
+        interpolated_signal_fluxes = signal_flux_interpolator(lightcurve_times)
         fluxes_with_injected_signal = lightcurve_fluxes + interpolated_signal_fluxes
         return fluxes_with_injected_signal
 

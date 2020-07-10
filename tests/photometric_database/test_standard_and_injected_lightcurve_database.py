@@ -7,7 +7,8 @@ from pathlib import Path
 
 import ramjet.photometric_database.standard_and_injected_lightcurve_database as database_module
 from ramjet.photometric_database.lightcurve_collection import LightcurveCollection
-from ramjet.photometric_database.standard_and_injected_lightcurve_database import StandardAndInjectedLightcurveDatabase
+from ramjet.photometric_database.standard_and_injected_lightcurve_database import \
+    StandardAndInjectedLightcurveDatabase, OutOfBoundsInjectionHandlingMethod
 
 
 class TestStandardAndInjectedLightcurveDatabase:
@@ -50,8 +51,10 @@ class TestStandardAndInjectedLightcurveDatabase:
         database.batch_size = 4
         database.time_steps_per_example = 3
         database.number_of_parallel_processes_per_map = 1
+
         def mock_window(dataset, batch_size, window_shift):
             return dataset.batch(batch_size)
+
         database.window_dataset_for_zipped_example_and_label_dataset = mock_window  # Disable windowing.
         database.normalize = lambda fluxes: fluxes  # Don't normalize values to keep it simple.
         return database
@@ -206,12 +209,29 @@ class TestStandardAndInjectedLightcurveDatabase:
         lightcurve_times = np.array([10, 20, 30, 40, 50, 60])
         signal_magnifications = np.array([1, 3, 1])
         signal_times = np.array([0, 20, 40])
-        database.allow_out_of_bounds_injection = True
+        database.out_of_bounds_injection_handling = OutOfBoundsInjectionHandlingMethod.RANDOM_INJECTION_LOCATION
         with patch.object(database_module.np.random, 'random') as mock_random:
             mock_random.return_value = 0
             fluxes_with_injected_signal = database.inject_signal_into_lightcurve(lightcurve_fluxes, lightcurve_times,
                                                                                  signal_magnifications, signal_times)
         assert np.array_equal(fluxes_with_injected_signal, np.array([1, 5, 9, 7, 5, 3]))
+
+    def test_inject_signal_using_repeats_for_out_of_bounds(self, database):
+        lightcurve_fluxes = np.array([1, 1, 1, 1, 1, 1, 1])
+        lightcurve_times = np.array([10, 20, 30, 40, 50, 60, 70])
+        signal_magnifications = np.array([1, 2])
+        signal_times = np.array([0, 10])
+        database.out_of_bounds_injection_handling = OutOfBoundsInjectionHandlingMethod.REPEAT_SIGNAL
+        with patch.object(database_module.np.random, 'random') as mock_random:
+            mock_random.return_value = 0.6  # Make signal offset end up as 40
+            fluxes_with_injected_signal0 = database.inject_signal_into_lightcurve(lightcurve_fluxes, lightcurve_times,
+                                                                                  signal_magnifications, signal_times)
+        assert np.array_equal(fluxes_with_injected_signal0, np.array([2, 1, 2, 1, 2, 1, 2]))
+        with patch.object(database_module.np.random, 'random') as mock_random:
+            mock_random.return_value = 0.8  # Make signal offset end up as 50
+            fluxes_with_injected_signal1 = database.inject_signal_into_lightcurve(lightcurve_fluxes, lightcurve_times,
+                                                                                  signal_magnifications, signal_times)
+        assert np.array_equal(fluxes_with_injected_signal1, np.array([1, 2, 1, 2, 1, 2, 1]))
 
     def test_injected_signal_randomly_varies_injectable_portion_used_when_injectable_larger_than_injectee(self,
                                                                                                           database):
@@ -235,7 +255,7 @@ class TestStandardAndInjectedLightcurveDatabase:
         injectee_times = np.array([10, 20, 30, 40, 50])
         injectable_magnifications = np.array([1, 3, 1])
         injectable_times = np.array([0, 10, 20])
-        database.allow_out_of_bounds_injection = True
+        database.out_of_bounds_injection_handling = OutOfBoundsInjectionHandlingMethod.RANDOM_INJECTION_LOCATION
         with patch.object(database_module.np.random, 'random') as mock_random:
             mock_random.return_value = 0
             injected = database.inject_signal_into_lightcurve(injectee_fluxes, injectee_times,
@@ -311,7 +331,7 @@ class TestStandardAndInjectedLightcurveDatabase:
         expected_label = lightcurve_collection.label
         load_from_path_function = lightcurve_collection.load_times_and_fluxes_from_path
         path, lightcurve = database.preprocess_infer_lightcurve(load_from_path_function,
-                                                                 tf.convert_to_tensor(str(lightcurve_path)))
+                                                                tf.convert_to_tensor(str(lightcurve_path)))
         assert np.array_equal(path, 'standard_path0.ext')  # Standard path 0.
         assert lightcurve.shape == (3, 1)
         assert np.array_equal(lightcurve, [[0], [1], [2]])  # Standard lightcurve 0.
