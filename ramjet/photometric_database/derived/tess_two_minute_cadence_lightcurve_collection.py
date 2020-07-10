@@ -9,6 +9,7 @@ from peewee import Select
 
 from ramjet.data_interface.metadatabase import MetadatabaseModel
 from ramjet.data_interface.tess_data_interface import TessDataInterface, TessFluxType
+from ramjet.data_interface.tess_target_metadata_manager import TessTargetMetadata
 from ramjet.data_interface.tess_two_minute_cadence_lightcurve_metadata_manager import \
     TessTwoMinuteCadenceLightcurveMetadataManger, TessTwoMinuteCadenceLightcurveMetadata
 from ramjet.photometric_database.sql_metadata_lightcurve_collection import SqlMetadataLightcurveCollection
@@ -75,3 +76,23 @@ class TessTwoMinuteCadenceLightcurveCollection(SqlMetadataLightcurveCollection):
         Downloads the lightcurve collection.
         """
         self.tess_data_interface.download_all_two_minute_cadence_lightcurves(self.data_directory)
+
+
+class TessTwoMinuteCadenceTargetDatasetSplitLightcurveCollection(TessTwoMinuteCadenceLightcurveCollection):
+    """
+    A lightcurve collection of the TESS two minute cadence data with lightcurves from the same target in the same
+    dataset split.
+    """
+    def get_sql_query(self) -> Select:
+        """
+        Gets the SQL query for the database models for the lightcurve collection.
+
+        :return: The SQL query.
+        """
+        query = TessTwoMinuteCadenceLightcurveMetadata().select()
+        query = self.order_by_uuid_with_random_start(query, TessTwoMinuteCadenceLightcurveMetadata.random_order_uuid)
+        query = query.join(TessTargetMetadata,
+                           on=TessTwoMinuteCadenceLightcurveMetadata.tic_id == TessTargetMetadata.tic_id)
+        if self.dataset_splits is not None:
+            query = query.where(TessTargetMetadata.dataset_split.in_(self.dataset_splits))
+        return query

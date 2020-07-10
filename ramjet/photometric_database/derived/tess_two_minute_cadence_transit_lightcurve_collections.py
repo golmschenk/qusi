@@ -8,10 +8,11 @@ from ramjet.data_interface.tess_transit_metadata_manager import TessTransitMetad
 from ramjet.data_interface.tess_two_minute_cadence_lightcurve_metadata_manager import \
     TessTwoMinuteCadenceLightcurveMetadata
 from ramjet.photometric_database.derived.tess_two_minute_cadence_lightcurve_collection import \
-    TessTwoMinuteCadenceLightcurveCollection
+    TessTwoMinuteCadenceTargetDatasetSplitLightcurveCollection
 
 
-class TessTwoMinuteCadenceConfirmedTransitLightcurveCollection(TessTwoMinuteCadenceLightcurveCollection):
+class TessTwoMinuteCadenceConfirmedTransitLightcurveCollection(
+    TessTwoMinuteCadenceTargetDatasetSplitLightcurveCollection):
     """
     A class representing the collection of TESS two minute cadence lightcurves containing transits.
     """
@@ -32,7 +33,8 @@ class TessTwoMinuteCadenceConfirmedTransitLightcurveCollection(TessTwoMinuteCade
         return query
 
 
-class TessTwoMinuteCadenceConfirmedAndCandidateTransitLightcurveCollection(TessTwoMinuteCadenceLightcurveCollection):
+class TessTwoMinuteCadenceConfirmedAndCandidateTransitLightcurveCollection(
+    TessTwoMinuteCadenceTargetDatasetSplitLightcurveCollection):
     """
     A class representing the collection of TESS two minute cadence lightcurves containing transits.
     """
@@ -54,7 +56,7 @@ class TessTwoMinuteCadenceConfirmedAndCandidateTransitLightcurveCollection(TessT
         return query
 
 
-class TessTwoMinuteCadenceNonTransitLightcurveCollection(TessTwoMinuteCadenceLightcurveCollection):
+class TessTwoMinuteCadenceNonTransitLightcurveCollection(TessTwoMinuteCadenceTargetDatasetSplitLightcurveCollection):
     """
     A class representing the collection of TESS two minute cadence lightcurves containing transits.
     """
