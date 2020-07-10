@@ -34,8 +34,8 @@ class TessTwoMinuteCadenceLightcurveCollection(SqlMetadataLightcurveCollection):
 
         :return: The SQL query.
         """
-        query = TessTwoMinuteCadenceLightcurveMetadata().select().order_by(
-            TessTwoMinuteCadenceLightcurveMetadata.random_order_uuid)
+        query = TessTwoMinuteCadenceLightcurveMetadata().select()
+        query = self.order_by_uuid_with_random_start(query, TessTwoMinuteCadenceLightcurveMetadata.random_order_uuid)
         if self.dataset_splits is not None:
             query = query.where(TessTwoMinuteCadenceLightcurveMetadata.dataset_split.in_(self.dataset_splits))
         return query

@@ -91,31 +91,6 @@ class TessTwoMinuteCadenceLightcurveMetadataManger:
         print('Building indexes...')
         SchemaManager(TessTwoMinuteCadenceLightcurveMetadata).create_indexes()  # Since we dropped them before.
 
-    def create_paths_generator(self, dataset_splits: Union[List[int], None] = None, repeat=True
-                               ) -> Generator[Path, None, None]:
-        """
-        Creates a generator for all the paths from the SQL table, with optional filters.
-
-        :param dataset_splits: The dataset splits to filter on. For splitting training, testing, etc.
-        :param repeat: Whether or not the generator should repeat indefinitely.
-        :return: The generator.
-        """
-        page_size = 1000
-        query = TessTwoMinuteCadenceLightcurveMetadata().select().order_by(
-            TessTwoMinuteCadenceLightcurveMetadata.random_order_uuid)
-        if dataset_splits is not None:
-            query = query.where(TessTwoMinuteCadenceLightcurveMetadata.dataset_split.in_(dataset_splits))
-        while True:
-            for page_number in itertools.count(start=1, step=1):  # Peewee pages start on 1.
-                page = query.paginate(page_number, paginate_by=page_size)
-                if len(page) > 0:
-                    for row in page:
-                        yield Path(self.lightcurve_root_directory_path.joinpath(row.path))
-                else:
-                    break
-            if not repeat:
-                break
-
 
 if __name__ == '__main__':
     manager = TessTwoMinuteCadenceLightcurveMetadataManger()
