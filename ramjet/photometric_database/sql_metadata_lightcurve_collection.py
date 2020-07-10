@@ -4,7 +4,9 @@ Code for a lightcurve collection that stores its metadata in the SQL database.
 import itertools
 from pathlib import Path
 from typing import Iterable
-from peewee import Select
+from uuid import uuid4
+
+from peewee import Select, Field, Case
 
 from ramjet.data_interface.metadatabase import MetadatabaseModel
 from ramjet.photometric_database.lightcurve_collection import LightcurveCollection, \
@@ -57,3 +59,17 @@ class SqlMetadataLightcurveCollection(LightcurveCollection):
                     yield Path(self.get_path_from_model(model))
             else:
                 break
+
+    @staticmethod
+    def order_by_uuid_with_random_start(select_query: Select, uuid_field: Field) -> Select:
+        """
+        Applies an "order by" on a query using a passed UUID field. The "order by" starts at a random UUID and then
+        loops back to the minimum UUID include all entities.
+
+        :param select_query: The query to add the "order by" to.
+        :param uuid_field: The UUID field to order on.
+        :return: The query updated to include the "order by".
+        """
+        random_start_case = Case(None, [(uuid_field > uuid4(), 0)], 1)
+        updated_select_query = select_query.order_by(random_start_case, uuid_field)
+        return updated_select_query
