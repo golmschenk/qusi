@@ -60,7 +60,7 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         validation_standard_paths_datasets, validation_injectee_path_dataset, validation_injectable_paths_datasets = \
             self.generate_paths_datasets_group_from_lightcurve_collections_group(
                 self.validation_standard_lightcurve_collections, self.validation_injectee_lightcurve_collection,
-                self.validation_injectable_lightcurve_collections
+                self.validation_injectable_lightcurve_collections, shuffle=False
             )
         training_lightcurve_and_label_datasets = []
         for paths_dataset, lightcurve_collection in zip(training_standard_paths_datasets,
@@ -108,7 +108,7 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
     def generate_paths_datasets_group_from_lightcurve_collections_group(
             self, standard_lightcurve_collections: List[LightcurveCollection],
             injectee_lightcurve_collection: LightcurveCollection,
-            injectable_lightcurve_collections: List[LightcurveCollection]
+            injectable_lightcurve_collections: List[LightcurveCollection], shuffle: bool = True
     ) -> (List[tf.data.Dataset], tf.data.Dataset, List[tf.data.Dataset]):
         """
         Create the path dataset for each lightcurve collection in the standard, injectee, and injectable sets.
@@ -116,6 +116,7 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         :param standard_lightcurve_collections: The standard lightcurve collections.
         :param injectee_lightcurve_collection: The injectee lightcurve collection.
         :param injectable_lightcurve_collections: The injectable lightcurve collections.
+        :param shuffle: Whether to shuffle the dataset or not.
         :return: The standard, injectee, and injectable paths datasets.
         """
         injectee_collection_index_in_standard_collection_list: Union[int, None] = None
@@ -125,11 +126,11 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         if injectee_collection_index_in_standard_collection_list is not None:
             standard_lightcurve_collections.pop(injectee_collection_index_in_standard_collection_list)
         standard_paths_datasets = self.generate_paths_datasets_from_lightcurve_collection_list(
-            standard_lightcurve_collections)
+            standard_lightcurve_collections, shuffle=shuffle)
         injectee_path_dataset = None
         if injectee_lightcurve_collection is not None:
             injectee_path_dataset = self.generate_paths_dataset_from_lightcurve_collection(
-                injectee_lightcurve_collection)
+                injectee_lightcurve_collection, shuffle=shuffle)
             number_of_elements_repeated_in_a_row = len(injectable_lightcurve_collections)
             if injectee_collection_index_in_standard_collection_list is not None:
                 number_of_elements_repeated_in_a_row += 1
@@ -140,31 +141,35 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
                 standard_lightcurve_collections.insert(injectee_collection_index_in_standard_collection_list,
                                                        injectee_path_dataset)
         injectable_paths_datasets = self.generate_paths_datasets_from_lightcurve_collection_list(
-            injectable_lightcurve_collections)
+            injectable_lightcurve_collections, shuffle=shuffle)
         return standard_paths_datasets, injectee_path_dataset, injectable_paths_datasets
 
-    def generate_paths_dataset_from_lightcurve_collection(self, lightcurve_collection: LightcurveCollection
-                                                          ) -> tf.data.Dataset:
+    def generate_paths_dataset_from_lightcurve_collection(self, lightcurve_collection: LightcurveCollection,
+                                                          shuffle: bool = True) -> tf.data.Dataset:
         """
         Generates a paths dataset for a lightcurve collection.
 
         :param lightcurve_collection: The lightcurve collection to generate a paths dataset for.
+        :param shuffle: Whether to shuffle the dataset or not.
         :return: The paths dataset.
         """
         paths_dataset = self.paths_dataset_from_list_or_generator_factory(lightcurve_collection.get_paths)
-        repeated_paths_dataset = paths_dataset.repeat()
-        shuffled_paths_dataset = repeated_paths_dataset.shuffle(self.shuffle_buffer_size)
-        return shuffled_paths_dataset
+        dataset = paths_dataset.repeat()
+        if shuffle:
+            dataset = dataset.shuffle(self.shuffle_buffer_size)
+        return dataset
 
-    def generate_paths_datasets_from_lightcurve_collection_list(self, lightcurve_collections: List[LightcurveCollection]
-                                                                ) -> List[tf.data.Dataset]:
+    def generate_paths_datasets_from_lightcurve_collection_list(self,
+                                                                lightcurve_collections: List[LightcurveCollection],
+                                                                shuffle: bool = True) -> List[tf.data.Dataset]:
         """
         Generates a paths dataset for each lightcurve collection in a list.
 
         :param lightcurve_collections: The list of lightcurve collections.
+        :param shuffle: Whether to shuffle the datasets or not.
         :return: The list of paths datasets.
         """
-        return [self.generate_paths_dataset_from_lightcurve_collection(lightcurve_collection)
+        return [self.generate_paths_dataset_from_lightcurve_collection(lightcurve_collection, shuffle=shuffle)
                 for lightcurve_collection in lightcurve_collections]
 
     def generate_standard_lightcurve_and_label_dataset(
