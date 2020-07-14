@@ -1,10 +1,11 @@
 from pathlib import Path
 from unittest.mock import patch, Mock
-
 import pytest
+from peewee import SqliteDatabase
 
 import ramjet.data_interface.tess_ffi_lightcurve_metadata_manager as module
 from ramjet.data_interface.tess_ffi_lightcurve_metadata_manager import TessFfiLightcurveMetadataManager
+
 
 class TestTessFfiLightcurveMetadataManager:
     @pytest.fixture
@@ -41,3 +42,36 @@ class TestTessFfiLightcurveMetadataManager:
         metadata_manger.populate_sql_database()
         assert mock_insert.call_args[0][0] == [Path(f'{index}.fits') for index in range(20)]
         assert mock_insert.call_args[0][1] == list(range(10)) * 2
+
+    def test_can_retrieve_training_and_validation_path_generator_from_sql_table(self, metadata_manger):
+        test_database = SqliteDatabase(':memory:')
+        with test_database.bind_ctx([module.TessFfiLightcurveMetadata], bind_refs=False, bind_backrefs=False):
+            test_database.connect()
+            metadata_manger.build_table()
+            metadata_manger.tess_ffi_data_interface.get_tic_id_and_sector_from_file_path = Mock(
+                side_effect=zip(range(20), range(20)))
+            metadata_manger.tess_ffi_data_interface.get_magnitude_from_file = Mock(side_effect=range(20))
+            lightcurve_paths = [Path(f'{index}.pkl') for index in range(20)]
+            dataset_splits = list(range(10)) * 2
+            with patch.object(module, 'uuid4') as mock_uuid4:
+                mock_uuid4.side_effect = [f'{index:02}' for index in range(20)]
+                metadata_manger.insert_multiple_rows_from_paths_into_database(lightcurve_paths, dataset_splits)
+            training_data_paths = metadata_manger.create_paths_generator(
+                dataset_splits=[0, 1, 2, 3, 4, 5, 6, 7])
+            validation_data_paths = metadata_manger.create_paths_generator(
+                dataset_splits=[8])
+            testing_data_paths = metadata_manger.create_paths_generator(
+                dataset_splits=[9])
+            training_data_paths_list = list(training_data_paths)
+            validation_data_paths_list = list(validation_data_paths)
+            testing_data_paths_list = list(testing_data_paths)
+            data_directory = metadata_manger.lightcurve_root_directory_path
+            assert len(training_data_paths_list) == 16
+            assert len(validation_data_paths_list) == 2
+            assert len(testing_data_paths_list) == 2
+            assert data_directory.joinpath('0.pkl') in training_data_paths_list
+            assert data_directory.joinpath('18.pkl') in validation_data_paths_list
+            assert data_directory.joinpath('9.pkl') in testing_data_paths_list
+            assert len(set(training_data_paths_list).intersection(set(validation_data_paths_list))) == 0
+            assert len(set(training_data_paths_list).intersection(set(testing_data_paths_list))) == 0
+            assert len(set(validation_data_paths_list).intersection(set(testing_data_paths_list))) == 0

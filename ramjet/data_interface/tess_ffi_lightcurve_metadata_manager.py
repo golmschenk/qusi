@@ -2,7 +2,6 @@
 Code for managing the TESS FFI metadata SQL table.
 """
 import itertools
-import math
 from pathlib import Path
 from typing import List, Union, Generator
 from uuid import uuid4
@@ -95,8 +94,7 @@ class TessFfiLightcurveMetadataManager:
         SchemaManager(TessFfiLightcurveMetadata).create_indexes()  # Since we dropped them before.
 
     def create_paths_generator(self, magnitude_range: (Union[float, None], Union[float, None]) = (None, None),
-                               dataset_splits: Union[List[int], None] = None, repeat=True
-                               ) -> Generator[Path, None, None]:
+                               dataset_splits: Union[List[int], None] = None) -> Generator[Path, None, None]:
         """
         Creates a generator for all the paths from the SQL table, with optional filters.
 
@@ -116,13 +114,10 @@ class TessFfiLightcurveMetadataManager:
             query = query.where(TessFfiLightcurveMetadata.magnitude < magnitude_range[1])
         if dataset_splits is not None:
             query = query.where(TessFfiLightcurveMetadata.dataset_split.in_(dataset_splits))
-        while True:
-            for page_number in itertools.count(start=1, step=1):  # Peewee pages start on 1.
-                page = query.paginate(page_number, paginate_by=page_size)
-                if len(page) > 0:
-                    for row in page:
-                        yield Path(self.lightcurve_root_directory_path.joinpath(row.path))
-                else:
-                    break
-            if not repeat:
+        for page_number in itertools.count(start=1, step=1):  # Peewee pages start on 1.
+            page = query.paginate(page_number, paginate_by=page_size)
+            if len(page) > 0:
+                for row in page:
+                    yield Path(self.lightcurve_root_directory_path.joinpath(row.path))
+            else:
                 break
