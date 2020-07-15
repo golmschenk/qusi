@@ -4,6 +4,7 @@ Code for a class for common interfacing with TESS data, such as downloading, sor
 import math
 import re
 import shutil
+import sys
 import tempfile
 import time
 from enum import Enum
@@ -516,4 +517,9 @@ class TessDataInterface:
 
 if __name__ == '__main__':
     tess_data_interface = TessDataInterface()
-    tess_data_interface.download_two_minute_cadence_lightcurves(Path('data/tess_two_minute_cadence_lightcurves'))
+    if len(sys.argv) > 1:
+        limit = int(sys.argv[1])
+    else:
+        limit = None
+    tess_data_interface.download_two_minute_cadence_lightcurves(Path('data/tess_two_minute_cadence_lightcurves'),
+                                                                limit=limit)
