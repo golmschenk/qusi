@@ -459,39 +459,6 @@ class TessDataInterface:
         single_sector_observations = self.add_sector_column_to_single_sector_observations(single_sector_observations)
         return sorted(single_sector_observations['Sector'].unique())
 
-    def download_exofop_toi_lightcurves_to_directory(self, directory: Union[Path, str] = None):
-        """
-        Downloads the `ExoFOP database <https://exofop.ipac.caltech.edu/tess/view_toi.php>`_ lightcurve files to the
-        given directory.
-
-        :param directory: The directory to download the lightcurves to. Defaults to the data interface directory.
-        """
-        print("Downloading ExoFOP TOI disposition CSV...")
-        tess_toi_data_interface = TessToiDataInterface()
-        if directory is None:
-            directory = tess_toi_data_interface.lightcurves_directory
-        if isinstance(directory, str):
-            directory = Path(directory)
-        toi_dispositions = tess_toi_data_interface.toi_dispositions()
-        tic_ids = toi_dispositions[ToiColumns.tic_id.value].unique()
-        print('Downloading TESS observation list...')
-        single_sector_observations = self.get_all_single_sector_observations(tic_ids)
-        print("Downloading lightcurves which are confirmed or suspected planets in TOI dispositions...")
-        suspected_planet_dispositions = toi_dispositions[toi_dispositions[ToiColumns.disposition.value] != 'FP']
-        suspected_planet_observations = pd.merge(single_sector_observations, suspected_planet_dispositions, how='inner',
-                                                 on=[ToiColumns.tic_id.value, ToiColumns.sector.value])
-        suspected_planet_data_products = self.get_product_list(suspected_planet_observations)
-        suspected_planet_lightcurve_data_products = suspected_planet_data_products[
-            suspected_planet_data_products['productFilename'].str.endswith('lc.fits')
-        ]
-        suspected_planet_download_manifest = self.download_products(
-            suspected_planet_lightcurve_data_products, data_directory=tess_toi_data_interface.data_directory)
-        print(f'Verifying and moving lightcurves to {directory}...')
-        directory.mkdir(parents=True, exist_ok=True)
-        for row_index, row in suspected_planet_download_manifest.iterrows():
-            if row['Status'] == 'COMPLETE':
-                file_path = Path(row['Local Path'])
-                file_path.rename(directory.joinpath(file_path.name))
 
     def get_all_single_sector_observations(self, tic_ids: List[int] = None) -> pd.DataFrame:
         """
