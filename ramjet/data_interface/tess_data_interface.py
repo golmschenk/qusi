@@ -28,6 +28,9 @@ from ramjet.data_interface.tess_toi_data_interface import TessToiDataInterface, 
 
 
 class TessFluxType(Enum):
+    """
+    An enum to represent the types of available fluxes in TESS two minute data.
+    """
     SAP = 'SAP_FLUX'
     PDCSAP = 'PDCSAP_FLUX'
 
