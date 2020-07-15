@@ -72,7 +72,6 @@ class ToiDatabase(TessSyntheticInjectedWithNegativeInjectionDatabase):
         toi_dispositions = tess_toi_data_interface.load_toi_dispositions_in_project_format()
         print("Downloading lightcurves which are not in TOI dispositions and do not have TCEs (not planets)...")
         print(f'Download limited to {number_of_negative_lightcurves_to_download} lightcurves...')
-        # noinspection SpellCheckingInspection
         toi_tic_ids = toi_dispositions['TIC ID'].values
         not_toi_observations = single_sector_observations[
             ~single_sector_observations['TIC ID'].isin(toi_tic_ids)  # Don't include even false positives.

@@ -75,7 +75,7 @@ class TessTwoMinuteCadenceLightcurveCollection(SqlMetadataLightcurveCollection):
         """
         Downloads the lightcurve collection.
         """
-        self.tess_data_interface.download_all_two_minute_cadence_lightcurves(self.data_directory)
+        self.tess_data_interface.download_two_minute_cadence_lightcurves(self.data_directory)
 
 
 class TessTwoMinuteCadenceTargetDatasetSplitLightcurveCollection(TessTwoMinuteCadenceLightcurveCollection):
