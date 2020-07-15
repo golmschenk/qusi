@@ -357,6 +357,20 @@ class TessDataInterface:
         comparison_figure.sizing_mode = 'stretch_width'
         show(comparison_figure)
 
+    def show_lightcurve(self, lightcurve_path: Path):
+        """
+        Shows a figure of the lightcurve at the passed path.
+
+        :param lightcurve_path: The path of the lightcurve.
+        """
+        fluxes, times = self.load_fluxes_and_times_from_fits_file(lightcurve_path)
+        figure = Figure(title=str(lightcurve_path), x_axis_label='Flux', y_axis_label='Time', active_drag='box_zoom')
+        color = 'firebrick'
+        figure.line(times, fluxes, line_color=color, line_alpha=0.1)
+        figure.circle(times, fluxes, line_color=color, line_alpha=0.4, fill_color=color, fill_alpha=0.1)
+        figure.sizing_mode = 'stretch_width'
+        show(figure)
+
     @staticmethod
     def get_target_coordinates(tic_id: int) -> SkyCoord:
         """
