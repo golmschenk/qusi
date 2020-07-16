@@ -59,7 +59,7 @@ class MOANegativeMicrolensingLightcurveCollection(LightcurveCollection):
 
     def __init__(self, dataset_splits=[0, 1, 2, 3, 4], split_pieces=5):
         super().__init__()
-        self.label = 1
+        self.label = 0
         random.seed(42)
         self.split_pieces = split_pieces
         self.dataset_splits = dataset_splits
