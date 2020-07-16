@@ -8,15 +8,20 @@ import pandas as pd
 
 from ramjet.photometric_database.lightcurve_collection import LightcurveCollection
 from ramjet.photometric_database.microlensing_signal_generator import MagnificationSignal
+import random
 
 
 class MOAPositiveMicrolensingLightcurveCollection(LightcurveCollection):
     """
     A lightcurve collection of the MOA data with previously detected microlensing events.
     """
-    def __init__(self):
+
+    def __init__(self, dataset_splits=[0, 1, 2, 3, 4], split_pieces=5):
         super().__init__()
         self.label = 1
+        random.seed(42)
+        self.split_pieces = split_pieces
+        self.dataset_splits = dataset_splits
 
     def get_paths(self) -> Iterable[Path]:
         """
@@ -25,7 +30,14 @@ class MOAPositiveMicrolensingLightcurveCollection(LightcurveCollection):
         :return: An iterable of the lightcurve paths.
         """
         paths = Path('/local/data/fugu3/sishitan/ramjet/data/moa_microlensing/positive').glob('*.feather')
-        return paths
+        path_list = list(paths)
+        random.shuffle(path_list)
+        number_of_samples = len(path_list)
+        number_of_samples_per_block = number_of_samples // self.split_pieces
+        dataset_paths = []
+        for block in self.dataset_splits:
+            dataset_paths += path_list[block*number_of_samples_per_block:(block+1)*number_of_samples_per_block]
+        return dataset_paths
 
     def load_times_and_fluxes_from_path(self, path: Path) -> (np.ndarray, np.ndarray):
         """
@@ -44,9 +56,13 @@ class MOANegativeMicrolensingLightcurveCollection(LightcurveCollection):
     """
     A lightcurve collection of the MOA data with no microlensing event.
     """
-    def __init__(self):
+
+    def __init__(self, dataset_splits=[0, 1, 2, 3, 4], split_pieces=5):
         super().__init__()
-        self.label = 0
+        self.label = 1
+        random.seed(42)
+        self.split_pieces = split_pieces
+        self.dataset_splits = dataset_splits
 
     def get_paths(self):
         """
@@ -55,7 +71,14 @@ class MOANegativeMicrolensingLightcurveCollection(LightcurveCollection):
         :return: An iterable of the lightcurve paths.
         """
         paths = Path('/local/data/fugu3/sishitan/ramjet/data/moa_microlensing/negative').glob('*.feather')
-        return paths
+        path_list = list(paths)
+        random.shuffle(path_list)
+        number_of_samples = len(path_list)
+        number_of_samples_per_block = number_of_samples // self.split_pieces
+        dataset_paths = []
+        for block in self.dataset_splits:
+            dataset_paths += path_list[block*number_of_samples_per_block:(block+1)*number_of_samples_per_block]
+        return dataset_paths
 
     def load_times_and_fluxes_from_path(self, path: Path) -> (np.ndarray, np.ndarray):
         lightcurve_dataframe = pd.read_feather(path)

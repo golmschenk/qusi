@@ -6,7 +6,6 @@ from ramjet.photometric_database.derived.moa_microlensing_lightcurve_collection 
     MicrolensingSyntheticGeneratedDuringRunningSignalCollection
 from ramjet.photometric_database.standard_and_injected_lightcurve_database import StandardAndInjectedLightcurveDatabase
 
-
 class MoaMicrolensingDatabase(StandardAndInjectedLightcurveDatabase):
     """
     A database to train a network to find microlensing events in MOA data. Uses real data that were previous classified.
@@ -14,10 +13,13 @@ class MoaMicrolensingDatabase(StandardAndInjectedLightcurveDatabase):
     def __init__(self):
         super().__init__()
         self.training_standard_lightcurve_collections = [
-            MOAPositiveMicrolensingLightcurveCollection(),
-            MOANegativeMicrolensingLightcurveCollection()
+            MOAPositiveMicrolensingLightcurveCollection(dataset_splits=[0, 1, 2, 3], split_pieces=5),
+            MOANegativeMicrolensingLightcurveCollection(dataset_splits=[0, 1, 2, 3], split_pieces=5)
         ]
-        self.validation_standard_lightcurve_collections = self.training_standard_lightcurve_collections
+        self.validation_standard_lightcurve_collections = [
+            MOAPositiveMicrolensingLightcurveCollection(dataset_splits=[4], split_pieces=5),
+            MOANegativeMicrolensingLightcurveCollection(dataset_splits=[4], split_pieces=5)
+        ]
 
 
 class MoaMicrolensingWithSyntheticDatabase(StandardAndInjectedLightcurveDatabase):
