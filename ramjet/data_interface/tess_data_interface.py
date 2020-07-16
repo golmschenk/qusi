@@ -24,7 +24,6 @@ from retrying import retry
 from bokeh.plotting import Figure
 
 from ramjet.analysis.lightcurve_visualizer import plot_lightcurve, create_dual_lightcurve_figure
-from ramjet.data_interface.tess_toi_data_interface import TessToiDataInterface, ToiColumns
 
 
 class TessFluxType(Enum):
