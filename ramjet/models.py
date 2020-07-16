@@ -1,9 +1,13 @@
 """Code for network architectures."""
+import sys
+
+import tensorflow as tf
 from tensorflow import sigmoid
 from tensorflow.keras import Sequential, Model, backend
 from tensorflow.keras.layers import Conv3D, MaxPool3D, Flatten, Dense, Reshape, LeakyReLU, Conv1D, BatchNormalization, \
     LSTM, AveragePooling1D, Layer, Bidirectional, Lambda, Conv2DTranspose
 from tensorflow.keras.regularizers import l2
+from tensorflow_core.python.keras.layers import Concatenate
 
 
 class SanityCheckNetwork(Sequential):
@@ -503,3 +507,195 @@ class ConvolutionalLstm(Model):
         x = self.prediction_layer(x)
         x = self.reshape(x)
         return x
+
+
+class ConvolutionalLstmMeanFinal(Model):
+
+    def __init__(self):
+        super().__init__()
+        leaky_relu = LeakyReLU(alpha=0.01)
+        l2_regularizer = l2(0.001)
+        self.convolution0 = Conv1D(4, kernel_size=4, strides=2, activation=leaky_relu,
+                                   kernel_regularizer=l2_regularizer)
+        self.convolution1 = Conv1D(4, kernel_size=4, strides=2, activation=leaky_relu,
+                                   kernel_regularizer=l2_regularizer)
+        self.batch_norm0 = BatchNormalization(renorm=True)
+        self.convolution2 = Conv1D(4, kernel_size=4, strides=2, activation=leaky_relu,
+                                   kernel_regularizer=l2_regularizer)
+        self.batch_norm1 = BatchNormalization(renorm=True)
+        self.convolution3 = Conv1D(8, kernel_size=4, strides=2, activation=leaky_relu,
+                                   kernel_regularizer=l2_regularizer)
+        self.batch_norm2 = BatchNormalization(renorm=True)
+        self.convolution4 = Conv1D(8, kernel_size=4, strides=2, activation=leaky_relu,
+                                   kernel_regularizer=l2_regularizer)
+        self.batch_norm3 = BatchNormalization(renorm=True)
+        self.convolution5 = Conv1D(8, kernel_size=4, activation=leaky_relu,
+                                   kernel_regularizer=l2_regularizer)
+        self.batch_norm4 = BatchNormalization(renorm=True)
+        self.convolution6 = Conv1D(16, kernel_size=4, activation=leaky_relu,
+                                   kernel_regularizer=l2_regularizer)
+        self.batch_norm5 = BatchNormalization(renorm=True)
+        self.convolution7 = Conv1D(16, kernel_size=4, activation=leaky_relu,
+                                   kernel_regularizer=l2_regularizer)
+        self.batch_norm6 = BatchNormalization(renorm=True)
+        self.convolution8 = Conv1D(16, kernel_size=4, activation=leaky_relu,
+                                   kernel_regularizer=l2_regularizer)
+        self.lstm0 = Bidirectional(LSTM(10, return_sequences=True))
+        self.lstm1 = Bidirectional(LSTM(10, return_sequences=True))
+        self.lstm2 = Bidirectional(LSTM(10, return_sequences=True))
+        self.prediction_layer = Conv1D(1, kernel_size=1, activation=sigmoid)
+        self.reshape = Reshape([1])
+
+    def call(self, inputs, training=False, mask=None):
+        """
+        The forward pass of the layer.
+
+        :param inputs: The input tensor.
+        :param training: A boolean specifying if the layer should be in training mode.
+        :param mask: A mask for the input tensor.
+        :return: The output tensor of the layer.
+        """
+        x = inputs
+        x = self.convolution0(x)
+        x = self.convolution1(x)
+        x = self.batch_norm0(x, training=training)
+        x = self.convolution2(x)
+        x = self.batch_norm1(x, training=training)
+        x = self.convolution3(x)
+        x = self.batch_norm2(x, training=training)
+        x = self.convolution4(x)
+        x = self.batch_norm3(x, training=training)
+        x = self.convolution5(x)
+        x = self.batch_norm4(x, training=training)
+        x = self.convolution6(x)
+        x = self.batch_norm5(x, training=training)
+        x = self.convolution7(x)
+        x = self.batch_norm6(x, training=training)
+        x = self.convolution8(x)
+        x = self.lstm0(x)
+        x = self.lstm1(x)
+        x = self.lstm2(x)
+        x = self.prediction_layer(x)
+        x = backend.mean(x, axis=[1, 2])
+        x = self.reshape(x)
+        return x
+
+
+class SimpleLightcurveCnnWithLstmLayers(Model):
+    """A simple 1D CNN for lightcurves."""
+
+    def __init__(self):
+        super().__init__()
+        leaky_relu = LeakyReLU(alpha=0.01)
+        l2_regularizer = l2(0.001)
+        self.convolution0 = Conv1D(8, kernel_size=4, strides=2, activation=leaky_relu,
+                                   kernel_regularizer=l2_regularizer)
+        self.convolution1 = Conv1D(8, kernel_size=4, strides=2, activation=leaky_relu,
+                                   kernel_regularizer=l2_regularizer)
+        self.lstm1 = Bidirectional(LSTM(10, return_sequences=True))
+        self.batch_norm1 = BatchNormalization(renorm=True)
+        self.concatenate1 = Concatenate()
+        self.convolution2 = Conv1D(8, kernel_size=4, strides=2, activation=leaky_relu,
+                                   kernel_regularizer=l2_regularizer)
+        self.lstm2 = Bidirectional(LSTM(10, return_sequences=True))
+        self.batch_norm2 = BatchNormalization(renorm=True)
+        self.concatenate2 = Concatenate()
+        self.convolution3 = Conv1D(16, kernel_size=4, strides=2, activation=leaky_relu,
+                                   kernel_regularizer=l2_regularizer)
+        self.lstm3 = Bidirectional(LSTM(10, return_sequences=True))
+        self.batch_norm3 = BatchNormalization(renorm=True)
+        self.concatenate3 = Concatenate()
+        self.convolution4 = Conv1D(16, kernel_size=4, strides=2, activation=leaky_relu,
+                                   kernel_regularizer=l2_regularizer)
+        self.lstm4 = Bidirectional(LSTM(10, return_sequences=True))
+        self.batch_norm4 = BatchNormalization(renorm=True)
+        self.concatenate4 = Concatenate()
+        self.convolution5 = Conv1D(16, kernel_size=4, strides=2, activation=leaky_relu,
+                                   kernel_regularizer=l2_regularizer)
+        self.lstm5 = Bidirectional(LSTM(10, return_sequences=True))
+        self.batch_norm5 = BatchNormalization(renorm=True)
+        self.concatenate5 = Concatenate()
+        self.convolution6 = Conv1D(32, kernel_size=4, strides=2, activation=leaky_relu,
+                                   kernel_regularizer=l2_regularizer)
+        self.lstm6 = Bidirectional(LSTM(10, return_sequences=True))
+        self.batch_norm6 = BatchNormalization(renorm=True)
+        self.concatenate6 = Concatenate()
+        self.convolution7 = Conv1D(32, kernel_size=4, strides=2, activation=leaky_relu,
+                                   kernel_regularizer=l2_regularizer)
+        self.lstm7 = Bidirectional(LSTM(10, return_sequences=True))
+        self.batch_norm7 = BatchNormalization(renorm=True)
+        self.concatenate7 = Concatenate()
+        self.convolution8 = Conv1D(32, kernel_size=4, strides=2, activation=leaky_relu,
+                                   kernel_regularizer=l2_regularizer)
+        self.lstm8 = Bidirectional(LSTM(10, return_sequences=True))
+        self.batch_norm8 = BatchNormalization(renorm=True)
+        self.concatenate8 = Concatenate()
+        self.convolution9 = Conv1D(64, kernel_size=4, strides=2, activation=leaky_relu,
+                                   kernel_regularizer=l2_regularizer)
+        self.lstm9 = Bidirectional(LSTM(10, return_sequences=True))
+        self.batch_norm9 = BatchNormalization(renorm=True)
+        self.concatenate9 = Concatenate()
+        self.convolution10 = Conv1D(64, kernel_size=4, strides=2, activation=leaky_relu,
+                                    kernel_regularizer=l2_regularizer)
+        self.lstm10 = Bidirectional(LSTM(10, return_sequences=True))
+        self.batch_norm10 = BatchNormalization(renorm=True)
+        self.concatenate10 = Concatenate()
+        self.convolution11 = Conv1D(10, kernel_size=7, activation=leaky_relu, kernel_regularizer=l2_regularizer)
+        self.convolution12 = Conv1D(1, [1], activation=sigmoid)
+        self.reshape = Reshape([1])
+
+    def call(self, inputs, training=False, mask=None):
+        """
+        The forward pass of the layer.
+
+        :param inputs: The input tensor.
+        :param training: A boolean specifying if the layer should be in training mode.
+        :param mask: A mask for the input tensor.
+        :return: The output tensor of the layer.
+        """
+        x = inputs
+        x0 = self.convolution0(x)
+        x1c = self.convolution1(x0)
+        x1b = self.batch_norm1(x1c, training=training)
+        x1l = self.lstm1(x1c)
+        x1 = self.concatenate1([x1b, x1l])
+        x2c = self.convolution2(x1)
+        x2b = self.batch_norm2(x2c, training=training)
+        x2l = self.lstm2(x2c)
+        x2 = self.concatenate2([x2b, x2l])
+        x3c = self.convolution3(x2)
+        x3b = self.batch_norm3(x3c, training=training)
+        x3l = self.lstm3(x3c)
+        x3 = self.concatenate3([x3b, x3l])
+        x4c = self.convolution4(x3)
+        x4b = self.batch_norm4(x4c, training=training)
+        x4l = self.lstm4(x4c)
+        x4 = self.concatenate4([x4b, x4l])
+        x5c = self.convolution5(x4)
+        x5b = self.batch_norm5(x5c, training=training)
+        x5l = self.lstm5(x5c)
+        x5 = self.concatenate5([x5b, x5l])
+        x6c = self.convolution6(x5)
+        x6b = self.batch_norm6(x6c, training=training)
+        x6l = self.lstm6(x6c)
+        x6 = self.concatenate6([x6b, x6l])
+        x7c = self.convolution7(x6)
+        x7b = self.batch_norm7(x7c, training=training)
+        x7l = self.lstm7(x7c)
+        x7 = self.concatenate7([x7b, x7l])
+        x8c = self.convolution8(x7)
+        x8b = self.batch_norm8(x8c, training=training)
+        x8l = self.lstm8(x8c)
+        x8 = self.concatenate8([x8b, x8l])
+        x9c = self.convolution9(x8)
+        x9b = self.batch_norm9(x9c, training=training)
+        x9l = self.lstm9(x9c)
+        x9 = self.concatenate9([x9b, x9l])
+        x10c = self.convolution10(x9)
+        x10b = self.batch_norm10(x10c, training=training)
+        x10l = self.lstm10(x10c)
+        x10 = self.concatenate10([x10b, x10l])
+        x11 = self.convolution11(x10)
+        x12 = self.convolution12(x11)
+        output = self.reshape(x12)
+        return output
