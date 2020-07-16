@@ -6,7 +6,6 @@ import re
 import shutil
 import sys
 import tempfile
-import time
 from enum import Enum
 from pathlib import Path
 from typing import Union, List, Dict

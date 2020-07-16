@@ -1,5 +1,6 @@
 """Code for network architectures."""
 import sys
+from typing import List
 
 import tensorflow as tf
 from tensorflow import sigmoid
@@ -699,3 +700,75 @@ class SimpleLightcurveCnnWithLstmLayers(Model):
         x12 = self.convolution12(x11)
         output = self.reshape(x12)
         return output
+
+
+class ResnetBlock1D(Layer):
+    def __init__(self, layers: int, channels: int, kernel_size: int, strides=2):
+        super().__init__()
+        self.layers: int = layers
+        self.channels: int = channels
+        self.kernel_size: int = kernel_size
+        self.strides: int = strides
+        self.inner_sequential = Sequential()
+        self.skip_sequential = Sequential()
+        self.activation = LeakyReLU(alpha=0.01)
+        leaky_relu = LeakyReLU(alpha=0.01)
+        l2_regularizer = l2(0.001)
+        for _ in range(self.layers - 1):
+            self.inner_sequential.add(Conv1D(self.channels, kernel_size=self.kernel_size, strides=self.strides,
+                                             activation=leaky_relu, kernel_regularizer=l2_regularizer, padding='SAME'))
+            self.inner_sequential.add(BatchNormalization())
+        self.inner_sequential.add(Conv1D(self.channels, kernel_size=self.kernel_size, strides=self.strides,
+                                         kernel_regularizer=l2_regularizer, padding='SAME'))
+        self.inner_sequential.add(BatchNormalization())
+        self.skip_sequential.add(Conv1D(self.channels, kernel_size=1, strides=self.strides ** self.layers,
+                                        kernel_regularizer=l2_regularizer, padding='SAME'))
+        self.skip_sequential.add(BatchNormalization())
+
+    def call(self, inputs, training=False, mask=None):
+        """
+        The forward pass of the layer.
+
+        :param inputs: The input tensor.
+        :param training: A boolean specifying if the layer should be in training mode.
+        :param mask: A mask for the input tensor.
+        :return: The output tensor of the layer.
+        """
+        inner_output = self.inner_sequential(inputs)
+        skip_output = self.skip_sequential(inputs)
+        output = self.activation(tf.keras.layers.add([inner_output, skip_output]))
+        return output
+
+
+class SimpleLightcurveCnnWithSkipConnections(Model):
+    """A simple 1D CNN for lightcurves."""
+
+    def __init__(self):
+        super().__init__()
+        leaky_relu = LeakyReLU(alpha=0.01)
+        l2_regularizer = l2(0.001)
+        self.resnet_block0 = ResnetBlock1D(layers=3, channels=8, kernel_size=4, strides=2)
+        self.resnet_block1 = ResnetBlock1D(layers=3, channels=16, kernel_size=4, strides=2)
+        self.resnet_block2 = ResnetBlock1D(layers=3, channels=32, kernel_size=4, strides=2)
+        self.resnet_block3 = ResnetBlock1D(layers=2, channels=64, kernel_size=4, strides=2)
+        self.end_convolution0 = Conv1D(10, kernel_size=10, activation=leaky_relu, kernel_regularizer=l2_regularizer)
+        self.end_convolution1 = Conv1D(1, [1], activation=sigmoid)
+        self.reshape = Reshape([1])
+
+    def call(self, inputs, training=False, mask=None):
+        """
+        The forward pass of the layer.
+
+        :param inputs: The input tensor.
+        :param training: A boolean specifying if the layer should be in training mode.
+        :param mask: A mask for the input tensor.
+        :return: The output tensor of the layer.
+        """
+        resnet_block0_outputs = self.resnet_block0(inputs)
+        resnet_block1_outputs = self.resnet_block1(resnet_block0_outputs)
+        resnet_block2_outputs = self.resnet_block2(resnet_block1_outputs)
+        resnet_block3_outputs = self.resnet_block3(resnet_block2_outputs)
+        end_convolution0_outputs = self.end_convolution0(resnet_block3_outputs)
+        end_convolution1_outputs = self.end_convolution1(end_convolution0_outputs)
+        outputs = self.reshape(end_convolution1_outputs)
+        return outputs
