@@ -730,8 +730,8 @@ class ResnetBlock1D(Layer):
         :param mask: A mask for the input tensor.
         :return: The output tensor of the layer.
         """
-        inner_output = self.inner_sequential(inputs)
-        skip_output = self.skip_sequential(inputs)
+        inner_output = self.inner_sequential.call(inputs, training=training)
+        skip_output = self.skip_sequential.call(inputs, training=training)
         output = self.activation(add([inner_output, skip_output]))
         return output
 
@@ -760,10 +760,10 @@ class SimpleLightcurveCnnWithSkipConnections(Model):
         :param mask: A mask for the input tensor.
         :return: The output tensor of the layer.
         """
-        resnet_block0_outputs = self.resnet_block0(inputs)
-        resnet_block1_outputs = self.resnet_block1(resnet_block0_outputs)
-        resnet_block2_outputs = self.resnet_block2(resnet_block1_outputs)
-        resnet_block3_outputs = self.resnet_block3(resnet_block2_outputs)
+        resnet_block0_outputs = self.resnet_block0.call(inputs, training=training)
+        resnet_block1_outputs = self.resnet_block1.call(resnet_block0_outputs, training=training)
+        resnet_block2_outputs = self.resnet_block2.call(resnet_block1_outputs, training=training)
+        resnet_block3_outputs = self.resnet_block3.call(resnet_block2_outputs, training=training)
         end_convolution0_outputs = self.end_convolution0(resnet_block3_outputs)
         end_convolution1_outputs = self.end_convolution1(end_convolution0_outputs)
         outputs = self.reshape(end_convolution1_outputs)
