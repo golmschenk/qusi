@@ -13,7 +13,8 @@ it work for another use case.
 
 Install
 -------
-First, you need Python 3.6+ with :code:`pip` installed. Ideally, this Python install is in its own Python virtual
+First, you need Python 3.7 with :code:`pip` installed (most Python 3.6+ versions should work, but some required packages
+may not be available on newer verisons yet). Ideally, this Python install is in its own Python virtual
 environment or Conda environment to make sure this project doesn't interfere with other projects and vice versa. The
 rest of this tutorial assumes the command :code:`python` will run your Python 3 install (on some systems this will
 run Python 2 by default). The same is true for :code:`pip` running the Python 3 related version of :code:`pip`.
