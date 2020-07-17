@@ -81,6 +81,12 @@ class MOANegativeMicrolensingLightcurveCollection(LightcurveCollection):
         return dataset_paths
 
     def load_times_and_fluxes_from_path(self, path: Path) -> (np.ndarray, np.ndarray):
+        """
+        Loads the times and fluxes from a given lightcurve path.
+
+        :param path: The path to the lightcurve file.
+        :return: The times and the fluxes of the lightcurve.
+        """
         lightcurve_dataframe = pd.read_feather(path)
         times = lightcurve_dataframe['HJD'].values
         fluxes = lightcurve_dataframe['flux'].values
