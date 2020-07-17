@@ -1,14 +1,10 @@
 """Code for network architectures."""
-import sys
-from typing import List
-
-import tensorflow as tf
 from tensorflow import sigmoid
 from tensorflow.keras import Sequential, Model, backend
 from tensorflow.keras.layers import Conv3D, MaxPool3D, Flatten, Dense, Reshape, LeakyReLU, Conv1D, BatchNormalization, \
-    LSTM, AveragePooling1D, Layer, Bidirectional, Lambda, Conv2DTranspose
+    LSTM, AveragePooling1D, Layer, Bidirectional, Lambda, Conv2DTranspose, add
 from tensorflow.keras.regularizers import l2
-from tensorflow_core.python.keras.layers import Concatenate
+from tensorflow.keras.layers import Concatenate
 
 
 class SanityCheckNetwork(Sequential):
@@ -736,7 +732,7 @@ class ResnetBlock1D(Layer):
         """
         inner_output = self.inner_sequential(inputs)
         skip_output = self.skip_sequential(inputs)
-        output = self.activation(tf.keras.layers.add([inner_output, skip_output]))
+        output = self.activation(add([inner_output, skip_output]))
         return output
 
 
