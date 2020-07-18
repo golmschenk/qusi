@@ -12,7 +12,7 @@ numpy==1.19.0
 tornado==6.0.4
 astroquery==0.4.1
 pandas==1.0.5
-scipy==1.5.1
+scipy==1.4.1
 requests==2.24.0
 pymc3==3.9.2
 pyarrow==0.17.1
