@@ -63,36 +63,37 @@ class SimpleLightcurveCnn(Model):
                                    kernel_regularizer=l2_regularizer)
         self.convolution1 = Conv1D(8, kernel_size=4, strides=2, activation=leaky_relu,
                                    kernel_regularizer=l2_regularizer)
-        self.batch_norm0 = BatchNormalization(renorm=True)
+        self.batch_norm0 = BatchNormalization()
         self.convolution2 = Conv1D(8, kernel_size=4, strides=2, activation=leaky_relu,
                                    kernel_regularizer=l2_regularizer)
-        self.batch_norm1 = BatchNormalization(renorm=True)
+        self.batch_norm1 = BatchNormalization()
         self.convolution3 = Conv1D(16, kernel_size=4, strides=2, activation=leaky_relu,
                                    kernel_regularizer=l2_regularizer)
-        self.batch_norm2 = BatchNormalization(renorm=True)
+        self.batch_norm2 = BatchNormalization()
         self.convolution4 = Conv1D(16, kernel_size=4, strides=2, activation=leaky_relu,
                                    kernel_regularizer=l2_regularizer)
-        self.batch_norm3 = BatchNormalization(renorm=True)
+        self.batch_norm3 = BatchNormalization()
         self.convolution5 = Conv1D(16, kernel_size=4, strides=2, activation=leaky_relu,
                                    kernel_regularizer=l2_regularizer)
-        self.batch_norm4 = BatchNormalization(renorm=True)
+        self.batch_norm4 = BatchNormalization()
         self.convolution6 = Conv1D(32, kernel_size=4, strides=2, activation=leaky_relu,
                                    kernel_regularizer=l2_regularizer)
-        self.batch_norm5 = BatchNormalization(renorm=True)
+        self.batch_norm5 = BatchNormalization()
         self.convolution7 = Conv1D(32, kernel_size=4, strides=2, activation=leaky_relu,
                                    kernel_regularizer=l2_regularizer)
-        self.batch_norm6 = BatchNormalization(renorm=True)
+        self.batch_norm6 = BatchNormalization()
         self.convolution8 = Conv1D(32, kernel_size=4, strides=2, activation=leaky_relu,
                                    kernel_regularizer=l2_regularizer)
-        self.batch_norm7 = BatchNormalization(renorm=True)
+        self.batch_norm7 = BatchNormalization()
         self.convolution9 = Conv1D(64, kernel_size=4, strides=2, activation=leaky_relu,
                                    kernel_regularizer=l2_regularizer)
-        self.batch_norm8 = BatchNormalization(renorm=True)
+        self.batch_norm8 = BatchNormalization()
         self.convolution10 = Conv1D(64, kernel_size=4, strides=2, activation=leaky_relu,
                                     kernel_regularizer=l2_regularizer)
-        self.batch_norm9 = BatchNormalization(renorm=True)
-        self.convolution11 = Conv1D(10, kernel_size=7, activation=leaky_relu, kernel_regularizer=l2_regularizer)
-        self.convolution12 = Conv1D(1, [1], activation=sigmoid)
+        self.batch_norm9 = BatchNormalization()
+        self.convolution11 = Conv1D(512, kernel_size=7, activation=leaky_relu, kernel_regularizer=l2_regularizer)
+        self.convolution12 = Conv1D(256, kernel_size=1, activation=leaky_relu, kernel_regularizer=l2_regularizer)
+        self.convolution13 = Conv1D(1, [1], activation=sigmoid)
         self.reshape = Reshape([1])
 
     def call(self, inputs, training=False, mask=None):
@@ -128,6 +129,7 @@ class SimpleLightcurveCnn(Model):
         x = self.batch_norm9(x, training=training)
         x = self.convolution11(x, training=training)
         x = self.convolution12(x, training=training)
+        x = self.convolution13(x, training=training)
         x = self.reshape(x, training=training)
         return x
 

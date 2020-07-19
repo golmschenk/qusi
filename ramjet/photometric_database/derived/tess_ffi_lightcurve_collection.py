@@ -3,30 +3,57 @@ Code for a lightcurve collection of the TESS FFI data, as produced by Brian Powe
 """
 import numpy as np
 from pathlib import Path
-from typing import Iterable
+from typing import Union, List
+from peewee import Select
 
+from ramjet.data_interface.metadatabase import MetadatabaseModel
 from ramjet.data_interface.tess_ffi_data_interface import TessFfiDataInterface
-from ramjet.photometric_database.lightcurve_collection import LightcurveCollection
+from ramjet.data_interface.tess_ffi_lightcurve_metadata_manager import TessFfiLightcurveMetadataManager, \
+    TessFfiLightcurveMetadata
+from ramjet.photometric_database.sql_metadata_lightcurve_collection import SqlMetadataLightcurveCollection
 
 
-tess_ffi_data_interface = TessFfiDataInterface()
-
-
-class TessFfiLightcurveCollection(LightcurveCollection):
+class TessFfiLightcurveCollection(SqlMetadataLightcurveCollection):
     """
-    A lightcurve collection of the TESS FFI data, as produced by Brian Powell.
+    A lightcurve collection of the TESS two minute cadence data.
     """
-    def __init__(self):
+    tess_ffi_data_interface = TessFfiDataInterface()
+    tess_ffi_lightcurve_metadata_manger = TessFfiLightcurveMetadataManager()
+
+    def __init__(self, dataset_splits: Union[List[int], None] = None,
+                 magnitude_range: (Union[float, None], Union[float, None]) = (None, None)):
         super().__init__()
+        self.data_directory: Path = Path('data/tess_ffi_lightcurves')
         self.label = 0
+        self.dataset_splits: Union[List[int], None] = dataset_splits
+        self.magnitude_range: (Union[float, None], Union[float, None]) = magnitude_range
 
-    def get_paths(self) -> Iterable[Path]:
+    def get_sql_query(self) -> Select:
         """
-        Gets the paths for the lightcurves in the collection.
+        Gets the SQL query for the database models for the lightcurve collection.
 
-        :return: An iterable of the lightcurve paths.
+        :return: The SQL query.
         """
-        return tess_ffi_data_interface.paths_generator_from_sql_table()
+        query = TessFfiLightcurveMetadata().select().order_by(
+            TessFfiLightcurveMetadata.random_order_uuid)
+        if self.magnitude_range[0] is not None and self.magnitude_range[1] is not None:
+            query = query.where(TessFfiLightcurveMetadata.magnitude.between(*self.magnitude_range))
+        elif self.magnitude_range[0] is not None:
+            query = query.where(TessFfiLightcurveMetadata.magnitude > self.magnitude_range[0])
+        elif self.magnitude_range[1] is not None:
+            query = query.where(TessFfiLightcurveMetadata.magnitude < self.magnitude_range[1])
+        if self.dataset_splits is not None:
+            query = query.where(TessFfiLightcurveMetadata.dataset_split.in_(self.dataset_splits))
+        return query
+
+    def get_path_from_model(self, model: MetadatabaseModel) -> Path:
+        """
+        Gets the lightcurve path from the SQL database model.
+
+        :return: The path to the lightcurve.
+        """
+        return Path(self.tess_ffi_lightcurve_metadata_manger.
+                    lightcurve_root_directory_path.joinpath(model.path))
 
     def load_times_and_fluxes_from_path(self, path: Path) -> (np.ndarray, np.ndarray):
         """
@@ -35,7 +62,7 @@ class TessFfiLightcurveCollection(LightcurveCollection):
         :param path: The path to the lightcurve file.
         :return: The times and the fluxes of the lightcurve.
         """
-        fluxes, times = tess_ffi_data_interface.load_fluxes_and_times_from_pickle_file(path)
+        fluxes, times = self.tess_ffi_data_interface.load_fluxes_and_times_from_pickle_file(path)
         return times, fluxes
 
     def load_times_and_magnifications_from_path(self, path: Path) -> (np.ndarray, np.ndarray):
@@ -45,6 +72,6 @@ class TessFfiLightcurveCollection(LightcurveCollection):
         :param path: The path to the lightcurve/signal file.
         :return: The times and the magnifications of the lightcurve/signal.
         """
-        fluxes, times = tess_ffi_data_interface.load_fluxes_and_times_from_pickle_file(path)
+        fluxes, times = self.tess_ffi_data_interface.load_fluxes_and_times_from_pickle_file(path)
         magnifications, times = self.generate_synthetic_signal_from_real_data(fluxes, times)
         return times, magnifications
