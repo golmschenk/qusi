@@ -121,3 +121,8 @@ class TessFfiLightcurveMetadataManager:
                     yield Path(self.lightcurve_root_directory_path.joinpath(row.path))
             else:
                 break
+
+
+if __name__ == '__main__':
+    manager = TessFfiLightcurveMetadataManager()
+    manager.build_table()
