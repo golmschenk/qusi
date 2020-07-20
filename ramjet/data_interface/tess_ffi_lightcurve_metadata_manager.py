@@ -51,7 +51,7 @@ class TessFfiLightcurveMetadataManager:
         row_dictionary_list = []
         for lightcurve_path, dataset_split in zip(lightcurve_paths, dataset_splits):
             tic_id, sector = self.tess_ffi_data_interface.get_tic_id_and_sector_from_file_path(lightcurve_path)
-            magnitude = self.tess_ffi_data_interface.get_magnitude_from_file(lightcurve_path)
+            magnitude = self.tess_ffi_data_interface.get_floor_magnitude_from_file_path(lightcurve_path)
             relative_path = lightcurve_path.relative_to(self.lightcurve_root_directory_path)
             row_dictionary_list.append({TessFfiLightcurveMetadata.path.name: str(relative_path),
                                         TessFfiLightcurveMetadata.tic_id.name: tic_id,
@@ -66,7 +66,7 @@ class TessFfiLightcurveMetadataManager:
         Populates the SQL database based on the lightcurve files.
         """
         print('Populating the TESS FFI lightcurve meta data table...')
-        path_glob = self.lightcurve_root_directory_path.glob('**/*.pkl')
+        path_glob = self.lightcurve_root_directory_path.glob('tesslcs_sector_*_104/tesslcs_tmag_*_*/tesslc_*.pkl')
         row_count = 0
         batch_paths = []
         batch_dataset_splits = []
