@@ -16,11 +16,12 @@ class MOAPositiveMicrolensingLightcurveCollection(LightcurveCollection):
     A lightcurve collection of the MOA data with previously detected microlensing events.
     """
 
-    def __init__(self, dataset_splits=[0, 1, 2, 3, 4], split_pieces=5):
+    def __init__(self, dataset_splits=None, split_pieces=5):
         super().__init__()
         self.label = 1
-        random.seed(42)
         self.split_pieces = split_pieces
+        if dataset_splits is None:
+            dataset_splits = [1, 2, 3, 4]
         self.dataset_splits = dataset_splits
 
     def get_paths(self) -> Iterable[Path]:
@@ -31,6 +32,7 @@ class MOAPositiveMicrolensingLightcurveCollection(LightcurveCollection):
         """
         paths = Path('/local/data/fugu3/sishitan/ramjet/data/moa_microlensing/positive').glob('*.feather')
         path_list = list(paths)
+        random.seed(42)
         random.shuffle(path_list)
         number_of_samples = len(path_list)
         number_of_samples_per_block = number_of_samples // self.split_pieces
@@ -57,11 +59,12 @@ class MOANegativeMicrolensingLightcurveCollection(LightcurveCollection):
     A lightcurve collection of the MOA data with no microlensing event.
     """
 
-    def __init__(self, dataset_splits=[0, 1, 2, 3, 4], split_pieces=5):
+    def __init__(self, dataset_splits=None, split_pieces=5):
         super().__init__()
         self.label = 0
-        random.seed(42)
         self.split_pieces = split_pieces
+        if dataset_splits is None:
+            dataset_splits = [1, 2, 3, 4]
         self.dataset_splits = dataset_splits
 
     def get_paths(self):
@@ -72,6 +75,7 @@ class MOANegativeMicrolensingLightcurveCollection(LightcurveCollection):
         """
         paths = Path('/local/data/fugu3/sishitan/ramjet/data/moa_microlensing/negative').glob('*.feather')
         path_list = list(paths)
+        random.seed(42)
         random.shuffle(path_list)
         number_of_samples = len(path_list)
         number_of_samples_per_block = number_of_samples // self.split_pieces
