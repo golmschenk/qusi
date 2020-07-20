@@ -52,7 +52,8 @@ class TessFfiLightcurveMetadataManager:
         for lightcurve_path, dataset_split in zip(lightcurve_paths, dataset_splits):
             tic_id, sector = self.tess_ffi_data_interface.get_tic_id_and_sector_from_file_path(lightcurve_path)
             magnitude = self.tess_ffi_data_interface.get_magnitude_from_file(lightcurve_path)
-            row_dictionary_list.append({TessFfiLightcurveMetadata.path.name: str(lightcurve_path),
+            relative_path = lightcurve_path.relative_to(self.lightcurve_root_directory_path)
+            row_dictionary_list.append({TessFfiLightcurveMetadata.path.name: str(relative_path),
                                         TessFfiLightcurveMetadata.tic_id.name: tic_id,
                                         TessFfiLightcurveMetadata.sector.name: sector,
                                         TessFfiLightcurveMetadata.magnitude.name: magnitude,
@@ -65,13 +66,13 @@ class TessFfiLightcurveMetadataManager:
         Populates the SQL database based on the lightcurve files.
         """
         print('Populating the TESS FFI lightcurve meta data table...')
-        path_glob = self.lightcurve_root_directory_path.glob('**/*.fits')
+        path_glob = self.lightcurve_root_directory_path.glob('**/*.pkl')
         row_count = 0
         batch_paths = []
         batch_dataset_splits = []
         with metadatabase.atomic():
             for index, path in enumerate(path_glob):
-                batch_paths.append(path.relative_to(self.lightcurve_root_directory_path))
+                batch_paths.append(path)
                 batch_dataset_splits.append(index % 10)
                 row_count += 1
                 if index % 1000 == 0 and index != 0:
