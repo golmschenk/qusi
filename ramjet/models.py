@@ -92,7 +92,7 @@ class SimpleLightcurveCnn(Model):
                                     kernel_regularizer=l2_regularizer)
         self.batch_norm9 = BatchNormalization()
         self.convolution11 = Conv1D(10, kernel_size=7, activation=leaky_relu, kernel_regularizer=l2_regularizer)
-        self.convolution13 = Conv1D(1, [1], activation=sigmoid)
+        self.convolution12 = Conv1D(1, [1], activation=sigmoid)
         self.reshape = Reshape([1])
 
     def call(self, inputs, training=False, mask=None):
