@@ -10,6 +10,7 @@ class TessFfiStandardTransitDatabase(StandardAndInjectedLightcurveDatabase):
     """
     def __init__(self):
         super().__init__()
+        self.time_steps_per_example = 1296  # 27 days / 30 minutes.
         self.training_standard_lightcurve_collections = [
             TessFfiConfirmedAndCandidateTransitLightcurveCollection(dataset_splits=list(range(8))),
             TessFfiNonTransitLightcurveCollection(dataset_splits=list(range(8)))
@@ -26,7 +27,7 @@ class TessFfiInjectedTransitDatabase(StandardAndInjectedLightcurveDatabase):
     """
     def __init__(self):
         super().__init__()
-        self.out_of_bounds_injection_handling = OutOfBoundsInjectionHandlingMethod.REPEAT_SIGNAL
+        self.time_steps_per_example = 1296  # 27 days / 30 minutes.
         self.training_injectee_lightcurve_collection = TessFfiNonTransitLightcurveCollection(
             dataset_splits=list(range(8)))
         self.training_injectable_lightcurve_collections = [
@@ -45,7 +46,7 @@ class TessFfiStandardAndInjectedTransitDatabase(StandardAndInjectedLightcurveDat
     """
     def __init__(self):
         super().__init__()
-        self.out_of_bounds_injection_handling = OutOfBoundsInjectionHandlingMethod.REPEAT_SIGNAL
+        self.time_steps_per_example = 1296  # 27 days / 30 minutes.
         self.training_standard_lightcurve_collections = [
             TessFfiConfirmedAndCandidateTransitLightcurveCollection(dataset_splits=list(range(8))),
             TessFfiNonTransitLightcurveCollection(dataset_splits=list(range(8)))
