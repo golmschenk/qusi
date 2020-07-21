@@ -2,9 +2,8 @@
 from tensorflow import sigmoid
 from tensorflow.keras import Sequential, Model, backend
 from tensorflow.keras.layers import Conv3D, MaxPool3D, Flatten, Dense, Reshape, LeakyReLU, Conv1D, BatchNormalization, \
-    LSTM, AveragePooling1D, Layer, Bidirectional, Lambda, Conv2DTranspose, add
+    LSTM, AveragePooling1D, Layer, Bidirectional, Lambda, Conv2DTranspose, add, Concatenate, MaxPooling1D
 from tensorflow.keras.regularizers import l2
-from tensorflow.keras.layers import Concatenate
 
 
 class SanityCheckNetwork(Sequential):
@@ -767,4 +766,301 @@ class SimpleLightcurveCnnWithSkipConnections(Model):
         end_convolution0_outputs = self.end_convolution0(resnet_block3_outputs, training=training)
         end_convolution1_outputs = self.end_convolution1(end_convolution0_outputs, training=training)
         outputs = self.reshape(end_convolution1_outputs, training=training)
+        return outputs
+
+class HalfDepthSimpleLightcurveCnn(Model):
+    def __init__(self):
+        super().__init__()
+        leaky_relu = LeakyReLU(alpha=0.01)
+        l2_regularizer = l2(0.001)
+        self.convolution0 = Conv1D(8, kernel_size=4, strides=4, activation=leaky_relu,
+                                   kernel_regularizer=l2_regularizer)
+        self.convolution1 = Conv1D(8, kernel_size=4, strides=4, activation=leaky_relu,
+                                   kernel_regularizer=l2_regularizer)
+        self.batch_norm1 = BatchNormalization()
+        self.convolution2 = Conv1D(16, kernel_size=4, strides=4, activation=leaky_relu,
+                                   kernel_regularizer=l2_regularizer)
+        self.batch_norm2 = BatchNormalization()
+        self.convolution3 = Conv1D(16, kernel_size=4, strides=4, activation=leaky_relu,
+                                   kernel_regularizer=l2_regularizer)
+        self.batch_norm3 = BatchNormalization()
+        self.convolution4 = Conv1D(32, kernel_size=4, strides=4, activation=leaky_relu,
+                                   kernel_regularizer=l2_regularizer)
+        self.batch_norm4 = BatchNormalization()
+        self.convolution5 = Conv1D(10, kernel_size=19, activation=leaky_relu, kernel_regularizer=l2_regularizer)
+        self.convolution6 = Conv1D(1, [1], activation=sigmoid)
+        self.reshape = Reshape([1])
+
+    def call(self, inputs, training=False, mask=None):
+        """
+        The forward pass of the layer.
+
+        :param inputs: The input tensor.
+        :param training: A boolean specifying if the layer should be in training mode.
+        :param mask: A mask for the input tensor.
+        :return: The output tensor of the layer.
+        """
+        x = inputs
+        x0c = self.convolution0(x, training=training)
+        x1c = self.convolution1(x0c, training=training)
+        x1b = self.batch_norm1(x1c, training=training)
+        x2c = self.convolution2(x1b, training=training)
+        x2b = self.batch_norm2(x2c, training=training)
+        x3c = self.convolution3(x2b, training=training)
+        x3b = self.batch_norm3(x3c, training=training)
+        x4c = self.convolution4(x3b, training=training)
+        x4b = self.batch_norm4(x4c, training=training)
+        x5c = self.convolution5(x4b, training=training)
+        x6c = self.convolution6(x5c, training=training)
+        outputs = self.reshape(x6c, training=training)
+        return outputs
+
+
+class QuarterDepthSimpleLightcurveCnn(Model):
+    def __init__(self):
+        super().__init__()
+        leaky_relu = LeakyReLU(alpha=0.01)
+        l2_regularizer = l2(0.001)
+        self.convolution0 = Conv1D(8, kernel_size=10, strides=10, activation=leaky_relu,
+                                   kernel_regularizer=l2_regularizer)
+        self.convolution1 = Conv1D(16, kernel_size=10, strides=10, activation=leaky_relu,
+                                   kernel_regularizer=l2_regularizer)
+        self.batch_norm1 = BatchNormalization()
+        self.convolution2 = Conv1D(32, kernel_size=10, strides=10, activation=leaky_relu,
+                                   kernel_regularizer=l2_regularizer)
+        self.batch_norm2 = BatchNormalization()
+        self.convolution3 = Conv1D(10, kernel_size=20, activation=leaky_relu, kernel_regularizer=l2_regularizer)
+        self.convolution4 = Conv1D(1, [1], activation=sigmoid)
+        self.reshape = Reshape([1])
+
+    def call(self, inputs, training=False, mask=None):
+        """
+        The forward pass of the layer.
+
+        :param inputs: The input tensor.
+        :param training: A boolean specifying if the layer should be in training mode.
+        :param mask: A mask for the input tensor.
+        :return: The output tensor of the layer.
+        """
+        x = inputs
+        x0c = self.convolution0(x, training=training)
+        x1c = self.convolution1(x0c, training=training)
+        x1b = self.batch_norm1(x1c, training=training)
+        x2c = self.convolution2(x1b, training=training)
+        x2b = self.batch_norm2(x2c, training=training)
+        x3c = self.convolution3(x2b, training=training)
+        x4c = self.convolution4(x3c, training=training)
+        outputs = self.reshape(x4c, training=training)
+        return outputs
+
+
+class DoubleDepthSimpleLightcurveCnn(Model):
+    def __init__(self):
+        super().__init__()
+        leaky_relu = LeakyReLU(alpha=0.01)
+        l2_regularizer = l2(0.001)
+        self.convolution0 = Conv1D(8, kernel_size=4, strides=2, activation=leaky_relu,
+                                   kernel_regularizer=l2_regularizer)
+        self.convolution1 = Conv1D(8, kernel_size=4, strides=2, activation=leaky_relu,
+                                   kernel_regularizer=l2_regularizer)
+        self.batch_norm1 = BatchNormalization(renorm=True)
+        self.convolution2 = Conv1D(8, kernel_size=4, strides=1, activation=leaky_relu,
+                                   kernel_regularizer=l2_regularizer)
+        self.batch_norm2 = BatchNormalization(renorm=True)
+        self.convolution3 = Conv1D(8, kernel_size=4, strides=2, activation=leaky_relu,
+                                   kernel_regularizer=l2_regularizer)
+        self.batch_norm3 = BatchNormalization(renorm=True)
+        self.convolution4 = Conv1D(8, kernel_size=4, strides=1, activation=leaky_relu,
+                                   kernel_regularizer=l2_regularizer)
+        self.batch_norm4 = BatchNormalization(renorm=True)
+        self.convolution5 = Conv1D(16, kernel_size=4, strides=2, activation=leaky_relu,
+                                   kernel_regularizer=l2_regularizer)
+        self.batch_norm5 = BatchNormalization(renorm=True)
+        self.convolution6 = Conv1D(16, kernel_size=4, strides=1, activation=leaky_relu,
+                                   kernel_regularizer=l2_regularizer)
+        self.batch_norm6 = BatchNormalization(renorm=True)
+        self.convolution7 = Conv1D(16, kernel_size=4, strides=2, activation=leaky_relu,
+                                   kernel_regularizer=l2_regularizer)
+        self.batch_norm7 = BatchNormalization(renorm=True)
+        self.convolution8 = Conv1D(16, kernel_size=4, strides=1, activation=leaky_relu,
+                                   kernel_regularizer=l2_regularizer)
+        self.batch_norm8 = BatchNormalization(renorm=True)
+        self.convolution9 = Conv1D(16, kernel_size=4, activation=leaky_relu, strides=2,
+                                   kernel_regularizer=l2_regularizer)
+        self.batch_norm9 = BatchNormalization(renorm=True)
+        self.convolution10 = Conv1D(16, kernel_size=4, strides=1, activation=leaky_relu,
+                                   kernel_regularizer=l2_regularizer)
+        self.batch_norm10 = BatchNormalization(renorm=True)
+        self.convolution11 = Conv1D(32, kernel_size=4, activation=leaky_relu, strides=2,
+                                   kernel_regularizer=l2_regularizer)
+        self.batch_norm11 = BatchNormalization(renorm=True)
+        self.convolution12 = Conv1D(32, kernel_size=4, strides=1, activation=leaky_relu,
+                                   kernel_regularizer=l2_regularizer)
+        self.batch_norm12 = BatchNormalization(renorm=True)
+        self.convolution13 = Conv1D(32, kernel_size=4, activation=leaky_relu, strides=2,
+                                   kernel_regularizer=l2_regularizer)
+        self.batch_norm13 = BatchNormalization(renorm=True)
+        self.convolution14 = Conv1D(32, kernel_size=4, strides=1, activation=leaky_relu,
+                                   kernel_regularizer=l2_regularizer)
+        self.batch_norm14 = BatchNormalization(renorm=True)
+        self.convolution15 = Conv1D(32, kernel_size=4, activation=leaky_relu, strides=2,
+                                   kernel_regularizer=l2_regularizer)
+        self.batch_norm15 = BatchNormalization(renorm=True)
+        self.convolution16 = Conv1D(32, kernel_size=4, strides=1, activation=leaky_relu,
+                                   kernel_regularizer=l2_regularizer)
+        self.batch_norm16 = BatchNormalization(renorm=True)
+        self.convolution17 = Conv1D(64, kernel_size=4, activation=leaky_relu, strides=2,
+                                   kernel_regularizer=l2_regularizer)
+        self.batch_norm17 = BatchNormalization(renorm=True)
+        self.convolution18 = Conv1D(64, kernel_size=4, strides=1, activation=leaky_relu,
+                                   kernel_regularizer=l2_regularizer)
+        self.batch_norm18 = BatchNormalization(renorm=True)
+        self.convolution19 = Conv1D(64, kernel_size=4, activation=leaky_relu, strides=2,
+                                    kernel_regularizer=l2_regularizer)
+        self.batch_norm19 = BatchNormalization(renorm=True)
+        self.convolution20 = Conv1D(10, kernel_size=4, activation=leaky_relu, kernel_regularizer=l2_regularizer)
+        self.convolution21 = Conv1D(1, [1], activation=sigmoid)
+        self.reshape = Reshape([1])
+
+    def call(self, inputs, training=False, mask=None):
+        """
+        The forward pass of the layer.
+
+        :param inputs: The input tensor.
+        :param training: A boolean specifying if the layer should be in training mode.
+        :param mask: A mask for the input tensor.
+        :return: The output tensor of the layer.
+        """
+        x = inputs
+        x = self.convolution0(x, training=training)
+        x = self.convolution1(x, training=training)
+        x = self.batch_norm1(x, training=training)
+        x = self.convolution2(x, training=training)
+        x = self.batch_norm2(x, training=training)
+        x = self.convolution3(x, training=training)
+        x = self.batch_norm3(x, training=training)
+        x = self.convolution4(x, training=training)
+        x = self.batch_norm4(x, training=training)
+        x = self.convolution5(x, training=training)
+        x = self.batch_norm5(x, training=training)
+        x = self.convolution6(x, training=training)
+        x = self.batch_norm6(x, training=training)
+        x = self.convolution7(x, training=training)
+        x = self.batch_norm7(x, training=training)
+        x = self.convolution8(x, training=training)
+        x = self.batch_norm8(x, training=training)
+        x = self.convolution9(x, training=training)
+        x = self.batch_norm9(x, training=training)
+        x = self.convolution10(x, training=training)
+        x = self.batch_norm10(x, training=training)
+        x = self.convolution11(x, training=training)
+        x = self.batch_norm11(x, training=training)
+        x = self.convolution12(x, training=training)
+        x = self.batch_norm12(x, training=training)
+        x = self.convolution13(x, training=training)
+        x = self.batch_norm13(x, training=training)
+        x = self.convolution14(x, training=training)
+        x = self.batch_norm14(x, training=training)
+        x = self.convolution15(x, training=training)
+        x = self.batch_norm15(x, training=training)
+        x = self.convolution16(x, training=training)
+        x = self.batch_norm16(x, training=training)
+        x = self.convolution17(x, training=training)
+        x = self.batch_norm17(x, training=training)
+        x = self.convolution18(x, training=training)
+        x = self.batch_norm18(x, training=training)
+        x = self.convolution19(x, training=training)
+        x = self.batch_norm19(x, training=training)
+        x = self.convolution20(x, training=training)
+        x = self.convolution21(x, training=training)
+        x = self.reshape(x, training=training)
+        return x
+
+class MiniDepthSimpleLightcurveCnn(Model):
+    def __init__(self):
+        super().__init__()
+        leaky_relu = LeakyReLU(alpha=0.01)
+        l2_regularizer = l2(0.001)
+        self.convolution0 = Conv1D(8, kernel_size=100, strides=100, activation=leaky_relu,
+                                   kernel_regularizer=l2_regularizer)
+        self.batch_norm0 = BatchNormalization()
+        self.convolution1 = Conv1D(10, kernel_size=200, activation=leaky_relu, kernel_regularizer=l2_regularizer)
+        self.convolution2 = Conv1D(1, [1], activation=sigmoid)
+        self.reshape = Reshape([1])
+
+    def call(self, inputs, training=False, mask=None):
+        """
+        The forward pass of the layer.
+
+        :param inputs: The input tensor.
+        :param training: A boolean specifying if the layer should be in training mode.
+        :param mask: A mask for the input tensor.
+        :return: The output tensor of the layer.
+        """
+        x = inputs
+        x = self.convolution0(x, training=training)
+        x = self.batch_norm0(x, training=training)
+        x = self.convolution1(x, training=training)
+        x = self.convolution2(x, training=training)
+        outputs = self.reshape(x, training=training)
+        return outputs
+
+
+class ConvolutionPoolingBatchNormalizationBlock(Layer):
+    def __init__(self, filters: int, kernel_size: int, pooling_size: int):
+        super().__init__()
+        leaky_relu = LeakyReLU(alpha=0.01)
+        l2_regularizer = l2(0.001)
+        self.convolution = Conv1D(filters, kernel_size=kernel_size, activation=leaky_relu,
+                                  kernel_regularizer=l2_regularizer)
+        self.max_pooling = MaxPooling1D(pool_size=pooling_size)
+        self.batch_normalization = BatchNormalization()
+
+    def call(self, inputs, training=False, mask=None):
+        """
+        The forward pass of the layer.
+
+        :param inputs: The input tensor.
+        :param training: A boolean specifying if the layer should be in training mode.
+        :param mask: A mask for the input tensor.
+        :return: The output tensor of the layer.
+        """
+        convolution_output = self.convolution(inputs, training=training)
+        max_pooling_output = self.max_pooling(convolution_output, training=training)
+        batch_normalization_output = self.batch_normalization(max_pooling_output, training=training)
+        return batch_normalization_output
+
+
+class SimplePoolingLightcurveCnn(Model):
+    def __init__(self):
+        super().__init__()
+        leaky_relu = LeakyReLU(alpha=0.01)
+        l2_regularizer = l2(0.001)
+        self.block0 = ConvolutionPoolingBatchNormalizationBlock(filters=4, kernel_size=3, pooling_size=5)
+        self.block1 = ConvolutionPoolingBatchNormalizationBlock(filters=8, kernel_size=3, pooling_size=5)
+        self.block2 = ConvolutionPoolingBatchNormalizationBlock(filters=16, kernel_size=3, pooling_size=5)
+        self.block3 = ConvolutionPoolingBatchNormalizationBlock(filters=32, kernel_size=3, pooling_size=10)
+        self.dense0 = Conv1D(20, kernel_size=15, activation=leaky_relu, kernel_regularizer=l2_regularizer)
+        self.dense1 = Conv1D(50, kernel_size=1, activation=leaky_relu, kernel_regularizer=l2_regularizer)
+        self.dense2 = Conv1D(1, kernel_size=1, activation=sigmoid)
+        self.reshape = Reshape([1])
+
+    def call(self, inputs, training=False, mask=None):
+        """
+        The forward pass of the layer.
+
+        :param inputs: The input tensor.
+        :param training: A boolean specifying if the layer should be in training mode.
+        :param mask: A mask for the input tensor.
+        :return: The output tensor of the layer.
+        """
+        x = inputs
+        x = self.block0(x)
+        x = self.block1(x)
+        x = self.block2(x)
+        x = self.block3(x)
+        x = self.dense0(x)
+        x = self.dense1(x)
+        x = self.dense2(x)
+        outputs = self.reshape(x, training=training)
         return outputs

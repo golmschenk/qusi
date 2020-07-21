@@ -3,7 +3,8 @@ Code for the the metadatabase.
 """
 from peewee import Model, SqliteDatabase
 
-metadatabase = SqliteDatabase('data/metadatabase.sqlite3', pragmas={'journal_mode': 'wal'})
+metadatabase = SqliteDatabase('data/metadatabase.sqlite3',
+                              pragmas={'journal_mode': 'wal'})
 
 
 def convert_class_to_table_name(model_class: Model):
