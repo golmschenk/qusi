@@ -11,7 +11,7 @@ from ramjet.photometric_database.derived.tess_two_minute_cadence_lightcurve_coll
 from ramjet.photometric_database.derived.tess_two_minute_cadence_transit_databases import \
     TessTwoMinuteCadenceStandardTransitDatabase
 from ramjet.analysis.model_loader import get_latest_log_directory
-from ramjet.models import SimpleLightcurveCnn
+from ramjet.basic_models import SimpleLightcurveCnn
 
 log_name = get_latest_log_directory(logs_directory='logs')  # Uses the latest model in the log directory.
 # log_name = 'logs/baseline YYYY-MM-DD-hh-mm-ss'  # Specify the path to the model to use.
