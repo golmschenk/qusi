@@ -43,7 +43,7 @@ run:
 
 .. code-block:: bash
 
-    python -m ramjet.photometric_database.tutorial.quick_start
+    python -m ramjet.photometric_database.setup.quick_start
 
 This download will take a while and will download ~25GB of data.
 
