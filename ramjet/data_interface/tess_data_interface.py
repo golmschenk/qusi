@@ -52,12 +52,15 @@ class TessDataInterface:
     def __init__(self):
         Observations.TIMEOUT = 2000
         Observations.PAGESIZE = 3000
-        Observations._portal_api_connection.TIMEOUT = 2000
-        Observations._portal_api_connection.PAGESIZE = 3000
         Catalogs.TIMEOUT = 2000
         Catalogs.PAGESIZE = 3000
-        Catalogs._portal_api_connection.TIMEOUT = 2000
-        Catalogs._portal_api_connection.PAGESIZE = 3000
+        try:  # Temporary fix for astroquery's update of timeout and pagesize locations.
+            Observations._portal_api_connection.TIMEOUT = 2000
+            Observations._portal_api_connection.PAGESIZE = 3000
+            Catalogs._portal_api_connection.TIMEOUT = 2000
+            Catalogs._portal_api_connection.PAGESIZE = 3000
+        except AttributeError:
+            pass
         self.mast_input_query_chunk_size = 1000
 
     def get_all_tess_time_series_observations(self, tic_id: Union[int, List[int]] = None) -> pd.DataFrame:
