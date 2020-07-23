@@ -482,7 +482,6 @@ class TessDataInterface:
         single_sector_observations = self.add_sector_column_to_single_sector_observations(single_sector_observations)
         return sorted(single_sector_observations['Sector'].unique())
 
-
     def get_all_single_sector_observations(self, tic_ids: List[int] = None) -> pd.DataFrame:
         """
         Gets the data frame containing all the single sector observations, with TIC ID and sector columns.
@@ -540,8 +539,8 @@ class TessDataInterface:
 if __name__ == '__main__':
     tess_data_interface = TessDataInterface()
     if len(sys.argv) > 1:
-        limit = int(sys.argv[1])
+        limit_ = int(sys.argv[1])
     else:
-        limit = None
+        limit_ = None
     tess_data_interface.download_two_minute_cadence_lightcurves(Path('data/tess_two_minute_cadence_lightcurves'),
-                                                                limit=limit)
+                                                                limit=limit_)
