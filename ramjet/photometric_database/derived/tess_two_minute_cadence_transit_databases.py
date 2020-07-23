@@ -1,3 +1,5 @@
+from ramjet.photometric_database.derived.tess_two_minute_cadence_lightcurve_collection import \
+    TessTwoMinuteCadenceTargetDatasetSplitLightcurveCollection
 from ramjet.photometric_database.derived.tess_two_minute_cadence_transit_lightcurve_collections import \
     TessTwoMinuteCadenceNonTransitLightcurveCollection, \
     TessTwoMinuteCadenceConfirmedAndCandidateTransitLightcurveCollection
@@ -19,6 +21,8 @@ class TessTwoMinuteCadenceStandardTransitDatabase(StandardAndInjectedLightcurveD
             TessTwoMinuteCadenceConfirmedAndCandidateTransitLightcurveCollection(dataset_splits=[8]),
             TessTwoMinuteCadenceNonTransitLightcurveCollection(dataset_splits=[8])
         ]
+        self.inference_lightcurve_collection = TessTwoMinuteCadenceTargetDatasetSplitLightcurveCollection(
+            dataset_splits=[9])
 
 
 class TessTwoMinuteCadenceInjectedTransitDatabase(StandardAndInjectedLightcurveDatabase):
@@ -38,11 +42,13 @@ class TessTwoMinuteCadenceInjectedTransitDatabase(StandardAndInjectedLightcurveD
             TessTwoMinuteCadenceConfirmedAndCandidateTransitLightcurveCollection(dataset_splits=[8]),
             TessTwoMinuteCadenceNonTransitLightcurveCollection(dataset_splits=[8])
         ]
+        self.inference_lightcurve_collection = TessTwoMinuteCadenceTargetDatasetSplitLightcurveCollection(
+            dataset_splits=[9])
 
 
 class TessTwoMinuteCadenceStandardAndInjectedTransitDatabase(StandardAndInjectedLightcurveDatabase):
     """
-    A database using positive and negative transit lightcurves injected into negative lightcurves.
+    A database using standard positive and negative transit lightcurves and positives injected into negatives.
     """
     def __init__(self):
         super().__init__()
@@ -61,3 +67,5 @@ class TessTwoMinuteCadenceStandardAndInjectedTransitDatabase(StandardAndInjected
             TessTwoMinuteCadenceConfirmedAndCandidateTransitLightcurveCollection(dataset_splits=[8]),
             TessTwoMinuteCadenceNonTransitLightcurveCollection(dataset_splits=[8])
         ]
+        self.inference_lightcurve_collection = TessTwoMinuteCadenceTargetDatasetSplitLightcurveCollection(
+            dataset_splits=[9])

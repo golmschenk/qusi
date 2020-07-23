@@ -41,6 +41,7 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         self.validation_standard_lightcurve_collections: List[LightcurveCollection] = []
         self.validation_injectee_lightcurve_collection: Union[LightcurveCollection, None] = None
         self.validation_injectable_lightcurve_collections: List[LightcurveCollection] = []
+        self.inference_lightcurve_collection: Union[LightcurveCollection, None] = None
         self.shuffle_buffer_size = 10000
         self.time_steps_per_example = 20000
         self.out_of_bounds_injection_handling: OutOfBoundsInjectionHandlingMethod = \
@@ -406,3 +407,16 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
 
         flat_mapped_dataset = zipped_dataset.flat_map(flat_map_interspersing_function)
         return flat_mapped_dataset
+
+    def generate_inference_dataset(self):
+        """
+        Generates the dataset to infer over.
+
+        :return: The inference dataset.
+        """
+        lightcurve_collection = self.inference_lightcurve_collection
+        example_paths_dataset = self.generate_paths_dataset_from_lightcurve_collection(lightcurve_collection)
+        examples_dataset = self.generate_infer_path_and_lightcurve_dataset(
+            example_paths_dataset, lightcurve_collection.load_times_and_fluxes_from_path)
+        batch_dataset = examples_dataset.batch(self.batch_size).prefetch(5)
+        return batch_dataset
