@@ -452,7 +452,7 @@ class TessDataInterface:
         :param save_directory: The directory to save the lightcurves to.
         :param limit: Limits the number of lightcurves downloaded. Default of None will download all lightcurves.
         """
-        print(f'Starting download of all 2-minute cadence lightcurves to directory `{save_directory}`.')
+        print(f'Starting download of 2-minute cadence lightcurves to directory `{save_directory}`.')
         save_directory.mkdir(parents=True, exist_ok=True)
         print(f'Retrieving observations list from MAST...')
         single_sector_observations = self.get_all_single_sector_observations()
