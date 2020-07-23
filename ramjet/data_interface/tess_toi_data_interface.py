@@ -1,3 +1,4 @@
+import warnings
 from enum import Enum
 from pathlib import Path
 from typing import Union
@@ -42,7 +43,10 @@ class TessToiDataInterface:
         :return: The TOI dispositions data frame.
         """
         if self.toi_dispositions_ is None:
-            self.update_toi_dispositions_file()
+            try:
+                self.update_toi_dispositions_file()
+            except requests.exceptions.ConnectionError:
+                warnings.warn('Unable to connect to update TOI file. Attempting to use existing file...')
             self.toi_dispositions_ = self.load_toi_dispositions_in_project_format()
         return self.toi_dispositions_
 
@@ -64,7 +68,10 @@ class TessToiDataInterface:
         :return: The CTOI dispositions data frame.
         """
         if self.ctoi_dispositions_ is None:
-            self.update_ctoi_dispositions_file()
+            try:
+                self.update_ctoi_dispositions_file()
+            except requests.exceptions.ConnectionError:
+                warnings.warn('Unable to connect to update TOI file. Attempting to use existing file...')
             self.ctoi_dispositions_ = self.load_ctoi_dispositions_in_project_format()
         return self.ctoi_dispositions_
 
