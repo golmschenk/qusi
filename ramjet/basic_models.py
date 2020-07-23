@@ -506,6 +506,10 @@ class ConvolutionalLstm(Model):
 
 
 class ConvolutionalLstmMeanFinal(Model):
+    """
+    A simple convolutional LSTM that does not reduce to a final value, but instead takes the average of the final
+    outputs.
+    """
 
     def __init__(self):
         super().__init__()
@@ -698,6 +702,7 @@ class SimpleLightcurveCnnWithLstmLayers(Model):
 
 
 class ResnetBlock1D(Layer):
+    """A 1D ResNet block."""
     def __init__(self, layers: int, channels: int, kernel_size: int, strides=2):
         super().__init__()
         self.layers: int = layers
@@ -769,6 +774,7 @@ class SimpleLightcurveCnnWithSkipConnections(Model):
         return outputs
 
 class HalfDepthSimpleLightcurveCnn(Model):
+    """A simple 1D CNN for lightcurves."""
     def __init__(self):
         super().__init__()
         leaky_relu = LeakyReLU(alpha=0.01)
@@ -817,6 +823,7 @@ class HalfDepthSimpleLightcurveCnn(Model):
 
 
 class QuarterDepthSimpleLightcurveCnn(Model):
+    """A simple 1D CNN for lightcurves."""
     def __init__(self):
         super().__init__()
         leaky_relu = LeakyReLU(alpha=0.01)
@@ -855,6 +862,7 @@ class QuarterDepthSimpleLightcurveCnn(Model):
 
 
 class DoubleDepthSimpleLightcurveCnn(Model):
+    """A simple 1D CNN for lightcurves."""
     def __init__(self):
         super().__init__()
         leaky_relu = LeakyReLU(alpha=0.01)
@@ -977,6 +985,7 @@ class DoubleDepthSimpleLightcurveCnn(Model):
         return x
 
 class MiniDepthSimpleLightcurveCnn(Model):
+    """A simple 1D CNN for lightcurves."""
     def __init__(self):
         super().__init__()
         leaky_relu = LeakyReLU(alpha=0.01)
@@ -1007,6 +1016,7 @@ class MiniDepthSimpleLightcurveCnn(Model):
 
 
 class ConvolutionPoolingBatchNormalizationBlock(Layer):
+    """A block containing a convolution, then a max pooling, then a batch normalization."""
     def __init__(self, filters: int, kernel_size: int, pooling_size: int):
         super().__init__()
         leaky_relu = LeakyReLU(alpha=0.01)
@@ -1032,6 +1042,7 @@ class ConvolutionPoolingBatchNormalizationBlock(Layer):
 
 
 class SimplePoolingLightcurveCnn(Model):
+    """A simple CNN using max pooling to reduce the time dimension."""
     def __init__(self):
         super().__init__()
         leaky_relu = LeakyReLU(alpha=0.01)
@@ -1066,6 +1077,7 @@ class SimplePoolingLightcurveCnn(Model):
         return outputs
 
 class SimplePoolingLightcurveCnn2(Model):
+    """A simple CNN using max pooling to reduce the time dimension."""
     def __init__(self):
         super().__init__()
         leaky_relu = LeakyReLU(alpha=0.01)
@@ -1102,6 +1114,7 @@ class SimplePoolingLightcurveCnn2(Model):
         return outputs
 
 class FfiSimplePoolingLightcurveCnn2(Model):
+    """A simple CNN using max pooling to reduce the time dimension."""
     def __init__(self):
         super().__init__()
         leaky_relu = LeakyReLU(alpha=0.01)
