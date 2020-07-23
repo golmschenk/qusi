@@ -100,7 +100,7 @@ like:
     path_to_lightcurve = ''  # Replace this string with the path to the lightcurve.
     tess_data_interface.show_lightcurve(path_to_lightcurve)
 
-:code:`ramjet` also provides a quick way to view any lightcurve available on MAST online using:
+:code:`ramjet` also provides a quick way to download and view any lightcurve available on MAST online using:
 
 .. code-block:: python
 

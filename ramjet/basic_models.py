@@ -1064,3 +1064,75 @@ class SimplePoolingLightcurveCnn(Model):
         x = self.dense2(x)
         outputs = self.reshape(x, training=training)
         return outputs
+
+class SimplePoolingLightcurveCnn2(Model):
+    def __init__(self):
+        super().__init__()
+        leaky_relu = LeakyReLU(alpha=0.01)
+        l2_regularizer = l2(0.001)
+        self.block0 = ConvolutionPoolingBatchNormalizationBlock(filters=4, kernel_size=3, pooling_size=4)
+        self.block1 = ConvolutionPoolingBatchNormalizationBlock(filters=8, kernel_size=3, pooling_size=4)
+        self.block2 = ConvolutionPoolingBatchNormalizationBlock(filters=16, kernel_size=3, pooling_size=4)
+        self.block3 = ConvolutionPoolingBatchNormalizationBlock(filters=32, kernel_size=3, pooling_size=5)
+        self.block4 = ConvolutionPoolingBatchNormalizationBlock(filters=64, kernel_size=3, pooling_size=5)
+        self.dense0 = Conv1D(20, kernel_size=11, activation=leaky_relu, kernel_regularizer=l2_regularizer)
+        self.dense1 = Conv1D(50, kernel_size=1, activation=leaky_relu, kernel_regularizer=l2_regularizer)
+        self.dense2 = Conv1D(1, kernel_size=1, activation=sigmoid)
+        self.reshape = Reshape([1])
+
+    def call(self, inputs, training=False, mask=None):
+        """
+        The forward pass of the layer.
+
+        :param inputs: The input tensor.
+        :param training: A boolean specifying if the layer should be in training mode.
+        :param mask: A mask for the input tensor.
+        :return: The output tensor of the layer.
+        """
+        x = inputs
+        x = self.block0(x)
+        x = self.block1(x)
+        x = self.block2(x)
+        x = self.block3(x)
+        x = self.block4(x)
+        x = self.dense0(x)
+        x = self.dense1(x)
+        x = self.dense2(x)
+        outputs = self.reshape(x, training=training)
+        return outputs
+
+class FfiSimplePoolingLightcurveCnn2(Model):
+    def __init__(self):
+        super().__init__()
+        leaky_relu = LeakyReLU(alpha=0.01)
+        l2_regularizer = l2(0.001)
+        self.block0 = ConvolutionPoolingBatchNormalizationBlock(filters=4, kernel_size=3, pooling_size=2)
+        self.block1 = ConvolutionPoolingBatchNormalizationBlock(filters=8, kernel_size=3, pooling_size=2)
+        self.block2 = ConvolutionPoolingBatchNormalizationBlock(filters=16, kernel_size=3, pooling_size=3)
+        self.block3 = ConvolutionPoolingBatchNormalizationBlock(filters=32, kernel_size=3, pooling_size=3)
+        self.block4 = ConvolutionPoolingBatchNormalizationBlock(filters=64, kernel_size=3, pooling_size=3)
+        self.dense0 = Conv1D(20, kernel_size=10, activation=leaky_relu, kernel_regularizer=l2_regularizer)
+        self.dense1 = Conv1D(50, kernel_size=1, activation=leaky_relu, kernel_regularizer=l2_regularizer)
+        self.dense2 = Conv1D(1, kernel_size=1, activation=sigmoid)
+        self.reshape = Reshape([1])
+
+    def call(self, inputs, training=False, mask=None):
+        """
+        The forward pass of the layer.
+
+        :param inputs: The input tensor.
+        :param training: A boolean specifying if the layer should be in training mode.
+        :param mask: A mask for the input tensor.
+        :return: The output tensor of the layer.
+        """
+        x = inputs
+        x = self.block0(x)
+        x = self.block1(x)
+        x = self.block2(x)
+        x = self.block3(x)
+        x = self.block4(x)
+        x = self.dense0(x)
+        x = self.dense1(x)
+        x = self.dense2(x)
+        outputs = self.reshape(x, training=training)
+        return outputs
