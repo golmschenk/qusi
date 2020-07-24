@@ -27,7 +27,9 @@ class TessFfiLightcurveMetadata(MetadatabaseModel):
         indexes = (
             (('tic_id', 'sector'), True),  # Ensures TIC ID and sector entry is unique.
             (('dataset_split', 'random_order_uuid'), False),  # Useful for training data split with random order.
-            (('magnitude', 'dataset_split', 'random_order_uuid'), False)  # Common training selection order.
+            (('magnitude', 'dataset_split', 'random_order_uuid'), False),  # Common training selection order.
+            (('dataset_split', 'tic_id', 'random_order_uuid'), False),  # Common training selection order.
+            (('magnitude', 'dataset_split', 'tic_id', 'random_order_uuid'), False)  # Common training selection order.
         )
 
 

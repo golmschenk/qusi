@@ -25,6 +25,12 @@ class TessTransitMetadata(MetadatabaseModel):
     tic_id = IntegerField(index=True, unique=True)
     disposition = CharField(index=True, choices=Disposition)
 
+    class Meta:
+        """Schema meta data for the model."""
+        indexes = (
+            (('disposition', 'tic_id'), False),
+        )
+
 
 class TessTransitMetadataManager:
     """
