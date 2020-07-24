@@ -1,7 +1,7 @@
 """
 Code for TensorFlow's `Dataset` class which allows for multiprocessing in CPU map functions.
 """
-import multiprocessing
+import pathos.multiprocessing as multiprocessing
 from typing import Callable, Union, List, Tuple
 import signal
 import tensorflow as tf

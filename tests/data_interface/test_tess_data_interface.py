@@ -139,6 +139,18 @@ class TestTessDataInterface:
         assert np.array_equal(times, np.array([5], dtype=np.float32))
 
     @patch.object(ramjet.data_interface.tess_data_interface.fits, 'open')
+    def test_loading_fluxes_and_times_from_fits_with_nans_kept(self, mock_fits_open, tess_data_interface):
+        fits_fluxes = np.array([np.nan, 2, 3], dtype=np.float32)
+        fits_times = np.array([4, 5, np.nan], dtype=np.float32)
+        hdu = Mock(data={'PDCSAP_FLUX': fits_fluxes, 'TIME': fits_times})
+        hdu_list = [None, hdu]  # Lightcurve information is in first extension table in TESS data.
+        mock_fits_open.return_value.__enter__.return_value = hdu_list
+        lightcurve_path = 'path/to/lightcurve'
+        fluxes, times = tess_data_interface.load_fluxes_and_times_from_fits_file(lightcurve_path, remove_nans=False)
+        assert np.allclose(fluxes, np.array([np.nan, 2, 3], dtype=np.float32), equal_nan=True)
+        assert np.allclose(times, np.array([4, 5, np.nan], dtype=np.float32), equal_nan=True)
+
+    @patch.object(ramjet.data_interface.tess_data_interface.fits, 'open')
     def test_can_extract_different_flux_types_from_fits(self, mock_fits_open, tess_data_interface):
         fits_sap_fluxes = np.array([1, 2, 3], dtype=np.float32)
         fits_pdcsap_fluxes = np.array([4, 5, 6], dtype=np.float32)
@@ -152,6 +164,56 @@ class TestTessDataInterface:
                                                                                     TessFluxType.PDCSAP)
         assert np.array_equal(sap_fluxes, fits_sap_fluxes)
         assert np.array_equal(pdcsap_fluxes, fits_pdcsap_fluxes)
+
+    @patch.object(ramjet.data_interface.tess_data_interface.fits, 'open')
+    def test_can_load_fluxes_flux_errors_and_times_from_tess_fits(self, mock_fits_open, tess_data_interface):
+        expected_fluxes = np.array([1, 2, 3], dtype=np.float32)
+        expected_flux_errors = np.array([4, 5, 6], dtype=np.float32)
+        expected_times = np.array([7, 8, 9], dtype=np.float32)
+        hdu = Mock(data={'PDCSAP_FLUX': expected_fluxes, 'PDCSAP_FLUX_ERR': expected_flux_errors,
+                         'TIME': expected_times})
+        hdu_list = [None, hdu]  # Lightcurve information is in first extension table in TESS data.
+        mock_fits_open.return_value.__enter__.return_value = hdu_list
+        lightcurve_path = 'path/to/lightcurve'
+        fluxes, flux_errors, times = tess_data_interface.load_fluxes_flux_errors_and_times_from_fits_file(lightcurve_path)
+        mock_fits_open.assert_called_with(lightcurve_path)
+        assert np.array_equal(fluxes, expected_fluxes)
+        assert np.array_equal(flux_errors, expected_flux_errors)
+        assert np.array_equal(times, expected_times)
+
+    @patch.object(ramjet.data_interface.tess_data_interface.fits, 'open')
+    def test_load_fluxes_flux_errors_and_times_from_tess_fits_removing_nans(self, mock_fits_open, tess_data_interface):
+        expected_fluxes = np.array([1, 2, np.nan], dtype=np.float32)
+        expected_flux_errors = np.array([4, 5, 6], dtype=np.float32)
+        expected_times = np.array([np.nan, 8, 9], dtype=np.float32)
+        hdu = Mock(data={'PDCSAP_FLUX': expected_fluxes, 'PDCSAP_FLUX_ERR': expected_flux_errors,
+                         'TIME': expected_times})
+        hdu_list = [None, hdu]  # Lightcurve information is in first extension table in TESS data.
+        mock_fits_open.return_value.__enter__.return_value = hdu_list
+        lightcurve_path = 'path/to/lightcurve'
+        fluxes, flux_errors, times = tess_data_interface.load_fluxes_flux_errors_and_times_from_fits_file(
+            lightcurve_path)
+        mock_fits_open.assert_called_with(lightcurve_path)
+        assert np.array_equal(fluxes, [2])
+        assert np.array_equal(flux_errors, [5])
+        assert np.array_equal(times, [8])
+
+    @patch.object(ramjet.data_interface.tess_data_interface.fits, 'open')
+    def test_load_fluxes_flux_errors_and_times_from_tess_fits_keeping_nans(self, mock_fits_open, tess_data_interface):
+        expected_fluxes = np.array([1, 2, np.nan], dtype=np.float32)
+        expected_flux_errors = np.array([4, 5, 6], dtype=np.float32)
+        expected_times = np.array([np.nan, 8, 9], dtype=np.float32)
+        hdu = Mock(data={'PDCSAP_FLUX': expected_fluxes, 'PDCSAP_FLUX_ERR': expected_flux_errors,
+                         'TIME': expected_times})
+        hdu_list = [None, hdu]  # Lightcurve information is in first extension table in TESS data.
+        mock_fits_open.return_value.__enter__.return_value = hdu_list
+        lightcurve_path = 'path/to/lightcurve'
+        fluxes, flux_errors, times = tess_data_interface.load_fluxes_flux_errors_and_times_from_fits_file(
+            lightcurve_path, remove_nans=False)
+        mock_fits_open.assert_called_with(lightcurve_path)
+        assert np.allclose(fluxes, expected_fluxes, equal_nan=True)
+        assert np.allclose(flux_errors, expected_flux_errors, equal_nan=True)
+        assert np.allclose(times, expected_times, equal_nan=True)
 
     def test_can_limit_an_observations_query_by_tic_id(self, tess_data_interface, tess_data_interface_module):
         mock_query_result = Table({'a': [1, 2], 'b': [3, 4]})
@@ -192,16 +254,6 @@ class TestTessDataInterface:
         assert variable_data_frame['VarType'].iloc[0] == b'RR'
         assert variable_data_frame['VarType'].iloc[1] == b'SNI'
 
-    def test_can_get_exofop_planet_disposition_for_tic_id(self, tess_data_interface):
-        mock_dispositions = pd.DataFrame({'TIC ID': [231663901, 266980320], 'Disposition': ['KP', 'CP']})
-        tess_data_interface.retrieve_toi_dispositions_from_exofop = Mock(return_value=mock_dispositions)
-        dispositions0 = tess_data_interface.retrieve_exofop_planet_disposition_for_tic_id(tic_id=231663901)
-        assert dispositions0['Disposition'].iloc[0] == 'KP'
-        dispositions1 = tess_data_interface.retrieve_exofop_planet_disposition_for_tic_id(tic_id=266980320)
-        assert dispositions1['Disposition'].iloc[0] == 'CP'
-        dispositions2 = tess_data_interface.retrieve_exofop_planet_disposition_for_tic_id(tic_id=25132999)
-        assert dispositions2.shape[0] == 0
-
     @patch.object(ramjet.data_interface.tess_data_interface.Observations, 'query_criteria')
     def test_can_get_list_of_sectors_target_appears_in(self, mock_query, tess_data_interface):
         mock_query_result = Table(
@@ -236,3 +288,10 @@ class TestTessDataInterface:
             'tess2018319095959-s0005-0000000278956474-0125-s')
         assert tic_id1 == 278956474
         assert sector1 == 5
+
+    def test_can_get_the_tic_row_of_a_target_based_on_tic_id(self, tess_data_interface, tess_data_interface_module):
+        mock_query_result = Table({'ra': [62.2, 62.2], 'dec': [-71.4, -71.4]})
+        tess_data_interface_module.Catalogs.query_criteria = Mock(return_value=mock_query_result)
+        tic_row = tess_data_interface.get_tess_input_catalog_row(tic_id=0)
+        assert tic_row['ra'] == 62.2
+        assert tic_row['dec'] == -71.4

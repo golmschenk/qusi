@@ -1,3 +1,4 @@
+import warnings
 from enum import Enum
 from pathlib import Path
 from typing import Union
@@ -5,13 +6,15 @@ from typing import Union
 import pandas as pd
 import requests
 
+from ramjet.data_interface.tess_data_interface import TessDataInterface
+
+
 class ToiColumns(Enum):
     """
     An enum for the names of the TOI columns for Pandas data frames.
     """
     tic_id = 'TIC ID'
     disposition = 'Disposition'
-    planet_number = 'Planet number'
     transit_epoch__bjd = 'Transit epoch (BJD)'
     transit_period__days = 'Transit period (days)'
     transit_duration = 'Transit duration (hours)'
@@ -22,30 +25,30 @@ class TessToiDataInterface:
     """
     A data interface for working with the TESS table of objects of interest.
     """
-    dispositions_: pd.DataFrame = None
-
     def __init__(self, data_directory='data/tess_toi'):
         self.data_directory = Path(data_directory)
         self.data_directory.mkdir(parents=True, exist_ok=True)
-        self.dispositions_path = self.data_directory.joinpath('toi_dispositions.csv')
+        self.toi_dispositions_path = self.data_directory.joinpath('toi_dispositions.csv')
+        self.ctoi_dispositions_path = self.data_directory.joinpath('ctoi_dispositions.csv')
         self.lightcurves_directory = self.data_directory.joinpath('lightcurves')
+        self.toi_dispositions_: Union[pd.DataFrame, None] = None
+        self.ctoi_dispositions_: Union[pd.DataFrame, None] = None
 
     @property
-    def dispositions(self):
+    def toi_dispositions(self):
         """
-        The TOI dispositions data frame property. Will load as a single class attribute on first access. If the
-        data file does not exists, downloads it first.
+        The TOI dispositions data frame property. Will load as an instance attribute on first access. Updates from
+        ExoFOP on first access.
 
         :return: The TOI dispositions data frame.
         """
-        if self.dispositions_ is None:
-            if not self.dispositions_path.exists():
-                toi_csv_url = 'https://exofop.ipac.caltech.edu/tess/download_toi.php?sort=toi&output=csv'
-                response = requests.get(toi_csv_url)
-                with self.dispositions_path.open('wb') as csv_file:
-                    csv_file.write(response.content)
-            self.dispositions_ = self.load_toi_dispositions_in_project_format()
-        return self.dispositions_
+        if self.toi_dispositions_ is None:
+            try:
+                self.update_toi_dispositions_file()
+            except requests.exceptions.ConnectionError:
+                warnings.warn('Unable to connect to update TOI file. Attempting to use existing file...')
+            self.toi_dispositions_ = self.load_toi_dispositions_in_project_format()
+        return self.toi_dispositions_
 
     def update_toi_dispositions_file(self):
         """
@@ -53,9 +56,33 @@ class TessToiDataInterface:
         """
         toi_csv_url = 'https://exofop.ipac.caltech.edu/tess/download_toi.php?sort=toi&output=csv'
         response = requests.get(toi_csv_url)
-        with self.dispositions_path.open('wb') as csv_file:
+        with self.toi_dispositions_path.open('wb') as csv_file:
             csv_file.write(response.content)
-        self.dispositions_ = self.load_toi_dispositions_in_project_format()
+
+    @property
+    def ctoi_dispositions(self):
+        """
+        The CTOI dispositions data frame property. Will load as an instance attribute on first access. Updates from
+        ExoFOP on first access.
+
+        :return: The CTOI dispositions data frame.
+        """
+        if self.ctoi_dispositions_ is None:
+            try:
+                self.update_ctoi_dispositions_file()
+            except requests.exceptions.ConnectionError:
+                warnings.warn('Unable to connect to update TOI file. Attempting to use existing file...')
+            self.ctoi_dispositions_ = self.load_ctoi_dispositions_in_project_format()
+        return self.ctoi_dispositions_
+
+    def update_ctoi_dispositions_file(self):
+        """
+        Downloads the latest CTOI dispositions file.
+        """
+        ctoi_csv_url = 'https://exofop.ipac.caltech.edu/tess/download_ctoi.php?sort=ctoi&output=csv'
+        response = requests.get(ctoi_csv_url)
+        with self.ctoi_dispositions_path.open('wb') as csv_file:
+            csv_file.write(response.content)
 
     def load_toi_dispositions_in_project_format(self) -> pd.DataFrame:
         """
@@ -63,11 +90,9 @@ class TessToiDataInterface:
 
         :return: The data frame of the TOI dispositions table.
         """
-        columns_to_use = ['TIC ID', 'TFOPWG Disposition', 'Planet Num', 'Epoch (BJD)', 'Period (days)',
-                          'Duration (hours)', 'Sectors']
-        dispositions = pd.read_csv(self.dispositions_path, usecols=columns_to_use)
+        columns_to_use = ['TIC ID', 'TFOPWG Disposition', 'Epoch (BJD)', 'Period (days)', 'Duration (hours)', 'Sectors']
+        dispositions = pd.read_csv(self.toi_dispositions_path, usecols=columns_to_use)
         dispositions.rename(columns={'TFOPWG Disposition': ToiColumns.disposition.value,
-                                     'Planet Num': ToiColumns.planet_number.value,
                                      'Epoch (BJD)': ToiColumns.transit_epoch__bjd.value,
                                      'Period (days)': ToiColumns.transit_period__days.value,
                                      'Duration (hours)': ToiColumns.transit_duration.value,
@@ -79,3 +104,82 @@ class TessToiDataInterface:
         dispositions[ToiColumns.sector.value] = pd.to_numeric(dispositions[ToiColumns.sector.value]
                                                               ).astype(pd.Int64Dtype())
         return dispositions
+
+    def load_ctoi_dispositions_in_project_format(self) -> pd.DataFrame:
+        """
+        Loads the ExoFOP CTOI table information from CSV to a data frame using a project consistent naming scheme.
+
+        :return: The data frame of the CTOI dispositions table.
+        """
+        columns_to_use = ['TIC ID', 'TFOPWG Disposition', 'Midpoint (BJD)', 'Period (days)', 'Duration (hrs)']
+        dispositions = pd.read_csv(self.ctoi_dispositions_path, usecols=columns_to_use)
+        dispositions.rename(columns={'TFOPWG Disposition': ToiColumns.disposition.value,
+                                     'Midpoint (BJD)': ToiColumns.transit_epoch__bjd.value,
+                                     'Period (days)': ToiColumns.transit_period__days.value,
+                                     'Duration (hrs)': ToiColumns.transit_duration.value}, inplace=True)
+        dispositions[ToiColumns.disposition.value] = dispositions[ToiColumns.disposition.value].fillna('')
+        return dispositions
+
+    def retrieve_exofop_toi_and_ctoi_planet_disposition_for_tic_id(self, tic_id: int) -> pd.DataFrame:
+        """
+        Retrieves the ExoFOP disposition information for a given TIC ID from <https://exofop.ipac.caltech.edu/tess/>`_.
+
+        :param tic_id: The TIC ID to get available data for.
+        :return: The disposition data frame.
+        """
+        toi_dispositions = self.toi_dispositions
+        ctoi_dispositions = self.ctoi_dispositions
+        toi_and_coi_dispositions = pd.concat([toi_dispositions, ctoi_dispositions], axis=0, ignore_index=True)
+        tic_target_dispositions = toi_and_coi_dispositions[toi_and_coi_dispositions['TIC ID'] == tic_id]
+        return tic_target_dispositions
+
+    def print_exofop_toi_and_ctoi_planet_dispositions_for_tic_target(self, tic_id):
+        """
+        Prints all ExoFOP disposition information for a given TESS target.
+
+        :param tic_id: The TIC target to for.
+        """
+        dispositions_data_frame = self.retrieve_exofop_toi_and_ctoi_planet_disposition_for_tic_id(tic_id)
+        if dispositions_data_frame.shape[0] == 0:
+            print('No known ExoFOP dispositions found.')
+            return
+        # Use context options to not truncate printed data.
+        with pd.option_context('display.max_rows', None, 'display.max_columns', None, 'display.width', None):
+            print(dispositions_data_frame)
+            
+    def download_exofop_toi_lightcurves_to_directory(self, directory: Path):
+        """
+        Downloads the `ExoFOP database <https://exofop.ipac.caltech.edu/tess/view_toi.php>`_ lightcurve files to the
+        given directory.
+
+        :param directory: The directory to download the lightcurves to. Defaults to the data interface directory.
+        """
+        print("Downloading ExoFOP TOI disposition CSV...")
+        tess_data_interface = TessDataInterface()
+        if isinstance(directory, str):
+            directory = Path(directory)
+        tic_ids = self.toi_dispositions[ToiColumns.tic_id.value].unique()
+        print('Downloading TESS observation list...')
+        single_sector_observations = tess_data_interface.get_all_single_sector_observations(tic_ids)
+        print("Downloading lightcurves which are confirmed or suspected planets in TOI dispositions...")
+        suspected_planet_dispositions = self.toi_dispositions[
+            self.toi_dispositions[ToiColumns.disposition.value] != 'FP']
+        suspected_planet_observations = pd.merge(single_sector_observations, suspected_planet_dispositions, how='inner',
+                                                 on=[ToiColumns.tic_id.value, ToiColumns.sector.value])
+        suspected_planet_data_products = tess_data_interface.get_product_list(suspected_planet_observations)
+        suspected_planet_lightcurve_data_products = suspected_planet_data_products[
+            suspected_planet_data_products['productFilename'].str.endswith('lc.fits')]
+        suspected_planet_download_manifest = tess_data_interface.download_products(
+            suspected_planet_lightcurve_data_products, data_directory=self.data_directory)
+        print(f'Verifying and moving lightcurves to {directory}...')
+        directory.mkdir(parents=True, exist_ok=True)
+        for row_index, row in suspected_planet_download_manifest.iterrows():
+            if row['Status'] == 'COMPLETE':
+                file_path = Path(row['Local Path'])
+                file_path.rename(directory.joinpath(file_path.name))
+
+
+if __name__ == '__main__':
+    tess_toi_data_interface = TessToiDataInterface()
+    tess_toi_data_interface.download_exofop_toi_lightcurves_to_directory(
+        Path('data/tess_two_minute_cadence_lightcurves'))
