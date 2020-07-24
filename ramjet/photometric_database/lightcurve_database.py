@@ -23,6 +23,15 @@ class LightcurveDatabase(ABC):
         self.time_steps_per_example: int
         self.number_of_parallel_processes_per_map = 16
 
+    @property
+    def window_shift(self) -> int:
+        """
+        How much the window shifts for a windowed batch set.
+
+        :return: The window shift size.
+        """
+        return self.batch_size // 10
+
     def log_dataset_file_names(self, dataset: tf.data.Dataset, dataset_name: str):
         """Saves the names of the files used in a dataset to a CSV file in the trail directory."""
         os.makedirs(self.trial_directory, exist_ok=True)
@@ -40,14 +49,28 @@ class LightcurveDatabase(ABC):
             lightcurve /= array_max
         return lightcurve
 
-    @staticmethod
-    def normalize(lightcurve: np.ndarray) -> np.ndarray:
-        """Normalizes light curve using quantile. quantile_10 (10%) at -1 and quantile_90 (90%) at 1.
+    def normalize(self, lightcurve: np.ndarray) -> np.ndarray:
         """
-        quantile_10 = np.percentile(lightcurve, 10)
-        quantile_90 = np.percentile(lightcurve, 90)
-        lightcurve = ((lightcurve - quantile_10) / ((quantile_90 - quantile_10) / 2)) - 1
-        return lightcurve
+        Normalizes the lightcurve.
+
+        :param lightcurve: The lightcurve to normalize.
+        :return: The normalized lightcurve.
+        """
+        return self.normalize_on_percentiles(lightcurve)
+
+    @staticmethod
+    def normalize_on_percentiles(lightcurve: np.ndarray) -> np.ndarray:
+        """
+        Normalizes light curve using percentiles. The 10th percentile is normalized to -1, the 90th to 1.
+        """
+        percentile_10 = np.percentile(lightcurve, 10)
+        percentile_90 = np.percentile(lightcurve, 90)
+        percentile_difference = percentile_90 - percentile_10
+        if percentile_difference == 0:
+            normalized_lightcurve = np.zeros_like(lightcurve)
+        else:
+            normalized_lightcurve = ((lightcurve - percentile_10) / (percentile_difference / 2)) - 1
+        return normalized_lightcurve
 
     @staticmethod
     def shuffle_in_unison(a, b, seed=None):
@@ -174,8 +197,27 @@ class LightcurveDatabase(ABC):
         remainder = np.concatenate(remaining_chunks)
         return extracted_chunk, remainder
 
-    @staticmethod
-    def padded_window_dataset_for_zipped_example_and_label_dataset(dataset: tf.data.Dataset, batch_size: int,
+    def flat_window_zipped_example_and_label_dataset(self, dataset, batch_size, window_shift):
+        """
+        Takes a zipped example and label dataset and repeats examples in a windowed fashion of a given batch size.
+        It is expected that the resulting dataset will subsequently be batched in some fashion by the given batch size.
+
+        :param dataset: The zipped example and label dataset.
+        :param batch_size: The size of the batches to produce.
+        :param window_shift: The shift of the moving window between batches.
+        :return: The flattened window dataset.
+        """
+        examples_dataset = dataset.map(lambda element, _: element)
+        labels_dataset = dataset.map(lambda _, element: element)
+        examples_window_dataset = examples_dataset.window(batch_size, shift=window_shift)
+        examples_unbatched_window_dataset = examples_window_dataset.flat_map(lambda element: element)
+        labels_window_dataset = labels_dataset.window(batch_size, shift=window_shift)
+        labels_unbatched_window_dataset = labels_window_dataset.flat_map(lambda element: element)
+        unbatched_window_dataset = tf.data.Dataset.zip((examples_unbatched_window_dataset,
+                                                        labels_unbatched_window_dataset))
+        return unbatched_window_dataset
+
+    def padded_window_dataset_for_zipped_example_and_label_dataset(self, dataset: tf.data.Dataset, batch_size: int,
                                                                    window_shift: int,
                                                                    padded_shapes: Tuple[List, List]) -> tf.data.Dataset:
         """
@@ -188,18 +230,11 @@ class LightcurveDatabase(ABC):
         :param padded_shapes: The output padded shape.
         :return: The padded window dataset.
         """
-        examples_dataset = dataset.map(lambda element, _: element)
-        labels_dataset = dataset.map(lambda _, element: element)
-        examples_window_dataset = examples_dataset.window(batch_size, shift=window_shift)
-        examples_unbatched_window_dataset = examples_window_dataset.flat_map(lambda element: element)
-        labels_window_dataset = labels_dataset.window(batch_size, shift=window_shift)
-        labels_unbatched_window_dataset = labels_window_dataset.flat_map(lambda element: element)
-        unbatched_window_dataset = tf.data.Dataset.zip((examples_unbatched_window_dataset,
-                                                        labels_unbatched_window_dataset))
+        unbatched_window_dataset = self.flat_window_zipped_example_and_label_dataset(dataset, batch_size,
+                                                                                     window_shift)
         return unbatched_window_dataset.padded_batch(batch_size, padded_shapes=padded_shapes)
 
-    @staticmethod
-    def window_dataset_for_zipped_example_and_label_dataset(dataset: tf.data.Dataset, batch_size: int,
+    def window_dataset_for_zipped_example_and_label_dataset(self, dataset: tf.data.Dataset, batch_size: int,
                                                             window_shift: int) -> tf.data.Dataset:
         """
         Takes a zipped example and label dataset, and converts it to batches, where each batch uses overlapping
@@ -210,14 +245,8 @@ class LightcurveDatabase(ABC):
         :param window_shift: The shift of the moving window between batches.
         :return: The window dataset.
         """
-        examples_dataset = dataset.map(lambda element, _: element)
-        labels_dataset = dataset.map(lambda _, element: element)
-        examples_window_dataset = examples_dataset.window(batch_size, shift=window_shift)
-        examples_unbatched_window_dataset = examples_window_dataset.flat_map(lambda element: element)
-        labels_window_dataset = labels_dataset.window(batch_size, shift=window_shift)
-        labels_unbatched_window_dataset = labels_window_dataset.flat_map(lambda element: element)
-        unbatched_window_dataset = tf.data.Dataset.zip((examples_unbatched_window_dataset,
-                                                        labels_unbatched_window_dataset))
+        unbatched_window_dataset = self.flat_window_zipped_example_and_label_dataset(dataset, batch_size,
+                                                                                     window_shift)
         return unbatched_window_dataset.batch(batch_size)
 
     def clear_data_directory(self):
@@ -250,6 +279,6 @@ class LightcurveDatabase(ABC):
                 resolved_example_paths = list_or_generator_factory()
             else:  # Otherwise, the paths are already a resolved list, and can be directly used.
                 resolved_example_paths = list_or_generator_factory
-            for path_string in map(str, resolved_example_paths):
-                yield path_string
+            for path in resolved_example_paths:
+                yield str(path)
         return tf.data.Dataset.from_generator(paths_to_strings_generator, output_types=tf.string)

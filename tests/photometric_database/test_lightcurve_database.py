@@ -2,7 +2,7 @@
 Tests for the LightcurveDatabase class.
 """
 from pathlib import Path
-from typing import Any, Generator, List
+from typing import Any
 from unittest.mock import Mock, patch
 import numpy as np
 import tensorflow as tf
@@ -135,3 +135,55 @@ class TestLightcurveDatabase:
         paths_dataset = database.paths_dataset_from_list_or_generator_factory(generator_factory)
         assert list(paths_dataset) == ['a', 'b', 'c']
         assert list(paths_dataset) == ['a', 'b', 'c']  # Check new generator rather than old empty one.
+
+    def test_normalization_does_not_invert_lightcurve_shape_when_there_are_negative_values(self, database):
+        unnormalized_positive_lightcurve_fluxes = np.array([10, 20, 30, 25, 15], dtype=np.float32)
+        normalized_positive_lightcurve_fluxes = database.normalize(unnormalized_positive_lightcurve_fluxes)
+        assert normalized_positive_lightcurve_fluxes.argmax() == 2
+        assert normalized_positive_lightcurve_fluxes.argmin() == 0
+        unnormalized_negative_lightcurve_fluxes = np.array([-30, -20, -10, -15, -25], dtype=np.float32)
+        normalized_negative_lightcurve_fluxes = database.normalize(unnormalized_negative_lightcurve_fluxes)
+        assert normalized_negative_lightcurve_fluxes.argmax() == 2
+        assert normalized_negative_lightcurve_fluxes.argmin() == 0
+
+    def test_normalization_brings_values_close_to_negative_one_to_one_range(self, database):
+        epsilon = 0.6
+        unnormalized_positive_lightcurve_fluxes = np.array([10, 20, 30, 20, 10], dtype=np.float32)
+        normalized_positive_lightcurve_fluxes = database.normalize(unnormalized_positive_lightcurve_fluxes)
+        assert (normalized_positive_lightcurve_fluxes > (-1 - epsilon)).all()
+        assert (normalized_positive_lightcurve_fluxes < (1 + epsilon)).all()
+        assert np.min(normalized_positive_lightcurve_fluxes) < (-1 + epsilon)
+        assert np.max(normalized_positive_lightcurve_fluxes) > (1 - epsilon)
+        unnormalized_negative_lightcurve_fluxes = np.array([-30, -20, -10, -20, -30], dtype=np.float32)
+        normalized_negative_lightcurve_fluxes = database.normalize(unnormalized_negative_lightcurve_fluxes)
+        assert (normalized_negative_lightcurve_fluxes > (-1 - epsilon)).all()
+        assert (normalized_negative_lightcurve_fluxes < (1 + epsilon)).all()
+        assert np.min(normalized_negative_lightcurve_fluxes) < (-1 + epsilon)
+        assert np.max(normalized_negative_lightcurve_fluxes) > (1 - epsilon)
+
+    def test_percentile_normalization_gives_exact_results(self, database):
+        unnormalized_lightcurve_fluxes = np.linspace(0, 100, num=101, dtype=np.float32)
+        normalized_lightcurve_fluxes = database.normalize_on_percentiles(unnormalized_lightcurve_fluxes)
+        assert normalized_lightcurve_fluxes[10] == -1
+        assert normalized_lightcurve_fluxes[90] == 1
+
+    def test_percentile_normalization_zeroes_lightcurve_with_all_same_value(self, database):
+        unnormalized_lightcurve_fluxes = np.full(shape=[100], fill_value=50)
+        normalized_lightcurve_fluxes = database.normalize_on_percentiles(unnormalized_lightcurve_fluxes)
+        assert normalized_lightcurve_fluxes[10] == 0
+        assert normalized_lightcurve_fluxes[90] == 0
+
+    def test_window_dataset_for_zipped_example_and_label_dataset_produces_windowed_batches(self, database):
+        example_dataset = tf.data.Dataset.from_tensor_slices([1, 2, 3, 4, 5])
+        label_dataset = tf.data.Dataset.from_tensor_slices([-1, -2, -3, -4, -5])
+        dataset = tf.data.Dataset.zip((example_dataset, label_dataset))
+        windowed_dataset = database.window_dataset_for_zipped_example_and_label_dataset(dataset,
+                                                                                        batch_size=3,
+                                                                                        window_shift=2)
+        windowed_dataset_iterator = iter(windowed_dataset)
+        batch0 = next(windowed_dataset_iterator)
+        assert np.array_equal(batch0[0], [1, 2, 3])
+        assert np.array_equal(batch0[1], [-1, -2, -3])
+        batch1 = next(windowed_dataset_iterator)
+        assert np.array_equal(batch1[0], [3, 4, 5])
+        assert np.array_equal(batch1[1], [-3, -4, -5])

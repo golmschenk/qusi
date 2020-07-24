@@ -5,17 +5,16 @@ Tutorial Summary
 ----------------
 This tutorial will get you started using the RAMjET pipeline to train a neural network to detect exoplanet transit
 events in `TESS <https://tess.mit.edu>`_ data. You will end up with a trained neural network that can be applied to TESS
-lightcurves to predict where transits exist in the lightcurve (if they exist at all). For example, one of the below
-images show an original lightcurve from TESS, and the other shows the true transit locations (in green) as well as what the
-trained neural network predicted (in red). You will be able to produce results similar to this. This tutorial is only intended
+lightcurves to predict if a transit exists in the given lightcurves. This tutorial is only intended
 to get the code working for you for a specific use case. It will *not* teach you how the process works nor how to make
 it work for another use case.
 
-.. image:: quick-start-tutorial/tess-lightcurve-with-transits-and-predictions.png
+.. image:: quick-start-tutorial/tess-lightcurve-with-transits.png
 
 Install
 -------
-First, you need Python 3.6+ with :code:`pip` installed. Ideally, this Python install is in its own Python virtual
+First, you need Python 3.7 with :code:`pip` installed (most Python 3.6+ versions should work, but some required packages
+may not be available on newer verisons yet). Ideally, this Python install is in its own Python virtual
 environment or Conda environment to make sure this project doesn't interfere with other projects and vice versa. The
 rest of this tutorial assumes the command :code:`python` will run your Python 3 install (on some systems this will
 run Python 2 by default). The same is true for :code:`pip` running the Python 3 related version of :code:`pip`.
@@ -44,9 +43,9 @@ run:
 
 .. code-block:: bash
 
-    python -m ramjet.photometric_database.toi_lightcurve_database
+    python -m ramjet.photometric_database.setup.quick_start
 
-This download will take a while and will download ~20GB of data.
+This download will take a while and will download ~25GB of data.
 
 Train the network
 -----------------
@@ -73,18 +72,38 @@ be saved to the log directory.
 
 Using the trained network to make predictions
 ---------------------------------------------
-To make a prediction for a lightcurve like shown above, run:
+To use the network to make predictions over all the lightcurves, run:
 
 .. code-block:: bash
 
     python infer.py
 
-This script will generate a plot of a lightcurve with the network's predictions and save the image to a file in
-the current directory.
+This script will load the latest trained model (from the :code:`logs` directory), and use it make a prediction about
+each of the lightcurves. A number from 0 to 1 is assigned to each lightcurve which states the network's confidence that
+the lightcurve contains a transit event. 0 meaning the network is confident that the lightcurve contains no transit and
+1 meaning the network is confident the lightcurve contains a transit. These predictions will be saved to a file in the
+same log directory where the trained model is kept. By default, only the top 5,000 results are kept. The path to this
+file from the root :code:`ramjet` directory will be
+:code:`logs/baseline YYYY-MM-DD-hh-mm-ss/infer results YYYY-MM-DD-hh-mm-ss.csv`, where the first datetime is when
+the network training was started, and the second datetime is when the inference run was started. The results will be
+sorted with the most likely transit candidates at the stop of the list.
 
-Although the network can make very predictions very quickly, this particular inference script is slowed by several
-factors. In particular, the network initialization (required only once for any number of predictions) and result image
-generation are relatively slow. Additionally, to keep the code simple, the data preprocessing is done synchronously
-with predictions, and the network processes a single lightcurve at a time. Asynchronous data preprocessing and
-predictions on batches of lightcurves leads to significantly faster inference speeds (but less understandable code,
-hence is excluded from this example script).
+Viewing the predictions
+-----------------------
+To directly view one of the lightcurves, :code:`ramjet` provides an quick viewing interface with something
+like:
+
+.. code-block:: python
+
+    from ramjet.data_interface.tess_data_interface import TessDataInterface
+    tess_data_interface = TessDataInterface()
+    path_to_lightcurve = ''  # Replace this string with the path to the lightcurve.
+    tess_data_interface.show_lightcurve(path_to_lightcurve)
+
+:code:`ramjet` also provides a quick way to download and view any lightcurve available on MAST online using:
+
+.. code-block:: python
+
+    from ramjet.data_interface.tess_data_interface import TessDataInterface
+    tess_data_interface = TessDataInterface()
+    tess_data_interface.show_pdcsap_and_sap_comparison_from_mast(tic_id=117979897, sector=5)
