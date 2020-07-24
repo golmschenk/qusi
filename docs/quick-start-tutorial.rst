@@ -13,7 +13,8 @@ it work for another use case.
 
 Install
 -------
-First, you need Python 3.6+ with :code:`pip` installed. Ideally, this Python install is in its own Python virtual
+First, you need Python 3.7 with :code:`pip` installed (most Python 3.6+ versions should work, but some required packages
+may not be available on newer verisons yet). Ideally, this Python install is in its own Python virtual
 environment or Conda environment to make sure this project doesn't interfere with other projects and vice versa. The
 rest of this tutorial assumes the command :code:`python` will run your Python 3 install (on some systems this will
 run Python 2 by default). The same is true for :code:`pip` running the Python 3 related version of :code:`pip`.
@@ -42,10 +43,9 @@ run:
 
 .. code-block:: bash
 
-    python -m ramjet.photometric_database.toi_database
+    python -m ramjet.photometric_database.setup.quick_start
 
-This download will take a while and will download ~25GB of data (the amount of data may change as TESS continues
-producing data).
+This download will take a while and will download ~25GB of data.
 
 Train the network
 -----------------
@@ -82,36 +82,28 @@ This script will load the latest trained model (from the :code:`logs` directory)
 each of the lightcurves. A number from 0 to 1 is assigned to each lightcurve which states the network's confidence that
 the lightcurve contains a transit event. 0 meaning the network is confident that the lightcurve contains no transit and
 1 meaning the network is confident the lightcurve contains a transit. These predictions will be saved to a file in the
-same log directory where the trained model is kept. The path to this file from the root :code:`ramjet` directory will be
-:code:`logs/baseline YYYY-MM-DD-hh-mm-ss/infer results YYYY-MM-DD-hh-mm-ss.feather`, where the first datetime is when
+same log directory where the trained model is kept. By default, only the top 5,000 results are kept. The path to this
+file from the root :code:`ramjet` directory will be
+:code:`logs/baseline YYYY-MM-DD-hh-mm-ss/infer results YYYY-MM-DD-hh-mm-ss.csv`, where the first datetime is when
 the network training was started, and the second datetime is when the inference run was started. The results will be
-sorted with the most likely transit candidates at the stop of the list. A :code:`feather` file is essentially an
-efficient CSV file. Unfortunately, it is not directly human readable. See the next step for viewing the results.
+sorted with the most likely transit candidates at the stop of the list.
 
 Viewing the predictions
 -----------------------
-To view the prediction results, the easiest method is to load the :code:`feather` file into a Pandas dataframe. Open a
-Python console (or add this code to a Python file) in the root :code:`ramjet` project
-directory:
-
-.. code-block:: bash
-
-    import pandas as pd
-    pd.set_option('display.max_colwidth', -1)  # Prevents path display truncating.
-    results_data_frame = pd.load_feather(`logs/baseline YYYY-MM-DD-hh-mm-ss/infer results YYYY-MM-DD-hh-mm-ss.feather`)
-    print(results_data_frame.head(10))
-
-This code will list the top 10 results, including their paths and network prediction confidence. For more ways to
-explore the Pandas data frame, see `Pandas' tutorial on data frames
-<https://pandas.pydata.org/docs/getting_started/intro_tutorials/02_read_write.html#min-tut-02-read-write>`_.
-If you would prefer to have a standard CSV file, you can save the data frame to a CSV using
-:code:`results_data_frame.to_csv('path/to/desired/output/location.csv')`.
-
-Finally, to directly view one of the lightcurves, :code:`ramjet` provides an quick viewing interface with something
+To directly view one of the lightcurves, :code:`ramjet` provides an quick viewing interface with something
 like:
 
 .. code-block:: python
 
     from ramjet.data_interface.tess_data_interface import TessDataInterface
     tess_data_interface = TessDataInterface()
-    tess_data_interface.plot_lightcurve_from_mast(tic_id=117979897, sector=5)
+    path_to_lightcurve = ''  # Replace this string with the path to the lightcurve.
+    tess_data_interface.show_lightcurve(path_to_lightcurve)
+
+:code:`ramjet` also provides a quick way to download and view any lightcurve available on MAST online using:
+
+.. code-block:: python
+
+    from ramjet.data_interface.tess_data_interface import TessDataInterface
+    tess_data_interface = TessDataInterface()
+    tess_data_interface.show_pdcsap_and_sap_comparison_from_mast(tic_id=117979897, sector=5)

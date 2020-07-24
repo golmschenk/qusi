@@ -1,6 +1,7 @@
+retrying
 numpy
 pandas
-tensorflow-cpu
+tensorflow
 astropy
 astroquery
 requests
@@ -12,4 +13,12 @@ sphinx-press-theme
 GitPython
 matplotlib
 pipreqs
-retrying
+bokeh
+pymc3
+Theano
+exoplanet
+scipy
+setuptools
+dataset
+pathos
+peewee
