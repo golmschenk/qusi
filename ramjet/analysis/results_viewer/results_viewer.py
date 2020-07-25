@@ -75,7 +75,7 @@ class ResultsViewer:
         self.bokeh_document = bokeh_document
         self.target_type = Target
         self.pool_executor = ThreadPoolExecutor()
-        self.results_data_frame = pd.read_feather(results_path)
+        self.results_data_frame = pd.read_csv(results_path, index_col='Index')
         self.current_target_index = starting_index
         self.number_of_indexes_before_and_after_to_load = 2
         self.number_of_indexes_before_and_after_to_delete = 5

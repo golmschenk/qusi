@@ -160,3 +160,30 @@ class TestLightcurveDatabase:
         assert (normalized_negative_lightcurve_fluxes < (1 + epsilon)).all()
         assert np.min(normalized_negative_lightcurve_fluxes) < (-1 + epsilon)
         assert np.max(normalized_negative_lightcurve_fluxes) > (1 - epsilon)
+
+    def test_percentile_normalization_gives_exact_results(self, database):
+        unnormalized_lightcurve_fluxes = np.linspace(0, 100, num=101, dtype=np.float32)
+        normalized_lightcurve_fluxes = database.normalize_on_percentiles(unnormalized_lightcurve_fluxes)
+        assert normalized_lightcurve_fluxes[10] == -1
+        assert normalized_lightcurve_fluxes[90] == 1
+
+    def test_percentile_normalization_zeroes_lightcurve_with_all_same_value(self, database):
+        unnormalized_lightcurve_fluxes = np.full(shape=[100], fill_value=50)
+        normalized_lightcurve_fluxes = database.normalize_on_percentiles(unnormalized_lightcurve_fluxes)
+        assert normalized_lightcurve_fluxes[10] == 0
+        assert normalized_lightcurve_fluxes[90] == 0
+
+    def test_window_dataset_for_zipped_example_and_label_dataset_produces_windowed_batches(self, database):
+        example_dataset = tf.data.Dataset.from_tensor_slices([1, 2, 3, 4, 5])
+        label_dataset = tf.data.Dataset.from_tensor_slices([-1, -2, -3, -4, -5])
+        dataset = tf.data.Dataset.zip((example_dataset, label_dataset))
+        windowed_dataset = database.window_dataset_for_zipped_example_and_label_dataset(dataset,
+                                                                                        batch_size=3,
+                                                                                        window_shift=2)
+        windowed_dataset_iterator = iter(windowed_dataset)
+        batch0 = next(windowed_dataset_iterator)
+        assert np.array_equal(batch0[0], [1, 2, 3])
+        assert np.array_equal(batch0[1], [-1, -2, -3])
+        batch1 = next(windowed_dataset_iterator)
+        assert np.array_equal(batch1[0], [3, 4, 5])
+        assert np.array_equal(batch1[1], [-3, -4, -5])

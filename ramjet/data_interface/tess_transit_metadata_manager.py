@@ -47,19 +47,20 @@ class TessTransitMetadataManager:
         row_count = 0
         metadatabase.drop_tables([TessTransitMetadata])
         metadatabase.create_tables([TessTransitMetadata])
-        for tic_id, disposition_set in target_grouped_dispositions.iteritems():
-            # As a target can have multiple planet dispositions, use the most forgiving available planet disposition.
-            if 'KP' in disposition_set or 'CP' in disposition_set:
-                database_disposition = Disposition.CONFIRMED.value
-            elif 'PC' in disposition_set or '' in disposition_set:
-                database_disposition = Disposition.CANDIDATE.value
-            elif 'FP' in disposition_set:
-                database_disposition = Disposition.FALSE_POSITIVE.value
-            else:
-                raise ValueError(f'{disposition_set} does not contain a known disposition.')
-            row = TessTransitMetadata(tic_id=tic_id, disposition=database_disposition)
-            row.save()
-            row_count += 1
+        with metadatabase.atomic():
+            for tic_id, disposition_set in target_grouped_dispositions.iteritems():
+                # As a target can have multiple dispositions, use the most forgiving available disposition.
+                if 'KP' in disposition_set or 'CP' in disposition_set:
+                    database_disposition = Disposition.CONFIRMED.value
+                elif 'PC' in disposition_set or '' in disposition_set:
+                    database_disposition = Disposition.CANDIDATE.value
+                elif 'FP' in disposition_set:
+                    database_disposition = Disposition.FALSE_POSITIVE.value
+                else:
+                    raise ValueError(f'{disposition_set} does not contain a known disposition.')
+                row = TessTransitMetadata(tic_id=tic_id, disposition=database_disposition)
+                row.save()
+                row_count += 1
         print(f'Table built. {row_count} rows added.')
 
 
