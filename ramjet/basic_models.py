@@ -1066,13 +1066,13 @@ class SimplePoolingLightcurveCnn(Model):
         :return: The output tensor of the layer.
         """
         x = inputs
-        x = self.block0(x)
-        x = self.block1(x)
-        x = self.block2(x)
-        x = self.block3(x)
-        x = self.dense0(x)
-        x = self.dense1(x)
-        x = self.dense2(x)
+        x = self.block0(x, training=training)
+        x = self.block1(x, training=training)
+        x = self.block2(x, training=training)
+        x = self.block3(x, training=training)
+        x = self.dense0(x, training=training)
+        x = self.dense1(x, training=training)
+        x = self.dense2(x, training=training)
         outputs = self.reshape(x, training=training)
         return outputs
 
@@ -1102,14 +1102,14 @@ class SimplePoolingLightcurveCnn2(Model):
         :return: The output tensor of the layer.
         """
         x = inputs
-        x = self.block0(x)
-        x = self.block1(x)
-        x = self.block2(x)
-        x = self.block3(x)
-        x = self.block4(x)
-        x = self.dense0(x)
-        x = self.dense1(x)
-        x = self.dense2(x)
+        x = self.block0(x, training=training)
+        x = self.block1(x, training=training)
+        x = self.block2(x, training=training)
+        x = self.block3(x, training=training)
+        x = self.block4(x, training=training)
+        x = self.dense0(x, training=training)
+        x = self.dense1(x, training=training)
+        x = self.dense2(x, training=training)
         outputs = self.reshape(x, training=training)
         return outputs
 
@@ -1139,13 +1139,13 @@ class FfiSimplePoolingLightcurveCnn2(Model):
         :return: The output tensor of the layer.
         """
         x = inputs
-        x = self.block0(x)
-        x = self.block1(x)
-        x = self.block2(x)
-        x = self.block3(x)
-        x = self.block4(x)
-        x = self.dense0(x)
-        x = self.dense1(x)
-        x = self.dense2(x)
+        x = self.block0(x, training=training)
+        x = self.block1(x, training=training)
+        x = self.block2(x, training=training)
+        x = self.block3(x, training=training)
+        x = self.block4(x, training=training)
+        x = self.dense0(x, training=training)
+        x = self.dense1(x, training=training)
+        x = self.dense2(x, training=training)
         outputs = self.reshape(x, training=training)
         return outputs
