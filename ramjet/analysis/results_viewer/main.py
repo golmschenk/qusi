@@ -14,5 +14,5 @@ def main():
     ResultsViewer.attach_document(document, results_path, starting_index)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__' or 'bokeh_app_' in __name__:
     main()
