@@ -1,7 +1,10 @@
+from ramjet.photometric_database.derived.tess_two_minute_cadence_lightcurve_collection import \
+    TessTwoMinuteCadenceTargetDatasetSplitLightcurveCollection
 from ramjet.photometric_database.derived.tess_two_minute_cadence_transit_lightcurve_collections import \
     TessTwoMinuteCadenceNonTransitLightcurveCollection, \
     TessTwoMinuteCadenceConfirmedAndCandidateTransitLightcurveCollection
-from ramjet.photometric_database.standard_and_injected_lightcurve_database import StandardAndInjectedLightcurveDatabase
+from ramjet.photometric_database.standard_and_injected_lightcurve_database import \
+    StandardAndInjectedLightcurveDatabase, OutOfBoundsInjectionHandlingMethod
 
 
 class TessTwoMinuteCadenceStandardTransitDatabase(StandardAndInjectedLightcurveDatabase):
@@ -18,6 +21,8 @@ class TessTwoMinuteCadenceStandardTransitDatabase(StandardAndInjectedLightcurveD
             TessTwoMinuteCadenceConfirmedAndCandidateTransitLightcurveCollection(dataset_splits=[8]),
             TessTwoMinuteCadenceNonTransitLightcurveCollection(dataset_splits=[8])
         ]
+        self.inference_lightcurve_collection = TessTwoMinuteCadenceTargetDatasetSplitLightcurveCollection(
+            dataset_splits=[9])
 
 
 class TessTwoMinuteCadenceInjectedTransitDatabase(StandardAndInjectedLightcurveDatabase):
@@ -26,7 +31,7 @@ class TessTwoMinuteCadenceInjectedTransitDatabase(StandardAndInjectedLightcurveD
     """
     def __init__(self):
         super().__init__()
-        self.allow_out_of_bounds_injection = True
+        self.out_of_bounds_injection_handling = OutOfBoundsInjectionHandlingMethod.REPEAT_SIGNAL
         self.training_injectee_lightcurve_collection = TessTwoMinuteCadenceNonTransitLightcurveCollection(
             dataset_splits=list(range(8)))
         self.training_injectable_lightcurve_collections = [
@@ -37,3 +42,30 @@ class TessTwoMinuteCadenceInjectedTransitDatabase(StandardAndInjectedLightcurveD
             TessTwoMinuteCadenceConfirmedAndCandidateTransitLightcurveCollection(dataset_splits=[8]),
             TessTwoMinuteCadenceNonTransitLightcurveCollection(dataset_splits=[8])
         ]
+        self.inference_lightcurve_collection = TessTwoMinuteCadenceTargetDatasetSplitLightcurveCollection(
+            dataset_splits=[9])
+
+
+class TessTwoMinuteCadenceStandardAndInjectedTransitDatabase(StandardAndInjectedLightcurveDatabase):
+    """
+    A database using standard positive and negative transit lightcurves and positives injected into negatives.
+    """
+    def __init__(self):
+        super().__init__()
+        self.out_of_bounds_injection_handling = OutOfBoundsInjectionHandlingMethod.REPEAT_SIGNAL
+        self.training_standard_lightcurve_collections = [
+            TessTwoMinuteCadenceConfirmedAndCandidateTransitLightcurveCollection(dataset_splits=list(range(8))),
+            TessTwoMinuteCadenceNonTransitLightcurveCollection(dataset_splits=list(range(8)))
+        ]
+        self.training_injectee_lightcurve_collection = TessTwoMinuteCadenceNonTransitLightcurveCollection(
+            dataset_splits=list(range(8)))
+        self.training_injectable_lightcurve_collections = [
+            TessTwoMinuteCadenceConfirmedAndCandidateTransitLightcurveCollection(dataset_splits=list(range(8))),
+            TessTwoMinuteCadenceNonTransitLightcurveCollection(dataset_splits=list(range(8)))
+        ]
+        self.validation_standard_lightcurve_collections = [
+            TessTwoMinuteCadenceConfirmedAndCandidateTransitLightcurveCollection(dataset_splits=[8]),
+            TessTwoMinuteCadenceNonTransitLightcurveCollection(dataset_splits=[8])
+        ]
+        self.inference_lightcurve_collection = TessTwoMinuteCadenceTargetDatasetSplitLightcurveCollection(
+            dataset_splits=[9])

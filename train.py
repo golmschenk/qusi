@@ -5,7 +5,7 @@ import tensorflow as tf
 from tensorflow.python.keras import callbacks
 from tensorflow.python.keras.losses import BinaryCrossentropy
 
-from ramjet.models import SimpleLightcurveCnn
+from ramjet.basic_models import SimpleLightcurveCnn
 from ramjet.photometric_database.derived.tess_two_minute_cadence_transit_databases import \
     TessTwoMinuteCadenceStandardTransitDatabase
 

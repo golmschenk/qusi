@@ -4,8 +4,8 @@ Code for a class for common interfacing with TESS data, such as downloading, sor
 import math
 import re
 import shutil
+import sys
 import tempfile
-import time
 from enum import Enum
 from pathlib import Path
 from typing import Union, List, Dict
@@ -23,10 +23,12 @@ from retrying import retry
 from bokeh.plotting import Figure
 
 from ramjet.analysis.lightcurve_visualizer import plot_lightcurve, create_dual_lightcurve_figure
-from ramjet.data_interface.tess_toi_data_interface import TessToiDataInterface, ToiColumns
 
 
 class TessFluxType(Enum):
+    """
+    An enum to represent the types of available fluxes in TESS two minute data.
+    """
     SAP = 'SAP_FLUX'
     PDCSAP = 'PDCSAP_FLUX'
 
@@ -52,6 +54,13 @@ class TessDataInterface:
         Observations.PAGESIZE = 3000
         Catalogs.TIMEOUT = 2000
         Catalogs.PAGESIZE = 3000
+        try:  # Temporary fix for astroquery's update of timeout and pagesize locations.
+            Observations._portal_api_connection.TIMEOUT = 2000
+            Observations._portal_api_connection.PAGESIZE = 3000
+            Catalogs._portal_api_connection.TIMEOUT = 2000
+            Catalogs._portal_api_connection.PAGESIZE = 3000
+        except AttributeError:
+            pass
         self.mast_input_query_chunk_size = 1000
 
     def get_all_tess_time_series_observations(self, tic_id: Union[int, List[int]] = None) -> pd.DataFrame:
@@ -354,6 +363,20 @@ class TessDataInterface:
         comparison_figure.sizing_mode = 'stretch_width'
         show(comparison_figure)
 
+    def show_lightcurve(self, lightcurve_path: Path):
+        """
+        Shows a figure of the lightcurve at the passed path.
+
+        :param lightcurve_path: The path of the lightcurve.
+        """
+        fluxes, times = self.load_fluxes_and_times_from_fits_file(lightcurve_path)
+        figure = Figure(title=str(lightcurve_path), x_axis_label='Flux', y_axis_label='Time', active_drag='box_zoom')
+        color = 'mediumblue'
+        figure.line(times, fluxes, line_color=color, line_alpha=0.1)
+        figure.circle(times, fluxes, line_color=color, line_alpha=0.4, fill_color=color, fill_alpha=0.1)
+        figure.sizing_mode = 'stretch_width'
+        show(figure)
+
     @staticmethod
     def get_target_coordinates(tic_id: int) -> SkyCoord:
         """
@@ -422,26 +445,23 @@ class TessDataInterface:
         print_data_frame.reset_index(drop=True, inplace=True)
         print(print_data_frame)
 
-    def download_all_two_minute_cadence_lightcurves(self, save_directory: Path):
+    def download_two_minute_cadence_lightcurves(self, save_directory: Path, limit: Union[None, int] = None):
         """
         Downloads all two minute cadence lightcurves from TESS.
 
         :param save_directory: The directory to save the lightcurves to.
+        :param limit: Limits the number of lightcurves downloaded. Default of None will download all lightcurves.
         """
-        print(f'Starting download of all 2-minute cadence lightcurves to directory `{save_directory}`.')
-        if save_directory.exists():
-            print('Will delete existing existing directory in 10 seconds. Control-C to cancel.')
-            time.sleep(10)
-            print('Deleting existing data...')
-            shutil.rmtree(save_directory)
+        print(f'Starting download of 2-minute cadence lightcurves to directory `{save_directory}`.')
         save_directory.mkdir(parents=True, exist_ok=True)
         print(f'Retrieving observations list from MAST...')
-        tess_observations = self.get_all_tess_time_series_observations()
-        single_sector_observations = self.filter_for_single_sector_observations(tess_observations)
+        single_sector_observations = self.get_all_single_sector_observations()
         print(f'Retrieving data products list from MAST...')
         data_products = self.get_product_list(single_sector_observations)
         print(f'Downloading lightcurves...')
         lightcurve_data_products = data_products[data_products['productFilename'].str.endswith('lc.fits')]
+        if limit is not None:
+            lightcurve_data_products = lightcurve_data_products.sample(frac=1, random_state=0).head(limit)
         download_manifest = self.download_products(lightcurve_data_products, data_directory=save_directory)
         print(f'Moving lightcurves to {save_directory}...')
         for _, manifest_row in download_manifest.iterrows():
@@ -462,60 +482,36 @@ class TessDataInterface:
         single_sector_observations = self.add_sector_column_to_single_sector_observations(single_sector_observations)
         return sorted(single_sector_observations['Sector'].unique())
 
-    def download_exofop_toi_lightcurves_to_directory(self, directory: Union[Path, str] = None):
+    def get_all_single_sector_observations(self, tic_ids: List[int] = None) -> pd.DataFrame:
         """
-        Downloads the `ExoFOP database <https://exofop.ipac.caltech.edu/tess/view_toi.php>`_ lightcurve files to the
-        given directory.
+        Gets the data frame containing all the single sector observations, with TIC ID and sector columns.
 
-        :param directory: The directory to download the lightcurves to. Defaults to the data interface directory.
+        :param tic_ids: The TIC IDs to get observations for.
+        :return: The data frame containing the observation information.
         """
-        print("Downloading ExoFOP TOI disposition CSV...")
-        tess_toi_data_interface = TessToiDataInterface()
-        if directory is None:
-            directory = tess_toi_data_interface.lightcurves_directory
-        if isinstance(directory, str):
-            directory = Path(directory)
-        toi_csv_url = 'https://exofop.ipac.caltech.edu/tess/download_toi.php?sort=toi&output=csv'
-        response = requests.get(toi_csv_url)
-        with tess_toi_data_interface.toi_dispositions_path.open('wb') as csv_file:
-            csv_file.write(response.content)
-        toi_dispositions = tess_toi_data_interface.load_toi_dispositions_in_project_format()
-        tic_ids = toi_dispositions[ToiColumns.tic_id.value].unique()
-        print('Downloading TESS observation list...')
         tess_observations = self.get_all_tess_time_series_observations(tic_id=tic_ids)
         single_sector_observations = self.filter_for_single_sector_observations(tess_observations)
         single_sector_observations = self.add_tic_id_column_to_single_sector_observations(
             single_sector_observations)
         single_sector_observations = self.add_sector_column_to_single_sector_observations(
             single_sector_observations)
-        print("Downloading lightcurves which are confirmed or suspected planets in TOI dispositions...")
-        suspected_planet_dispositions = toi_dispositions[toi_dispositions[ToiColumns.disposition.value] != 'FP']
-        suspected_planet_observations = pd.merge(single_sector_observations, suspected_planet_dispositions, how='inner',
-                                                 on=[ToiColumns.tic_id.value, ToiColumns.sector.value])
-        observations_not_found = suspected_planet_dispositions.shape[0] - suspected_planet_observations.shape[0]
-        print(f"{suspected_planet_observations.shape[0]} observations found that match the TOI dispositions.")
-        print(f"No observations found for {observations_not_found} entries in TOI dispositions.")
-        suspected_planet_data_products = self.get_product_list(suspected_planet_observations)
-        suspected_planet_lightcurve_data_products = suspected_planet_data_products[
-            suspected_planet_data_products['productFilename'].str.endswith('lc.fits')
-        ]
-        suspected_planet_download_manifest = self.download_products(
-            suspected_planet_lightcurve_data_products, data_directory=tess_toi_data_interface.data_directory)
-        print(f'Verifying and moving lightcurves to {directory}...')
-        directory.mkdir(parents=True, exist_ok=True)
-        for file_path_string in suspected_planet_download_manifest['Local Path']:
-            file_path = Path(file_path_string)
-            lightcurve_path = directory.joinpath(file_path.name)
-            try:
-                file_path.rename(lightcurve_path)
-                hdu_list = fits.open(str(lightcurve_path))
-                lightcurve = hdu_list[1].data
-                _ = lightcurve['TIME'][0]
-            except (OSError, TypeError):
-                print(f'{file_path} seems to be corrupt. Re-downloading and replacing.')
-                sector = tess_data_interface.get_sector_from_single_sector_obs_id(str(lightcurve_path.stem))
-                tic_id = tess_data_interface.get_tic_id_from_single_sector_obs_id(str(lightcurve_path.stem))
-                tess_data_interface.download_lightcurve(tic_id, sector, save_directory=lightcurve_path.parent)
+        return single_sector_observations
+
+    def verify_lightcurve(self, lightcurve_path: Path):
+        """
+        The lightcurve is checked if it's malformed, and if it is, it is re-downloaded.
+
+        :param lightcurve_path: The path of the lightcurve.
+        """
+        try:
+            hdu_list = fits.open(str(lightcurve_path))
+            lightcurve = hdu_list[1].data
+            _ = lightcurve['TIME'][0]  # Basic check if the lightcurve file is malformed.
+        except (OSError, TypeError):
+            print(f'{lightcurve_path} seems to be malformed. Re-downloading and replacing.')
+            sector = self.get_sector_from_single_sector_obs_id(str(lightcurve_path.stem))
+            tic_id = self.get_tic_id_from_single_sector_obs_id(str(lightcurve_path.stem))
+            self.download_lightcurve(tic_id, sector, save_directory=lightcurve_path.parent)
 
     @staticmethod
     def get_tic_id_and_sector_from_file_path(file_path: Union[Path, str]):
@@ -542,4 +538,9 @@ class TessDataInterface:
 
 if __name__ == '__main__':
     tess_data_interface = TessDataInterface()
-    tess_data_interface.download_all_two_minute_cadence_lightcurves(Path('data/tess_two_minute_cadence_lightcurves'))
+    if len(sys.argv) > 1:
+        limit_ = int(sys.argv[1])
+    else:
+        limit_ = None
+    tess_data_interface.download_two_minute_cadence_lightcurves(Path('data/tess_two_minute_cadence_lightcurves'),
+                                                                limit=limit_)

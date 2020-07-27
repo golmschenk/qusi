@@ -1,9 +1,13 @@
+import warnings
 from enum import Enum
 from pathlib import Path
 from typing import Union
 
 import pandas as pd
 import requests
+
+from ramjet.data_interface.tess_data_interface import TessDataInterface
+
 
 class ToiColumns(Enum):
     """
@@ -39,7 +43,10 @@ class TessToiDataInterface:
         :return: The TOI dispositions data frame.
         """
         if self.toi_dispositions_ is None:
-            self.update_toi_dispositions_file()
+            try:
+                self.update_toi_dispositions_file()
+            except requests.exceptions.ConnectionError:
+                warnings.warn('Unable to connect to update TOI file. Attempting to use existing file...')
             self.toi_dispositions_ = self.load_toi_dispositions_in_project_format()
         return self.toi_dispositions_
 
@@ -61,7 +68,10 @@ class TessToiDataInterface:
         :return: The CTOI dispositions data frame.
         """
         if self.ctoi_dispositions_ is None:
-            self.update_ctoi_dispositions_file()
+            try:
+                self.update_ctoi_dispositions_file()
+            except requests.exceptions.ConnectionError:
+                warnings.warn('Unable to connect to update TOI file. Attempting to use existing file...')
             self.ctoi_dispositions_ = self.load_ctoi_dispositions_in_project_format()
         return self.ctoi_dispositions_
 
@@ -136,3 +146,40 @@ class TessToiDataInterface:
         # Use context options to not truncate printed data.
         with pd.option_context('display.max_rows', None, 'display.max_columns', None, 'display.width', None):
             print(dispositions_data_frame)
+            
+    def download_exofop_toi_lightcurves_to_directory(self, directory: Path):
+        """
+        Downloads the `ExoFOP database <https://exofop.ipac.caltech.edu/tess/view_toi.php>`_ lightcurve files to the
+        given directory.
+
+        :param directory: The directory to download the lightcurves to. Defaults to the data interface directory.
+        """
+        print("Downloading ExoFOP TOI disposition CSV...")
+        tess_data_interface = TessDataInterface()
+        if isinstance(directory, str):
+            directory = Path(directory)
+        tic_ids = self.toi_dispositions[ToiColumns.tic_id.value].unique()
+        print('Downloading TESS observation list...')
+        single_sector_observations = tess_data_interface.get_all_single_sector_observations(tic_ids)
+        print("Downloading lightcurves which are confirmed or suspected planets in TOI dispositions...")
+        suspected_planet_dispositions = self.toi_dispositions[
+            self.toi_dispositions[ToiColumns.disposition.value] != 'FP']
+        suspected_planet_observations = pd.merge(single_sector_observations, suspected_planet_dispositions, how='inner',
+                                                 on=[ToiColumns.tic_id.value, ToiColumns.sector.value])
+        suspected_planet_data_products = tess_data_interface.get_product_list(suspected_planet_observations)
+        suspected_planet_lightcurve_data_products = suspected_planet_data_products[
+            suspected_planet_data_products['productFilename'].str.endswith('lc.fits')]
+        suspected_planet_download_manifest = tess_data_interface.download_products(
+            suspected_planet_lightcurve_data_products, data_directory=self.data_directory)
+        print(f'Verifying and moving lightcurves to {directory}...')
+        directory.mkdir(parents=True, exist_ok=True)
+        for row_index, row in suspected_planet_download_manifest.iterrows():
+            if row['Status'] == 'COMPLETE':
+                file_path = Path(row['Local Path'])
+                file_path.rename(directory.joinpath(file_path.name))
+
+
+if __name__ == '__main__':
+    tess_toi_data_interface = TessToiDataInterface()
+    tess_toi_data_interface.download_exofop_toi_lightcurves_to_directory(
+        Path('data/tess_two_minute_cadence_lightcurves'))

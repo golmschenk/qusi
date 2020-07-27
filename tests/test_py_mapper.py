@@ -28,7 +28,7 @@ class TestPyMapper:
         batch = next(iter(batch_dataset))
         batch_array = batch.numpy()
         unique_pids = set(batch_array)
-        assert len(unique_pids) == 4
+        assert len(unique_pids) > 2
 
     def test_py_map_correctly_applies_map_function(self, dataset: tf.data.Dataset):
         py_mapper = PyMapper(add_one, number_of_parallel_calls=4)

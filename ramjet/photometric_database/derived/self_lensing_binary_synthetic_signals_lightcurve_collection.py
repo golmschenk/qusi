@@ -88,15 +88,15 @@ class ReversedSelfLensingBinarySyntheticSignalsLightcurveCollection(
         self.label = 0
 
     @staticmethod
-    def reverse_signal(times: np.ndarray, magnitudes: np.ndarray) -> (np.ndarray, np.ndarray):
+    def reverse_signal(times: np.ndarray, magnifications: np.ndarray) -> (np.ndarray, np.ndarray):
         """
         Reverses the signal (i.e., the original first magnitude is in the last position and vice versa).
 
         :param times: The times of the original signal.
-        :param magnitudes: The magnitudes of the original signal.
+        :param magnifications: The magnifications of the original signal.
         :return: The reversed signal times and magnitudes.
         """
-        return times, magnitudes[::-1]
+        return times, magnifications[::-1]
 
     def load_times_and_magnifications_from_path(self, path: Path) -> (np.ndarray, np.ndarray):
         """

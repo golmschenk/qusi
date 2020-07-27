@@ -41,6 +41,7 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         self.validation_standard_lightcurve_collections: List[LightcurveCollection] = []
         self.validation_injectee_lightcurve_collection: Union[LightcurveCollection, None] = None
         self.validation_injectable_lightcurve_collections: List[LightcurveCollection] = []
+        self.inference_lightcurve_collection: Union[LightcurveCollection, None] = None
         self.shuffle_buffer_size = 10000
         self.time_steps_per_example = 20000
         self.out_of_bounds_injection_handling: OutOfBoundsInjectionHandlingMethod = \
@@ -145,16 +146,19 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         return standard_paths_datasets, injectee_path_dataset, injectable_paths_datasets
 
     def generate_paths_dataset_from_lightcurve_collection(self, lightcurve_collection: LightcurveCollection,
-                                                          shuffle: bool = True) -> tf.data.Dataset:
+                                                          repeat: bool = True, shuffle: bool = True
+                                                          ) -> tf.data.Dataset:
         """
         Generates a paths dataset for a lightcurve collection.
 
         :param lightcurve_collection: The lightcurve collection to generate a paths dataset for.
+        :param repeat: Whether to repeat the dataset or not.
         :param shuffle: Whether to shuffle the dataset or not.
         :return: The paths dataset.
         """
-        paths_dataset = self.paths_dataset_from_list_or_generator_factory(lightcurve_collection.get_paths)
-        dataset = paths_dataset.repeat()
+        dataset = self.paths_dataset_from_list_or_generator_factory(lightcurve_collection.get_paths)
+        if repeat:
+            dataset = dataset.repeat()
         if shuffle:
             dataset = dataset.shuffle(self.shuffle_buffer_size)
         return dataset
@@ -406,3 +410,17 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
 
         flat_mapped_dataset = zipped_dataset.flat_map(flat_map_interspersing_function)
         return flat_mapped_dataset
+
+    def generate_inference_dataset(self):
+        """
+        Generates the dataset to infer over.
+
+        :return: The inference dataset.
+        """
+        lightcurve_collection = self.inference_lightcurve_collection
+        example_paths_dataset = self.generate_paths_dataset_from_lightcurve_collection(lightcurve_collection,
+                                                                                       repeat=False, shuffle=False)
+        examples_dataset = self.generate_infer_path_and_lightcurve_dataset(
+            example_paths_dataset, lightcurve_collection.load_times_and_fluxes_from_path)
+        batch_dataset = examples_dataset.batch(self.batch_size).prefetch(5)
+        return batch_dataset
