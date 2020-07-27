@@ -12,7 +12,7 @@ from ramjet.photometric_database.derived.tess_ffi_lightcurve_collection import T
 
 class TessFfiEclipsingBinaryLightcurveCollection(TessFfiLightcurveCollection):
     """
-    A class representing the collection of TESS two minute cadence lightcurves containing transits.
+    A class representing the collection of TESS two minute cadence lightcurves containing eclipsing binaries.
     """
     def __init__(self, dataset_splits: Union[List[int], None] = None,
                  magnitude_range: (Union[float, None], Union[float, None]) = (None, None)):
@@ -29,3 +29,14 @@ class TessFfiEclipsingBinaryLightcurveCollection(TessFfiLightcurveCollection):
         eclipsing_binary_tic_id_query = TessEclipsingBinaryMetadata.select(TessEclipsingBinaryMetadata.tic_id)
         query = query.where(TessFfiLightcurveMetadata.tic_id.in_(eclipsing_binary_tic_id_query))
         return query
+
+
+class TessFfiEclipsingBinaryNegativeLabelLightcurveCollection(TessFfiEclipsingBinaryLightcurveCollection):
+    """
+    A class representing the collection of TESS two minute cadence lightcurves containing eclipsing binaries with a
+    negative label.
+    """
+    def __init__(self, dataset_splits: Union[List[int], None] = None,
+                 magnitude_range: (Union[float, None], Union[float, None]) = (None, None)):
+        super().__init__(dataset_splits=dataset_splits, magnitude_range=magnitude_range)
+        self.label = 0
