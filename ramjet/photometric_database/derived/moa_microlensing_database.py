@@ -22,7 +22,8 @@ class MoaMicrolensingDatabase(StandardAndInjectedLightcurveDatabase):
             MOAPositiveMicrolensingLightcurveCollection(dataset_splits=[1], split_pieces=5),
             MOANegativeMicrolensingLightcurveCollection(dataset_splits=[1], split_pieces=5)
         ]
-        self.inference_lightcurve_collections = MOANegativeMicrolensingLightcurveCollection(dataset_splits=[1], split_pieces=5)
+        self.inference_lightcurve_collections = MOANegativeMicrolensingLightcurveCollection(dataset_splits=[1],
+                                                                                            split_pieces=5)
 
 
 class MoaMicrolensingWithSyntheticDatabase(StandardAndInjectedLightcurveDatabase):
