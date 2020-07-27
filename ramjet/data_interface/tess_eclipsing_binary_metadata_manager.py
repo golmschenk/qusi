@@ -27,7 +27,7 @@ class TessEclipsingBinaryMetadataManager:
         """
         Builds the TESS eclipsing binary metadata table.
         """
-        print('Building TESS transit metadata table...')
+        print('Building TESS eclipsing binary metadata table...')
         eclipsing_binary_data_frame = pd.read_csv(brian_powell_eclipsing_binary_csv_path, usecols=['ID'])
         row_count = 0
         metadatabase.drop_tables([TessEclipsingBinaryMetadata])
@@ -38,8 +38,12 @@ class TessEclipsingBinaryMetadataManager:
             row = {'tic_id': tic_id}
             rows.append(row)
             row_count += 1
+            if row_count % 1000 == 0:
+                with metadatabase.atomic():
+                    TessEclipsingBinaryMetadata.insert_many(rows).execute()
+                rows = []
         with metadatabase.atomic():
-            TessEclipsingBinaryMetadata.insert_many(rows)
+            TessEclipsingBinaryMetadata.insert_many(rows).execute()
         SchemaManager(TessEclipsingBinaryMetadata).create_indexes()
         print(f'Table built. {row_count} rows added.')
 
