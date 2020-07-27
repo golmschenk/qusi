@@ -24,7 +24,7 @@ def infer(model: tf.keras.Model, dataset: tf.data.Dataset, infer_results_path: P
     predictions_data_frame = pd.read_csv(io.StringIO(''), names=columns, dtype=dict(zip(columns, dtypes)))
     examples_count = 0
     for batch_index, (paths, examples) in enumerate(dataset):
-        predictions = model.predict(examples)
+        predictions = model(examples, training=False)
         batch_predictions = pd.DataFrame({'Lightcurve path': paths.numpy().astype(str),
                                           'Prediction': np.squeeze(predictions, axis=1)})
         examples_count += batch_predictions.shape[0]
