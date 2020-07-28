@@ -6,7 +6,7 @@ from typing import List
 from peewee import IntegerField, CharField, SchemaManager
 
 from ramjet.data_interface.metadatabase import MetadatabaseModel, metadatabase, metadatabase_uuid, \
-    convert_class_to_table_name
+    convert_class_to_table_name, dataset_split_from_uuid
 from ramjet.data_interface.tess_data_interface import TessDataInterface
 
 
@@ -37,25 +37,24 @@ class TessTwoMinuteCadenceLightcurveMetadataManger:
     def __init__(self):
         self.lightcurve_root_directory_path = Path('data/tess_two_minute_cadence_lightcurves')
 
-    def insert_multiple_rows_from_paths_into_database(self, lightcurve_paths: List[Path], dataset_splits: List[int]):
+    def insert_multiple_rows_from_paths_into_database(self, lightcurve_paths: List[Path]):
         """
         Inserts sets of lightcurve paths into the table.
 
         :param lightcurve_paths: The list of paths to insert.
-        :param dataset_splits: The dataset splits to assign to each path.
         """
-        assert len(lightcurve_paths) == len(dataset_splits)
         row_dictionary_list = []
         table_name = convert_class_to_table_name(TessTwoMinuteCadenceLightcurveMetadata)
-        for lightcurve_path, dataset_split in zip(lightcurve_paths, dataset_splits):
+        for lightcurve_path in lightcurve_paths:
             tic_id, sector = self.tess_data_interface.get_tic_id_and_sector_from_file_path(lightcurve_path)
             uuid_name = f'{table_name} TIC {tic_id} sector {sector}'
             uuid = metadatabase_uuid(uuid_name)
+            dataset_split = dataset_split_from_uuid(uuid)
             row_dictionary_list.append({TessTwoMinuteCadenceLightcurveMetadata.path.name: str(lightcurve_path),
                                         TessTwoMinuteCadenceLightcurveMetadata.tic_id.name: tic_id,
                                         TessTwoMinuteCadenceLightcurveMetadata.sector.name: sector,
                                         TessTwoMinuteCadenceLightcurveMetadata.dataset_split.name: dataset_split,
-                                        TessTwoMinuteCadenceLightcurveMetadata.random_order_uuid: uuid})
+                                        TessTwoMinuteCadenceLightcurveMetadata.random_order_uuid.name: str(uuid)})
         with metadatabase.atomic():
             TessTwoMinuteCadenceLightcurveMetadata.insert_many(row_dictionary_list).execute()
 
@@ -67,19 +66,16 @@ class TessTwoMinuteCadenceLightcurveMetadataManger:
         path_glob = self.lightcurve_root_directory_path.glob('**/*.fits')
         row_count = 0
         batch_paths = []
-        batch_dataset_splits = []
         with metadatabase.atomic():
             for index, path in enumerate(path_glob):
                 batch_paths.append(path.relative_to(self.lightcurve_root_directory_path))
-                batch_dataset_splits.append(index % 10)
                 row_count += 1
                 if index % 1000 == 0 and index != 0:
-                    self.insert_multiple_rows_from_paths_into_database(batch_paths, batch_dataset_splits)
+                    self.insert_multiple_rows_from_paths_into_database(batch_paths)
                     batch_paths = []
-                    batch_dataset_splits = []
                     print(f'{index} rows inserted...', end='\r')
             if len(batch_paths) > 0:
-                self.insert_multiple_rows_from_paths_into_database(batch_paths, batch_dataset_splits)
+                self.insert_multiple_rows_from_paths_into_database(batch_paths)
         print(f'TESS two minute cadence lightcurve meta data table populated. {row_count} rows added.')
 
     def build_table(self):
