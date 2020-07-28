@@ -1,14 +1,12 @@
 """
 Code for managing the meta data of the two minute cadence TESS lightcurves.
 """
-import itertools
-import sqlite3
 from pathlib import Path
-from typing import List, Union, Generator
-from uuid import uuid4
+from typing import List
 from peewee import IntegerField, CharField, SchemaManager
 
-from ramjet.data_interface.metadatabase import MetadatabaseModel, metadatabase
+from ramjet.data_interface.metadatabase import MetadatabaseModel, metadatabase, metadatabase_uuid, \
+    convert_class_to_table_name
 from ramjet.data_interface.tess_data_interface import TessDataInterface
 
 
@@ -20,7 +18,7 @@ class TessTwoMinuteCadenceLightcurveMetadata(MetadatabaseModel):
     sector = IntegerField(index=True)
     path = CharField(unique=True)
     dataset_split = IntegerField()
-    random_order_uuid = CharField(unique=True, index=True, default=uuid4)
+    random_order_uuid = CharField(unique=True, index=True)
 
     class Meta:
         """Schema meta data for the model."""
@@ -48,12 +46,16 @@ class TessTwoMinuteCadenceLightcurveMetadataManger:
         """
         assert len(lightcurve_paths) == len(dataset_splits)
         row_dictionary_list = []
+        table_name = convert_class_to_table_name(TessTwoMinuteCadenceLightcurveMetadata)
         for lightcurve_path, dataset_split in zip(lightcurve_paths, dataset_splits):
             tic_id, sector = self.tess_data_interface.get_tic_id_and_sector_from_file_path(lightcurve_path)
+            uuid_name = f'{table_name} TIC {tic_id} sector {sector}'
+            uuid = metadatabase_uuid(uuid_name)
             row_dictionary_list.append({TessTwoMinuteCadenceLightcurveMetadata.path.name: str(lightcurve_path),
                                         TessTwoMinuteCadenceLightcurveMetadata.tic_id.name: tic_id,
                                         TessTwoMinuteCadenceLightcurveMetadata.sector.name: sector,
-                                        TessTwoMinuteCadenceLightcurveMetadata.dataset_split.name: dataset_split})
+                                        TessTwoMinuteCadenceLightcurveMetadata.dataset_split.name: dataset_split,
+                                        TessTwoMinuteCadenceLightcurveMetadata.random_order_uuid: uuid})
         with metadatabase.atomic():
             TessTwoMinuteCadenceLightcurveMetadata.insert_many(row_dictionary_list).execute()
 

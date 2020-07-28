@@ -4,10 +4,10 @@ Code for managing the TESS FFI metadata SQL table.
 import itertools
 from pathlib import Path
 from typing import List, Union, Generator
-from uuid import uuid4
 from peewee import IntegerField, CharField, FloatField, SchemaManager
 
-from ramjet.data_interface.metadatabase import MetadatabaseModel, metadatabase
+from ramjet.data_interface.metadatabase import MetadatabaseModel, metadatabase, metadatabase_uuid, \
+    convert_class_to_table_name
 from ramjet.data_interface.tess_ffi_data_interface import TessFfiDataInterface
 
 
@@ -20,7 +20,7 @@ class TessFfiLightcurveMetadata(MetadatabaseModel):
     path = CharField(unique=True)
     dataset_split = IntegerField()
     magnitude = FloatField()
-    random_order_uuid = CharField(unique=True, index=True, default=uuid4)
+    random_order_uuid = CharField(unique=True, index=True)
 
     class Meta:
         """Schema meta data for the model."""
@@ -51,15 +51,19 @@ class TessFfiLightcurveMetadataManager:
         """
         assert len(lightcurve_paths) == len(dataset_splits)
         row_dictionary_list = []
+        table_name = convert_class_to_table_name(TessFfiLightcurveMetadata)
         for lightcurve_path, dataset_split in zip(lightcurve_paths, dataset_splits):
             tic_id, sector = self.tess_ffi_data_interface.get_tic_id_and_sector_from_file_path(lightcurve_path)
             magnitude = self.tess_ffi_data_interface.get_floor_magnitude_from_file_path(lightcurve_path)
             relative_path = lightcurve_path.relative_to(self.lightcurve_root_directory_path)
+            uuid_name = f'{table_name} TIC {tic_id} sector {sector}'
+            uuid = metadatabase_uuid(uuid_name)
             row_dictionary_list.append({TessFfiLightcurveMetadata.path.name: str(relative_path),
                                         TessFfiLightcurveMetadata.tic_id.name: tic_id,
                                         TessFfiLightcurveMetadata.sector.name: sector,
                                         TessFfiLightcurveMetadata.magnitude.name: magnitude,
-                                        TessFfiLightcurveMetadata.dataset_split.name: dataset_split})
+                                        TessFfiLightcurveMetadata.dataset_split.name: dataset_split,
+                                        TessFfiLightcurveMetadata.random_order_uuid: uuid})
         with metadatabase.atomic():
             TessFfiLightcurveMetadata.insert_many(row_dictionary_list).execute()
 
