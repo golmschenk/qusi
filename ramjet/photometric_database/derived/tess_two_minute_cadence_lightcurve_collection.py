@@ -22,12 +22,12 @@ class TessTwoMinuteCadenceLightcurveCollection(SqlMetadataLightcurveCollection):
     tess_data_interface = TessDataInterface()
     tess_two_minute_cadence_lightcurve_metadata_manger = TessTwoMinuteCadenceLightcurveMetadataManger()
 
-    def __init__(self, dataset_splits: Union[List[int], None] = None):
+    def __init__(self, dataset_splits: Union[List[int], None] = None, flux_type: TessFluxType = TessFluxType.PDCSAP):
         super().__init__()
         self.data_directory: Path = Path('data/tess_two_minute_cadence_lightcurves')
         self.label = 0
         self.dataset_splits: Union[List[int], None] = dataset_splits
-        self.flux_type: TessFluxType = TessFluxType.PDCSAP
+        self.flux_type: TessFluxType = flux_type
 
     def get_sql_query(self) -> Select:
         """
