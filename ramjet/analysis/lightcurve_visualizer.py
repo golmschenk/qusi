@@ -7,10 +7,12 @@ from typing import Union, List
 import numpy as np
 import matplotlib.pyplot as plt
 from bokeh.colors import Color
+from bokeh.layouts import gridplot
+from bokeh.models import Column
 from bokeh.plotting import Figure
 from matplotlib.colors import LinearSegmentedColormap
 
-from ramjet.analysis.color_palette import lightcurve_color0
+from ramjet.analysis.color_palette import lightcurve_color0, lightcurve_color1, lightcurve_color3
 
 
 def plot_lightcurve(times: np.ndarray, fluxes: np.ndarray, labels: np.ndarray = None, predictions: np.ndarray = None,
@@ -155,7 +157,7 @@ def add_lightcurve_plot_to_figure(figure: Figure, times: np.ndarray, fluxes: np.
 
 def create_plotted_lightcurve_figure(times: np.ndarray, fluxes: np.ndarray, title: Union[str, None] = None,
                                      x_axis_label: Union[str, None] = 'Times',
-                                     y_axis_label: Union[str, None] = 'Fluxes'):
+                                     y_axis_label: Union[str, None] = 'Fluxes') -> Figure:
     """
     Create a lightcurve figure and plot a lightcurve to it.
 
@@ -170,3 +172,32 @@ def create_plotted_lightcurve_figure(times: np.ndarray, fluxes: np.ndarray, titl
     add_lightcurve_plot_to_figure(figure, times, fluxes, lightcurve_color0)
     figure.sizing_mode = 'stretch_width'
     return figure
+
+
+def create_plotted_injected_lightcurve_components_column(
+        injectee_times: np.ndarray, injectee_fluxes: np.ndarray, injectable_times: np.ndarray,
+        injectable_magnitudes: np.ndarray, injected_times: np.ndarray, injected_fluxes: np.ndarray) -> Column:
+    """
+    Creates a Bokeh column containing the two plots displaying the injectee and injected lightcurves along side the
+    injectable signal.
+
+    :param injectee_times: The times of the lightcurve which will have a signal injected into it.
+    :param injectee_fluxes: The fluxes of the lightcurve which will have a signal injected into it.
+    :param injectable_times: The times of the signal to be injected.
+    :param injectable_magnitudes: The magnitudes of the signal to be injected.
+    :param injected_times: The times of the lightcurve with injected signal.
+    :param injected_fluxes: The fluxes of the lightcurve with injected signal.
+    :return: The column containing the figures.
+    """
+    injectee_and_injected_figure = Figure(x_axis_label='Time', y_axis_label='Fluxes', active_drag='box_zoom')
+    injectable_figure = Figure(x_axis_label='Time', y_axis_label='Fluxes', active_drag='box_zoom',
+                               x_range=injectee_and_injected_figure.x_range)
+
+    add_lightcurve_plot_to_figure(injectee_and_injected_figure, injectee_times, injectee_fluxes, lightcurve_color0,
+                                  legend_label='Injectee')
+    add_lightcurve_plot_to_figure(injectee_and_injected_figure, injected_times, injected_fluxes, lightcurve_color1,
+                                  'Injected')
+    add_lightcurve_plot_to_figure(injectable_figure, injectable_times, injectable_magnitudes, lightcurve_color3,
+                                  'Injectable')
+    grid_plot = gridplot([[injectee_and_injected_figure], [injectable_figure]])
+    return grid_plot
