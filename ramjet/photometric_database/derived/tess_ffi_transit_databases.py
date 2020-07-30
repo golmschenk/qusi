@@ -1,5 +1,6 @@
 from ramjet.photometric_database.derived.tess_ffi_eclipsing_binary_lightcurve_collection import \
-    TessFfiEclipsingBinaryNegativeLabelLightcurveCollection
+    TessFfiAntiEclipsingBinaryForTransitLightcurveCollection
+from ramjet.photometric_database.derived.tess_ffi_lightcurve_collection import TessFfiLightcurveCollection
 from ramjet.photometric_database.derived.tess_ffi_transit_lightcurve_collections import \
     TessFfiConfirmedAndCandidateTransitLightcurveCollection, TessFfiNonTransitLightcurveCollection
 from ramjet.photometric_database.standard_and_injected_lightcurve_database import StandardAndInjectedLightcurveDatabase, \
@@ -35,13 +36,14 @@ class TessFfiStandardTransitAntiEclipsingBinaryDatabase(StandardAndInjectedLight
         self.training_standard_lightcurve_collections = [
             TessFfiConfirmedAndCandidateTransitLightcurveCollection(dataset_splits=list(range(8))),
             TessFfiNonTransitLightcurveCollection(dataset_splits=list(range(8))),
-            TessFfiEclipsingBinaryNegativeLabelLightcurveCollection(dataset_splits=list(range(8)))
+            TessFfiAntiEclipsingBinaryForTransitLightcurveCollection(dataset_splits=list(range(8)))
         ]
         self.validation_standard_lightcurve_collections = [
             TessFfiConfirmedAndCandidateTransitLightcurveCollection(dataset_splits=[8]),
             TessFfiNonTransitLightcurveCollection(dataset_splits=[8]),
-            TessFfiEclipsingBinaryNegativeLabelLightcurveCollection(dataset_splits=[8])
+            TessFfiAntiEclipsingBinaryForTransitLightcurveCollection(dataset_splits=[8])
         ]
+        self.inference_lightcurve_collection = TessFfiLightcurveCollection(dataset_splits=[9])
 
 
 class TessFfiInjectedTransitDatabase(StandardAndInjectedLightcurveDatabase):
