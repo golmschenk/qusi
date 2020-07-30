@@ -168,4 +168,5 @@ def create_plotted_lightcurve_figure(times: np.ndarray, fluxes: np.ndarray, titl
     """
     figure = Figure(title=title, x_axis_label=x_axis_label, y_axis_label=y_axis_label, active_drag='box_zoom')
     add_lightcurve_plot_to_figure(figure, times, fluxes, lightcurve_color0)
+    figure.sizing_mode = 'stretch_width'
     return figure
