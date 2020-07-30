@@ -10,6 +10,8 @@ from bokeh.colors import Color
 from bokeh.plotting import Figure
 from matplotlib.colors import LinearSegmentedColormap
 
+from ramjet.analysis.color_palette import lightcurve_color0
+
 
 def plot_lightcurve(times: np.ndarray, fluxes: np.ndarray, labels: np.ndarray = None, predictions: np.ndarray = None,
                     title: str = None, x_label: str = 'Days', y_label: str = 'Flux',
@@ -133,8 +135,7 @@ def create_dual_lightcurve_figure(fluxes0, times0, name0, fluxes1, times1, name1
     return figure
 
 
-def add_lightcurve_plot_to_figure(figure: Figure, times: Union[List[float], np.ndarray],
-                                  fluxes: Union[List[float], np.ndarray], color: Color,
+def add_lightcurve_plot_to_figure(figure: Figure, times: np.ndarray, fluxes: np.ndarray, color: Color,
                                   legend_label: Union[str, None] = None):
     """
     Adds a lightcurve plot to a figure.
@@ -150,3 +151,21 @@ def add_lightcurve_plot_to_figure(figure: Figure, times: Union[List[float], np.n
     if legend_label is not None:
         kwargs['legend_label'] = legend_label  # Bokeh handles None differently than a none existent kwarg.
     figure.circle(times, fluxes, line_color=color, line_alpha=0.4, fill_color=color, fill_alpha=0.1, **kwargs)
+
+
+def create_plotted_lightcurve_figure(times: np.ndarray, fluxes: np.ndarray, title: Union[str, None] = None,
+                                     x_axis_label: Union[str, None] = 'Times',
+                                     y_axis_label: Union[str, None] = 'Fluxes'):
+    """
+    Create a lightcurve figure and plot a lightcurve to it.
+
+    :param times: The times of the lightcurve.
+    :param fluxes: The fluxes of the lightcurve.
+    :param title: The title of the figure.
+    :param x_axis_label: The label for the x axis.
+    :param y_axis_label: The label for the y axis.
+    :return: The figure with plotted lightcurve.
+    """
+    figure = Figure(title=title, x_axis_label=x_axis_label, y_axis_label=y_axis_label, active_drag='box_zoom')
+    add_lightcurve_plot_to_figure(figure, times, fluxes, lightcurve_color0)
+    return figure
