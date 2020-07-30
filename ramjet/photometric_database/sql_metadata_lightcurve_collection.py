@@ -50,7 +50,7 @@ class SqlMetadataLightcurveCollection(LightcurveCollection):
 
         :return: An iterable of the lightcurve paths.
         """
-        page_size = 1000
+        page_size = 100000
         query = self.get_sql_query()
         for page_number in itertools.count(start=1, step=1):  # Peewee pages start on 1.
             page = query.paginate(page_number, paginate_by=page_size)
