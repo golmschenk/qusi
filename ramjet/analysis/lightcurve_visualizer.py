@@ -3,9 +3,10 @@ Code for visualizing lightcurves.
 """
 
 from pathlib import Path
-from typing import Union
+from typing import Union, List
 import numpy as np
 import matplotlib.pyplot as plt
+from bokeh.colors import Color
 from bokeh.plotting import Figure
 from matplotlib.colors import LinearSegmentedColormap
 
@@ -130,3 +131,22 @@ def create_dual_lightcurve_figure(fluxes0, times0, name0, fluxes1, times1, name1
     add_lightcurve(times0, fluxes0, name0, 'firebrick')
     add_lightcurve(times1, fluxes1, name1, 'mediumblue')
     return figure
+
+
+def add_lightcurve_plot_to_figure(figure: Figure, times: Union[List[float], np.ndarray],
+                                  fluxes: Union[List[float], np.ndarray], color: Color,
+                                  legend_label: Union[str, None] = None):
+    """
+    Adds a lightcurve plot to a figure.
+
+    :param figure: The figure to add the lightcurve to.
+    :param times: The times of the lightcurve.
+    :param fluxes: The fluxes of the lightcurve.
+    :param color: The color to use for plotting.
+    :param legend_label: The label to give the lightcurve in the legend of the figure.
+    """
+    figure.line(times, fluxes, line_color=color, line_alpha=0.1)
+    kwargs = {}
+    if legend_label is not None:
+        kwargs['legend_label'] = legend_label  # Bokeh handles None differently than a none existent kwarg.
+    figure.circle(times, fluxes, line_color=color, line_alpha=0.4, fill_color=color, fill_alpha=0.1, **kwargs)
