@@ -64,7 +64,7 @@ class TessTargetMetadataManger:
                     row_count += self.insert_multiple_rows_from_paths_into_database(batch_paths)
                     batch_paths = []
                     batch_dataset_splits = []
-                    print(f'{index} rows inserted...', end='\r')
+                    print(f'{row_count} rows inserted...', end='\r')
             if len(batch_paths) > 0:
                 row_count += self.insert_multiple_rows_from_paths_into_database(batch_paths)
         print(f'TESS target metadata table populated. {row_count} rows added.')
