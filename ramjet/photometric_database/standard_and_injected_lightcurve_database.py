@@ -2,15 +2,13 @@
 An abstract class allowing for any number and combination of standard and injectable/injectee lightcurve collections.
 """
 import math
-from enum import Enum
-from functools import partial
-
 import numpy as np
 import tensorflow as tf
+from enum import Enum
 from pathlib import Path
-from typing import List, Union, Callable, Tuple, Dict
-
+from functools import partial
 from scipy.interpolate import interp1d
+from typing import List, Union, Callable, Tuple
 
 from ramjet.photometric_database.lightcurve_collection import LightcurveCollection
 from ramjet.photometric_database.lightcurve_database import LightcurveDatabase

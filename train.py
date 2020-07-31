@@ -41,6 +41,7 @@ def train():
 
     # Compile and train model.
     model.compile(optimizer=optimizer, loss=loss_metric, metrics=metrics)
+    print(f'Trial: {trial_name}')
     try:
         model.fit(training_dataset, epochs=epochs_to_run, validation_data=validation_dataset,
                   callbacks=[tensorboard_callback, model_checkpoint_callback], steps_per_epoch=5000,
