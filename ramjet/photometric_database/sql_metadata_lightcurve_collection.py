@@ -1,7 +1,6 @@
 """
 Code for a lightcurve collection that stores its metadata in the SQL database.
 """
-import itertools
 from pathlib import Path
 from typing import Iterable
 from uuid import uuid4
@@ -50,15 +49,9 @@ class SqlMetadataLightcurveCollection(LightcurveCollection):
 
         :return: An iterable of the lightcurve paths.
         """
-        page_size = 100000
         query = self.get_sql_query()
-        for page_number in itertools.count(start=1, step=1):  # Peewee pages start on 1.
-            page = query.paginate(page_number, paginate_by=page_size)
-            if len(page) > 0:
-                for model in page:
-                    yield Path(self.get_path_from_model(model))
-            else:
-                break
+        for model in query:
+            yield Path(self.get_path_from_model(model))
 
     @staticmethod
     def order_by_uuid_with_random_start(select_query: Select, uuid_field: Field) -> Select:
