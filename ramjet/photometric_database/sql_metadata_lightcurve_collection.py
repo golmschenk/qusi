@@ -51,6 +51,7 @@ class SqlMetadataLightcurveCollection(LightcurveCollection):
         :return: An iterable of the lightcurve paths.
         """
         query = self.get_sql_query()
+        query = query.iterator().objects()  # Disable Peewee's cache and graph for better performance.
         for model in query:
             yield Path(self.get_path_from_model(model))
 
