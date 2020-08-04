@@ -6,7 +6,9 @@ from typing import Type
 
 from peewee import Model, SqliteDatabase
 
-metadatabase = SqliteDatabase('data/metadatabase.sqlite3', pragmas={'journal_mode': 'wal'})
+metadatabase = SqliteDatabase('data/metadatabase.sqlite3',
+                              pragmas={'journal_mode': 'wal'},
+                              check_same_thread=False)
 metadatabase_uuid_namespace = UUID('ed5c78c4-d8dd-4525-9633-97beac696cd1')
 
 
