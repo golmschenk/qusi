@@ -1,7 +1,6 @@
 from pathlib import Path
 from unittest.mock import patch, Mock
 import pytest
-from peewee import SqliteDatabase
 
 import ramjet.data_interface.tess_ffi_lightcurve_metadata_manager as module
 from ramjet.data_interface.tess_ffi_lightcurve_metadata_manager import TessFfiLightcurveMetadataManager
@@ -35,10 +34,8 @@ class TestTessFfiLightcurveMetadataManager:
         mock_metadatabase_uuid.side_effect = ['uuid0', 'uuid1']
         metadata_manger.insert_multiple_rows_from_paths_into_database(lightcurve_paths=lightcurve_paths)
         expected_insert = [
-            {'random_order_uuid': 'uuid0', 'path': str(lightcurve_path0), 'tic_id': 1111, 'sector': 1,
-             'dataset_split': 2, 'magnitude': 7},
-            {'random_order_uuid': 'uuid1', 'path': str(lightcurve_path1), 'tic_id': 1234567, 'sector': 12,
-             'dataset_split': 3, 'magnitude': 14}
+            {'path': str(lightcurve_path0), 'tic_id': 1111, 'sector': 1, 'dataset_split': 2, 'magnitude': 7},
+            {'path': str(lightcurve_path1), 'tic_id': 1234567, 'sector': 12, 'dataset_split': 3, 'magnitude': 14}
         ]
         assert mock_insert_many.call_args[0][0] == expected_insert
 

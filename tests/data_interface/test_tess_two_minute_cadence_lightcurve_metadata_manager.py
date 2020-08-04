@@ -1,5 +1,4 @@
 import pytest
-import sqlite3
 from pathlib import Path
 from unittest.mock import patch, Mock
 
@@ -31,10 +30,8 @@ class TestTessTwoMinuteCadenceLightcurveMetadataManger:
                 mock_metadatabase_uuid.side_effect = [uuid0, uuid1]
                 metadata_manger.insert_multiple_rows_from_paths_into_database(
                     lightcurve_paths=[lightcurve_path0, lightcurve_path1])
-        expected_insert = [{'random_order_uuid': 'mock-uuid-output0', 'path': str(lightcurve_path0),
-                            'tic_id': 382068171, 'sector': 13, 'dataset_split': 2},
-                           {'random_order_uuid': 'mock-uuid-output1', 'path': str(lightcurve_path1),
-                            'tic_id': 280909647, 'sector': 11, 'dataset_split': 3}]
+        expected_insert = [{'path': str(lightcurve_path0), 'tic_id': 382068171, 'sector': 13, 'dataset_split': 2},
+                           {'path': str(lightcurve_path1), 'tic_id': 280909647, 'sector': 11, 'dataset_split': 3}]
         assert mock_insert_many.call_args[0][0] == expected_insert
 
     @patch.object(Path, 'glob')
