@@ -20,16 +20,13 @@ class TessFfiLightcurveMetadata(MetadatabaseModel):
     path = CharField(unique=True)
     dataset_split = IntegerField()
     magnitude = FloatField()
-    random_order_uuid = CharField(unique=True, index=True)
 
     class Meta:
         """Schema meta data for the model."""
         indexes = (
-            (('tic_id', 'sector'), True),  # Ensures TIC ID and sector entry is unique.
-            (('dataset_split', 'random_order_uuid'), False),  # Useful for training data split with random order.
-            (('magnitude', 'dataset_split', 'random_order_uuid'), False),  # Common training selection order.
-            (('dataset_split', 'tic_id', 'random_order_uuid'), False),  # Common training selection order.
-            (('magnitude', 'dataset_split', 'tic_id', 'random_order_uuid'), False)  # Common training selection order.
+            (('sector', 'tic_id'), True),  # Ensures TIC ID and sector entry is unique.
+            (('dataset_split', 'tic_id'), False),
+            (('dataset_split', 'magnitude', 'tic_id'), False)
         )
 
 
@@ -61,8 +58,7 @@ class TessFfiLightcurveMetadataManager:
                                         TessFfiLightcurveMetadata.tic_id.name: tic_id,
                                         TessFfiLightcurveMetadata.sector.name: sector,
                                         TessFfiLightcurveMetadata.magnitude.name: magnitude,
-                                        TessFfiLightcurveMetadata.dataset_split.name: dataset_split,
-                                        TessFfiLightcurveMetadata.random_order_uuid.name: str(uuid)})
+                                        TessFfiLightcurveMetadata.dataset_split.name: dataset_split})
         with metadatabase.atomic():
             TessFfiLightcurveMetadata.insert_many(row_dictionary_list).execute()
 
@@ -95,35 +91,6 @@ class TessFfiLightcurveMetadataManager:
         SchemaManager(TessFfiLightcurveMetadata).drop_indexes()  # To allow for fast insert.
         self.populate_sql_database()
         SchemaManager(TessFfiLightcurveMetadata).create_indexes()  # Since we dropped them before.
-
-    def create_paths_generator(self, magnitude_range: (Union[float, None], Union[float, None]) = (None, None),
-                               dataset_splits: Union[List[int], None] = None) -> Generator[Path, None, None]:
-        """
-        Creates a generator for all the paths from the SQL table, with optional filters.
-
-        :param magnitude_range: The range of magnitudes to consider.
-        :param dataset_splits: The dataset splits to filter on. For splitting training, testing, etc.
-        :param repeat: Whether or not the generator should repeat indefinitely.
-        :return: The generator.
-        """
-        page_size = 1000
-        query = TessFfiLightcurveMetadata().select().order_by(
-            TessFfiLightcurveMetadata.random_order_uuid)
-        if magnitude_range[0] is not None and magnitude_range[1] is not None:
-            query = query.where(TessFfiLightcurveMetadata.magnitude.between(*magnitude_range))
-        elif magnitude_range[0] is not None:
-            query = query.where(TessFfiLightcurveMetadata.magnitude > magnitude_range[0])
-        elif magnitude_range[1] is not None:
-            query = query.where(TessFfiLightcurveMetadata.magnitude < magnitude_range[1])
-        if dataset_splits is not None:
-            query = query.where(TessFfiLightcurveMetadata.dataset_split.in_(dataset_splits))
-        for page_number in itertools.count(start=1, step=1):  # Peewee pages start on 1.
-            page = query.paginate(page_number, paginate_by=page_size)
-            if len(page) > 0:
-                for row in page:
-                    yield Path(self.lightcurve_root_directory_path.joinpath(row.path))
-            else:
-                break
 
 
 if __name__ == '__main__':

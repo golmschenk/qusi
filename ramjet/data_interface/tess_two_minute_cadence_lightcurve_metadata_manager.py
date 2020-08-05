@@ -18,13 +18,11 @@ class TessTwoMinuteCadenceLightcurveMetadata(MetadatabaseModel):
     sector = IntegerField(index=True)
     path = CharField(unique=True)
     dataset_split = IntegerField()
-    random_order_uuid = CharField(unique=True, index=True)
 
     class Meta:
         """Schema meta data for the model."""
         indexes = (
-            (('dataset_split', 'random_order_uuid'), False),  # Useful for training data split with random order.
-            (('tic_id', 'sector'), True),  # Ensures TIC ID and sector entry is unique.
+            (('sector', 'tic_id'), True),  # Ensures TIC ID and sector entry is unique.
         )
 
 
@@ -53,8 +51,7 @@ class TessTwoMinuteCadenceLightcurveMetadataManger:
             row_dictionary_list.append({TessTwoMinuteCadenceLightcurveMetadata.path.name: str(lightcurve_path),
                                         TessTwoMinuteCadenceLightcurveMetadata.tic_id.name: tic_id,
                                         TessTwoMinuteCadenceLightcurveMetadata.sector.name: sector,
-                                        TessTwoMinuteCadenceLightcurveMetadata.dataset_split.name: dataset_split,
-                                        TessTwoMinuteCadenceLightcurveMetadata.random_order_uuid.name: str(uuid)})
+                                        TessTwoMinuteCadenceLightcurveMetadata.dataset_split.name: dataset_split})
         with metadatabase.atomic():
             TessTwoMinuteCadenceLightcurveMetadata.insert_many(row_dictionary_list).execute()
 

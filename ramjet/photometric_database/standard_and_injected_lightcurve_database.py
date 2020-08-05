@@ -2,7 +2,6 @@
 An abstract class allowing for any number and combination of standard and injectable/injectee lightcurve collections.
 """
 import math
-from collections import namedtuple
 from enum import Enum
 from functools import partial
 
