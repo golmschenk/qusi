@@ -170,7 +170,7 @@ class SimpleFfiLightcurveCnn(Model):
         self.convolution10 = Conv1D(64, kernel_size=4, activation=leaky_relu,
                                     kernel_regularizer=l2_regularizer)
         self.batch_norm9 = BatchNormalization(renorm=True)
-        self.convolution11 = Conv1D(10, kernel_size=20, activation=leaky_relu, kernel_regularizer=l2_regularizer)
+        self.convolution11 = Conv1D(10, kernel_size=11, activation=leaky_relu, kernel_regularizer=l2_regularizer)
         self.convolution12 = Conv1D(1, [1], activation=sigmoid)
         self.reshape = Reshape([1])
 
@@ -235,7 +235,7 @@ class SmallFfiLightcurveCnn(Model):
         self.convolution5 = Conv1D(128, kernel_size=4, strides=2, activation=leaky_relu,
                                    kernel_regularizer=l2_regularizer)
         self.batch_norm4 = BatchNormalization(renorm=True)
-        self.convolution6 = Conv1D(10, kernel_size=18, activation=leaky_relu, kernel_regularizer=l2_regularizer)
+        self.convolution6 = Conv1D(10, kernel_size=13, activation=leaky_relu, kernel_regularizer=l2_regularizer)
         self.convolution7 = Conv1D(1, [1], activation=sigmoid)
         self.reshape = Reshape([1])
 
@@ -1124,7 +1124,7 @@ class FfiSimplePoolingLightcurveCnn2(Model):
         self.block2 = ConvolutionPoolingBatchNormalizationBlock(filters=16, kernel_size=3, pooling_size=3)
         self.block3 = ConvolutionPoolingBatchNormalizationBlock(filters=32, kernel_size=3, pooling_size=3)
         self.block4 = ConvolutionPoolingBatchNormalizationBlock(filters=64, kernel_size=3, pooling_size=3)
-        self.dense0 = Conv1D(20, kernel_size=10, activation=leaky_relu, kernel_regularizer=l2_regularizer)
+        self.dense0 = Conv1D(20, kernel_size=8, activation=leaky_relu, kernel_regularizer=l2_regularizer)
         self.dense1 = Conv1D(50, kernel_size=1, activation=leaky_relu, kernel_regularizer=l2_regularizer)
         self.dense2 = Conv1D(1, kernel_size=1, activation=sigmoid)
         self.reshape = Reshape([1])

@@ -14,7 +14,7 @@ class TessFfiDatabase(StandardAndInjectedLightcurveDatabase):
     def __init__(self):
         super().__init__()
         self.batch_size = 1000
-        self.time_steps_per_example = 1296  # 27 days / 30 minutes.
+        self.time_steps_per_example = 1000
         self.shuffle_buffer_size = 100000
         self.out_of_bounds_injection_handling = OutOfBoundsInjectionHandlingMethod.RANDOM_INJECTION_LOCATION
 
