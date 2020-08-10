@@ -2,7 +2,6 @@
 An abstract class allowing for any number and combination of standard and injectable/injectee lightcurve collections.
 """
 import math
-from collections import namedtuple
 from enum import Enum
 from functools import partial
 
@@ -259,7 +258,7 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         lightcurve_path_string = lightcurve_path_tensor.numpy().decode('utf-8')
         lightcurve_path = Path(lightcurve_path_string)
         times, fluxes = load_times_and_fluxes_from_path_function(lightcurve_path)
-        preprocessed_fluxes = self.flux_preprocessing(fluxes)
+        preprocessed_fluxes = self.flux_preprocessing(fluxes, evaluation_mode=True)
         example = np.expand_dims(preprocessed_fluxes, axis=-1)
         return lightcurve_path_string, example
 
