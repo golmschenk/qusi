@@ -100,9 +100,9 @@ def is_outlier(points: np.ndarray, threshold: float = 5):
                       median absolute deviation greater than this value will be classified as outliers.
     """
     assert len(points.shape) == 1  # Only designed to work with 1D data.
-    median = np.median(points, axis=0)
+    median = np.nanmedian(points, axis=0)
     absolute_deviation_from_median = np.abs(points - median)
-    median_absolute_deviation_from_median = np.median(absolute_deviation_from_median)
+    median_absolute_deviation_from_median = np.nanmedian(absolute_deviation_from_median)
     modified_z_score = 0.6745 * absolute_deviation_from_median / median_absolute_deviation_from_median
     return modified_z_score > threshold
 

@@ -443,13 +443,13 @@ class ResultsViewer:
                                             'Normalized SAP flux': target.normalized_sap_fluxes,
                                             'Time (days)': target.times - np.nanmin(target.times),
                                             'Folded time (days)': np.full_like(target.times, np.nan)}
-        self.lightcurve_figure.x_range.start = np.min(target.times)
-        self.lightcurve_figure.x_range.end = np.max(target.times)
+        self.lightcurve_figure.x_range.start = np.nanmin(target.times)
+        self.lightcurve_figure.x_range.end = np.nanmax(target.times)
         fluxes = target.normalized_pdcsap_fluxes
         outlier_indexes = is_outlier(fluxes, threshold=10)
         inlier_fluxes = fluxes[~outlier_indexes]
-        self.lightcurve_figure.x_range.start = np.min(inlier_fluxes)
-        self.lightcurve_figure.x_range.end = np.max(inlier_fluxes)
+        self.lightcurve_figure.y_range.start = np.nanmin(inlier_fluxes)
+        self.lightcurve_figure.y_range.end = np.nanmax(inlier_fluxes)
         self.fold_coordinate_data_source.data = {'Time (BTJD)': [], 'Normalized PDCSAP flux': []}
         self.event_coordinates = []
         self.initial_fit_data_source.data = {'Folded time (days)': [], 'Relative flux': [], 'Fit': [], 'Fit time': [],
