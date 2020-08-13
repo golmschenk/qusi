@@ -76,7 +76,8 @@ class ResultsViewer:
         self.bokeh_document = bokeh_document
         self.target_type = Target
         self.pool_executor = ThreadPoolExecutor()
-        self.results_data_frame = pd.read_csv(results_path, index_col='Index')
+        self.results_data_frame = pd.read_csv(results_path)
+        self.results_data_frame['Prediction'] = 1.0
         self.current_target_index = starting_index
         self.number_of_indexes_before_and_after_to_load = 2
         self.number_of_indexes_before_and_after_to_delete = 5
@@ -421,7 +422,8 @@ class ResultsViewer:
         for index_to_load in indexes_to_load:
             if index_to_load not in self.target_future_dictionary:
                 lightcurve_path = self.results_data_frame['Lightcurve path'].iloc[index_to_load]
-                target_pool_apply_result = self.pool_executor.submit(self.target_type, lightcurve_path)
+                lightcurve_path = Path('data/tess_ffi_lightcurves').joinpath(lightcurve_path)
+                target_pool_apply_result = self.pool_executor.submit(self.target_type, str(lightcurve_path))
                 self.target_future_dictionary[index_to_load] = target_pool_apply_result
         for index_to_delete in indexes_to_delete:
             if index_to_delete in self.target_future_dictionary:
@@ -446,10 +448,14 @@ class ResultsViewer:
         self.lightcurve_figure.x_range.start = np.nanmin(target.times)
         self.lightcurve_figure.x_range.end = np.nanmax(target.times)
         fluxes = target.normalized_pdcsap_fluxes
-        outlier_indexes = is_outlier(fluxes, threshold=10)
+        outlier_indexes = is_outlier(fluxes, threshold=50)
         inlier_fluxes = fluxes[~outlier_indexes]
-        self.lightcurve_figure.y_range.start = np.nanmin(inlier_fluxes)
-        self.lightcurve_figure.y_range.end = np.nanmax(inlier_fluxes)
+        min_inlier_flux = np.nanmin(inlier_fluxes)
+        max_inlier_flux = np.nanmax(inlier_fluxes)
+        inlier_range = max_inlier_flux - min_inlier_flux
+        padding = inlier_range * 0.15
+        self.lightcurve_figure.y_range.start = min_inlier_flux - padding
+        self.lightcurve_figure.y_range.end = max_inlier_flux + padding
         self.fold_coordinate_data_source.data = {'Time (BTJD)': [], 'Normalized PDCSAP flux': []}
         self.event_coordinates = []
         self.initial_fit_data_source.data = {'Folded time (days)': [], 'Relative flux': [], 'Fit': [], 'Fit time': [],
