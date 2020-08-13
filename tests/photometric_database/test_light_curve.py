@@ -25,3 +25,19 @@ class TestLightCurve:
         light_curve.fluxes_dictionary = {'a': [0, 1], 'b': [2, 3]}
         with pytest.raises(ValueError):
             _ = light_curve.fluxes
+
+    def test_can_set_fluxes_if_no_flux_types_exists(self):
+        light_curve = LightCurve()
+        light_curve.fluxes = [0, 1]
+
+    def test_can_set_fluxes_if_only_another_setter_set_flux_type_exists(self):
+        light_curve = LightCurve()
+        light_curve.fluxes = [0, 1]
+        light_curve.fluxes = [2, 3]
+
+    def test_cannot_set_fluxes_if_flux_type_with_a_specific_key_was_previously_set(self):
+        light_curve = LightCurve()
+        light_curve.fluxes_dictionary = {'a': [0, 1]}
+        with pytest.raises(ValueError):
+            light_curve.fluxes = [2, 3]
+
