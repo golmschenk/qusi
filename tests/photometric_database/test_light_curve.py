@@ -1,43 +1,55 @@
+import numpy as np
+import pandas as pd
 import pytest
 
 from ramjet.photometric_database.light_curve import LightCurve
 
 
 class TestLightCurve:
-    def test_fluxes_returns_the_only_fluxes_entry_from_the_dictionary_if_there_is_only_one(self):
+    def test_times_are_drawn_from_light_curve_data_frame_when_column_name_is_set(self):
         light_curve = LightCurve()
-        light_curve.fluxes_dictionary = {'a': [0, 1]}
-        assert light_curve.fluxes == [0, 1]
+        light_curve.data_frame = pd.DataFrame({'time_column': [0, 1]})
+        light_curve.time_column_name = 'time_column'
+        assert np.array_equal(light_curve.times, [0, 1])
 
-    def test_fluxes_returns_the_default_flux_type_when_available(self):
+    def test_fluxes_are_drawn_from_light_curve_data_frame_when_column_name_is_set(self):
         light_curve = LightCurve()
-        light_curve.fluxes_dictionary = {'a': [0, 1], 'b': [2, 3]}
-        light_curve.default_flux_type = 'b'
-        assert light_curve.fluxes == [2, 3]
+        light_curve.data_frame = pd.DataFrame({'flux_column': [0, 1]})
+        light_curve.flux_column_name = 'flux_column'
+        assert np.array_equal(light_curve.fluxes, [0, 1])
 
-    def test_fluxes_errors_if_no_fluxes_are_available(self):
+    def test_times_error_when_column_name_is_not_set(self):
         light_curve = LightCurve()
-        with pytest.raises(ValueError):
+        light_curve.data_frame = pd.DataFrame({'time_column': [0, 1]})
+        with pytest.raises(KeyError):
+            _ = light_curve.times
+
+    def test_fluxes_error_when_column_name_is_not_set(self):
+        light_curve = LightCurve()
+        light_curve.data_frame = pd.DataFrame({'flux_column': [0, 1]})
+        with pytest.raises(KeyError):
             _ = light_curve.fluxes
 
-    def test_fluxes_errors_if_multiple_flux_types_are_available_but_none_are_default(self):
+    def test_time_column_name_is_set_when_times_are_manually_set(self):
         light_curve = LightCurve()
-        light_curve.fluxes_dictionary = {'a': [0, 1], 'b': [2, 3]}
-        with pytest.raises(ValueError):
-            _ = light_curve.fluxes
+        assert light_curve.time_column_name is None
+        light_curve.times = [0, 1]
+        assert light_curve.time_column_name is not None
 
-    def test_can_set_fluxes_if_no_flux_types_exists(self):
+    def test_flux_column_name_is_set_when_times_are_manually_set(self):
         light_curve = LightCurve()
+        assert light_curve.flux_column_name is None
         light_curve.fluxes = [0, 1]
+        assert light_curve.flux_column_name is not None
 
-    def test_can_set_fluxes_if_only_another_setter_set_flux_type_exists(self):
+    def test_setting_times_sets_existing_named_time_column_if_one_exists(self):
         light_curve = LightCurve()
+        light_curve.time_column_name = 'time_column'
+        light_curve.times = [0, 1]
+        assert np.array_equal(light_curve.data_frame['time_column'].values, [0, 1])
+
+    def test_setting_fluxes_sets_existing_named_flux_column_if_one_exists(self):
+        light_curve = LightCurve()
+        light_curve.flux_column_name = 'flux_column'
         light_curve.fluxes = [0, 1]
-        light_curve.fluxes = [2, 3]
-
-    def test_cannot_set_fluxes_if_flux_type_with_a_specific_key_was_previously_set(self):
-        light_curve = LightCurve()
-        light_curve.fluxes_dictionary = {'a': [0, 1]}
-        with pytest.raises(ValueError):
-            light_curve.fluxes = [2, 3]
-
+        assert np.array_equal(light_curve.data_frame['flux_column'].values, [0, 1])

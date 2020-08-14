@@ -4,43 +4,45 @@ Code for a class to represent a light curve. See the contained class docstring f
 from typing import Union, Dict
 
 import numpy as np
+import pandas as pd
 
 
 class LightCurve:
     """
-    A class to represent a light curve. A light curve is a collection of data which includes times and fluxes
-    (often several types of fluxes).
+    A class to represent a light curve. A light curve is a collection of data which may includes times, fluxes,
+    flux errors, and related values.
     """
     def __init__(self):
-        self.times: np.ndarray
-        self.fluxes_dictionary: Dict[str, np.ndarray] = {}
-        self.default_flux_type: Union[str, None] = None
+        self.data_frame: pd.DataFrame = pd.DataFrame()
+        self.flux_column_name: Union[str, None] = None
+        self.time_column_name: Union[str, None] = None
 
     @property
     def fluxes(self) -> np.ndarray:
         """
-        The fluxes of the lightcurve. Uses the default flux type if multiple are available.
+        The fluxes of the light curve.
 
         :return: The fluxes.
         """
-        number_of_flux_types = len(self.fluxes_dictionary)
-        if number_of_flux_types == 1:
-            return next(iter(self.fluxes_dictionary.values()))
-        elif number_of_flux_types > 1:
-            if self.default_flux_type is None:
-                raise ValueError('A light curve with multiple flux types must specify a default type to use '
-                                 'the `fluxes` property.')
-            else:
-                return self.fluxes_dictionary[self.default_flux_type]
-        else:
-            raise ValueError('The lightcurve contains no fluxes.')
+        return self.data_frame[self.flux_column_name].values
 
     @fluxes.setter
     def fluxes(self, value: np.ndarray):
-        number_of_flux_types = len(self.fluxes_dictionary)
-        if number_of_flux_types == 0 or (number_of_flux_types == 1 and
-                                         next(iter(self.fluxes_dictionary.keys())) == 'default'):
-            self.fluxes_dictionary['default'] = value
-        else:
-            raise ValueError('Light curve contains specific flux types, so `fluxes` cannot be set directly. '
-                             'Use `fluxes_dictionary` with a specific key instead.')
+        if self.flux_column_name is None:
+            self.flux_column_name = 'flux'
+        self.data_frame[self.flux_column_name] = value
+
+    @property
+    def times(self) -> np.ndarray:
+        """
+        The times of the light curve.
+
+        :return: The times.
+        """
+        return self.data_frame[self.time_column_name].values
+
+    @times.setter
+    def times(self, value: np.ndarray):
+        if self.time_column_name is None:
+            self.time_column_name = 'time'
+        self.data_frame[self.time_column_name] = value
