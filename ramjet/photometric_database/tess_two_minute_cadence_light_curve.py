@@ -3,6 +3,7 @@ Code to for a class to represent a TESS two minute cadence light curve based on 
 """
 from __future__ import annotations
 
+import re
 from enum import Enum
 from pathlib import Path
 from typing import List, Union
@@ -37,6 +38,11 @@ class TessTwoMinuteCadenceFileBasedLightCurve(LightCurve):
     """
     A class to represent a TESS two minute cadence light curve.
     """
+    def __init__(self):
+        super().__init__()
+        self.tic_id: int
+        self.sector: int
+
     @classmethod
     def from_path(cls, path: Path,
                   flux_column_name: TessTwoMinuteCadenceColumnName = TessTwoMinuteCadenceColumnName.PDCSAP_FLUX.value,
@@ -62,3 +68,25 @@ class TessTwoMinuteCadenceFileBasedLightCurve(LightCurve):
                 column_name = TessTwoMinuteCadenceColumnName[fits_index.name]
                 light_curve.data_frame[column_name.value] = light_curve_table[fits_index.value]
         return light_curve
+
+    @staticmethod
+    def get_tic_id_and_sector_from_file_path(file_path: Union[Path, str]):
+        """
+        Gets the TIC ID and sector from commonly encountered file name patterns.
+
+        :param file_path: The path of the file to extract the TIC ID and sector.
+        :return: The TIC ID and sector. The sector might be omitted (as None).
+        """
+        if isinstance(file_path, str):
+            file_path = Path(file_path)
+        file_name = file_path.stem
+        # Search for the human readable version. E.g., "TIC 169480782 sector 5"
+        match = re.search(r'TIC (\d+) sector (\d+)', file_name)
+        if match:
+            return int(match.group(1)), int(match.group(2))
+        # Search for the TESS obs_id version. E.g., "tess2018319095959-s0005-0000000278956474-0125-s"
+        match = re.search(r'tess\d+-s(\d+)-(\d+)-\d+-s', file_name)
+        if match:
+            return int(match.group(2)), int(match.group(1))
+        # Raise an error if none of the patterns matched.
+        raise ValueError(f'{file_name} does not match a known pattern to extract TIC ID and sector from.')

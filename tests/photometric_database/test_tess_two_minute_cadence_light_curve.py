@@ -42,3 +42,27 @@ class TestTessTwoMinuteCadenceFileBasedLightCurve:
             assert np.array_equal(light_curve.times, fake_hdu_list[1].data[TessTwoMinuteCadenceColumnName.TIME.value])
             assert np.array_equal(light_curve.fluxes,
                                   fake_hdu_list[1].data[TessTwoMinuteCadenceColumnName.PDCSAP_FLUX.value])
+
+    def test_can_get_tic_id_and_sector_from_human_readable_file_name(self):
+        tic_id0, sector0 = TessTwoMinuteCadenceFileBasedLightCurve.get_tic_id_and_sector_from_file_path(
+            'TIC 289890301 sector 15 second half')
+        assert tic_id0 == 289890301
+        assert sector0 == 15
+        tic_id1, sector1 = TessTwoMinuteCadenceFileBasedLightCurve.get_tic_id_and_sector_from_file_path(
+            'output/TIC 169480782 sector 5.png')
+        assert tic_id1 == 169480782
+        assert sector1 == 5
+
+    def test_get_tic_id_and_sector_raises_error_with_unknown_pattern(self):
+        with pytest.raises(ValueError):
+            TessTwoMinuteCadenceFileBasedLightCurve.get_tic_id_and_sector_from_file_path('a b c d e f g')
+
+    def test_can_get_tic_id_and_sector_from_tess_obs_id_style_file_name(self):
+        tic_id0, sector0 = TessTwoMinuteCadenceFileBasedLightCurve.get_tic_id_and_sector_from_file_path(
+            'mast:TESS/product/tess2019006130736-s0007-0000000278956474-0131-s_lc.fits')
+        assert tic_id0 == 278956474
+        assert sector0 == 7
+        tic_id1, sector1 = TessTwoMinuteCadenceFileBasedLightCurve.get_tic_id_and_sector_from_file_path(
+            'tess2018319095959-s0005-0000000278956474-0125-s')
+        assert tic_id1 == 278956474
+        assert sector1 == 5
