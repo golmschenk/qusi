@@ -40,8 +40,8 @@ class TessTwoMinuteCadenceFileBasedLightCurve(LightCurve):
     """
     def __init__(self):
         super().__init__()
-        self.tic_id: int
-        self.sector: int
+        self.tic_id: Union[int, None] = None
+        self.sector: Union[int, None] = None
 
     @classmethod
     def from_path(cls, path: Path,
@@ -67,6 +67,7 @@ class TessTwoMinuteCadenceFileBasedLightCurve(LightCurve):
             for fits_index in fits_indexes_to_load:
                 column_name = TessTwoMinuteCadenceColumnName[fits_index.name]
                 light_curve.data_frame[column_name.value] = light_curve_table[fits_index.value]
+        light_curve.tic_id, light_curve.sector = cls.get_tic_id_and_sector_from_file_path(path)
         return light_curve
 
     @staticmethod

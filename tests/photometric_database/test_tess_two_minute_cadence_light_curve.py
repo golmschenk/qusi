@@ -31,14 +31,14 @@ class TestTessTwoMinuteCadenceFileBasedLightCurve:
     def test_from_path_factory_creates_data_frame_from_fits_hdu_list(self, fake_hdu_list):
         with patch.object(module.fits, 'open') as mock_open:
             mock_open.return_value.__enter__.return_value = fake_hdu_list
-            light_curve = TessTwoMinuteCadenceFileBasedLightCurve.from_path(Path('fake.fits'))
+            light_curve = TessTwoMinuteCadenceFileBasedLightCurve.from_path(Path('TIC 169480782 sector 5.fits'))
             expected_data_frame = pd.DataFrame(fake_hdu_list[1].data)
             assert light_curve.data_frame.sort_index(axis=1).equals(expected_data_frame.sort_index(axis=1))
 
     def test_from_path_factory_light_curve_uses_correct_default_times_and_fluxes(self, fake_hdu_list):
         with patch.object(module.fits, 'open') as mock_open:
             mock_open.return_value.__enter__.return_value = fake_hdu_list
-            light_curve = TessTwoMinuteCadenceFileBasedLightCurve.from_path(Path('fake.fits'))
+            light_curve = TessTwoMinuteCadenceFileBasedLightCurve.from_path(Path('TIC 169480782 sector 5.fits'))
             assert np.array_equal(light_curve.times, fake_hdu_list[1].data[TessTwoMinuteCadenceColumnName.TIME.value])
             assert np.array_equal(light_curve.fluxes,
                                   fake_hdu_list[1].data[TessTwoMinuteCadenceColumnName.PDCSAP_FLUX.value])
@@ -66,3 +66,10 @@ class TestTessTwoMinuteCadenceFileBasedLightCurve:
             'tess2018319095959-s0005-0000000278956474-0125-s')
         assert tic_id1 == 278956474
         assert sector1 == 5
+
+    def test_from_path_factory_sets_the_tic_id_and_sector_of_the_light_curve(self, fake_hdu_list):
+        with patch.object(module.fits, 'open') as mock_open:
+            mock_open.return_value.__enter__.return_value = fake_hdu_list
+            light_curve = TessTwoMinuteCadenceFileBasedLightCurve.from_path(Path('TIC 169480782 sector 5.fits'))
+            assert light_curve.tic_id == 169480782
+            assert light_curve.sector == 5
