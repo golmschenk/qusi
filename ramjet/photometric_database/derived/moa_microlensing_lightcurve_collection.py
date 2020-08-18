@@ -38,7 +38,12 @@ class MOAPositiveMicrolensingLightcurveCollection(LightcurveCollection):
         number_of_samples_per_block = number_of_samples // self.split_pieces
         dataset_paths = []
         for block in self.dataset_splits:
-            dataset_paths += path_list[block*number_of_samples_per_block:(block+1)*number_of_samples_per_block]
+            if block == (self.split_pieces - 1):
+                dataset_paths += path_list[
+                                 block * number_of_samples_per_block:]
+            else:
+                dataset_paths += path_list[
+                                 block * number_of_samples_per_block:(block + 1) * number_of_samples_per_block]
         return dataset_paths
 
     def load_times_and_fluxes_from_path(self, path: Path) -> (np.ndarray, np.ndarray):
@@ -81,7 +86,12 @@ class MOANegativeMicrolensingLightcurveCollection(LightcurveCollection):
         number_of_samples_per_block = number_of_samples // self.split_pieces
         dataset_paths = []
         for block in self.dataset_splits:
-            dataset_paths += path_list[block*number_of_samples_per_block:(block+1)*number_of_samples_per_block]
+            if block == (self.split_pieces - 1):
+                dataset_paths += path_list[
+                                 block * number_of_samples_per_block:]
+            else:
+                dataset_paths += path_list[
+                                 block * number_of_samples_per_block:(block + 1) * number_of_samples_per_block]
         return dataset_paths
 
     def load_times_and_fluxes_from_path(self, path: Path) -> (np.ndarray, np.ndarray):
