@@ -100,9 +100,7 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
             )
             validation_lightcurve_and_label_datasets.append(lightcurve_and_label_dataset)
         validation_dataset = self.intersperse_datasets(validation_lightcurve_and_label_datasets)
-        validation_dataset = self.window_dataset_for_zipped_example_and_label_dataset(validation_dataset,
-                                                                                      self.batch_size,
-                                                                                      self.window_shift)
+        validation_dataset = validation_dataset.batch(self.batch_size)
         return training_dataset, validation_dataset
 
     def generate_paths_datasets_group_from_lightcurve_collections_group(
