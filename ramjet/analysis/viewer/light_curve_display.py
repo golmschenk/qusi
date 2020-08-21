@@ -1,12 +1,16 @@
 """
 Code for displaying a light curve figure.
 """
+import pandas as pd
 from typing import Union, List
 
+from bokeh.colors import Color
 from bokeh.models import ColumnDataSource
 from bokeh.plotting import Figure
 
+from ramjet.analysis.color_palette import lightcurve_colors
 from ramjet.analysis.viewer.convert_column_name_to_display_name import convert_column_name_to_display_name
+from ramjet.photometric_database.light_curve import LightCurve
 
 
 class LightCurveDisplay:
@@ -34,6 +38,10 @@ class LightCurveDisplay:
         display.flux_column_names = flux_column_names
         time_axis_label = convert_column_name_to_display_name(time_column_name)
         display.initialize_figure(time_axis_label=time_axis_label, flux_axis_label=flux_axis_label)
+        display.initialize_data_source(column_names=[time_column_name] + flux_column_names)
+        for flux_column_name, color in zip(display.flux_column_names, lightcurve_colors):
+            display.add_flux_data_source_line_to_figure(time_column_name=time_column_name, flux_column_name=flux_column_name,
+                                                        color=color)
         return display
 
     def initialize_figure(self, time_axis_label: str, flux_axis_label: str):
@@ -45,3 +53,34 @@ class LightCurveDisplay:
         """
         self.figure = Figure(x_axis_label=time_axis_label, y_axis_label=flux_axis_label,
                              active_drag='box_zoom', active_scroll='wheel_zoom')
+        self.figure.sizing_mode = 'stretch_width'
+
+    def initialize_data_source(self, column_names: List[str]):
+        """
+        Creates a data source with the passed column names.
+
+        :param column_names: The column names to include in the data source.
+        """
+        self.data_source = ColumnDataSource(data=pd.DataFrame({column_name: [] for column_name in column_names}))
+
+    def add_flux_data_source_line_to_figure(self, time_column_name: str, flux_column_name: str, color: Color):
+        """
+        Add a flux data source time series line to the figure.
+
+        :param time_column_name: The name to use for the time column.
+        :param flux_column_name: The name to use for the flux column.
+        :param color: The color to use for the line.
+        """
+        legend_label = convert_column_name_to_display_name(flux_column_name)
+        self.figure.line(x=time_column_name, y=flux_column_name, source=self.data_source, line_color=color,
+                         line_alpha=0.1)
+        self.figure.circle(x=time_column_name, y=flux_column_name, source=self.data_source, legend_label=legend_label,
+                           line_color=color, line_alpha=0.4, fill_color=color, fill_alpha=0.1)
+
+    def update_from_light_curve(self, lightcurve: LightCurve):
+        """
+        Update the data for the display based on a light curve.
+
+        :param lightcurve: The light curve to display.
+        """
+        self.data_source.data = lightcurve.data_frame
