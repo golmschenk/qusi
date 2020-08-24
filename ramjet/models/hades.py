@@ -2,7 +2,7 @@ from tensorflow import sigmoid
 from tensorflow.keras import Model
 from tensorflow.keras.layers import Convolution1D, Reshape
 
-from ramjet.basic_models import LightCurveNetworkBlock
+from ramjet.models.components.light_curve_network_block import LightCurveNetworkBlock
 
 
 class Hades(Model):
