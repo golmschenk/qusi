@@ -1026,7 +1026,7 @@ class LightCurveNetworkBlock(Layer):
         self.convolution = Conv1D(filters, kernel_size=kernel_size, activation=leaky_relu,
                                   kernel_regularizer=l2_regularizer)
         if dropout_rate > 0:
-            self.dropout = SpatialDropout1D(0.1)
+            self.dropout = SpatialDropout1D(dropout_rate)
         else:
             self.dropout = None
         if pooling_size > 1:
