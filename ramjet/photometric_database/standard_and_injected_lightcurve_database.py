@@ -42,7 +42,7 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         self.validation_injectable_lightcurve_collections: List[LightcurveCollection] = []
         self.inference_lightcurve_collection: Union[LightcurveCollection, None] = None
         self.shuffle_buffer_size = 10000
-        self.time_steps_per_example = 20000
+        self.time_steps_per_example = 16000
         self.out_of_bounds_injection_handling: OutOfBoundsInjectionHandlingMethod = \
             OutOfBoundsInjectionHandlingMethod.ERROR
 

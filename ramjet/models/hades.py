@@ -17,7 +17,7 @@ class Hades(Model):
         self.block6 = LightCurveNetworkBlock(filters=128, kernel_size=3, pooling_size=2)
         self.block7 = LightCurveNetworkBlock(filters=128, kernel_size=3, pooling_size=2)
         self.block8 = LightCurveNetworkBlock(filters=128, kernel_size=3, pooling_size=2)
-        self.block9 = LightCurveNetworkBlock(filters=20, kernel_size=9, pooling_size=1)
+        self.block9 = LightCurveNetworkBlock(filters=20, kernel_size=7, pooling_size=1)
         self.block10 = LightCurveNetworkBlock(filters=20, kernel_size=1, pooling_size=1, batch_normalization=False)
         self.prediction_layer = Convolution1D(1, kernel_size=1, activation=sigmoid)
         self.reshape = Reshape([1])
