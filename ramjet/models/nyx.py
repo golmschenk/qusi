@@ -8,7 +8,8 @@ from ramjet.basic_models import LightCurveNetworkBlock
 class Nyx(Model):
     def __init__(self):
         super().__init__()
-        self.block0 = LightCurveNetworkBlock(filters=5, kernel_size=3, pooling_size=2, batch_normalization=False)
+        self.block0 = LightCurveNetworkBlock(filters=5, kernel_size=3, pooling_size=2, batch_normalization=False,
+                                             dropout_rate=0)
         self.block1 = LightCurveNetworkBlock(filters=10, kernel_size=3, pooling_size=2, batch_normalization=False)
         self.block2 = LightCurveNetworkBlock(filters=10, kernel_size=3, pooling_size=2, batch_normalization=False)
         self.block3 = LightCurveNetworkBlock(filters=20, kernel_size=3, pooling_size=1, dropout_rate=0)
