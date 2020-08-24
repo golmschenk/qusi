@@ -336,10 +336,10 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         :param seed: Seed for the randomization.
         :return: The preprocessed flux array.
         """
-        normalized_fluxes = self.normalize(fluxes)
-        uniform_length_fluxes = self.make_uniform_length(normalized_fluxes, self.time_steps_per_example,
+        uniform_length_fluxes = self.make_uniform_length(fluxes, self.time_steps_per_example,
                                                          randomize=not evaluation_mode, seed=seed)
-        return uniform_length_fluxes
+        normalized_fluxes = self.normalize(uniform_length_fluxes)
+        return normalized_fluxes
 
     def inject_signal_into_lightcurve(self, lightcurve_fluxes: np.ndarray, lightcurve_times: np.ndarray,
                                       signal_magnifications: np.ndarray, signal_times: np.ndarray):
