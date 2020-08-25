@@ -1,4 +1,4 @@
-from tensorflow.keras.layers import Conv1D, AlphaDropout, MaxPooling1D, Layer
+from tensorflow.keras.layers import Conv1D, AlphaDropout, MaxPooling1D, Layer, AveragePooling1D
 from tensorflow.keras.regularizers import l2
 
 
@@ -9,7 +9,7 @@ class SeluLightCurveNetworkBlock(Layer):
         self.convolution = Conv1D(filters, kernel_size=kernel_size,
                                   kernel_initializer='lecun_normal', activation='selu')
         if dropout_rate > 0:
-            self.dropout = AlphaDropout(dropout_rate, [None, 1, filters])
+            self.dropout = AlphaDropout(dropout_rate, [100, 1, filters])
         else:
             self.dropout = None
         if pooling_size > 1:
@@ -30,6 +30,6 @@ class SeluLightCurveNetworkBlock(Layer):
         x = self.convolution(x, training=training)
         if self.dropout is not None:
             x = self.dropout(x, training=training)
-        if self.max_pooling is not None:
-            x = self.max_pooling(x, training=training)
+        if self.pooling is not None:
+            x = self.pooling(x, training=training)
         return x
