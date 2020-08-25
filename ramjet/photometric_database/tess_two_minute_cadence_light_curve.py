@@ -40,6 +40,8 @@ class TessTwoMinuteCadenceLightCurve(LightCurve):
     A class to represent a TESS two minute cadence light curve.
     """
     mast_tess_data_interface = TessDataInterface()
+    flux_column_names = [TessTwoMinuteCadenceColumnName.PDCSAP_FLUX.value,
+                         TessTwoMinuteCadenceColumnName.SAP_FLUX.value]
 
     def __init__(self):
         super().__init__()
@@ -64,7 +66,7 @@ class TessTwoMinuteCadenceLightCurve(LightCurve):
         light_curve.flux_column_name = flux_column_name
         light_curve.time_column_name = TessTwoMinuteCadenceColumnName.TIME.value
         if fits_indexes_to_load is None:
-            fits_indexes_to_load = list(TessTwoMinuteCadenceColumnName)
+            fits_indexes_to_load = list(TessTwoMinuteCadenceMastFitsIndex)
         with fits.open(path) as hdu_list:
             light_curve_table = hdu_list[1].data  # Lightcurve information is in first extension table.
             for fits_index in fits_indexes_to_load:
