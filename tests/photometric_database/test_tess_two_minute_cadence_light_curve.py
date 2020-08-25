@@ -7,7 +7,7 @@ import pytest
 
 import ramjet.photometric_database.tess_two_minute_cadence_light_curve as module
 from ramjet.photometric_database.tess_two_minute_cadence_light_curve import TessTwoMinuteCadenceColumnName, \
-    TessTwoMinuteCadenceMastFitsIndex, TessTwoMinuteCadenceFileBasedLightCurve
+    TessTwoMinuteCadenceMastFitsIndex, TessTwoMinuteCadenceLightCurve
 
 
 class TestTessTwoMinuteCadenceFileBasedLightCurve:
@@ -31,38 +31,38 @@ class TestTessTwoMinuteCadenceFileBasedLightCurve:
     def test_from_path_factory_creates_data_frame_from_fits_hdu_list(self, fake_hdu_list):
         with patch.object(module.fits, 'open') as mock_open:
             mock_open.return_value.__enter__.return_value = fake_hdu_list
-            light_curve = TessTwoMinuteCadenceFileBasedLightCurve.from_path(Path('TIC 169480782 sector 5.fits'))
+            light_curve = TessTwoMinuteCadenceLightCurve.from_path(Path('TIC 169480782 sector 5.fits'))
             expected_data_frame = pd.DataFrame(fake_hdu_list[1].data)
             assert light_curve.data_frame.sort_index(axis=1).equals(expected_data_frame.sort_index(axis=1))
 
     def test_from_path_factory_light_curve_uses_correct_default_times_and_fluxes(self, fake_hdu_list):
         with patch.object(module.fits, 'open') as mock_open:
             mock_open.return_value.__enter__.return_value = fake_hdu_list
-            light_curve = TessTwoMinuteCadenceFileBasedLightCurve.from_path(Path('TIC 169480782 sector 5.fits'))
+            light_curve = TessTwoMinuteCadenceLightCurve.from_path(Path('TIC 169480782 sector 5.fits'))
             assert np.array_equal(light_curve.times, fake_hdu_list[1].data[TessTwoMinuteCadenceColumnName.TIME.value])
             assert np.array_equal(light_curve.fluxes,
                                   fake_hdu_list[1].data[TessTwoMinuteCadenceColumnName.PDCSAP_FLUX.value])
 
     def test_can_get_tic_id_and_sector_from_human_readable_file_name(self):
-        tic_id0, sector0 = TessTwoMinuteCadenceFileBasedLightCurve.get_tic_id_and_sector_from_file_path(
+        tic_id0, sector0 = TessTwoMinuteCadenceLightCurve.get_tic_id_and_sector_from_file_path(
             'TIC 289890301 sector 15 second half')
         assert tic_id0 == 289890301
         assert sector0 == 15
-        tic_id1, sector1 = TessTwoMinuteCadenceFileBasedLightCurve.get_tic_id_and_sector_from_file_path(
+        tic_id1, sector1 = TessTwoMinuteCadenceLightCurve.get_tic_id_and_sector_from_file_path(
             'output/TIC 169480782 sector 5.png')
         assert tic_id1 == 169480782
         assert sector1 == 5
 
     def test_get_tic_id_and_sector_raises_error_with_unknown_pattern(self):
         with pytest.raises(ValueError):
-            TessTwoMinuteCadenceFileBasedLightCurve.get_tic_id_and_sector_from_file_path('a b c d e f g')
+            TessTwoMinuteCadenceLightCurve.get_tic_id_and_sector_from_file_path('a b c d e f g')
 
     def test_can_get_tic_id_and_sector_from_tess_obs_id_style_file_name(self):
-        tic_id0, sector0 = TessTwoMinuteCadenceFileBasedLightCurve.get_tic_id_and_sector_from_file_path(
+        tic_id0, sector0 = TessTwoMinuteCadenceLightCurve.get_tic_id_and_sector_from_file_path(
             'mast:TESS/product/tess2019006130736-s0007-0000000278956474-0131-s_lc.fits')
         assert tic_id0 == 278956474
         assert sector0 == 7
-        tic_id1, sector1 = TessTwoMinuteCadenceFileBasedLightCurve.get_tic_id_and_sector_from_file_path(
+        tic_id1, sector1 = TessTwoMinuteCadenceLightCurve.get_tic_id_and_sector_from_file_path(
             'tess2018319095959-s0005-0000000278956474-0125-s')
         assert tic_id1 == 278956474
         assert sector1 == 5
@@ -70,6 +70,19 @@ class TestTessTwoMinuteCadenceFileBasedLightCurve:
     def test_from_path_factory_sets_the_tic_id_and_sector_of_the_light_curve(self, fake_hdu_list):
         with patch.object(module.fits, 'open') as mock_open:
             mock_open.return_value.__enter__.return_value = fake_hdu_list
-            light_curve = TessTwoMinuteCadenceFileBasedLightCurve.from_path(Path('TIC 169480782 sector 5.fits'))
+            light_curve = TessTwoMinuteCadenceLightCurve.from_path(Path('TIC 169480782 sector 5.fits'))
             assert light_curve.tic_id == 169480782
             assert light_curve.sector == 5
+
+    def test_from_mast_factory_requests_a_mast_download_and_uses_the_resulting_file_with_the_path_factory(self):
+        mock_light_curve = Mock()
+        mock_light_curve_path = Mock()
+        mock_download_light_curve = Mock(return_value=mock_light_curve_path)
+        TessTwoMinuteCadenceLightCurve.mast_tess_data_interface.download_lightcurve = mock_download_light_curve
+        mock_from_path = Mock(return_value=mock_light_curve)
+        TessTwoMinuteCadenceLightCurve.from_path = mock_from_path
+        light_curve = TessTwoMinuteCadenceLightCurve.from_mast(tic_id=1, sector=2)
+        assert mock_download_light_curve.call_args[1]['tic_id'] == 1
+        assert mock_download_light_curve.call_args[1]['sector'] == 2
+        assert mock_from_path.call_args[1]['path'] == mock_light_curve_path
+        assert light_curve is mock_light_curve

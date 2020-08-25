@@ -1,5 +1,5 @@
 """
-Code to for a class to represent a TESS two minute cadence light curve based on a file.
+Code to for a class to represent a TESS two minute cadence light curve.
 """
 from __future__ import annotations
 
@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import List, Union
 from astropy.io import fits
 
+from ramjet.data_interface.tess_data_interface import TessDataInterface
 from ramjet.photometric_database.light_curve import LightCurve
 
 
@@ -34,10 +35,12 @@ class TessTwoMinuteCadenceMastFitsIndex(Enum):
     PDCSAP_FLUX_ERROR = 'PDCSAP_FLUX_ERR'
 
 
-class TessTwoMinuteCadenceFileBasedLightCurve(LightCurve):
+class TessTwoMinuteCadenceLightCurve(LightCurve):
     """
     A class to represent a TESS two minute cadence light curve.
     """
+    mast_tess_data_interface = TessDataInterface()
+
     def __init__(self):
         super().__init__()
         self.tic_id: Union[int, None] = None
@@ -47,14 +50,14 @@ class TessTwoMinuteCadenceFileBasedLightCurve(LightCurve):
     def from_path(cls, path: Path,
                   flux_column_name: TessTwoMinuteCadenceColumnName = TessTwoMinuteCadenceColumnName.PDCSAP_FLUX.value,
                   fits_indexes_to_load: Union[List[TessTwoMinuteCadenceMastFitsIndex], None] = None
-                  ) -> TessTwoMinuteCadenceFileBasedLightCurve:
+                  ) -> TessTwoMinuteCadenceLightCurve:
         """
-        Creates a TESS two minute light curve from a path to the MAST FITS file..
+        Creates a TESS two minute light curve from a path to the MAST FITS file.
 
         :param path: The path to the FITS file to load.
         :param flux_column_name: The column name to use for the default flux attribute.
         :param fits_indexes_to_load: The indexes to load from the FITS file. By default, all will be loaded. Selecting
-                                     specific ones may speed the process when loading many ligh tcurves.
+                                     specific ones may speed the process when loading many light curves.
         :return: The light curve.
         """
         light_curve = cls()
@@ -68,6 +71,26 @@ class TessTwoMinuteCadenceFileBasedLightCurve(LightCurve):
                 column_name = TessTwoMinuteCadenceColumnName[fits_index.name]
                 light_curve.data_frame[column_name.value] = light_curve_table[fits_index.value]
         light_curve.tic_id, light_curve.sector = cls.get_tic_id_and_sector_from_file_path(path)
+        return light_curve
+
+    @classmethod
+    def from_mast(cls, tic_id:int, sector: int,
+                  flux_column_name: TessTwoMinuteCadenceColumnName = TessTwoMinuteCadenceColumnName.PDCSAP_FLUX.value,
+                  fits_indexes_to_load: Union[List[TessTwoMinuteCadenceMastFitsIndex], None] = None
+                  ) -> TessTwoMinuteCadenceLightCurve:
+        """
+        Downloads a FITS file from MAST and creates a TESS two minute light curve from it.
+
+        :param tic_id: The TIC ID of the target.
+        :param sector: The sector of the observation.
+        :param flux_column_name: The column name to use for the default flux attribute.
+        :param fits_indexes_to_load: The indexes to load from the FITS file. By default, all will be loaded. Selecting
+                                     specific ones may speed the process when loading many light curves.
+        :return: The light curve.
+        """
+        light_curve_path = cls.mast_tess_data_interface.download_lightcurve(tic_id=tic_id, sector=sector)
+        light_curve = cls.from_path(path=light_curve_path, flux_column_name=flux_column_name,
+                                    fits_indexes_to_load=fits_indexes_to_load)
         return light_curve
 
     @staticmethod
