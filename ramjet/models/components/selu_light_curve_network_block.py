@@ -30,6 +30,6 @@ class SeluLightCurveNetworkBlock(Layer):
         x = self.convolution(x, training=training)
         if self.dropout is not None:
             x = self.dropout(x, training=training)
-        if self.pooling is not None:
-            x = self.pooling(x, training=training)
+        if self.max_pooling is not None:
+            x = self.max_pooling(x, training=training)
         return x
