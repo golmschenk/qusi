@@ -1,18 +1,22 @@
-from tensorflow.keras.layers import LeakyReLU, Conv1D, SpatialDropout1D, MaxPooling1D, BatchNormalization, Layer
+from tensorflow.keras.layers import LeakyReLU, Conv1D, SpatialDropout1D, Dropout, MaxPooling1D, BatchNormalization,\
+    Layer
 from tensorflow.keras.regularizers import l2
 
 
 class LightCurveNetworkBlock(Layer):
     """A block containing a convolution and all the fixings that go with it."""
     def __init__(self, filters: int, kernel_size: int, pooling_size: int, dropout_rate: float = 0.1,
-                 batch_normalization: bool = True):
+                 batch_normalization: bool = True, spatial_dropout: bool = True):
         super().__init__()
         leaky_relu = LeakyReLU(alpha=0.01)
         l2_regularizer = l2(0.001)
         self.convolution = Conv1D(filters, kernel_size=kernel_size, activation=leaky_relu,
                                   kernel_regularizer=l2_regularizer)
         if dropout_rate > 0:
-            self.dropout = SpatialDropout1D(dropout_rate)
+            if spatial_dropout:
+                self.dropout = SpatialDropout1D(dropout_rate)
+            else:
+                self.dropout = Dropout(dropout_rate)
         else:
             self.dropout = None
         if pooling_size > 1:

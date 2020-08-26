@@ -1,6 +1,6 @@
 from tensorflow import sigmoid
 from tensorflow.keras import Model
-from tensorflow.keras.layers import Convolution1D, Reshape
+from tensorflow.keras.layers import Dense, Reshape, Convolution1D
 
 from ramjet.models.components.light_curve_network_block import LightCurveNetworkBlock
 
@@ -16,7 +16,7 @@ class Hades(Model):
         self.block5 = LightCurveNetworkBlock(filters=128, kernel_size=3, pooling_size=2)
         self.block6 = LightCurveNetworkBlock(filters=128, kernel_size=3, pooling_size=2)
         self.block7 = LightCurveNetworkBlock(filters=128, kernel_size=3, pooling_size=2)
-        self.block8 = LightCurveNetworkBlock(filters=128, kernel_size=3, pooling_size=2)
+        self.block8 = LightCurveNetworkBlock(filters=20, kernel_size=3, pooling_size=2, spatial_dropout=False)
         self.block9 = LightCurveNetworkBlock(filters=20, kernel_size=7, pooling_size=1)
         self.block10 = LightCurveNetworkBlock(filters=20, kernel_size=1, pooling_size=1, batch_normalization=False)
         self.prediction_layer = Convolution1D(1, kernel_size=1, activation=sigmoid)
