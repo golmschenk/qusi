@@ -81,11 +81,15 @@ class LightcurveDatabase(ABC):
         return np.array(a)[indexes], np.array(b)[indexes]
 
     @staticmethod
-    def remove_random_values(lightcurve: np.ndarray) -> np.ndarray:
+    def remove_random_elements(lightcurve: np.ndarray, ratio: float = 0.01) -> np.ndarray:
         """Removes random values from the lightcurve."""
-        max_values_to_remove = 10
-        values_to_remove = random.randrange(max_values_to_remove)
-        random_indexes = np.random.randint(0, len(lightcurve), size=values_to_remove)
+        light_curve_length = lightcurve.shape[0]
+        max_values_to_remove = int(light_curve_length * ratio)
+        if max_values_to_remove != 0:
+            values_to_remove = np.random.randint(max_values_to_remove)
+        else:
+            values_to_remove = 0
+        random_indexes = np.random.choice(range(light_curve_length), values_to_remove, replace=False)
         return np.delete(lightcurve, random_indexes)
 
     def get_ratio_enforced_dataset(self, positive_training_dataset: tf.data.Dataset,
@@ -122,12 +126,11 @@ class LightcurveDatabase(ABC):
         """
         return 'positive' in example_path
 
-    @staticmethod
-    def make_uniform_length(example: np.ndarray, length: int, randomize: bool = True) -> np.ndarray:
+    def make_uniform_length(self, example: np.ndarray, length: int, randomize: bool = True) -> np.ndarray:
         """Makes the example a specific length, by clipping those too large and repeating those too small."""
         assert len(example.shape) == 1  # Only tested for 1D cases. Need to add test for 2D before allowing.
         if randomize:
-            example = np.roll(example, np.random.randint(example.shape[0]), axis=0)
+            example = self.randomly_roll_elements(example)
         if example.shape[0] == length:
             pass
         elif example.shape[0] > length:
@@ -135,6 +138,12 @@ class LightcurveDatabase(ABC):
         else:
             elements_to_repeat = length - example.shape[0]
             example = np.pad(example, (0, elements_to_repeat), mode='wrap')
+        return example
+
+    @staticmethod
+    def randomly_roll_elements(example: np.ndarray) -> np.ndarray:
+        """Randomly rolls the elements."""
+        example = np.roll(example, np.random.randint(example.shape[0]), axis=0)
         return example
 
     def get_training_and_validation_datasets_for_file_paths(

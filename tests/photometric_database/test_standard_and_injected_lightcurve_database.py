@@ -60,6 +60,13 @@ class TestStandardAndInjectedLightcurveDatabase:
         database.normalize = lambda fluxes: fluxes  # Don't normalize values to keep it simple.
         return database
 
+    @pytest.fixture
+    def deterministic_database(self, database) -> StandardAndInjectedLightcurveDatabase:
+        """A fixture of a deterministic database with lightcurve collections pre-prepared."""
+        database.remove_random_elements = lambda x: x
+        database.randomly_roll_elements = lambda x: x
+        return database
+
     def test_database_has_lightcurve_collection_properties(self):
         database = StandardAndInjectedLightcurveDatabase()
         assert hasattr(database, 'training_standard_lightcurve_collections')
@@ -100,7 +107,9 @@ class TestStandardAndInjectedLightcurveDatabase:
 
     @pytest.mark.slow
     @pytest.mark.functional
-    def test_can_generate_standard_lightcurve_and_label_dataset_from_paths_dataset_and_label(self, database):
+    def test_can_generate_standard_lightcurve_and_label_dataset_from_paths_dataset_and_label(self,
+                                                                                             deterministic_database):
+        database = deterministic_database
         lightcurve_collection = database.training_standard_lightcurve_collections[0]
         paths_dataset = database.generate_paths_dataset_from_lightcurve_collection(lightcurve_collection)
         label = lightcurve_collection.label
@@ -111,7 +120,8 @@ class TestStandardAndInjectedLightcurveDatabase:
         assert np.array_equal(lightcurve_and_label[0].numpy(), [[0], [1], [2]])  # Standard lightcurve 0.
         assert np.array_equal(lightcurve_and_label[1].numpy(), [0])  # Standard label 0.
 
-    def test_can_preprocess_standard_lightcurve(self, database):
+    def test_can_preprocess_standard_lightcurve(self, deterministic_database):
+        database = deterministic_database
         lightcurve_collection = database.training_standard_lightcurve_collections[0]
         # noinspection PyUnresolvedReferences
         lightcurve_path = lightcurve_collection.get_paths()[0]
@@ -146,7 +156,8 @@ class TestStandardAndInjectedLightcurveDatabase:
         assert np.array_equal(lightcurve_and_label[0].numpy(), [[0.5], [3], [5.5]])  # Injected lightcurve 0
         assert np.array_equal(lightcurve_and_label[1].numpy(), [0])  # Injected label 0.
 
-    def test_can_preprocess_injected_lightcurve(self, database):
+    def test_can_preprocess_injected_lightcurve(self, deterministic_database):
+        database = deterministic_database
         injectee_lightcurve_collection = database.training_injectee_lightcurve_collection
         injectable_lightcurve_collection = database.training_injectable_lightcurve_collections[0]
         # noinspection PyUnresolvedReferences

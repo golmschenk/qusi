@@ -9,7 +9,6 @@ import tensorflow as tf
 import pytest
 
 import ramjet.photometric_database.lightcurve_database as module
-import ramjet.photometric_database.lightcurve_database
 from ramjet.photometric_database.lightcurve_database import LightcurveDatabase
 
 
@@ -211,3 +210,10 @@ class TestLightcurveDatabase:
             stub_randint.return_value = 3
             uniform_length_fluxes = database.make_uniform_length(fluxes, 4, randomize=True)
             assert np.array_equal(uniform_length_fluxes, [3, 4, 5, 0])
+
+    def test_remove_random_elements_removes_elements(self, database):
+        array = np.array([0, 1, 2, 3])
+        with patch.object(module.np.random, 'randint') as mock_randint:
+            mock_randint.side_effect = lambda x: x
+            updated_array = database.remove_random_elements(array, ratio=0.5)
+        assert updated_array.shape[0] == 2
