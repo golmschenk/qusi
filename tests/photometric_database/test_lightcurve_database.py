@@ -8,6 +8,7 @@ import numpy as np
 import tensorflow as tf
 import pytest
 
+import ramjet.photometric_database.lightcurve_database as module
 import ramjet.photometric_database.lightcurve_database
 from ramjet.photometric_database.lightcurve_database import LightcurveDatabase
 
@@ -60,19 +61,6 @@ class TestLightcurveDatabase:
         assert np.array_equal(batch0[0].numpy(), [[1, 1], [2, 2], [3, 3]])
         batch1 = next(padded_window_iterator)
         assert np.array_equal(batch1[0].numpy(), [[3, 3, 0], [4, 4, 4], [5, 5, 5]])
-
-    @patch.object(ramjet.photometric_database.lightcurve_database.np.random, 'randint')
-    def test_lightcurve_padding_can_be_made_non_random_for_evaluation(self, mock_randint, database, database_module):
-        mock_randint.return_value = 3
-        lightcurve0 = database.make_uniform_length(np.array([10, 20, 30, 40, 50]), length=9, randomize=True)
-        assert np.array_equal(lightcurve0, [30, 40, 50, 10, 20, 30, 40, 50, 10])
-        lightcurve1 = database.make_uniform_length(np.array([10, 20, 30, 40, 50]), length=9, randomize=False)
-        assert np.array_equal(lightcurve1, [10, 20, 30, 40, 50, 10, 20, 30, 40])
-        # Should also work for lightcurves with more than just 1 value over time.
-        lightcurve2 = database.make_uniform_length(np.array([[10], [20], [30], [40], [50]]), length=9, randomize=True)
-        assert np.array_equal(lightcurve2, [[30], [40], [50], [10], [20], [30], [40], [50], [10]])
-        lightcurve3 = database.make_uniform_length(np.array([[10], [20], [30], [40], [50]]), length=9, randomize=False)
-        assert np.array_equal(lightcurve3, [[10], [20], [30], [40], [50], [10], [20], [30], [40]])
 
     def test_splitting_of_training_and_validation_datasets_for_file_paths_with_list_input(self, database):
         paths = [Path('a'), Path('b'), Path('c'), Path('d'), Path('e'), Path('f')]
@@ -187,3 +175,39 @@ class TestLightcurveDatabase:
         batch1 = next(windowed_dataset_iterator)
         assert np.array_equal(batch1[0], [3, 4, 5])
         assert np.array_equal(batch1[1], [-3, -4, -5])
+
+    def test_make_uniform_length_does_not_change_input_that_is_already_the_correct_size(self, database):
+        fluxes = np.array([0, 1, 2, 3, 4, 5])
+        uniform_length_fluxes = database.make_uniform_length(fluxes, 6, randomize=False)
+        assert np.array_equal(uniform_length_fluxes, [0, 1, 2, 3, 4, 5])
+
+    def test_make_uniform_length_with_random_rolls_input_that_is_already_the_correct_size(self, database):
+        fluxes = np.array([0, 1, 2, 3, 4, 5])
+        with patch.object(module.np.random, 'randint') as stub_randint:
+            stub_randint.return_value = 3
+            uniform_length_fluxes = database.make_uniform_length(fluxes, 6, randomize=True)
+            assert np.array_equal(uniform_length_fluxes, [3, 4, 5, 0, 1, 2])
+
+    def test_make_uniform_length_repeats_elements_when_input_is_too_short(self, database):
+        fluxes = np.array([0, 1, 2, 3])
+        uniform_length_fluxes = database.make_uniform_length(fluxes, 6, randomize=False)
+        assert np.array_equal(uniform_length_fluxes, [0, 1, 2, 3, 0, 1])
+
+    def test_make_uniform_length_repeats_elements_when_input_is_too_short_with_random_roll(self, database):
+        fluxes = np.array([0, 1, 2, 3])
+        with patch.object(module.np.random, 'randint') as stub_randint:
+            stub_randint.return_value = 3
+            uniform_length_fluxes = database.make_uniform_length(fluxes, 6)
+            assert np.array_equal(uniform_length_fluxes, [1, 2, 3, 0, 1, 2])
+
+    def test_make_uniform_length_clips_elements_when_input_is_too_long(self, database):
+        fluxes = np.array([0, 1, 2, 3, 4, 5])
+        uniform_length_fluxes = database.make_uniform_length(fluxes, 4, randomize=False)
+        assert np.array_equal(uniform_length_fluxes, [0, 1, 2, 3])
+
+    def test_make_uniform_length_clips_elements_when_input_is_too_long_with_random_roll(self, database):
+        fluxes = np.array([0, 1, 2, 3, 4, 5])
+        with patch.object(module.np.random, 'randint') as stub_randint:
+            stub_randint.return_value = 3
+            uniform_length_fluxes = database.make_uniform_length(fluxes, 4, randomize=True)
+            assert np.array_equal(uniform_length_fluxes, [3, 4, 5, 0])

@@ -5,6 +5,7 @@ import numpy as np
 import tensorflow as tf
 from pathlib import Path
 
+import ramjet.photometric_database.lightcurve_database
 import ramjet.photometric_database.standard_and_injected_lightcurve_database as database_module
 from ramjet.photometric_database.lightcurve_collection import LightcurveCollection
 from ramjet.photometric_database.standard_and_injected_lightcurve_database import \
@@ -71,7 +72,8 @@ class TestStandardAndInjectedLightcurveDatabase:
     @pytest.mark.slow
     @pytest.mark.functional
     @patch.object(database_module.np.random, 'random', return_value=0)
-    def test_database_can_generate_training_and_validation_datasets(self, mock_random, database):
+    @patch.object(ramjet.photometric_database.lightcurve_database.np.random, 'randint', return_value=0)
+    def test_database_can_generate_training_and_validation_datasets(self, mock_randint, mock_random, database):
         training_dataset, validation_dataset = database.generate_datasets()
         training_batch = next(iter(training_dataset))
         training_batch_examples = training_batch[0]
@@ -125,8 +127,9 @@ class TestStandardAndInjectedLightcurveDatabase:
     @pytest.mark.slow
     @pytest.mark.functional
     @patch.object(database_module.np.random, 'random', return_value=0)
-    def test_can_generate_injected_lightcurve_and_label_dataset_from_paths_dataset_and_label(self, mock_random,
-                                                                                             database):
+    @patch.object(ramjet.photometric_database.lightcurve_database.np.random, 'randint', return_value=0)
+    def test_can_generate_injected_lightcurve_and_label_dataset_from_paths_dataset_and_label(self, mock_randint,
+                                                                                             mock_random, database):
         injectee_lightcurve_collection = database.training_injectee_lightcurve_collection
         injectable_lightcurve_collection = database.training_injectable_lightcurve_collections[0]
         injectee_paths_dataset = database.generate_paths_dataset_from_lightcurve_collection(
@@ -294,7 +297,9 @@ class TestStandardAndInjectedLightcurveDatabase:
 
     @pytest.mark.slow
     @pytest.mark.functional
-    def test_database_can_generate_training_and_validation_datasets_with_only_standard_collections(self, database):
+    @patch.object(ramjet.photometric_database.lightcurve_database.np.random, 'randint', return_value=0)
+    def test_database_can_generate_training_and_validation_datasets_with_only_standard_collections(self, mock_randint,
+                                                                                                   database):
         database.training_injectee_lightcurve_collection = None
         database.training_injectable_lightcurve_collections = []
         database.validation_injectee_lightcurve_collection = None
@@ -336,17 +341,3 @@ class TestStandardAndInjectedLightcurveDatabase:
         assert lightcurve.shape == (3, 1)
         assert np.array_equal(lightcurve, [[0], [1], [2]])  # Standard lightcurve 0.
 
-    @pytest.mark.slow
-    @pytest.mark.functional
-    def test_generated_standard_and_infer_datasets_return_the_same_lightcurve(self, database):
-        lightcurve_collection = database.training_standard_lightcurve_collections[0]
-        paths_dataset0 = database.generate_paths_dataset_from_lightcurve_collection(lightcurve_collection)
-        label = lightcurve_collection.label
-        lightcurve_and_label_dataset = database.generate_standard_lightcurve_and_label_dataset(
-            paths_dataset0, lightcurve_collection.load_times_and_fluxes_from_path, label)
-        lightcurve_and_label = next(iter(lightcurve_and_label_dataset))
-        paths_dataset1 = database.generate_paths_dataset_from_lightcurve_collection(lightcurve_collection)
-        path_and_lightcurve_dataset = database.generate_infer_path_and_lightcurve_dataset(
-            paths_dataset1, lightcurve_collection.load_times_and_fluxes_from_path)
-        path_and_lightcurve = next(iter(path_and_lightcurve_dataset))
-        assert np.array_equal(lightcurve_and_label[0].numpy(), path_and_lightcurve[1].numpy())

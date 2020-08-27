@@ -2,6 +2,7 @@
 An abstract class allowing for any number and combination of standard and injectable/injectee lightcurve collections.
 """
 import math
+import random
 from enum import Enum
 from functools import partial
 
@@ -327,7 +328,7 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         example = np.expand_dims(preprocessed_fluxes, axis=-1)
         return example, np.array([label])
 
-    def flux_preprocessing(self, fluxes: np.ndarray, evaluation_mode: bool = False, seed: int = None) -> np.ndarray:
+    def flux_preprocessing(self, fluxes: np.ndarray, evaluation_mode: bool = False) -> np.ndarray:
         """
         Preprocessing for the flux.
 
@@ -337,7 +338,7 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         :return: The preprocessed flux array.
         """
         uniform_length_fluxes = self.make_uniform_length(fluxes, self.time_steps_per_example,
-                                                         randomize=not evaluation_mode, seed=seed)
+                                                         randomize=not evaluation_mode)
         normalized_fluxes = self.normalize(uniform_length_fluxes)
         return normalized_fluxes
 

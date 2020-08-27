@@ -123,29 +123,18 @@ class LightcurveDatabase(ABC):
         return 'positive' in example_path
 
     @staticmethod
-    def make_uniform_length(example: np.ndarray, length: int, randomize: bool = True, seed: int = None) -> np.ndarray:
+    def make_uniform_length(example: np.ndarray, length: int, randomize: bool = True) -> np.ndarray:
         """Makes the example a specific length, by clipping those too large and repeating those too small."""
-        if seed is not None:
-            np.random.seed(seed)
+        assert len(example.shape) == 1  # Only tested for 1D cases. Need to add test for 2D before allowing.
+        if randomize:
+            example = np.roll(example, np.random.randint(example.shape[0]), axis=0)
         if example.shape[0] == length:
             pass
         elif example.shape[0] > length:
-            if randomize:
-                start_slice = np.random.randint(0, example.shape[0] - length)
-            else:
-                start_slice = 0
-            example = example[start_slice:start_slice + length]
+            example = example[:length]
         else:
             elements_to_repeat = length - example.shape[0]
-            if randomize:
-                pre_padding = np.random.randint(0, elements_to_repeat + 1)
-            else:
-                pre_padding = 0
-            post_padding = elements_to_repeat - pre_padding
-            if len(example.shape) == 2:
-                example = np.pad(example, ((pre_padding, post_padding), (0, 0)), mode='wrap')
-            else:
-                example = np.pad(example, (pre_padding, post_padding), mode='wrap')
+            example = np.pad(example, (0, elements_to_repeat), mode='wrap')
         return example
 
     def get_training_and_validation_datasets_for_file_paths(
