@@ -53,3 +53,17 @@ class TestLightCurve:
         light_curve.flux_column_name = 'flux_column'
         light_curve.fluxes = [0, 1]
         assert np.array_equal(light_curve.data_frame['flux_column'].values, [0, 1])
+
+    def test_can_convert_column_to_relative_scale(self):
+        light_curve = LightCurve()
+        light_curve.data_frame = pd.DataFrame({'a': [1, 2, 3]})
+        light_curve.convert_column_to_relative_scale('a')
+        assert np.array_equal(light_curve.data_frame['a'], [0.5, 1, 1.5])
+
+    def test_can_convert_columns_to_relative_scale(self):
+        light_curve = LightCurve()
+        light_curve.data_frame = pd.DataFrame({'a': [1, 2, 3], 'b': [-1, -2, -3], 'c': [1, 2, 3]})
+        light_curve.convert_columns_to_relative_scale(['a', 'b'])
+        assert np.array_equal(light_curve.data_frame['a'], [0.5, 1, 1.5])
+        assert np.array_equal(light_curve.data_frame['b'], [0.5, 1, 1.5])
+        assert np.array_equal(light_curve.data_frame['c'], [1, 2, 3])
