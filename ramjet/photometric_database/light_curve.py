@@ -53,7 +53,7 @@ class LightCurve:
 
         :param column_name: The name of the column to be converted.
         """
-        self.data_frame[column_name] = self.data_frame[column_name] / np.median(self.data_frame[column_name])
+        self.data_frame[column_name] = self.data_frame[column_name] / np.nanmedian(self.data_frame[column_name])
 
     def convert_columns_to_relative_scale(self, column_names: List[str]):
         """

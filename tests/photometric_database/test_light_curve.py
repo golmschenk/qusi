@@ -58,12 +58,20 @@ class TestLightCurve:
         light_curve = LightCurve()
         light_curve.data_frame = pd.DataFrame({'a': [1, 2, 3]})
         light_curve.convert_column_to_relative_scale('a')
-        assert np.array_equal(light_curve.data_frame['a'], [0.5, 1, 1.5])
+        assert np.array_equal(light_curve.data_frame['a'].values, [0.5, 1, 1.5])
 
     def test_can_convert_columns_to_relative_scale(self):
         light_curve = LightCurve()
         light_curve.data_frame = pd.DataFrame({'a': [1, 2, 3], 'b': [-1, -2, -3], 'c': [1, 2, 3]})
         light_curve.convert_columns_to_relative_scale(['a', 'b'])
-        assert np.array_equal(light_curve.data_frame['a'], [0.5, 1, 1.5])
-        assert np.array_equal(light_curve.data_frame['b'], [0.5, 1, 1.5])
-        assert np.array_equal(light_curve.data_frame['c'], [1, 2, 3])
+        assert np.array_equal(light_curve.data_frame['a'].values, [0.5, 1, 1.5])
+        assert np.array_equal(light_curve.data_frame['b'].values, [0.5, 1, 1.5])
+        assert np.array_equal(light_curve.data_frame['c'].values, [1, 2, 3])
+
+    def test_can_convert_column_to_relative_scale_with_nans(self):
+        light_curve = LightCurve()
+        light_curve.data_frame = pd.DataFrame({'a': [1, 2, 3, np.nan]})
+        light_curve.convert_column_to_relative_scale('a')
+        light_curve_values = light_curve.data_frame['a'].values
+        expected_values = np.array([0.5, 1, 1.5, np.nan])
+        assert np.allclose(light_curve_values, expected_values, equal_nan=True)
