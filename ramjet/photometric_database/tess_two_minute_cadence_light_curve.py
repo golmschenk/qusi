@@ -76,7 +76,7 @@ class TessTwoMinuteCadenceLightCurve(LightCurve):
         return light_curve
 
     @classmethod
-    def from_mast(cls, tic_id:int, sector: int,
+    def from_mast(cls, tic_id: int, sector: int,
                   flux_column_name: TessTwoMinuteCadenceColumnName = TessTwoMinuteCadenceColumnName.PDCSAP_FLUX.value,
                   fits_indexes_to_load: Union[List[TessTwoMinuteCadenceMastFitsIndex], None] = None
                   ) -> TessTwoMinuteCadenceLightCurve:

@@ -22,3 +22,4 @@ setuptools
 dataset
 pathos
 peewee
+pytest-asyncio
