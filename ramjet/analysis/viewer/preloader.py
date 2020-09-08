@@ -31,13 +31,6 @@ class Preloader:
         self.light_curve_path_list: List[Path] = []
         self.running_loading_task: Union[Task, None] = None
 
-    async def load_surrounding_light_curves(self):
-        """
-        Loads the next and previous light curves relative to the current light curve.
-        """
-        await self.load_next_light_curves()
-        await self.load_previous_light_curves()
-
     async def load_light_curve_at_index_as_current(self, index: int):
         """
         Loads the light curve at the passed index as the current light curve.
@@ -45,9 +38,18 @@ class Preloader:
         :param index: The index in the path list to load.
         """
         loop = asyncio.get_running_loop()
+        await self.cancel_loading_task()
         current_light_curve = await loop.run_in_executor(None, self.load_light_curve_from_path,
                                                          self.light_curve_path_list[index])
         self.current_index_light_curve_pair = IndexLightCurvePair(index, current_light_curve)
+        await self.reset_deques()
+
+    async def load_surrounding_light_curves(self):
+        """
+        Loads the next and previous light curves relative to the current light curve.
+        """
+        await self.load_next_light_curves()
+        await self.load_previous_light_curves()
 
     async def load_next_light_curves(self):
         """
@@ -109,9 +111,15 @@ class Preloader:
         """
         Cancels the existing loading task and starts a new one.
         """
+        await self.cancel_loading_task()
+        self.running_loading_task = asyncio.create_task(self.load_surrounding_light_curves())
+
+    async def cancel_loading_task(self):
+        """
+        Cancels an existing loading task if it exists.
+        """
         if self.running_loading_task is not None:
             self.running_loading_task.cancel()
-        asyncio.create_task(self.load_surrounding_light_curves())
 
     @staticmethod
     def load_light_curve_from_path(path: Path) -> LightCurve:
@@ -122,3 +130,12 @@ class Preloader:
         :return: The light curve.
         """
         return TessTwoMinuteCadenceLightCurve.from_path(path)
+
+    async def reset_deques(self):
+        """
+        Cancels any loading tasks, clears the deques, and starts the loading task.
+        """
+        await self.cancel_loading_task()
+        self.previous_index_light_curve_pair_deque = deque(maxlen=self.maximum_preloaded)
+        self.next_index_light_curve_pair_deque = deque(maxlen=self.maximum_preloaded)
+        self.running_loading_task = asyncio.create_task(self.load_surrounding_light_curves())

@@ -190,21 +190,21 @@ class TestPreloader:
         assert mock_refresh_surrounding_light_curve_loading.called
 
     @pytest.mark.asyncio
-    async def test_refresh_surrounding_light_curve_loading_cancels_existing_loading_task(self):
+    async def test_cancel_loading_cancels_existing_loading_task(self):
         preloader = Preloader()
         mock_old_running_loading_task = Mock()
         preloader.running_loading_task = mock_old_running_loading_task
 
-        await preloader.refresh_surrounding_light_curve_loading()
+        await preloader.cancel_loading_task()
 
         assert preloader.running_loading_task.cancel.called
 
     @pytest.mark.asyncio
-    async def test_refresh_surrounding_light_curve_loading_works_with_no_existing_loading_task(self):
+    async def test_cancel_loading_does_not_error_with_no_existing_loading_task(self):
         preloader = Preloader()
         preloader.running_loading_task = None
 
-        await preloader.refresh_surrounding_light_curve_loading()
+        await preloader.cancel_loading_task()
 
         assert True  # Implicit pass if an error did not occur.
 
