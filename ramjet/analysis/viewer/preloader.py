@@ -139,3 +139,17 @@ class Preloader:
         self.previous_index_light_curve_pair_deque = deque(maxlen=self.maximum_preloaded)
         self.next_index_light_curve_pair_deque = deque(maxlen=self.maximum_preloaded)
         self.running_loading_task = asyncio.create_task(self.load_surrounding_light_curves())
+
+    @classmethod
+    async def from_light_curve_path_list(cls, paths: List[Path], starting_index: int = 0):
+        """
+        Create a preloader from a list of light curve paths.
+
+        :param paths: The list of light curve paths.
+        :param starting_index: The starting index to preload around.
+        :return: The preloader.
+        """
+        preloader = cls()
+        preloader.light_curve_path_list = paths
+        await preloader.load_light_curve_at_index_as_current(starting_index)
+        return preloader

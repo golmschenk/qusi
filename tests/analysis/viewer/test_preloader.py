@@ -1,5 +1,6 @@
 from asyncio import Future
 from collections import deque
+from pathlib import Path
 from unittest.mock import Mock, MagicMock, patch, AsyncMock
 
 import pytest
@@ -219,3 +220,20 @@ class TestPreloader:
             _ = await preloader.refresh_surrounding_light_curve_loading()
 
             assert mock_create_task.call_args[0][0] is stub_coroutine
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_factory_from_path_list_loads_light_curves(self):
+        stub_light_curves_dictionary = {'a.fits': Mock(), 'b.fits': Mock(), 'c.fits': Mock(), 'd.fits': Mock()}
+        def load_light_curve_side_effect(path):
+            return stub_light_curves_dictionary[str(path)]
+        mock_load_light_curve_from_path = Mock(side_effect=load_light_curve_side_effect)
+        Preloader.load_light_curve_from_path = mock_load_light_curve_from_path
+
+        paths = [Path(string) for string in ['a.fits', 'b.fits', 'c.fits', 'd.fits']]
+        preloader = await Preloader.from_light_curve_path_list(paths, starting_index=1)
+        await preloader.running_loading_task
+
+        assert preloader.current_index_light_curve_pair.light_curve == stub_light_curves_dictionary['b.fits']
+        assert len(preloader.previous_index_light_curve_pair_deque) == 1
+        assert len(preloader.next_index_light_curve_pair_deque) == 2
