@@ -129,7 +129,9 @@ class Preloader:
         :param path: The path of the light curve.
         :return: The light curve.
         """
-        return TessTwoMinuteCadenceLightCurve.from_path(path)
+        light_curve = TessTwoMinuteCadenceLightCurve.from_path(path)
+        light_curve.convert_columns_to_relative_scale(TessTwoMinuteCadenceLightCurve.flux_column_names)
+        return light_curve
 
     async def reset_deques(self):
         """

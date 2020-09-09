@@ -1,7 +1,6 @@
-from asyncio import Future
 from collections import deque
 from pathlib import Path
-from unittest.mock import Mock, MagicMock, patch, AsyncMock
+from unittest.mock import Mock, patch, AsyncMock
 
 import pytest
 

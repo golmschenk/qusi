@@ -77,7 +77,7 @@ class LightCurveDisplay:
         self.figure.circle(x=time_column_name, y=flux_column_name, source=self.data_source, legend_label=legend_label,
                            line_color=color, line_alpha=0.4, fill_color=color, fill_alpha=0.1)
 
-    def update_from_light_curve(self, lightcurve: LightCurve):
+    async def update_from_light_curve(self, lightcurve: LightCurve):
         """
         Update the data for the display based on a light curve.
 
