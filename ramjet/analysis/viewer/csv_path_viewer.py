@@ -67,6 +67,7 @@ class CsvPathViewer:
         viewer.light_curve_display = LightCurveDisplay.for_columns(TessTwoMinuteCadenceColumnName.TIME.value,
                                                                    TessTwoMinuteCadenceLightCurve.flux_column_names,
                                                                    flux_axis_label='Relative flux')
+        viewer.light_curve_display.exclude_outliers_from_zoom = True
         viewer.previous_button, viewer.next_button = viewer.create_target_switching_buttons()
         bokeh_document.add_root(viewer.previous_button)
         bokeh_document.add_root(viewer.next_button)
