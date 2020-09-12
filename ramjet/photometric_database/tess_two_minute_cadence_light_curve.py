@@ -6,7 +6,7 @@ from __future__ import annotations
 import re
 from enum import Enum
 from pathlib import Path
-from typing import List, Union
+from typing import List, Union, Any, Tuple
 from astropy.io import fits
 
 from ramjet.data_interface.tess_data_interface import TessDataInterface
@@ -88,34 +88,57 @@ class TessTwoMinuteCadenceLightCurve(LightCurve):
         light_curve = cls.from_path(path=light_curve_path, fits_indexes_to_load=fits_indexes_to_load)
         return light_curve
 
+    @classmethod
+    def from_identifier(cls, identifier: Any) -> TessTwoMinuteCadenceLightCurve:
+        """
+        Loads the light curve in a generalized way, attempting to infer the light curve based on the passed identifier.
+
+        :param identifier: The identifier of the light curve. Could come in various forms.
+        :return: The light curve.
+        """
+        if isinstance(identifier, Path):
+            return cls.from_path(path=identifier)
+        elif isinstance(identifier, tuple) and isinstance(identifier[0], int) and isinstance(identifier[1], int):
+            tic_id = identifier[0]
+            sector = identifier[1]
+            return cls.from_mast(tic_id=tic_id, sector=sector)
+        elif isinstance(identifier, str):
+            tic_id, sector = cls.get_tic_id_and_sector_from_identifier_string(identifier)
+            return cls.from_mast(tic_id=tic_id, sector=sector)
+        else:
+            raise ValueError(f'{identifier} does not match a known type to infer the light curve identifier from.')
+
     @staticmethod
-    def get_tic_id_and_sector_from_file_path(file_path: Union[Path, str]) -> (float, Union[float, None]):
+    def get_tic_id_and_sector_from_file_path(file_path: Path) -> (int, Union[int, None]):
         """
         Gets the TIC ID and sector from commonly encountered file name patterns.
 
         :param file_path: The path of the file to extract the TIC ID and sector.
         :return: The TIC ID and sector. The sector might be omitted (as None).
         """
-        if isinstance(file_path, str):
-            file_path = Path(file_path)
         file_name = file_path.stem
+        tic_id, sector = TessTwoMinuteCadenceLightCurve.get_tic_id_and_sector_from_identifier_string(file_name)
+        return tic_id, sector
+
+    @staticmethod
+    def get_tic_id_and_sector_from_identifier_string(identifier_string: str) -> (int, Union[int, None]):
+        """
+        Gets the TIC ID and sector from commonly encountered identifier string patterns.
+
+        :param identifier_string: The string to extract the TIC ID and sector.
+        :return: The TIC ID and sector. The sector might be omitted (as None).
+        """
         # Search for the human readable version. E.g., "TIC 169480782 sector 5"
-        match = re.search(r'TIC (\d+) sector (\d+)', file_name)
+        match = re.search(r'TIC (\d+) sector (\d+)', identifier_string)
         if match:
             return int(match.group(1)), int(match.group(2))
         # Search for the human readable TIC only version. E.g., "TIC 169480782"
-        match = re.search(r'TIC (\d+)', file_name)
+        match = re.search(r'TIC (\d+)', identifier_string)
         if match:
             return int(match.group(1)), None
         # Search for the TESS obs_id version. E.g., "tess2018319095959-s0005-0000000278956474-0125-s"
-        match = re.search(r'tess\d+-s(\d+)-(\d+)-\d+-s', file_name)
+        match = re.search(r'tess\d+-s(\d+)-(\d+)-\d+-s', identifier_string)
         if match:
             return int(match.group(2)), int(match.group(1))
         # Raise an error if none of the patterns matched.
-        raise ValueError(f'{file_name} does not match a known pattern to extract TIC ID and sector from.')
-
-    def convert_to_relative_scale(self):
-        """
-        Converts the light curve to relative scale.
-        """
-        self.convert_columns_to_relative_scale(self.flux_column_names)
+        raise ValueError(f'{identifier_string} does not match a known pattern to extract TIC ID and sector from.')

@@ -68,6 +68,6 @@ class LightCurve(ABC):
 
     def convert_to_relative_scale(self):
         """
-        Converts the light curve to relative scale. Useful for subclasses which need more complex conversions.
+        Converts the light curve to relative scale.
         """
         self.convert_columns_to_relative_scale(self.flux_column_names)
