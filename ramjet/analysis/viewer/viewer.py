@@ -20,7 +20,7 @@ from ramjet.photometric_database.tess_two_minute_cadence_light_curve import Tess
     TessTwoMinuteCadenceColumnName
 
 
-class CsvPathViewer:
+class Viewer:
     """
     A viewer for a CSV file containing a column of paths.
     """
@@ -83,7 +83,7 @@ class CsvPathViewer:
         return previous_button, next_button
 
     @classmethod
-    def from_csv_path(cls, bokeh_document: Document, csv_path: Path) -> CsvPathViewer:
+    def from_csv_path(cls, bokeh_document: Document, csv_path: Path) -> Viewer:
         """
         Creates a viewer from a CSV path containing a light curve path column.
 
@@ -95,7 +95,7 @@ class CsvPathViewer:
         viewer.document = bokeh_document
         viewer.csv_path = csv_path
         viewer.light_curve_display = LightCurveDisplay.for_columns(TessTwoMinuteCadenceColumnName.TIME.value,
-                                                                   TessTwoMinuteCadenceLightCurve.flux_column_names,
+                                                                   TessTwoMinuteCadenceLightCurve().flux_column_names,
                                                                    flux_axis_label='Relative flux')
         viewer.light_curve_display.exclude_outliers_from_zoom = True
         viewer.previous_button, viewer.next_button = viewer.create_light_curve_switching_buttons()
@@ -103,6 +103,8 @@ class CsvPathViewer:
         bokeh_document.add_root(viewer.next_button)
         # bokeh_document.add_root(viewer.information_div)
         bokeh_document.add_root(viewer.light_curve_display.figure)
+        loop = asyncio.get_running_loop()
+        loop.create_task(viewer.start_preloader())
         return viewer
 
     async def start_preloader(self):
@@ -123,14 +125,15 @@ def application(bokeh_document: Document):
     :param bokeh_document: The Bokeh document to run the viewer in.
     """
     csv_path = Path('/Users/golmschenk/Code/ramjet/data/viewer_check.csv')
-    viewer = CsvPathViewer.from_csv_path(bokeh_document, csv_path)
-    loop = asyncio.get_running_loop()
-    loop.create_task(viewer.start_preloader())
+    # tess_toi_data_interface = TessToiDataInterface()
+    # toi_dispositions = tess_toi_data_interface.toi_dispositions
+    Viewer.from_csv_path(bokeh_document, csv_path)
 
 
 if __name__ == '__main__':
     document = curdoc()
-    server = Server({'/': application}, port=5009)
+    server = Server({'/': application}, port=5010)
     server.start()
     server.io_loop.add_callback(server.show, "/")
     server.io_loop.start()
+

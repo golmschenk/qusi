@@ -15,7 +15,7 @@ class LightCurve(ABC):
     """
     def __init__(self):
         self.data_frame: pd.DataFrame = pd.DataFrame()
-        self.flux_column_name: Union[str, None] = None
+        self.flux_column_names: List[str] = []
         self.time_column_name: Union[str, None] = None
 
     @property
@@ -25,13 +25,14 @@ class LightCurve(ABC):
 
         :return: The fluxes.
         """
-        return self.data_frame[self.flux_column_name].values
+        return self.data_frame[self.flux_column_names[0]].values
 
     @fluxes.setter
     def fluxes(self, value: np.ndarray):
-        if self.flux_column_name is None:
-            self.flux_column_name = 'flux'
-        self.data_frame[self.flux_column_name] = value
+        if len(self.flux_column_names) == 0:
+            default_flux_name = 'flux'
+            self.flux_column_names.append(default_flux_name)
+        self.data_frame[self.flux_column_names[0]] = value
 
     @property
     def times(self) -> np.ndarray:
@@ -69,4 +70,4 @@ class LightCurve(ABC):
         """
         Converts the light curve to relative scale. Useful for subclasses which need more complex conversions.
         """
-        self.convert_column_to_relative_scale(self.flux_column_name)
+        self.convert_columns_to_relative_scale(self.flux_column_names)
