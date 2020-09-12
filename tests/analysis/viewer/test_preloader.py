@@ -15,14 +15,14 @@ class TestPreloader:
         preloader.light_curve_path_list = ['a.fits', 'b.fits', 'c.fits']
         stub_light_curve = Mock()
         mock_load_light_curve_from_path = Mock(return_value=stub_light_curve)
-        preloader.load_light_curve_from_path = mock_load_light_curve_from_path
+        preloader.load_light_curve_from_identifier = mock_load_light_curve_from_path
         index = 1
 
         await preloader.load_light_curve_at_index_as_current(index)
 
         assert preloader.current_index_light_curve_pair.index == index
         assert preloader.current_index_light_curve_pair.light_curve is stub_light_curve
-        assert preloader.load_light_curve_from_path.call_args[0][0] == 'b.fits'
+        assert preloader.load_light_curve_from_identifier.call_args[0][0] == 'b.fits'
 
     @pytest.mark.asyncio
     async def test_loading_next_light_curves_loads_from_last_in_next_deque(self):
@@ -32,7 +32,7 @@ class TestPreloader:
         def load_light_curve_side_effect(path):
             return stub_light_curves_dictionary[path]
         mock_load_light_curve_from_path = Mock(side_effect=load_light_curve_side_effect)
-        preloader.load_light_curve_from_path = mock_load_light_curve_from_path
+        preloader.load_light_curve_from_identifier = mock_load_light_curve_from_path
         preloader.next_index_light_curve_pair_deque = deque(
             [IndexLightCurvePair(1, stub_light_curves_dictionary['b.fits'])])
 
@@ -52,7 +52,7 @@ class TestPreloader:
         def load_light_curve_side_effect(path):
             return stub_light_curves_dictionary[path]
         mock_load_light_curve_from_path = Mock(side_effect=load_light_curve_side_effect)
-        preloader.load_light_curve_from_path = mock_load_light_curve_from_path
+        preloader.load_light_curve_from_identifier = mock_load_light_curve_from_path
         preloader.current_index_light_curve_pair = IndexLightCurvePair(1, stub_light_curves_dictionary['b.fits'])
 
         await preloader.load_next_light_curves()
@@ -71,7 +71,7 @@ class TestPreloader:
         def load_light_curve_side_effect(path):
             return stub_light_curves_dictionary[path]
         mock_load_light_curve_from_path = Mock(side_effect=load_light_curve_side_effect)
-        preloader.load_light_curve_from_path = mock_load_light_curve_from_path
+        preloader.load_light_curve_from_identifier = mock_load_light_curve_from_path
         preloader.previous_index_light_curve_pair_deque = deque(
             [IndexLightCurvePair(2, stub_light_curves_dictionary['c.fits'])])
 
@@ -92,7 +92,7 @@ class TestPreloader:
         def load_light_curve_side_effect(path):
             return stub_light_curves_dictionary[path]
         mock_load_light_curve_from_path = Mock(side_effect=load_light_curve_side_effect)
-        preloader.load_light_curve_from_path = mock_load_light_curve_from_path
+        preloader.load_light_curve_from_identifier = mock_load_light_curve_from_path
         preloader.previous_index_light_curve_pair_deque = deque(
             [IndexLightCurvePair(2, stub_light_curves_dictionary['c.fits'])])
 
@@ -112,7 +112,7 @@ class TestPreloader:
         def load_light_curve_side_effect(path):
             return stub_light_curves_dictionary[path]
         mock_load_light_curve_from_path = Mock(side_effect=load_light_curve_side_effect)
-        preloader.load_light_curve_from_path = mock_load_light_curve_from_path
+        preloader.load_light_curve_from_identifier = mock_load_light_curve_from_path
         preloader.current_index_light_curve_pair = IndexLightCurvePair(2, stub_light_curves_dictionary['c.fits'])
 
         await preloader.load_previous_light_curves()
@@ -227,7 +227,7 @@ class TestPreloader:
         def load_light_curve_side_effect(path):
             return stub_light_curves_dictionary[str(path)]
         mock_load_light_curve_from_path = Mock(side_effect=load_light_curve_side_effect)
-        Preloader.load_light_curve_from_path = mock_load_light_curve_from_path
+        Preloader.load_light_curve_from_identifier = mock_load_light_curve_from_path
 
         paths = [Path(string) for string in ['a.fits', 'b.fits', 'c.fits', 'd.fits']]
         preloader = await Preloader.from_light_curve_path_list(paths, starting_index=1)

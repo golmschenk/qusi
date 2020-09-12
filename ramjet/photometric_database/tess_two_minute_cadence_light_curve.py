@@ -96,7 +96,7 @@ class TessTwoMinuteCadenceLightCurve(LightCurve):
         return light_curve
 
     @staticmethod
-    def get_tic_id_and_sector_from_file_path(file_path: Union[Path, str]):
+    def get_tic_id_and_sector_from_file_path(file_path: Union[Path, str]) -> (float, Union[float, None]):
         """
         Gets the TIC ID and sector from commonly encountered file name patterns.
 
@@ -110,9 +110,19 @@ class TessTwoMinuteCadenceLightCurve(LightCurve):
         match = re.search(r'TIC (\d+) sector (\d+)', file_name)
         if match:
             return int(match.group(1)), int(match.group(2))
+        # Search for the human readable TIC only version. E.g., "TIC 169480782"
+        match = re.search(r'TIC (\d+)', file_name)
+        if match:
+            return int(match.group(1)), None
         # Search for the TESS obs_id version. E.g., "tess2018319095959-s0005-0000000278956474-0125-s"
         match = re.search(r'tess\d+-s(\d+)-(\d+)-\d+-s', file_name)
         if match:
             return int(match.group(2)), int(match.group(1))
         # Raise an error if none of the patterns matched.
         raise ValueError(f'{file_name} does not match a known pattern to extract TIC ID and sector from.')
+
+    def convert_to_relative_scale(self):
+        """
+        Converts the light curve to relative scale.
+        """
+        self.convert_columns_to_relative_scale(self.flux_column_names)

@@ -1,13 +1,14 @@
 """
 Code for a class to represent a light curve. See the contained class docstring for more details.
 """
-from typing import Union, Dict, List
+from abc import ABC
+from typing import Union, List
 
 import numpy as np
 import pandas as pd
 
 
-class LightCurve:
+class LightCurve(ABC):
     """
     A class to represent a light curve. A light curve is a collection of data which may includes times, fluxes,
     flux errors, and related values.
@@ -63,3 +64,9 @@ class LightCurve:
         """
         for column_name in column_names:
             self.convert_column_to_relative_scale(column_name)
+
+    def convert_to_relative_scale(self):
+        """
+        Converts the light curve to relative scale. Useful for subclasses which need more complex conversions.
+        """
+        self.convert_column_to_relative_scale(self.flux_column_name)

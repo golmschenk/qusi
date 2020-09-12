@@ -39,7 +39,7 @@ class Preloader:
         """
         loop = asyncio.get_running_loop()
         await self.cancel_loading_task()
-        current_light_curve = await loop.run_in_executor(None, self.load_light_curve_from_path,
+        current_light_curve = await loop.run_in_executor(None, self.load_light_curve_from_identifier,
                                                          self.light_curve_path_list[index])
         self.current_index_light_curve_pair = IndexLightCurvePair(index, current_light_curve)
         await self.reset_deques()
@@ -63,7 +63,7 @@ class Preloader:
         while (len(self.next_index_light_curve_pair_deque) < self.minimum_preloaded and
                last_index != len(self.light_curve_path_list) - 1):
             last_index += 1
-            last_light_curve = await loop.run_in_executor(None, self.load_light_curve_from_path,
+            last_light_curve = await loop.run_in_executor(None, self.load_light_curve_from_identifier,
                                                           self.light_curve_path_list[last_index])
             last_index_light_curve_pair = IndexLightCurvePair(last_index, last_light_curve)
             self.next_index_light_curve_pair_deque.append(last_index_light_curve_pair)
@@ -80,7 +80,7 @@ class Preloader:
         while (len(self.previous_index_light_curve_pair_deque) < self.minimum_preloaded and
                first_index != 0):
             first_index -= 1
-            first_light_curve = await loop.run_in_executor(None, self.load_light_curve_from_path,
+            first_light_curve = await loop.run_in_executor(None, self.load_light_curve_from_identifier,
                                                            self.light_curve_path_list[first_index])
             first_index_light_curve_pair = IndexLightCurvePair(first_index, first_light_curve)
             self.previous_index_light_curve_pair_deque.appendleft(first_index_light_curve_pair)
@@ -122,15 +122,15 @@ class Preloader:
             self.running_loading_task.cancel()
 
     @staticmethod
-    def load_light_curve_from_path(path: Path) -> LightCurve:
+    def load_light_curve_from_identifier(path: Path) -> LightCurve:
         """
-        Loads a light curve from a path.
+        Loads a light curve from a generic identifier.
 
         :param path: The path of the light curve.
         :return: The light curve.
         """
         light_curve = TessTwoMinuteCadenceLightCurve.from_path(path)
-        light_curve.convert_columns_to_relative_scale(TessTwoMinuteCadenceLightCurve.flux_column_names)
+        light_curve.convert_to_relative_scale()
         return light_curve
 
     async def reset_deques(self):
