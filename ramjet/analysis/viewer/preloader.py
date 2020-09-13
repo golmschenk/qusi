@@ -140,7 +140,9 @@ class Preloader:
         await self.cancel_loading_task()
         self.previous_index_light_curve_pair_deque = deque(maxlen=self.maximum_preloaded)
         self.next_index_light_curve_pair_deque = deque(maxlen=self.maximum_preloaded)
-        self.running_loading_task = asyncio.create_task(self.load_surrounding_light_curves())
+        loading_task = asyncio.create_task(self.load_surrounding_light_curves())
+        self.running_loading_task = loading_task
+        await loading_task
 
     @classmethod
     async def from_light_curve_path_list(cls, paths: List[Path], starting_index: int = 0):
