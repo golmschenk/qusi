@@ -4,9 +4,10 @@ Code to for a class to represent a TESS two minute cadence light curve.
 from __future__ import annotations
 
 import re
+import numpy as np
 from enum import Enum
 from pathlib import Path
-from typing import List, Union, Any, Tuple
+from typing import List, Union, Any
 from astropy.io import fits
 
 from ramjet.data_interface.tess_data_interface import TessDataInterface
@@ -96,9 +97,11 @@ class TessTwoMinuteCadenceLightCurve(LightCurve):
         :param identifier: The identifier of the light curve. Could come in various forms.
         :return: The light curve.
         """
+        integer_types = (int, np.integer)
         if isinstance(identifier, Path):
             return cls.from_path(path=identifier)
-        elif isinstance(identifier, tuple) and isinstance(identifier[0], int) and isinstance(identifier[1], int):
+        elif isinstance(identifier, tuple) and (isinstance(identifier[0], integer_types) and
+                                                isinstance(identifier[1], integer_types)):
             tic_id = identifier[0]
             sector = identifier[1]
             return cls.from_mast(tic_id=tic_id, sector=sector)

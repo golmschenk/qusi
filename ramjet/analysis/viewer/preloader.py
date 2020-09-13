@@ -5,7 +5,7 @@ import asyncio
 from asyncio import Task
 from collections import deque
 from pathlib import Path
-from typing import Union, List, NamedTuple, Deque
+from typing import Union, List, NamedTuple, Deque, Any
 
 from ramjet.photometric_database.light_curve import LightCurve
 from ramjet.photometric_database.tess_two_minute_cadence_light_curve import TessTwoMinuteCadenceLightCurve
@@ -28,7 +28,7 @@ class Preloader:
         self.current_index_light_curve_pair: Union[None, IndexLightCurvePair] = None
         self.next_index_light_curve_pair_deque: Deque[IndexLightCurvePair] = deque(maxlen=self.maximum_preloaded)
         self.previous_index_light_curve_pair_deque: Deque[IndexLightCurvePair] = deque(maxlen=self.maximum_preloaded)
-        self.light_curve_path_list: List[Path] = []
+        self.light_curve_identifiers: List[Any] = []
         self.running_loading_task: Union[Task, None] = None
 
     async def load_light_curve_at_index_as_current(self, index: int):
@@ -40,7 +40,7 @@ class Preloader:
         loop = asyncio.get_running_loop()
         await self.cancel_loading_task()
         current_light_curve = await loop.run_in_executor(None, self.load_light_curve_from_identifier,
-                                                         self.light_curve_path_list[index])
+                                                         self.light_curve_identifiers[index])
         self.current_index_light_curve_pair = IndexLightCurvePair(index, current_light_curve)
         await self.reset_deques()
 
@@ -61,10 +61,10 @@ class Preloader:
         else:
             last_index = self.current_index_light_curve_pair.index
         while (len(self.next_index_light_curve_pair_deque) < self.minimum_preloaded and
-               last_index != len(self.light_curve_path_list) - 1):
+               last_index != len(self.light_curve_identifiers) - 1):
             last_index += 1
             last_light_curve = await loop.run_in_executor(None, self.load_light_curve_from_identifier,
-                                                          self.light_curve_path_list[last_index])
+                                                          self.light_curve_identifiers[last_index])
             last_index_light_curve_pair = IndexLightCurvePair(last_index, last_light_curve)
             self.next_index_light_curve_pair_deque.append(last_index_light_curve_pair)
 
@@ -81,7 +81,7 @@ class Preloader:
                first_index != 0):
             first_index -= 1
             first_light_curve = await loop.run_in_executor(None, self.load_light_curve_from_identifier,
-                                                           self.light_curve_path_list[first_index])
+                                                           self.light_curve_identifiers[first_index])
             first_index_light_curve_pair = IndexLightCurvePair(first_index, first_light_curve)
             self.previous_index_light_curve_pair_deque.appendleft(first_index_light_curve_pair)
 
@@ -122,14 +122,14 @@ class Preloader:
             self.running_loading_task.cancel()
 
     @staticmethod
-    def load_light_curve_from_identifier(path: Path) -> LightCurve:
+    def load_light_curve_from_identifier(identifier: Any) -> LightCurve:
         """
         Loads a light curve from a generic identifier.
 
-        :param path: The path of the light curve.
+        :param identifier: The identifier of the light curve.
         :return: The light curve.
         """
-        light_curve = TessTwoMinuteCadenceLightCurve.from_path(path)
+        light_curve = TessTwoMinuteCadenceLightCurve.from_identifier(identifier)
         light_curve.convert_to_relative_scale()
         return light_curve
 
@@ -145,15 +145,15 @@ class Preloader:
         await loading_task
 
     @classmethod
-    async def from_light_curve_path_list(cls, paths: List[Path], starting_index: int = 0):
+    async def from_identifier_list(cls, identifiers: List[Any], starting_index: int = 0):
         """
-        Create a preloader from a list of light curve paths.
+        Create a preloader from a list of light curve identifiers.
 
-        :param paths: The list of light curve paths.
+        :param identifiers: The list of light curve identifiers.
         :param starting_index: The starting index to preload around.
         :return: The preloader.
         """
         preloader = cls()
-        preloader.light_curve_path_list = paths
+        preloader.light_curve_identifiers = identifiers
         await preloader.load_light_curve_at_index_as_current(starting_index)
         return preloader

@@ -16,6 +16,7 @@ from bokeh.server.server import Server
 
 from ramjet.analysis.viewer.light_curve_display import LightCurveDisplay
 from ramjet.analysis.viewer.preloader import Preloader
+from ramjet.data_interface.tess_toi_data_interface import TessToiDataInterface
 from ramjet.photometric_database.tess_two_minute_cadence_light_curve import TessTwoMinuteCadenceLightCurve, \
     TessTwoMinuteCadenceColumnName
 
@@ -113,8 +114,8 @@ class Viewer:
         """
         paths_data_frame = pd.read_csv(self.csv_path)
         path_strings = paths_data_frame['Light curve path']
-        paths = list(map(Path, path_strings))
-        self.preloader = await Preloader.from_light_curve_path_list(paths)
+        identifiers = list(map(Path, path_strings))
+        self.preloader = await Preloader.from_identifier_list(identifiers)
         initial_light_curve = self.preloader.current_index_light_curve_pair.light_curve
         await self.update_light_curve_with_document_lock(initial_light_curve)
 

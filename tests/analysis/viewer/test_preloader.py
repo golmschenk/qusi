@@ -12,11 +12,12 @@ class TestPreloader:
     @pytest.mark.asyncio
     async def test_loading_light_curve_at_index_as_current_calls_loading_with_correct_path(self):
         preloader = Preloader()
-        preloader.light_curve_path_list = ['a.fits', 'b.fits', 'c.fits']
+        preloader.light_curve_identifiers = ['a.fits', 'b.fits', 'c.fits']
         stub_light_curve = Mock()
         mock_load_light_curve_from_path = Mock(return_value=stub_light_curve)
         preloader.load_light_curve_from_identifier = mock_load_light_curve_from_path
         index = 1
+        preloader.reset_deques = AsyncMock()
 
         await preloader.load_light_curve_at_index_as_current(index)
 
@@ -27,7 +28,7 @@ class TestPreloader:
     @pytest.mark.asyncio
     async def test_loading_next_light_curves_loads_from_last_in_next_deque(self):
         preloader = Preloader()
-        preloader.light_curve_path_list = ['a.fits', 'b.fits', 'c.fits', 'd.fits']
+        preloader.light_curve_identifiers = ['a.fits', 'b.fits', 'c.fits', 'd.fits']
         stub_light_curves_dictionary = {'a.fits': Mock(), 'b.fits': Mock(), 'c.fits': Mock(), 'd.fits': Mock()}
         def load_light_curve_side_effect(path):
             return stub_light_curves_dictionary[path]
@@ -47,7 +48,7 @@ class TestPreloader:
     @pytest.mark.asyncio
     async def test_loading_next_light_curves_loads_from_current_when_next_deque_is_empty(self):
         preloader = Preloader()
-        preloader.light_curve_path_list = ['a.fits', 'b.fits', 'c.fits', 'd.fits']
+        preloader.light_curve_identifiers = ['a.fits', 'b.fits', 'c.fits', 'd.fits']
         stub_light_curves_dictionary = {'a.fits': Mock(), 'b.fits': Mock(), 'c.fits': Mock(), 'd.fits': Mock()}
         def load_light_curve_side_effect(path):
             return stub_light_curves_dictionary[path]
@@ -66,7 +67,7 @@ class TestPreloader:
     @pytest.mark.asyncio
     async def test_loading_previous_light_curves_loads_from_first_in_previous_deque(self):
         preloader = Preloader()
-        preloader.light_curve_path_list = ['a.fits', 'b.fits', 'c.fits', 'd.fits']
+        preloader.light_curve_identifiers = ['a.fits', 'b.fits', 'c.fits', 'd.fits']
         stub_light_curves_dictionary = {'a.fits': Mock(), 'b.fits': Mock(), 'c.fits': Mock(), 'd.fits': Mock()}
         def load_light_curve_side_effect(path):
             return stub_light_curves_dictionary[path]
@@ -87,7 +88,7 @@ class TestPreloader:
     @pytest.mark.asyncio
     async def test_loading_previous_light_curves_loads_from_first_in_previous_deque(self):
         preloader = Preloader()
-        preloader.light_curve_path_list = ['a.fits', 'b.fits', 'c.fits', 'd.fits']
+        preloader.light_curve_identifiers = ['a.fits', 'b.fits', 'c.fits', 'd.fits']
         stub_light_curves_dictionary = {'a.fits': Mock(), 'b.fits': Mock(), 'c.fits': Mock(), 'd.fits': Mock()}
         def load_light_curve_side_effect(path):
             return stub_light_curves_dictionary[path]
@@ -107,7 +108,7 @@ class TestPreloader:
     @pytest.mark.asyncio
     async def test_loading_previous_light_curves_loads_from_current_when_previous_deque_is_empty(self):
         preloader = Preloader()
-        preloader.light_curve_path_list = ['a.fits', 'b.fits', 'c.fits', 'd.fits']
+        preloader.light_curve_identifiers = ['a.fits', 'b.fits', 'c.fits', 'd.fits']
         stub_light_curves_dictionary = {'a.fits': Mock(), 'b.fits': Mock(), 'c.fits': Mock(), 'd.fits': Mock()}
         def load_light_curve_side_effect(path):
             return stub_light_curves_dictionary[path]
@@ -126,7 +127,7 @@ class TestPreloader:
     @pytest.mark.asyncio
     async def test_incrementing_preloader_shifts_light_curve_deques(self):
         preloader = Preloader()
-        preloader.light_curve_path_list = ['a.fits', 'b.fits', 'c.fits', 'd.fits']
+        preloader.light_curve_identifiers = ['a.fits', 'b.fits', 'c.fits', 'd.fits']
         stub_light_curves_dictionary = {'a.fits': Mock(), 'b.fits': Mock(), 'c.fits': Mock(), 'd.fits': Mock()}
         preloader.current_index_light_curve_pair = IndexLightCurvePair(1, stub_light_curves_dictionary['b.fits'])
         preloader.previous_index_light_curve_pair_deque = deque(
@@ -146,7 +147,7 @@ class TestPreloader:
     @pytest.mark.asyncio
     async def test_decrementing_preloader_shifts_light_curve_deques(self):
         preloader = Preloader()
-        preloader.light_curve_path_list = ['a.fits', 'b.fits', 'c.fits', 'd.fits']
+        preloader.light_curve_identifiers = ['a.fits', 'b.fits', 'c.fits', 'd.fits']
         stub_light_curves_dictionary = {'a.fits': Mock(), 'b.fits': Mock(), 'c.fits': Mock(), 'd.fits': Mock()}
         preloader.current_index_light_curve_pair = IndexLightCurvePair(1, stub_light_curves_dictionary['b.fits'])
         preloader.previous_index_light_curve_pair_deque = deque(
@@ -230,7 +231,7 @@ class TestPreloader:
         Preloader.load_light_curve_from_identifier = mock_load_light_curve_from_path
 
         paths = [Path(string) for string in ['a.fits', 'b.fits', 'c.fits', 'd.fits']]
-        preloader = await Preloader.from_light_curve_path_list(paths, starting_index=1)
+        preloader = await Preloader.from_identifier_list(paths, starting_index=1)
         await preloader.running_loading_task
 
         assert preloader.current_index_light_curve_pair.light_curve == stub_light_curves_dictionary['b.fits']

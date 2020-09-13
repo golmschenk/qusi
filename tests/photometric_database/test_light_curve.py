@@ -12,10 +12,10 @@ class TestLightCurve:
         light_curve.time_column_name = 'time_column'
         assert np.array_equal(light_curve.times, [0, 1])
 
-    def test_fluxes_are_drawn_from_light_curve_data_frame_when_column_name_is_set(self):
+    def test_fluxes_are_drawn_from_light_curve_data_frame_when_column_names_is_set(self):
         light_curve = LightCurve()
         light_curve.data_frame = pd.DataFrame({'flux_column': [0, 1]})
-        light_curve.flux_column_name = 'flux_column'
+        light_curve.flux_column_names = ['flux_column']
         assert np.array_equal(light_curve.fluxes, [0, 1])
 
     def test_times_error_when_column_name_is_not_set(self):
@@ -27,7 +27,7 @@ class TestLightCurve:
     def test_fluxes_error_when_column_name_is_not_set(self):
         light_curve = LightCurve()
         light_curve.data_frame = pd.DataFrame({'flux_column': [0, 1]})
-        with pytest.raises(KeyError):
+        with pytest.raises(IndexError):
             _ = light_curve.fluxes
 
     def test_time_column_name_is_set_when_times_are_manually_set(self):
@@ -38,9 +38,9 @@ class TestLightCurve:
 
     def test_flux_column_name_is_set_when_times_are_manually_set(self):
         light_curve = LightCurve()
-        assert light_curve.flux_column_name is None
+        assert len(light_curve.flux_column_names) == 0
         light_curve.fluxes = [0, 1]
-        assert light_curve.flux_column_name is not None
+        assert len(light_curve.flux_column_names) == 1
 
     def test_setting_times_sets_existing_named_time_column_if_one_exists(self):
         light_curve = LightCurve()
@@ -50,7 +50,7 @@ class TestLightCurve:
 
     def test_setting_fluxes_sets_existing_named_flux_column_if_one_exists(self):
         light_curve = LightCurve()
-        light_curve.flux_column_name = 'flux_column'
+        light_curve.flux_column_names = ['flux_column']
         light_curve.fluxes = [0, 1]
         assert np.array_equal(light_curve.data_frame['flux_column'].values, [0, 1])
 
