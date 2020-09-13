@@ -7,7 +7,7 @@ from tensorflow.python.keras.losses import BinaryCrossentropy
 
 from ramjet.basic_models import SimpleLightcurveCnn
 from ramjet.photometric_database.derived.tess_two_minute_cadence_transit_databases import \
-    TessTwoMinuteCadenceStandardTransitDatabase
+    TessTwoMinuteCadenceStandardTransitDatabase, TessTwoMinuteCadenceStandardAndInjectedTransitDatabase
 
 
 def train():
@@ -16,7 +16,7 @@ def train():
     # Basic training settings.
     trial_name = f'baseline'  # Add any desired run name details to this string.
     model = SimpleLightcurveCnn()
-    database = TessTwoMinuteCadenceStandardTransitDatabase()
+    database = TessTwoMinuteCadenceStandardAndInjectedTransitDatabase()
     # database.batch_size = 100  # Reducing the batch size may help if you are running out of memory.
     epochs_to_run = 1000
     logs_directory = 'logs'
