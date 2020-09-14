@@ -1,3 +1,4 @@
+from asyncio import Task
 from collections import deque
 from pathlib import Path
 from unittest.mock import Mock, patch, AsyncMock
@@ -193,12 +194,13 @@ class TestPreloader:
     @pytest.mark.asyncio
     async def test_cancel_loading_cancels_existing_loading_task(self):
         preloader = Preloader()
-        mock_old_running_loading_task = Mock()
+        mock_coroutine_function = AsyncMock()
+        mock_old_running_loading_task = Task(mock_coroutine_function())
         preloader.running_loading_task = mock_old_running_loading_task
 
         await preloader.cancel_loading_task()
 
-        assert preloader.running_loading_task.cancel.called
+        assert mock_old_running_loading_task.cancelled
 
     @pytest.mark.asyncio
     async def test_cancel_loading_does_not_error_with_no_existing_loading_task(self):

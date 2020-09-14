@@ -129,7 +129,10 @@ class Preloader:
         """
         if self.running_loading_task is not None:
             self.running_loading_task.cancel()
-            await self.running_loading_task
+            try:
+                await self.running_loading_task
+            except asyncio.CancelledError:
+                pass
 
     @staticmethod
     def load_light_curve_from_identifier(identifier: Any) -> LightCurve:
