@@ -4,9 +4,10 @@ Code to load light curves in the background so they show up quickly when display
 import asyncio
 from asyncio import Task
 from collections import deque
-from pathlib import Path
+import warnings
 from typing import Union, List, NamedTuple, Deque, Any
 
+from ramjet.data_interface.tess_data_interface import NoDataProductsFoundException
 from ramjet.photometric_database.light_curve import LightCurve
 from ramjet.photometric_database.tess_two_minute_cadence_light_curve import TessTwoMinuteCadenceLightCurve
 
@@ -63,8 +64,12 @@ class Preloader:
         while (len(self.next_index_light_curve_pair_deque) < self.minimum_preloaded and
                last_index != len(self.light_curve_identifiers) - 1):
             last_index += 1
-            last_light_curve = await loop.run_in_executor(None, self.load_light_curve_from_identifier,
-                                                          self.light_curve_identifiers[last_index])
+            try:
+                last_light_curve = await loop.run_in_executor(None, self.load_light_curve_from_identifier,
+                                                              self.light_curve_identifiers[last_index])
+            except NoDataProductsFoundException:
+                warnings.warn(f'No light curve found for identifier {self.light_curve_identifiers[last_index]}.')
+                continue
             last_index_light_curve_pair = IndexLightCurvePair(last_index, last_light_curve)
             self.next_index_light_curve_pair_deque.append(last_index_light_curve_pair)
 
@@ -80,8 +85,12 @@ class Preloader:
         while (len(self.previous_index_light_curve_pair_deque) < self.minimum_preloaded and
                first_index != 0):
             first_index -= 1
-            first_light_curve = await loop.run_in_executor(None, self.load_light_curve_from_identifier,
-                                                           self.light_curve_identifiers[first_index])
+            try:
+                first_light_curve = await loop.run_in_executor(None, self.load_light_curve_from_identifier,
+                                                               self.light_curve_identifiers[first_index])
+            except NoDataProductsFoundException:
+                warnings.warn(f'No light curve found for identifier {self.light_curve_identifiers[first_index]}.')
+                continue
             first_index_light_curve_pair = IndexLightCurvePair(first_index, first_light_curve)
             self.previous_index_light_curve_pair_deque.appendleft(first_index_light_curve_pair)
 
@@ -120,6 +129,7 @@ class Preloader:
         """
         if self.running_loading_task is not None:
             self.running_loading_task.cancel()
+            await self.running_loading_task
 
     @staticmethod
     def load_light_curve_from_identifier(identifier: Any) -> LightCurve:
@@ -140,9 +150,7 @@ class Preloader:
         await self.cancel_loading_task()
         self.previous_index_light_curve_pair_deque = deque(maxlen=self.maximum_preloaded)
         self.next_index_light_curve_pair_deque = deque(maxlen=self.maximum_preloaded)
-        loading_task = asyncio.create_task(self.load_surrounding_light_curves())
-        self.running_loading_task = loading_task
-        await loading_task
+        self.running_loading_task = asyncio.create_task(self.load_surrounding_light_curves())
 
     @classmethod
     async def from_identifier_list(cls, identifiers: List[Any], starting_index: int = 0):
