@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 
 import pytest
 import numpy as np
@@ -365,3 +365,13 @@ class TestStandardAndInjectedLightcurveDatabase:
         assert lightcurve.shape == (3, 1)
         assert np.array_equal(lightcurve, [[0], [1], [2]])  # Standard lightcurve 0.
 
+    @pytest.mark.parametrize("evaluation_mode, called_expectation", [(True, False),
+                                                                     (False, True)])
+    def test_flux_preprocessing_evaluation_modes_calling_of_remove_random_elements(self, database, evaluation_mode,
+                                                                                   called_expectation):
+        mock_remove_random_elements = Mock(side_effect=lambda x: x)
+        database.remove_random_elements = mock_remove_random_elements
+
+        database.flux_preprocessing(np.array([0, 1, 2]), evaluation_mode=evaluation_mode)
+
+        assert mock_remove_random_elements.called == called_expectation

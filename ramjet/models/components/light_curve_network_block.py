@@ -1,6 +1,8 @@
+"""
+Code for a general light curve network block.
+"""
 from tensorflow.keras.layers import LeakyReLU, Conv1D, SpatialDropout1D, Dropout, MaxPooling1D, BatchNormalization,\
     Layer
-from tensorflow.keras.regularizers import l2
 from tensorflow.keras.layers import Reshape
 
 
