@@ -3,7 +3,6 @@ import math
 import shutil
 from abc import ABC
 import os
-import random
 from pathlib import Path
 from typing import List, Union, Tuple, Callable, Iterable
 
@@ -195,7 +194,9 @@ class LightcurveDatabase(ABC):
         remainder = np.concatenate(remaining_chunks)
         return extracted_chunk, remainder
 
-    def flat_window_zipped_example_and_label_dataset(self, dataset, batch_size, window_shift):
+    @staticmethod
+    def flat_window_zipped_example_and_label_dataset(dataset: tf.data.Dataset, batch_size: int, window_shift: int,
+                                                     ) -> tf.data.Dataset:
         """
         Takes a zipped example and label dataset and repeats examples in a windowed fashion of a given batch size.
         It is expected that the resulting dataset will subsequently be batched in some fashion by the given batch size.
@@ -208,8 +209,8 @@ class LightcurveDatabase(ABC):
         examples_dataset = dataset.map(lambda element, _: element)
         labels_dataset = dataset.map(lambda _, element: element)
         examples_window_dataset = examples_dataset.window(batch_size, shift=window_shift)
-        examples_unbatched_window_dataset = examples_window_dataset.flat_map(lambda element: element)
         labels_window_dataset = labels_dataset.window(batch_size, shift=window_shift)
+        examples_unbatched_window_dataset = examples_window_dataset.flat_map(lambda element: element)
         labels_unbatched_window_dataset = labels_window_dataset.flat_map(lambda element: element)
         unbatched_window_dataset = tf.data.Dataset.zip((examples_unbatched_window_dataset,
                                                         labels_unbatched_window_dataset))

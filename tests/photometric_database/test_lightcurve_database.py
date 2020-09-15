@@ -217,3 +217,14 @@ class TestLightcurveDatabase:
             mock_randint.side_effect = lambda x: x
             updated_array = database.remove_random_elements(array, ratio=0.5)
         assert updated_array.shape[0] == 2
+
+    def test_flat_window_zipped_produces_overlapping_window_repeats(self, database):
+        examples_dataset = tf.data.Dataset.from_tensor_slices(['a', 'b', 'c', 'd', 'e'])
+        labels_dataset = tf.data.Dataset.from_tensor_slices([0, 1, 2, 3, 4])
+        zipped_dataset = tf.data.Dataset.zip((examples_dataset, labels_dataset))
+
+        windowed_dataset = database.flat_window_zipped_example_and_label_dataset(zipped_dataset, batch_size=3,
+                                                                                 window_shift=2)
+
+        windowed_list = list(windowed_dataset.as_numpy_iterator())
+        assert windowed_list == [(b'a', 0), (b'b', 1), (b'c', 2), (b'c', 2), (b'd', 3), (b'e', 4), (b'e', 4)]
