@@ -19,6 +19,9 @@ class TessFfiDatabase(StandardAndInjectedLightcurveDatabase):
         self.out_of_bounds_injection_handling = OutOfBoundsInjectionHandlingMethod.RANDOM_INJECTION_LOCATION
 
 
+magnitude_range = (0, 11)
+
+
 class TessFfiStandardTransitDatabase(TessFfiDatabase):
     """
     A database using standard positive and negative transit lightcurves.
@@ -26,12 +29,12 @@ class TessFfiStandardTransitDatabase(TessFfiDatabase):
     def __init__(self):
         super().__init__()
         self.training_standard_lightcurve_collections = [
-            TessFfiConfirmedTransitLightcurveCollection(dataset_splits=list(range(8))),
-            TessFfiNonTransitLightcurveCollection(dataset_splits=list(range(8)))
+            TessFfiConfirmedTransitLightcurveCollection(dataset_splits=list(range(8)), magnitude_range=magnitude_range),
+            TessFfiNonTransitLightcurveCollection(dataset_splits=list(range(8)), magnitude_range=magnitude_range)
         ]
         self.validation_standard_lightcurve_collections = [
-            TessFfiConfirmedTransitLightcurveCollection(dataset_splits=[8]),
-            TessFfiNonTransitLightcurveCollection(dataset_splits=[8])
+            TessFfiConfirmedTransitLightcurveCollection(dataset_splits=[8], magnitude_range=magnitude_range),
+            TessFfiNonTransitLightcurveCollection(dataset_splits=[8], magnitude_range=magnitude_range)
         ]
 
 
@@ -42,16 +45,19 @@ class TessFfiStandardTransitAntiEclipsingBinaryDatabase(TessFfiDatabase):
     def __init__(self):
         super().__init__()
         self.training_standard_lightcurve_collections = [
-            TessFfiConfirmedTransitLightcurveCollection(dataset_splits=list(range(8))),
-            TessFfiNonTransitLightcurveCollection(dataset_splits=list(range(8))),
-            TessFfiAntiEclipsingBinaryForTransitLightcurveCollection(dataset_splits=list(range(8)))
+            TessFfiConfirmedTransitLightcurveCollection(dataset_splits=list(range(8)), magnitude_range=magnitude_range),
+            TessFfiNonTransitLightcurveCollection(dataset_splits=list(range(8)), magnitude_range=magnitude_range),
+            TessFfiAntiEclipsingBinaryForTransitLightcurveCollection(dataset_splits=list(range(8)),
+                                                                     magnitude_range=magnitude_range)
         ]
         self.validation_standard_lightcurve_collections = [
-            TessFfiConfirmedTransitLightcurveCollection(dataset_splits=[8]),
-            TessFfiNonTransitLightcurveCollection(dataset_splits=[8]),
-            TessFfiAntiEclipsingBinaryForTransitLightcurveCollection(dataset_splits=[8])
+            TessFfiConfirmedTransitLightcurveCollection(dataset_splits=[8], magnitude_range=magnitude_range),
+            TessFfiNonTransitLightcurveCollection(dataset_splits=[8], magnitude_range=magnitude_range),
+            TessFfiAntiEclipsingBinaryForTransitLightcurveCollection(dataset_splits=[8],
+                                                                     magnitude_range=magnitude_range)
         ]
-        self.inference_lightcurve_collection = TessFfiLightcurveCollection(dataset_splits=[9])
+        self.inference_lightcurve_collection = TessFfiLightcurveCollection(dataset_splits=[9],
+                                                                           magnitude_range=magnitude_range)
 
 
 class TessFfiInjectedTransitDatabase(TessFfiDatabase):
@@ -63,12 +69,12 @@ class TessFfiInjectedTransitDatabase(TessFfiDatabase):
         self.training_injectee_lightcurve_collection = TessFfiNonTransitLightcurveCollection(
             dataset_splits=list(range(8)))
         self.training_injectable_lightcurve_collections = [
-            TessFfiConfirmedTransitLightcurveCollection(dataset_splits=list(range(8))),
-            TessFfiNonTransitLightcurveCollection(dataset_splits=list(range(8)))
+            TessFfiConfirmedTransitLightcurveCollection(dataset_splits=list(range(8)), magnitude_range=magnitude_range),
+            TessFfiNonTransitLightcurveCollection(dataset_splits=list(range(8)), magnitude_range=magnitude_range)
         ]
         self.validation_standard_lightcurve_collections = [
-            TessFfiConfirmedTransitLightcurveCollection(dataset_splits=[8]),
-            TessFfiNonTransitLightcurveCollection(dataset_splits=[8])
+            TessFfiConfirmedTransitLightcurveCollection(dataset_splits=[8], magnitude_range=magnitude_range),
+            TessFfiNonTransitLightcurveCollection(dataset_splits=[8], magnitude_range=magnitude_range)
         ]
 
 
@@ -79,16 +85,16 @@ class TessFfiStandardAndInjectedTransitDatabase(TessFfiDatabase):
     def __init__(self):
         super().__init__()
         self.training_standard_lightcurve_collections = [
-            TessFfiConfirmedTransitLightcurveCollection(dataset_splits=list(range(8))),
-            TessFfiNonTransitLightcurveCollection(dataset_splits=list(range(8)))
+            TessFfiConfirmedTransitLightcurveCollection(dataset_splits=list(range(8)), magnitude_range=magnitude_range),
+            TessFfiNonTransitLightcurveCollection(dataset_splits=list(range(8)), magnitude_range=magnitude_range)
         ]
         self.training_injectee_lightcurve_collection = TessFfiNonTransitLightcurveCollection(
-            dataset_splits=list(range(8)))
+            dataset_splits=list(range(8)), magnitude_range=magnitude_range)
         self.training_injectable_lightcurve_collections = [
-            TessFfiConfirmedTransitLightcurveCollection(dataset_splits=list(range(8))),
-            TessFfiNonTransitLightcurveCollection(dataset_splits=list(range(8)))
+            TessFfiConfirmedTransitLightcurveCollection(dataset_splits=list(range(8)), magnitude_range=magnitude_range),
+            TessFfiNonTransitLightcurveCollection(dataset_splits=list(range(8)), magnitude_range=magnitude_range)
         ]
         self.validation_standard_lightcurve_collections = [
-            TessFfiConfirmedTransitLightcurveCollection(dataset_splits=[8]),
-            TessFfiNonTransitLightcurveCollection(dataset_splits=[8])
+            TessFfiConfirmedTransitLightcurveCollection(dataset_splits=[8], magnitude_range=magnitude_range),
+            TessFfiNonTransitLightcurveCollection(dataset_splits=[8], magnitude_range=magnitude_range)
         ]
