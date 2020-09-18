@@ -101,6 +101,8 @@ class Preloader:
         :return: The new current index and light curve pair.
         """
         self.previous_index_light_curve_pair_deque.append(self.current_index_light_curve_pair)
+        if len(self.next_index_light_curve_pair_deque) == 0 and not self.running_loading_task.done():
+            await self.running_loading_task
         self.current_index_light_curve_pair = self.next_index_light_curve_pair_deque.popleft()
         await self.refresh_surrounding_light_curve_loading()
         return self.current_index_light_curve_pair
@@ -112,6 +114,8 @@ class Preloader:
         :return: The new current index and light curve pair.
         """
         self.next_index_light_curve_pair_deque.appendleft(self.current_index_light_curve_pair)
+        while len(self.previous_index_light_curve_pair_deque) == 0 and not self.running_loading_task.done():
+            await self.running_loading_task
         self.current_index_light_curve_pair = self.previous_index_light_curve_pair_deque.pop()
         await self.refresh_surrounding_light_curve_loading()
         return self.current_index_light_curve_pair
