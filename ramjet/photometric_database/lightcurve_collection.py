@@ -80,3 +80,12 @@ class LightcurveCollection:
         normalized_fluxes = fluxes / flux_median
         relative_times = times - np.min(times)
         return normalized_fluxes, relative_times
+
+    def load_label_from_path(self, path: Path) -> Union[float, np.ndarray]:
+        """
+        Loads the label of an example from a corresponding path.
+
+        :param path: The path to load the label for.
+        :return: The label.
+        """
+        return self.label
