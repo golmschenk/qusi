@@ -379,7 +379,6 @@ class TestStandardAndInjectedLightcurveDatabase:
     def test_generated_standard_and_infer_datasets_return_the_same_lightcurve(self, database):
         lightcurve_collection = database.training_standard_lightcurve_collections[0]
         paths_dataset0 = database.generate_paths_dataset_from_lightcurve_collection(lightcurve_collection)
-        label = lightcurve_collection.label
         lightcurve_and_label_dataset = database.generate_standard_lightcurve_and_label_dataset(
             paths_dataset0, lightcurve_collection.load_times_and_fluxes_from_path,
             lightcurve_collection.load_label_from_path)
@@ -389,3 +388,19 @@ class TestStandardAndInjectedLightcurveDatabase:
             paths_dataset1, lightcurve_collection.load_times_and_fluxes_from_path)
         path_and_lightcurve = next(iter(path_and_lightcurve_dataset))
         assert np.array_equal(lightcurve_and_label[0].numpy(), path_and_lightcurve[1].numpy())
+
+    @pytest.mark.functional
+    def test_can_specify_a_label_with_more_then_size_one_in_preprocessor(self):
+        database = StandardAndInjectedLightcurveDatabase()
+        database.number_of_parallel_processes_per_map = 1
+        database.time_steps_per_example = 3
+        database.number_of_labels_per_example = 2
+        stub_load_times_and_fluxes_function = lambda path: (np.array([0, -1, -2]), np.array([0, 1, 2]))
+        expected_label = np.array([0, 1])
+        stub_load_label_function = lambda path: expected_label
+        paths_dataset = tf.data.Dataset.from_tensor_slices(['a.fits', 'b.fits'])
+        dataset = database.generate_standard_lightcurve_and_label_dataset(paths_dataset,
+                                                                          stub_load_times_and_fluxes_function,
+                                                                          stub_load_label_function)
+        dataset_list = list(dataset)
+        assert np.array_equal(dataset_list[0][1], expected_label)
