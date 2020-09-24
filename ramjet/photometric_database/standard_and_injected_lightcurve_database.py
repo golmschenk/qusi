@@ -217,10 +217,21 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         lightcurve_path = Path(lightcurve_path_tensor.numpy().decode('utf-8'))
         times, fluxes = load_times_and_fluxes_from_path_function(lightcurve_path)
         preprocessed_fluxes = self.flux_preprocessing(fluxes)
-        example = np.expand_dims(preprocessed_fluxes, axis=-1)
         label = load_label_from_path_function(lightcurve_path)
+        example, label = self.expand_to_training_dimensions(preprocessed_fluxes, label)
+        return example, label
+
+    @staticmethod
+    def expand_to_training_dimensions(example, label):
+        """
+        Expand the example and label to the appropriate dimensions for training.
+        """
+        example = np.expand_dims(example, axis=-1)
         if type(label) is not np.ndarray:
-            label = np.array([label])
+            if type(label) in [list, tuple]:
+                label = np.array(label)
+            else:
+                label = np.array([label])
         return example, label
 
     def generate_infer_path_and_lightcurve_dataset(
@@ -331,10 +342,8 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         fluxes = self.inject_signal_into_lightcurve(injectee_fluxes, injectee_times, injectable_magnifications,
                                                     injectable_times)
         preprocessed_fluxes = self.flux_preprocessing(fluxes)
-        example = np.expand_dims(preprocessed_fluxes, axis=-1)
         label = load_label_from_path_function(injectable_lightcurve_path)
-        if type(label) is not np.ndarray:
-            label = np.array([label])
+        example, label = self.expand_to_training_dimensions(preprocessed_fluxes, label)
         return example, label
 
     def flux_preprocessing(self, fluxes: np.ndarray, evaluation_mode: bool = False, seed: int = None) -> np.ndarray:

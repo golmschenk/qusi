@@ -54,7 +54,7 @@ class SimpleCubeCnn(Sequential):
 class SimpleLightcurveCnn(Model):
     """A simple 1D CNN for lightcurves."""
 
-    def __init__(self):
+    def __init__(self, number_of_label_types=1):
         super().__init__()
         leaky_relu = LeakyReLU(alpha=0.01)
         l2_regularizer = l2(0.001)
@@ -91,8 +91,8 @@ class SimpleLightcurveCnn(Model):
                                     kernel_regularizer=l2_regularizer)
         self.batch_norm9 = BatchNormalization()
         self.convolution11 = Conv1D(10, kernel_size=7, activation=leaky_relu, kernel_regularizer=l2_regularizer)
-        self.convolution12 = Conv1D(1, [1], activation=sigmoid)
-        self.reshape = Reshape([1])
+        self.convolution12 = Conv1D(number_of_label_types, [1], activation=sigmoid)
+        self.reshape = Reshape([number_of_label_types])
 
     def call(self, inputs, training=False, mask=None):
         """
