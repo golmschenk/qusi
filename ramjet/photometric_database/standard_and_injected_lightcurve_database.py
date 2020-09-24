@@ -43,7 +43,7 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         self.inference_lightcurve_collection: Union[LightcurveCollection, None] = None
         self.shuffle_buffer_size = 10000
         self.time_steps_per_example = 20000
-        self.number_of_labels_per_example = 1
+        self.number_of_label_types = 1
         self.out_of_bounds_injection_handling: OutOfBoundsInjectionHandlingMethod = \
             OutOfBoundsInjectionHandlingMethod.ERROR
 
@@ -191,7 +191,7 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         preprocess_map_function = partial(self.preprocess_standard_lightcurve, load_times_and_fluxes_from_path_function,
                                           load_label_from_path_function)
         output_types = (tf.float32, tf.float32)
-        output_shapes = [(self.time_steps_per_example, 1), (self.number_of_labels_per_example,)]
+        output_shapes = [(self.time_steps_per_example, 1), (self.number_of_label_types,)]
         example_and_label_dataset = map_py_function_to_dataset(paths_dataset,
                                                                preprocess_map_function,
                                                                self.number_of_parallel_processes_per_map,
@@ -292,7 +292,7 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
                                           injectable_load_times_and_magnifications_from_path_function,
                                           load_label_from_path_function)
         output_types = (tf.float32, tf.float32)
-        output_shapes = [(self.time_steps_per_example, 1), (self.number_of_labels_per_example,)]
+        output_shapes = [(self.time_steps_per_example, 1), (self.number_of_label_types,)]
         zipped_paths_dataset = tf.data.Dataset.zip((injectee_paths_dataset, injectable_paths_dataset))
         example_and_label_dataset = map_py_function_to_dataset(zipped_paths_dataset,
                                                                preprocess_map_function,
