@@ -22,12 +22,12 @@ class TessTwoMinuteCadenceLightcurveCollection(SqlMetadataLightcurveCollection):
     tess_data_interface = TessDataInterface()
     tess_two_minute_cadence_lightcurve_metadata_manger = TessTwoMinuteCadenceLightcurveMetadataManger()
 
-    def __init__(self, dataset_splits: Union[List[int], None] = None):
+    def __init__(self, dataset_splits: Union[List[int], None] = None, flux_type: TessFluxType = TessFluxType.PDCSAP):
         super().__init__()
         self.data_directory: Path = Path('data/tess_two_minute_cadence_lightcurves')
         self.label = 0
         self.dataset_splits: Union[List[int], None] = dataset_splits
-        self.flux_type: TessFluxType = TessFluxType.PDCSAP
+        self.flux_type: TessFluxType = flux_type
 
     def get_sql_query(self) -> Select:
         """
@@ -36,7 +36,9 @@ class TessTwoMinuteCadenceLightcurveCollection(SqlMetadataLightcurveCollection):
         :return: The SQL query.
         """
         query = TessTwoMinuteCadenceLightcurveMetadata().select(TessTwoMinuteCadenceLightcurveMetadata.path)
-        query = self.order_by_uuid_with_random_start(query, TessTwoMinuteCadenceLightcurveMetadata.random_order_uuid)
+        query = self.order_by_dataset_split_with_random_start(query,
+                                                              TessTwoMinuteCadenceLightcurveMetadata.dataset_split,
+                                                              self.dataset_splits)
         if self.dataset_splits is not None:
             query = query.where(TessTwoMinuteCadenceLightcurveMetadata.dataset_split.in_(self.dataset_splits))
         return query
@@ -90,9 +92,11 @@ class TessTwoMinuteCadenceTargetDatasetSplitLightcurveCollection(TessTwoMinuteCa
         :return: The SQL query.
         """
         query = TessTwoMinuteCadenceLightcurveMetadata().select(TessTwoMinuteCadenceLightcurveMetadata.path)
-        query = self.order_by_uuid_with_random_start(query, TessTwoMinuteCadenceLightcurveMetadata.random_order_uuid)
         query = query.join(TessTargetMetadata,
                            on=TessTwoMinuteCadenceLightcurveMetadata.tic_id == TessTargetMetadata.tic_id)
+        query = self.order_by_dataset_split_with_random_start(query,
+                                                              TessTargetMetadata.dataset_split,
+                                                              self.dataset_splits)
         if self.dataset_splits is not None:
             query = query.where(TessTargetMetadata.dataset_split.in_(self.dataset_splits))
         return query

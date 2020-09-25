@@ -1,5 +1,4 @@
 import pytest
-import sqlite3
 from pathlib import Path
 from unittest.mock import patch, Mock
 
@@ -25,10 +24,12 @@ class TestTessTwoMinuteCadenceLightcurveMetadataManger:
         lightcurve_path1 = Path('lightcurves/tess2019112060037-s0011-0000000280909647-0143-s_lc.fits')
         uuid0 = 'mock-uuid-output0'
         uuid1 = 'mock-uuid-output1'
-        with patch.object(module, 'uuid4') as mock_uuid4:
-            mock_uuid4.side_effect = [uuid0, uuid1]
-            metadata_manger.insert_multiple_rows_from_paths_into_database(
-                lightcurve_paths=[lightcurve_path0, lightcurve_path1], dataset_splits=[2, 3])
+        with patch.object(module, 'metadatabase_uuid') as mock_metadatabase_uuid:
+            with patch.object(module, 'dataset_split_from_uuid') as mock_dataset_split_generator:
+                mock_dataset_split_generator.side_effect = [2, 3]
+                mock_metadatabase_uuid.side_effect = [uuid0, uuid1]
+                metadata_manger.insert_multiple_rows_from_paths_into_database(
+                    lightcurve_paths=[lightcurve_path0, lightcurve_path1])
         expected_insert = [{'path': str(lightcurve_path0), 'tic_id': 382068171, 'sector': 13, 'dataset_split': 2},
                            {'path': str(lightcurve_path1), 'tic_id': 280909647, 'sector': 11, 'dataset_split': 3}]
         assert mock_insert_many.call_args[0][0] == expected_insert
@@ -41,4 +42,3 @@ class TestTessTwoMinuteCadenceLightcurveMetadataManger:
         metadata_manger.insert_multiple_rows_from_paths_into_database = mock_insert
         metadata_manger.populate_sql_database()
         assert mock_insert.call_args[0][0] == [Path(f'{index}.fits') for index in range(20)]
-        assert mock_insert.call_args[0][1] == list(range(10)) * 2

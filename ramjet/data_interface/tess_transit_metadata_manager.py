@@ -1,6 +1,8 @@
 """
 Code for managing the TESS transit metadata.
 """
+import warnings
+
 import pandas as pd
 from enum import Enum
 from peewee import IntegerField, CharField
@@ -58,12 +60,14 @@ class TessTransitMetadataManager:
                 # As a target can have multiple dispositions, use the most forgiving available disposition.
                 if 'KP' in disposition_set or 'CP' in disposition_set:
                     database_disposition = Disposition.CONFIRMED.value
-                elif 'PC' in disposition_set or '' in disposition_set:
+                elif 'PC' in disposition_set or '' in disposition_set or 'APC' in disposition_set:
                     database_disposition = Disposition.CANDIDATE.value
-                elif 'FP' in disposition_set:
+                elif 'FP' in disposition_set or 'FA' in disposition_set:
                     database_disposition = Disposition.FALSE_POSITIVE.value
                 else:
-                    raise ValueError(f'{disposition_set} does not contain a known disposition.')
+                    warnings.warn(f'Dispositions for TIC {tic_id} are {disposition_set}, which does not contain a known'
+                                  f'disposition.')
+                    continue
                 row = TessTransitMetadata(tic_id=tic_id, disposition=database_disposition)
                 row.save()
                 row_count += 1

@@ -2,7 +2,7 @@ from ramjet.photometric_database.derived.tess_two_minute_cadence_lightcurve_coll
     TessTwoMinuteCadenceTargetDatasetSplitLightcurveCollection
 from ramjet.photometric_database.derived.tess_two_minute_cadence_transit_lightcurve_collections import \
     TessTwoMinuteCadenceNonTransitLightcurveCollection, \
-    TessTwoMinuteCadenceConfirmedAndCandidateTransitLightcurveCollection
+    TessTwoMinuteCadenceConfirmedTransitLightcurveCollection
 from ramjet.photometric_database.standard_and_injected_lightcurve_database import \
     StandardAndInjectedLightcurveDatabase, OutOfBoundsInjectionHandlingMethod
 
@@ -14,15 +14,15 @@ class TessTwoMinuteCadenceStandardTransitDatabase(StandardAndInjectedLightcurveD
     def __init__(self):
         super().__init__()
         self.training_standard_lightcurve_collections = [
-            TessTwoMinuteCadenceConfirmedAndCandidateTransitLightcurveCollection(dataset_splits=list(range(8))),
+            TessTwoMinuteCadenceConfirmedTransitLightcurveCollection(dataset_splits=list(range(8))),
             TessTwoMinuteCadenceNonTransitLightcurveCollection(dataset_splits=list(range(8)))
         ]
         self.validation_standard_lightcurve_collections = [
-            TessTwoMinuteCadenceConfirmedAndCandidateTransitLightcurveCollection(dataset_splits=[8]),
+            TessTwoMinuteCadenceConfirmedTransitLightcurveCollection(dataset_splits=[8]),
             TessTwoMinuteCadenceNonTransitLightcurveCollection(dataset_splits=[8])
         ]
-        self.inference_lightcurve_collection = TessTwoMinuteCadenceTargetDatasetSplitLightcurveCollection(
-            dataset_splits=[9])
+        self.inference_lightcurve_collections = [
+            TessTwoMinuteCadenceTargetDatasetSplitLightcurveCollection(dataset_splits=[9])]
 
 
 class TessTwoMinuteCadenceInjectedTransitDatabase(StandardAndInjectedLightcurveDatabase):
@@ -35,15 +35,15 @@ class TessTwoMinuteCadenceInjectedTransitDatabase(StandardAndInjectedLightcurveD
         self.training_injectee_lightcurve_collection = TessTwoMinuteCadenceNonTransitLightcurveCollection(
             dataset_splits=list(range(8)))
         self.training_injectable_lightcurve_collections = [
-            TessTwoMinuteCadenceConfirmedAndCandidateTransitLightcurveCollection(dataset_splits=list(range(8))),
+            TessTwoMinuteCadenceConfirmedTransitLightcurveCollection(dataset_splits=list(range(8))),
             TessTwoMinuteCadenceNonTransitLightcurveCollection(dataset_splits=list(range(8)))
         ]
         self.validation_standard_lightcurve_collections = [
-            TessTwoMinuteCadenceConfirmedAndCandidateTransitLightcurveCollection(dataset_splits=[8]),
+            TessTwoMinuteCadenceConfirmedTransitLightcurveCollection(dataset_splits=[8]),
             TessTwoMinuteCadenceNonTransitLightcurveCollection(dataset_splits=[8])
         ]
-        self.inference_lightcurve_collection = TessTwoMinuteCadenceTargetDatasetSplitLightcurveCollection(
-            dataset_splits=[9])
+        self.inference_lightcurve_collections = [
+            TessTwoMinuteCadenceTargetDatasetSplitLightcurveCollection(dataset_splits=[9])]
 
 
 class TessTwoMinuteCadenceStandardAndInjectedTransitDatabase(StandardAndInjectedLightcurveDatabase):
@@ -54,18 +54,18 @@ class TessTwoMinuteCadenceStandardAndInjectedTransitDatabase(StandardAndInjected
         super().__init__()
         self.out_of_bounds_injection_handling = OutOfBoundsInjectionHandlingMethod.REPEAT_SIGNAL
         self.training_standard_lightcurve_collections = [
-            TessTwoMinuteCadenceConfirmedAndCandidateTransitLightcurveCollection(dataset_splits=list(range(8))),
+            TessTwoMinuteCadenceConfirmedTransitLightcurveCollection(dataset_splits=list(range(8))),
             TessTwoMinuteCadenceNonTransitLightcurveCollection(dataset_splits=list(range(8)))
         ]
         self.training_injectee_lightcurve_collection = TessTwoMinuteCadenceNonTransitLightcurveCollection(
             dataset_splits=list(range(8)))
         self.training_injectable_lightcurve_collections = [
-            TessTwoMinuteCadenceConfirmedAndCandidateTransitLightcurveCollection(dataset_splits=list(range(8))),
+            TessTwoMinuteCadenceConfirmedTransitLightcurveCollection(dataset_splits=list(range(8))),
             TessTwoMinuteCadenceNonTransitLightcurveCollection(dataset_splits=list(range(8)))
         ]
         self.validation_standard_lightcurve_collections = [
-            TessTwoMinuteCadenceConfirmedAndCandidateTransitLightcurveCollection(dataset_splits=[8]),
+            TessTwoMinuteCadenceConfirmedTransitLightcurveCollection(dataset_splits=[8]),
             TessTwoMinuteCadenceNonTransitLightcurveCollection(dataset_splits=[8])
         ]
-        self.inference_lightcurve_collection = TessTwoMinuteCadenceTargetDatasetSplitLightcurveCollection(
-            dataset_splits=[9])
+        self.inference_lightcurve_collections = [
+            TessTwoMinuteCadenceTargetDatasetSplitLightcurveCollection(dataset_splits=[9])]
