@@ -16,7 +16,7 @@ class LightcurveCollection:
     """
     A class representing a collection of lightcurves. Used to define how to find, load, and label a set of lightcurves.
     """
-    def __init__(self, label: Union[float, None] = None,
+    def __init__(self, label: Union[float, None] = None, paths: Union[List[Path], None] = None,
                  function_to_get_paths: Union[Callable[[], Iterable[Path]], None] = None,
                  function_to_load_times_and_fluxes_from_path: Union[
                      Callable[[Path], Tuple[np.ndarray, np.ndarray]], None] = None,
@@ -39,6 +39,7 @@ class LightcurveCollection:
             self.load_times_and_magnifications_from_path: Callable[
                 [Path], Tuple[np.ndarray, np.ndarray]] = function_to_load_times_and_magnifications_from_path
         self.label: Union[float, None] = label
+        self.paths: Union[List[Path], None] = paths
 
     def get_paths(self) -> Iterable[Path]:
         """
@@ -46,7 +47,7 @@ class LightcurveCollection:
 
         :return: An iterable of the lightcurve paths.
         """
-        raise LightcurveCollectionMethodNotImplementedError
+        return self.paths
 
     def load_times_and_fluxes_from_path(self, path: Path) -> (np.ndarray, np.ndarray):
         """
