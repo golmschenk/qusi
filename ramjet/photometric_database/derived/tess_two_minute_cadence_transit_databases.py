@@ -21,8 +21,8 @@ class TessTwoMinuteCadenceStandardTransitDatabase(StandardAndInjectedLightcurveD
             TessTwoMinuteCadenceConfirmedTransitLightcurveCollection(dataset_splits=[8]),
             TessTwoMinuteCadenceNonTransitLightcurveCollection(dataset_splits=[8])
         ]
-        self.inference_lightcurve_collection = TessTwoMinuteCadenceTargetDatasetSplitLightcurveCollection(
-            dataset_splits=[9])
+        self.inference_lightcurve_collections = [
+            TessTwoMinuteCadenceTargetDatasetSplitLightcurveCollection(dataset_splits=[9])]
 
 
 class TessTwoMinuteCadenceInjectedTransitDatabase(StandardAndInjectedLightcurveDatabase):
@@ -42,8 +42,8 @@ class TessTwoMinuteCadenceInjectedTransitDatabase(StandardAndInjectedLightcurveD
             TessTwoMinuteCadenceConfirmedTransitLightcurveCollection(dataset_splits=[8]),
             TessTwoMinuteCadenceNonTransitLightcurveCollection(dataset_splits=[8])
         ]
-        self.inference_lightcurve_collection = TessTwoMinuteCadenceTargetDatasetSplitLightcurveCollection(
-            dataset_splits=[9])
+        self.inference_lightcurve_collections = [
+            TessTwoMinuteCadenceTargetDatasetSplitLightcurveCollection(dataset_splits=[9])]
 
 
 class TessTwoMinuteCadenceStandardAndInjectedTransitDatabase(StandardAndInjectedLightcurveDatabase):
@@ -67,5 +67,5 @@ class TessTwoMinuteCadenceStandardAndInjectedTransitDatabase(StandardAndInjected
             TessTwoMinuteCadenceConfirmedTransitLightcurveCollection(dataset_splits=[8]),
             TessTwoMinuteCadenceNonTransitLightcurveCollection(dataset_splits=[8])
         ]
-        self.inference_lightcurve_collection = TessTwoMinuteCadenceTargetDatasetSplitLightcurveCollection(
-            dataset_splits=[9])
+        self.inference_lightcurve_collections = [
+            TessTwoMinuteCadenceTargetDatasetSplitLightcurveCollection(dataset_splits=[9])]
