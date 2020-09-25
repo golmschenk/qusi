@@ -22,4 +22,5 @@ class SelfLensingBinaryDatabase(StandardAndInjectedLightcurveDatabase):
         self.validation_standard_lightcurve_collections = self.training_standard_lightcurve_collections
         self.validation_injectee_lightcurve_collection = self.training_injectee_lightcurve_collection
         self.validation_injectable_lightcurve_collections = self.training_injectable_lightcurve_collections
-        self.inference_lightcurve_collection = TessTwoMinuteCadenceLightcurveCollection(flux_type=TessFluxType.SAP)
+        self.inference_lightcurve_collections = [
+            TessTwoMinuteCadenceLightcurveCollection(flux_type=TessFluxType.SAP)]
