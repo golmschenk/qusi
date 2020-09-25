@@ -1,8 +1,6 @@
 """
 Boilerplate code for running trials.
 """
-
-import io
 import numpy as np
 import pandas as pd
 import tensorflow as tf
@@ -52,9 +50,12 @@ def save_results(confidences_data_frame: pd.DataFrame, infer_results_path: Path,
     :param number_of_top_predictions_to_keep: The number of top results to keep. None will save all results.
     :return:
     """
-    confidences_data_frame = confidences_data_frame.sort_values('Prediction', ascending=False)
     if number_of_top_predictions_to_keep is not None:
+        try:
+            confidences_data_frame = confidences_data_frame.sort_values('confidence', ascending=False)
+        except KeyError:
+            raise Exception(f'Cannot request keeping top results for multilabel inference.')
         confidences_data_frame = confidences_data_frame.head(number_of_top_predictions_to_keep)
     confidences_data_frame = confidences_data_frame.reset_index(drop=True)
-    confidences_data_frame.to_csv(infer_results_path, index_label='Index')
+    confidences_data_frame.to_csv(infer_results_path, index_label='index')
     return confidences_data_frame
