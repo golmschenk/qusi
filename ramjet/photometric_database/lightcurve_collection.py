@@ -1,6 +1,6 @@
 import numpy as np
 from pathlib import Path
-from typing import Callable, Iterable, Union, Tuple
+from typing import Callable, Iterable, Union, Tuple, List
 
 
 class LightcurveCollectionMethodNotImplementedError(RuntimeError):
@@ -89,3 +89,25 @@ class LightcurveCollection:
         :return: The label.
         """
         return self.label
+
+    @staticmethod
+    def shuffle_and_split_paths(paths: List[Path], dataset_splits: List[int], number_of_splits: int = 10) -> List[Path]:
+        """
+        Repeatably shuffles a list of paths and then gets the requested dataset splits from that list of paths.
+        Designed to allow splitting a list of paths into training, validation, and testing datasets easily.
+
+        :param paths: The original list of paths.
+        :param dataset_splits: The indexes of the dataset splits to return.
+        :param number_of_splits: The number of dataset splits.
+        :return: The paths of the dataset splits.
+        """
+        path_array = np.array(paths)
+        np.random.seed(0)
+        np.random.shuffle(path_array)
+        dataset_split_arrays = np.array_split(path_array, number_of_splits)
+        dataset_split_arrays_to_keep = [dataset_split_array
+                                        for dataset_split_index, dataset_split_array in enumerate(dataset_split_arrays)
+                                        if dataset_split_index in dataset_splits]
+        paths_array = np.concatenate(dataset_split_arrays_to_keep)
+        dataset_split_paths = list(map(Path, paths_array))
+        return dataset_split_paths
