@@ -1,9 +1,9 @@
 """
 Code for interacting with MOA light curve files and metadata.
 """
-from typing import Union
-
 import pandas as pd
+from collections import defaultdict
+from typing import List, Dict
 
 from pathlib import Path
 
@@ -29,22 +29,38 @@ class MoaDataInterface:
         data_frame = data_frame.sort_index()
         return data_frame
 
-    def get_tag_for_path_from_data_frame(self, path: Path, data_frame: pd.DataFrame) -> Union[str, None]:
+    @staticmethod
+    def get_tag_for_path_from_data_frame(path: Path, events_data_frame: pd.DataFrame) -> str:
         """
         Gets the event tag of a light curve from the events data frame.
 
         :param path: The path of the light curve whose event tag should be retrieved.
-        :param data_frame: Takahiro Sumi's 9-year events data frame.
+        :param events_data_frame: Takahiro Sumi's 9-year events data frame.
         :return: The string of the tag of the event. None if no tag exists.
         """
         file_name = path.name
         file_name_without_extension = file_name.split('.')[0]
         moa_identifier = file_name_without_extension.split('_')[-1]  # Remove duplicate identifier string.
         field, clr, chip_string, subfield_string, id_string = moa_identifier.split('-')
-        chip, subfield, id = int(chip_string), int(subfield_string), int(id_string)
+        chip, subfield, id_ = int(chip_string), int(subfield_string), int(id_string)
         try:
-            row = data_frame.loc[(field, clr, chip, subfield, id)]
+            row = events_data_frame.loc[(field, clr, chip, subfield, id_)]
             tag = row['tag']
             return tag
         except KeyError:
-            return None
+            return 'no_tag'
+
+    def group_paths_by_tag_in_events_data_frame(self, paths: List[Path], events_data_frame: pd.DataFrame
+                                                ) -> Dict[str, List[Path]]:
+        """
+        Groups paths into a dictionary based on their tags.
+
+        :param paths: The paths to group.
+        :param events_data_frame: The events data frame to look for a tag in.
+        :return:
+        """
+        tag_path_list_dictionary = defaultdict(list)
+        for path in paths:
+            tag = self.get_tag_for_path_from_data_frame(path, events_data_frame)
+            tag_path_list_dictionary[tag].append(path)
+        return tag_path_list_dictionary
