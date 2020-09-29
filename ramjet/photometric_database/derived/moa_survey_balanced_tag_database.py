@@ -38,4 +38,5 @@ class MoaSurveyBalancedTagDatabase(StandardAndInjectedLightcurveDatabase):
                 collection.label = [1, 0]
             else:
                 collection.label = [0, 0]
+            collections.append(collection)
         return collections
