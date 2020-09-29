@@ -13,6 +13,7 @@ class MoaSurveyBalancedTagDatabase(StandardAndInjectedLightcurveDatabase):
 
     def __init__(self):
         super().__init__()
+        self.number_of_label_types = 2
         self.training_standard_lightcurve_collections = self.create_collection_for_each_tag(
             dataset_splits=list(range(8)))
         self.validation_standard_lightcurve_collections = self.create_collection_for_each_tag(dataset_splits=[8])
