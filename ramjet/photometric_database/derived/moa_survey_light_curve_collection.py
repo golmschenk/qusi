@@ -29,7 +29,7 @@ class MoaSurveyLightCurveCollection(LightcurveCollection):
             tag_paths = self.moa_data_interface.survey_tag_to_path_list_dictionary[tag]
             if self.dataset_splits is not None:
                 # Split on each tag, so that the splitting remains across collections with different tag selections.
-                tag_paths = self.shuffle_and_split_paths(paths, self.dataset_splits)
+                tag_paths = self.shuffle_and_split_paths(tag_paths, self.dataset_splits)
             paths.extend(tag_paths)
         return paths
 
