@@ -24,7 +24,7 @@ class MoaDataInterface:
             takahiro_sumi_nine_year_events_data_frame = self.read_takahiro_sumi_nine_year_events_table_as_data_frame(
                 Path('data/moa_microlensing/moa9yr_events_oct2018.txt'))
             self.survey_tag_to_path_list_dictionary_ = self.group_paths_by_tag_in_events_data_frame(
-                list(Path('data/moa_microlensing').glob('**/*.feather')), takahiro_sumi_nine_year_events_data_frame)
+                list(Path('data/moa_microlensing').glob('**/*.cor.feather')), takahiro_sumi_nine_year_events_data_frame)
         return self.survey_tag_to_path_list_dictionary_
 
     @staticmethod
