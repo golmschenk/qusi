@@ -56,8 +56,8 @@ class TessFfiStandardTransitAntiEclipsingBinaryDatabase(TessFfiDatabase):
             TessFfiAntiEclipsingBinaryForTransitLightcurveCollection(dataset_splits=[8],
                                                                      magnitude_range=magnitude_range)
         ]
-        self.inference_lightcurve_collection = TessFfiLightcurveCollection(dataset_splits=[9],
-                                                                           magnitude_range=magnitude_range)
+        self.inference_lightcurve_collections = [
+            TessFfiLightcurveCollection(dataset_splits=[9], magnitude_range=magnitude_range)]
 
 
 class TessFfiInjectedTransitDatabase(TessFfiDatabase):
