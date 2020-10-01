@@ -6,7 +6,7 @@ from ramjet.models.components.light_curve_network_block import LightCurveNetwork
 
 
 class Hades(Model):
-    def __init__(self):
+    def __init__(self, number_of_label_types=1):
         super().__init__()
         self.block0 = LightCurveNetworkBlock(filters=8, kernel_size=3, pooling_size=3, batch_normalization=False,
                                              dropout_rate=0)
@@ -21,8 +21,8 @@ class Hades(Model):
         self.block9 = LightCurveNetworkBlock(filters=20, kernel_size=7, pooling_size=1)
         self.block10 = LightCurveNetworkBlock(filters=20, kernel_size=1, pooling_size=1, batch_normalization=False,
                                               dropout_rate=0)
-        self.prediction_layer = Convolution1D(1, kernel_size=1, activation=sigmoid)
-        self.reshape = Reshape([1])
+        self.prediction_layer = Convolution1D(number_of_label_types, kernel_size=1, activation=sigmoid)
+        self.reshape = Reshape([number_of_label_types])
 
     def call(self, inputs, training=False, mask=None):
         """
