@@ -31,7 +31,7 @@ To download a lightcurve, use a command like:
 
 .. code-block:: python
 
-    tess_data_interface.download_lightcurve(tic_id=370101492, sector=12, save_directory='lightcurves')
+    tess_data_interface.download_two_minute_cadence_lightcurve(tic_id=370101492, sector=12, save_directory='lightcurves')
 
 This will create a directory called "lightcurves" in the current working directory (if it doesn't exist), and download
 into it the lightcurve FITS file for TIC 370101492 in sector 12.
