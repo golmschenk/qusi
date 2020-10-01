@@ -163,6 +163,19 @@ class TessDataInterface:
         return single_sector_observations.copy()
 
     @staticmethod
+    def filter_out_twenty_second_cadence_observations(time_series_observations: pd.DataFrame) -> pd.DataFrame:
+        """
+        Removes 20-second cadence data from the observation data frame.
+
+        :param time_series_observations: A data frame of observations to filtered.
+        :return: The data frame without 20-second cadence data.
+        """
+        observations_without_twenty_second_cadence = time_series_observations[
+            ~time_series_observations['dataURL'].str.endswith('fast-lc.fits')
+        ]
+        return observations_without_twenty_second_cadence.copy()
+
+    @staticmethod
     def filter_for_multi_sector_observations(time_series_observations: pd.DataFrame) -> pd.DataFrame:
         """
         Filters a data frame of observations to get only the multi sector observations.
@@ -229,7 +242,7 @@ class TessDataInterface:
             lightcurve_path = Path(lightcurve_path)  # In case it's currently a string.
             lightcurve_path.unlink()
             tic_id, sector = self.get_tic_id_and_sector_from_file_path(lightcurve_path)
-            self.download_lightcurve(tic_id=tic_id, sector=sector, save_directory=lightcurve_path.parent)
+            self.download_two_minute_cadence_lightcurve(tic_id=tic_id, sector=sector, save_directory=lightcurve_path.parent)
             with fits.open(lightcurve_path) as hdu_list:
                 lightcurve = hdu_list[1].data  # Lightcurve information is in first extension table.
         return lightcurve
@@ -282,7 +295,8 @@ class TessDataInterface:
             times = np.delete(times, nan_indexes)
         return fluxes, flux_errors, times
 
-    def download_lightcurve(self, tic_id: int, sector: int = None, save_directory: Union[Path, str] = None) -> Path:
+    def download_two_minute_cadence_lightcurve(self, tic_id: int, sector: int = None,
+                                               save_directory: Union[Path, str] = None) -> Path:
         """
         Downloads a lightcurve from MAST.
 
@@ -294,7 +308,8 @@ class TessDataInterface:
         """
         observations = self.get_all_tess_time_series_observations(tic_id=tic_id)
         single_sector_observations = self.filter_for_single_sector_observations(observations)
-        observations_with_sectors = self.add_sector_column_to_single_sector_observations(single_sector_observations)
+        two_minute_observations = self.filter_out_twenty_second_cadence_observations(single_sector_observations)
+        observations_with_sectors = self.add_sector_column_to_single_sector_observations(two_minute_observations)
         if sector is not None:
             observations_with_sectors = observations_with_sectors[observations_with_sectors['Sector'] == sector]
         else:
@@ -321,7 +336,7 @@ class TessDataInterface:
         :param exclude_flux_outliers: Whether or not to exclude flux outlier data points when plotting.
         :param base_data_point_size: The size of the data points to use when plotting (and related sizes).
         """
-        lightcurve_path = self.download_lightcurve(tic_id, sector)
+        lightcurve_path = self.download_two_minute_cadence_lightcurve(tic_id, sector)
         fluxes, times = self.load_fluxes_and_times_from_fits_file(lightcurve_path)
         if sector is None:
             sector = self.get_sector_from_single_sector_obs_id(str(lightcurve_path.stem))
@@ -339,7 +354,7 @@ class TessDataInterface:
         :param sector: The sector of the lightcurve to plot.
         :return: The generated figure.
         """
-        lightcurve_path = self.download_lightcurve(tic_id, sector)
+        lightcurve_path = self.download_two_minute_cadence_lightcurve(tic_id, sector)
         pdcsap_fluxes, pdcsap_times = self.load_fluxes_and_times_from_fits_file(lightcurve_path, TessFluxType.PDCSAP)
         normalized_pdcsap_fluxes = pdcsap_fluxes / np.median(pdcsap_fluxes)
         sap_fluxes, sap_times = self.load_fluxes_and_times_from_fits_file(lightcurve_path, TessFluxType.SAP)
@@ -455,7 +470,7 @@ class TessDataInterface:
         print(f'Starting download of 2-minute cadence lightcurves to directory `{save_directory}`.')
         save_directory.mkdir(parents=True, exist_ok=True)
         print(f'Retrieving observations list from MAST...')
-        single_sector_observations = self.get_all_single_sector_observations()
+        single_sector_observations = self.get_all_two_minute_single_sector_observations()
         print(f'Retrieving data products list from MAST...')
         data_products = self.get_product_list(single_sector_observations)
         print(f'Downloading lightcurves...')
@@ -479,10 +494,11 @@ class TessDataInterface:
         """
         time_series_observations = self.get_all_tess_time_series_observations(tic_id)
         single_sector_observations = self.filter_for_single_sector_observations(time_series_observations)
-        single_sector_observations = self.add_sector_column_to_single_sector_observations(single_sector_observations)
+        two_minute_observations = self.filter_out_twenty_second_cadence_observations(single_sector_observations)
+        single_sector_observations = self.add_sector_column_to_single_sector_observations(two_minute_observations)
         return sorted(single_sector_observations['Sector'].unique())
 
-    def get_all_single_sector_observations(self, tic_ids: List[int] = None) -> pd.DataFrame:
+    def get_all_two_minute_single_sector_observations(self, tic_ids: List[int] = None) -> pd.DataFrame:
         """
         Gets the data frame containing all the single sector observations, with TIC ID and sector columns.
 
@@ -491,11 +507,12 @@ class TessDataInterface:
         """
         tess_observations = self.get_all_tess_time_series_observations(tic_id=tic_ids)
         single_sector_observations = self.filter_for_single_sector_observations(tess_observations)
-        single_sector_observations = self.add_tic_id_column_to_single_sector_observations(
-            single_sector_observations)
-        single_sector_observations = self.add_sector_column_to_single_sector_observations(
-            single_sector_observations)
-        return single_sector_observations
+        two_minute_observations = self.filter_out_twenty_second_cadence_observations(single_sector_observations)
+        two_minute_observations = self.add_tic_id_column_to_single_sector_observations(
+            two_minute_observations)
+        two_minute_observations = self.add_sector_column_to_single_sector_observations(
+            two_minute_observations)
+        return two_minute_observations
 
     def verify_lightcurve(self, lightcurve_path: Path):
         """
@@ -511,7 +528,7 @@ class TessDataInterface:
             print(f'{lightcurve_path} seems to be malformed. Re-downloading and replacing.')
             sector = self.get_sector_from_single_sector_obs_id(str(lightcurve_path.stem))
             tic_id = self.get_tic_id_from_single_sector_obs_id(str(lightcurve_path.stem))
-            self.download_lightcurve(tic_id, sector, save_directory=lightcurve_path.parent)
+            self.download_two_minute_cadence_lightcurve(tic_id, sector, save_directory=lightcurve_path.parent)
 
     @staticmethod
     def get_tic_id_and_sector_from_file_path(file_path: Union[Path, str]):
