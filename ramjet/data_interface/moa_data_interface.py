@@ -3,8 +3,7 @@ Code for interacting with MOA light curve files and metadata.
 """
 import pandas as pd
 from collections import defaultdict
-from typing import List, Dict
-
+from typing import List, Dict, Union
 from pathlib import Path
 
 
@@ -12,6 +11,24 @@ class MoaDataInterface:
     """
     A class for interacting with MOA light curve files and metadata.
     """
+    survey_tag_to_path_list_dictionary_: Union[Dict[str, List[Path]], None] = None
+    no_tag_string = 'no_tag'
+    all_survey_tags = ['c', 'cf', 'cp', 'cw', 'cs', 'cb', 'v', 'n', 'nr', 'm', 'j', no_tag_string]
+
+    @property
+    def survey_tag_to_path_list_dictionary(self) -> Dict[str, List[Path]]:
+        """
+        Property allowing the survey tag to path list dictionary to only be loaded once.
+
+        :return: The survey tag to path list dictionary
+        """
+        if self.survey_tag_to_path_list_dictionary_ is None:
+            takahiro_sumi_nine_year_events_data_frame = self.read_takahiro_sumi_nine_year_events_table_as_data_frame(
+                Path('data/moa_microlensing/moa9yr_events_oct2018.txt'))
+            self.survey_tag_to_path_list_dictionary_ = self.group_paths_by_tag_in_events_data_frame(
+                list(Path('data/moa_microlensing').glob('**/*.cor.feather')), takahiro_sumi_nine_year_events_data_frame)
+        return self.survey_tag_to_path_list_dictionary_
+
     @staticmethod
     def read_takahiro_sumi_nine_year_events_table_as_data_frame(path: Path) -> pd.DataFrame:
         """
@@ -29,8 +46,7 @@ class MoaDataInterface:
         data_frame = data_frame.sort_index()
         return data_frame
 
-    @staticmethod
-    def get_tag_for_path_from_data_frame(path: Path, events_data_frame: pd.DataFrame) -> str:
+    def get_tag_for_path_from_data_frame(self, path: Path, events_data_frame: pd.DataFrame) -> str:
         """
         Gets the event tag of a light curve from the events data frame.
 
@@ -48,7 +64,7 @@ class MoaDataInterface:
             tag = row['tag']
             return tag
         except KeyError:
-            return 'no_tag'
+            return self.no_tag_string
 
     def group_paths_by_tag_in_events_data_frame(self, paths: List[Path], events_data_frame: pd.DataFrame
                                                 ) -> Dict[str, List[Path]]:
