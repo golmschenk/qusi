@@ -145,7 +145,7 @@ class TestStandardAndInjectedLightcurveDatabase:
         stub_load_times_and_fluxes_function = Mock(return_value=(np.array([0, -1, -2]), np.array([0, 1, 2])))
         mock_load_label_function = Mock(return_value=3)
         path_tensor = tf.constant('stub_path.fits')
-        database.flux_preprocessing = lambda identity: identity
+        database.flux_preprocessing = lambda identity, *args, **kwargs: identity
 
         # noinspection PyTypeChecker
         example, label = database.preprocess_standard_lightcurve(
@@ -162,8 +162,8 @@ class TestStandardAndInjectedLightcurveDatabase:
         stub_load_times_and_fluxes_function = Mock(return_value=(np.array([0, -1, -2]), np.array([0, 1, 2])))
         mock_load_label_function = Mock(return_value=3)
         path_tensor = tf.constant('stub_path.fits')
-        database.flux_preprocessing = lambda identity: identity
-        database.inject_signal_into_lightcurve = lambda identity, *other_args: identity
+        database.flux_preprocessing = lambda identity, *args, **kwargs: identity
+        database.inject_signal_into_lightcurve = lambda identity, *args, **kwargs: identity
 
         # noinspection PyTypeChecker
         example, label = database.preprocess_injected_lightcurve(
@@ -405,15 +405,17 @@ class TestStandardAndInjectedLightcurveDatabase:
 
     @pytest.mark.slow
     @pytest.mark.functional
-    def test_generated_standard_and_infer_datasets_return_the_same_lightcurve(self, database):
-        lightcurve_collection = database.training_standard_lightcurve_collections[0]
-        paths_dataset0 = database.generate_paths_dataset_from_lightcurve_collection(lightcurve_collection)
-        lightcurve_and_label_dataset = database.generate_standard_lightcurve_and_label_dataset(
+    def test_generated_standard_and_infer_datasets_return_the_same_lightcurve(self, database_with_collections):
+        lightcurve_collection = database_with_collections.training_standard_lightcurve_collections[0]
+        paths_dataset0 = database_with_collections.generate_paths_dataset_from_lightcurve_collection(
+            lightcurve_collection)
+        lightcurve_and_label_dataset = database_with_collections.generate_standard_lightcurve_and_label_dataset(
             paths_dataset0, lightcurve_collection.load_times_and_fluxes_from_path,
             lightcurve_collection.load_label_from_path)
         lightcurve_and_label = next(iter(lightcurve_and_label_dataset))
-        paths_dataset1 = database.generate_paths_dataset_from_lightcurve_collection(lightcurve_collection)
-        path_and_lightcurve_dataset = database.generate_infer_path_and_lightcurve_dataset(
+        paths_dataset1 = database_with_collections.generate_paths_dataset_from_lightcurve_collection(
+            lightcurve_collection)
+        path_and_lightcurve_dataset = database_with_collections.generate_infer_path_and_lightcurve_dataset(
             paths_dataset1, lightcurve_collection.load_times_and_fluxes_from_path)
         path_and_lightcurve = next(iter(path_and_lightcurve_dataset))
         assert np.array_equal(lightcurve_and_label[0].numpy(), path_and_lightcurve[1].numpy())
