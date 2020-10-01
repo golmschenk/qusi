@@ -160,7 +160,7 @@ class TessToiDataInterface:
             directory = Path(directory)
         tic_ids = self.toi_dispositions[ToiColumns.tic_id.value].unique()
         print('Downloading TESS observation list...')
-        single_sector_observations = tess_data_interface.get_all_single_sector_observations(tic_ids)
+        single_sector_observations = tess_data_interface.get_all_two_minute_single_sector_observations(tic_ids)
         print("Downloading lightcurves which are confirmed or suspected planets in TOI dispositions...")
         suspected_planet_dispositions = self.toi_dispositions[
             self.toi_dispositions[ToiColumns.disposition.value] != 'FP']

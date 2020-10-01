@@ -274,7 +274,7 @@ class TransitFitter:
         relative_flux_errors_arrays = []
         times_arrays = []
         for sector in sectors:
-            lightcurve_path = self.tess_data_interface.download_lightcurve(tic_id, sector)
+            lightcurve_path = self.tess_data_interface.download_two_minute_cadence_lightcurve(tic_id, sector)
             lightcurve = self.tess_data_interface.load_fluxes_flux_errors_and_times_from_fits_file(lightcurve_path)
             sector_fluxes, sector_flux_errors, sector_times = lightcurve
             sector_flux_median = np.median(sector_fluxes)
