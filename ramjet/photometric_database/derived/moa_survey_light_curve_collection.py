@@ -12,6 +12,7 @@ class MoaSurveyLightCurveCollection(LightcurveCollection):
     A collection of light curves based on the MOA 9-year survey.
     """
     moa_data_interface = MoaDataInterface()
+    all_survey_tags = ['c', 'cf', 'cp', 'cw', 'cs', 'cb', 'v', 'n', 'nr', 'm', 'j']
 
     def __init__(self, survey_tags: List[str], dataset_splits: Union[List[int], None] = None):
         super().__init__()
