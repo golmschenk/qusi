@@ -37,24 +37,27 @@ def infer(model: tf.keras.Model, dataset: tf.data.Dataset, infer_results_path: P
         if number_of_top_predictions_to_keep is not None and batch_index % 100 == 0:
             confidences_data_frame = save_results(confidences_data_frame, infer_results_path,
                                                   number_of_top_predictions_to_keep)
-    save_results(confidences_data_frame, infer_results_path, number_of_top_predictions_to_keep)
+    save_results(confidences_data_frame, infer_results_path, number_of_top_predictions_to_keep, sort=True)
 
 
 def save_results(confidences_data_frame: pd.DataFrame, infer_results_path: Path,
-                 number_of_top_predictions_to_keep: int = None):
+                 number_of_top_predictions_to_keep: int = None, sort: bool = False):
     """
     Saves a predictions data frame to a file.
 
     :param confidences_data_frame: The data frame of predictions to save.
     :param infer_results_path: The path to save the resulting predictions to.
-    :param number_of_top_predictions_to_keep: The number of top results to keep. None will save all results.
-    :return:
+    :param number_of_top_predictions_to_keep: The number of top results to keep. None will save all results. If not None
+                                              the data frame is sorted.
+    :param sort: Whether to sort even if the number of top predictions is not set.
+    :return: The updated data frame.
     """
-    if number_of_top_predictions_to_keep is not None:
+    if (number_of_top_predictions_to_keep is not None) or sort:
         try:
             confidences_data_frame = confidences_data_frame.sort_values('confidence', ascending=False)
         except KeyError:
-            raise Exception(f'Cannot request keeping top results for multilabel inference.')
+            raise Exception(f'Cannot request sorting for multi-label inference.')
+    if number_of_top_predictions_to_keep is not None:
         confidences_data_frame = confidences_data_frame.head(number_of_top_predictions_to_keep)
     confidences_data_frame = confidences_data_frame.reset_index(drop=True)
     confidences_data_frame.to_csv(infer_results_path, index_label='index')
