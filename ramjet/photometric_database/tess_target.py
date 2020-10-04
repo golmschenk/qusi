@@ -3,6 +3,8 @@ Code to represent a TESS target.
 """
 from __future__ import annotations
 
+import math
+
 import numpy as np
 from typing import Union
 
@@ -22,6 +24,7 @@ class TessTarget:
         self.radius: Union[float, None] = None
         self.mass: Union[float, None] = None
         self.magnitude: Union[float, None] = None
+        self.contamination_ratio: Union[float, None] = None
 
     @classmethod
     def from_tic_id(cls, tic_id: int) -> TessTarget:
@@ -40,13 +43,31 @@ class TessTarget:
             if not np.isnan(gaia_source_id):
                 target.radius = target.get_radius_from_gaia(gaia_source_id)
         target.mass = tic_row['mass']
+        # noinspection SpellCheckingInspection
         target.magnitude = tic_row['Tmag']
+        # noinspection SpellCheckingInspection
+        target.contamination_ratio = tic_row['contratio']
         return target
 
     @staticmethod
     def get_radius_from_gaia(gaia_source_id: int) -> float:
+        """
+        Retrieves the radius of a body from Gaia.
+
+        :param gaia_source_id: The Gaia source ID for the target to retrieve the radius of.
+        :return: The radius.
+        """
         # noinspection SqlResolve
         gaia_job = Gaia.launch_job(f'select * from gaiadr2.gaia_source where source_id={gaia_source_id}')
         query_results_data_frame = gaia_job.get_results().to_pandas()
         radius = query_results_data_frame['radius_val'].iloc[0]
         return radius
+
+    def calculate_transiting_body_radius(self, transit_depth: float) -> float:
+        """
+        Calculates the radius of a transiting body based on the target parameters and the transit depth.
+
+        :param transit_depth: The depth of the transit signal.
+        :return: The calculated radius of the transiting body.
+        """
+        return self.radius * math.sqrt(transit_depth / (1 - self.contamination_ratio))

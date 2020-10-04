@@ -28,3 +28,17 @@ class TestTessTarget:
         gaia_radius = target.get_radius_from_gaia(2057537107164000640)
 
         assert gaia_radius == pytest.approx(4.2563343)
+
+    @pytest.mark.parametrize('transit_depth, target_radius, target_contamination_ratio, expected_body_radius',
+                             [(0.01011, 1.0, 0.0, 0.1005484),
+                              (0.02, 1.0, 0.1, 0.1490712),
+                              (0.01, 2.0, 0.5, 0.2828427)])
+    def test_can_estimate_radius_of_transiting_body(self, transit_depth, target_radius, target_contamination_ratio,
+                                                    expected_body_radius):
+        target = TessTarget()
+        target.radius = target_radius
+        target.contamination_ratio = target_contamination_ratio
+
+        body_radius = target.calculate_transiting_body_radius(transit_depth=transit_depth)
+
+        assert body_radius == pytest.approx(expected_body_radius)
