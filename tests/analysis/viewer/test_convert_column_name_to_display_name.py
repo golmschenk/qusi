@@ -1,6 +1,6 @@
 import pytest
 
-from ramjet.analysis.viewer.convert_column_name_to_display_name import convert_column_name_to_display_name
+from ramjet.analysis.convert_column_name_to_display_name import convert_column_name_to_display_name
 
 
 @pytest.mark.parametrize('column_name, expected_display_name',

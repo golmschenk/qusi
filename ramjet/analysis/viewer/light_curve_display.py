@@ -11,7 +11,7 @@ from bokeh.plotting import Figure
 
 from ramjet.analysis.color_palette import lightcurve_colors
 from ramjet.analysis.lightcurve_visualizer import calculate_inlier_range
-from ramjet.analysis.viewer.convert_column_name_to_display_name import convert_column_name_to_display_name
+from ramjet.analysis.convert_column_name_to_display_name import convert_column_name_to_display_name
 from ramjet.photometric_database.light_curve import LightCurve
 
 
