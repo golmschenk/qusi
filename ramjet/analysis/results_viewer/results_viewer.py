@@ -51,7 +51,7 @@ class Target:
         self.loaded = True
 
     def load_lightcurve(self):
-        lightcurve_path = tess_data_interface.download_lightcurve(self.tic_id, self.sector)
+        lightcurve_path = tess_data_interface.download_two_minute_cadence_lightcurve(self.tic_id, self.sector)
         self.pdcsap_fluxes, self.pdcsap_flux_errors, self.times = tess_data_interface.load_fluxes_flux_errors_and_times_from_fits_file(
             lightcurve_path, TessFluxType.PDCSAP, remove_nans=False)
         nonnegative_pdcsap_fluxes = self.pdcsap_fluxes - np.minimum(np.nanmin(self.pdcsap_fluxes), 0)

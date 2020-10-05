@@ -1,4 +1,5 @@
 from pathlib import Path
+from unittest.mock import Mock
 
 import numpy as np
 import pytest
@@ -72,15 +73,15 @@ class TestLightcurveCollection:
         except LightcurveCollectionMethodNotImplementedError:
             pytest.fail('`LightcurveCollectionMethodNotImplementedError` raised when it should not be.')
 
-    def test_calling_get_paths_without_setting_raises_error(self):
+    def test_calling_get_paths_without_setting_returns_the_paths_attribute(self):
         lightcurve_collection = LightcurveCollection()
-        with pytest.raises(LightcurveCollectionMethodNotImplementedError):
-            _ = lightcurve_collection.get_paths()
+        stub_paths = Mock()
+        lightcurve_collection.paths = stub_paths
+        paths0 = lightcurve_collection.get_paths()
+        assert paths0 is stub_paths
         lightcurve_collection.get_paths = lambda: []
-        try:
-            _ = lightcurve_collection.get_paths()
-        except LightcurveCollectionMethodNotImplementedError:
-            pytest.fail('`LightcurveCollectionMethodNotImplementedError` raised when it should not be.')
+        paths1 = lightcurve_collection.get_paths()
+        assert paths1 == []
 
     def test_get_paths_can_be_set_by_passing_to_init(self):
         lightcurve_collection = LightcurveCollection(function_to_get_paths=lambda: [])

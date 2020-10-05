@@ -4,7 +4,7 @@ import datetime
 from pathlib import Path
 
 from ramjet.photometric_database.derived.tess_two_minute_cadence_transit_databases import \
-    TessTwoMinuteCadenceStandardTransitDatabase
+    TessTwoMinuteCadenceStandardAndInjectedTransitDatabase
 from ramjet.analysis.model_loader import get_latest_log_directory
 from ramjet.basic_models import SimpleLightcurveCnn
 from ramjet.trial import infer
@@ -15,11 +15,11 @@ saved_log_directory = Path(f'{log_name}')
 datetime_string = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
 
 print('Setting up dataset...', flush=True)
-database = TessTwoMinuteCadenceStandardTransitDatabase()
+database = TessTwoMinuteCadenceStandardAndInjectedTransitDatabase()
 inference_dataset = database.generate_inference_dataset()
 
 print('Loading model...', flush=True)
-model = SimpleLightcurveCnn()
+model = SimpleLightcurveCnn(database.number_of_label_types)
 model.load_weights(str(saved_log_directory.joinpath('model.ckpt'))).expect_partial()
 
 print('Inferring...', flush=True)

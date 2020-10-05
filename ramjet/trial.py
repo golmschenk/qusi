@@ -1,8 +1,6 @@
 """
 Boilerplate code for running trials.
 """
-
-import io
 import numpy as np
 import pandas as pd
 import tensorflow as tf
@@ -19,36 +17,45 @@ def infer(model: tf.keras.Model, dataset: tf.data.Dataset, infer_results_path: P
     :param infer_results_path: The path to save the resulting predictions to.
     :param number_of_top_predictions_to_keep: The number of top results to keep. None will save all results.
     """
-    columns = ['Lightcurve path', 'Prediction']
-    dtypes = [str, int]
-    predictions_data_frame = pd.read_csv(io.StringIO(''), names=columns, dtype=dict(zip(columns, dtypes)))
+    confidences_data_frame = None
     examples_count = 0
     for batch_index, (paths, examples) in enumerate(dataset):
-        predictions = model(examples, training=False)
-        batch_predictions = pd.DataFrame({'Lightcurve path': paths.numpy().astype(str),
-                                          'Prediction': np.squeeze(predictions, axis=1)})
-        examples_count += batch_predictions.shape[0]
-        predictions_data_frame = pd.concat([predictions_data_frame, batch_predictions])
+        confidences = model(examples, training=False)
+        if confidences.shape[1] == 1:
+            batch_confidences_data_frame = pd.DataFrame({'light_curve_path': paths.numpy().astype(str),
+                                                         'confidence': np.squeeze(confidences, axis=1)})
+        else:
+            batch_confidences_data_frame = pd.DataFrame({'light_curve_path': paths.numpy().astype(str)})
+            for label_index in range(confidences.shape[1]):
+                batch_confidences_data_frame[f'label_{label_index}_confidence'] = confidences[:, label_index]
+        examples_count += batch_confidences_data_frame.shape[0]
+        if confidences_data_frame is None:
+            confidences_data_frame = batch_confidences_data_frame
+        else:
+            confidences_data_frame = pd.concat([confidences_data_frame, batch_confidences_data_frame])
         print(f'{examples_count} examples inferred on.', flush=True)
         if number_of_top_predictions_to_keep is not None and batch_index % 100 == 0:
-            predictions_data_frame = save_results(predictions_data_frame, infer_results_path,
+            confidences_data_frame = save_results(confidences_data_frame, infer_results_path,
                                                   number_of_top_predictions_to_keep)
-    save_results(predictions_data_frame, infer_results_path, number_of_top_predictions_to_keep)
+    save_results(confidences_data_frame, infer_results_path, number_of_top_predictions_to_keep)
 
 
-def save_results(predictions_data_frame: pd.DataFrame, infer_results_path: Path,
+def save_results(confidences_data_frame: pd.DataFrame, infer_results_path: Path,
                  number_of_top_predictions_to_keep: int = None):
     """
     Saves a predictions data frame to a file.
 
-    :param predictions_data_frame: The data frame of predictions to save.
+    :param confidences_data_frame: The data frame of predictions to save.
     :param infer_results_path: The path to save the resulting predictions to.
     :param number_of_top_predictions_to_keep: The number of top results to keep. None will save all results.
-    :return:
+    :return: The updated data frame.
     """
-    predictions_data_frame = predictions_data_frame.sort_values('Prediction', ascending=False)
+    try:
+        confidences_data_frame = confidences_data_frame.sort_values('confidence', ascending=False)
+    except KeyError:
+        confidences_data_frame = confidences_data_frame.sort_values('label_0_confidence', ascending=False)
     if number_of_top_predictions_to_keep is not None:
-        predictions_data_frame = predictions_data_frame.head(number_of_top_predictions_to_keep)
-    predictions_data_frame = predictions_data_frame.reset_index(drop=True)
-    predictions_data_frame.to_csv(infer_results_path, index_label='Index')
-    return predictions_data_frame
+        confidences_data_frame = confidences_data_frame.head(number_of_top_predictions_to_keep)
+    confidences_data_frame = confidences_data_frame.reset_index(drop=True)
+    confidences_data_frame.to_csv(infer_results_path, index_label='index')
+    return confidences_data_frame
