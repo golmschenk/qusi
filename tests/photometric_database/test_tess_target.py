@@ -31,8 +31,8 @@ class TestTessTarget:
 
     @pytest.mark.parametrize('transit_depth, target_radius, target_contamination_ratio, expected_body_radius',
                              [(0.01011, 1.0, 0.0, 0.1005484),
-                              (0.02, 1.0, 0.1, 0.1490712),
-                              (0.01, 2.0, 0.5, 0.2828427)])
+                              (0.02, 1.0, 0.1, 0.1483239),
+                              (0.01, 2.0, 0.5, 0.2449489)])
     def test_can_estimate_radius_of_transiting_body(self, transit_depth, target_radius, target_contamination_ratio,
                                                     expected_body_radius):
         target = TessTarget()

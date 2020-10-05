@@ -72,7 +72,7 @@ class TessTarget:
         :param transit_depth: The depth of the transit signal.
         :return: The calculated radius of the transiting body.
         """
-        return self.radius * math.sqrt(transit_depth / (1 - self.contamination_ratio))
+        return self.radius * math.sqrt(transit_depth * (1 + self.contamination_ratio))
 
     def retrieve_nearby_tic_targets(self) -> pd.DataFrame:
         """
