@@ -42,3 +42,29 @@ class TestTessTarget:
         body_radius = target.calculate_transiting_body_radius(transit_depth=transit_depth)
 
         assert body_radius == pytest.approx(expected_body_radius)
+
+    @pytest.mark.external
+    def test_can_retrieve_nearby_tic_target_data_frame(self):
+        # Information from https://exofop.ipac.caltech.edu/tess/nearbytarget.php?id=231663901
+        target = TessTarget()
+        target.tic_id = 231663901
+
+        nearby_target_data_frame = target.retrieve_nearby_tic_targets()
+
+        assert 1989124451 in nearby_target_data_frame['TIC ID'].values
+        assert 1989124456 in nearby_target_data_frame['TIC ID'].values
+        assert 231663902 in nearby_target_data_frame['TIC ID'].values
+
+    @pytest.mark.external
+    def test_retrieve_nearby_tic_target_data_frame_corrects_exofop_bug(self):
+        # Information from https://exofop.ipac.caltech.edu/tess/nearbytarget.php?id=231663901
+        # As of 2020-10-5, they incorrectly leave out the header for distance error.
+        target = TessTarget()
+        target.tic_id = 231663901
+
+        nearby_target_data_frame = target.retrieve_nearby_tic_targets()
+
+        row = nearby_target_data_frame[nearby_target_data_frame['TIC ID'] == 231663901].iloc[0]
+        assert row['PM RA (mas/yr)'] == pytest.approx(12.6409)
+        assert row['Separation (arcsec)'] == 0
+        assert row['Distance Err (pc)'] == pytest.approx(4.411)

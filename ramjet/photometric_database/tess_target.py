@@ -3,11 +3,13 @@ Code to represent a TESS target.
 """
 from __future__ import annotations
 
+import io
 import math
-
 import numpy as np
+import pandas as pd
 from typing import Union
 
+import requests
 from astroquery.gaia import Gaia
 
 from ramjet.data_interface.tess_data_interface import TessDataInterface
@@ -71,3 +73,16 @@ class TessTarget:
         :return: The calculated radius of the transiting body.
         """
         return self.radius * math.sqrt(transit_depth / (1 - self.contamination_ratio))
+
+    def retrieve_nearby_tic_targets(self):
+        """
+        Retrieves the data frame of nearby targets from ExoFOP.
+
+        :return: The data frame of nearby targets.
+        """
+        csv_url = f'https://exofop.ipac.caltech.edu/tess/download_nearbytarget.php?id={self.tic_id}&output=csv'
+        csv_string = requests.get(csv_url).content.decode('utf-8')
+        if 'Distance Err' not in csv_string:  # Correct ExoFOP bug where distance error column header is missing.
+            csv_string = csv_string.replace('Distance(pc)', 'Distance (pc),Distance Err (pc)')
+        data_frame = pd.read_csv(io.StringIO(csv_string), index_col=False)
+        return data_frame
