@@ -1,6 +1,8 @@
 """
 Code for vetting transit candidates.
 """
+import pandas as pd
+
 from ramjet.photometric_database.tess_target import TessTarget
 
 
@@ -27,9 +29,9 @@ class TransitVetter:
             return False
 
     @staticmethod
-    def has_problematic_nearby_targets(target: TessTarget) -> bool:
+    def has_no_nearby_likely_eclipsing_binary_background_targets(target: TessTarget) -> bool:
         """
-        Checks if the target has problematic nearby targets.
+        Checks if the target has likely nearby targets which may be eclipsing binaries showing up as the transit.
 
         :param target: The target of interest.
         :return: Whether or not there is at least one problematic nearby target.
@@ -39,6 +41,25 @@ class TransitVetter:
         nearby_target_data_frame = target.retrieve_nearby_tic_targets()
         problematic_nearby_target_data_frame = nearby_target_data_frame.loc[
             (nearby_target_data_frame['TESS Mag'] < target.magnitude + magnitude_difference_threshold) &
+            (nearby_target_data_frame['Separation (arcsec)'] < nearby_threshold_arcseconds)
+        ]
+        if problematic_nearby_target_data_frame.shape[0] == 0:
+            return True
+        else:
+            return False
+
+    @staticmethod
+    def has_no_nearby_toi_targets(target: TessTarget) -> bool:
+        """
+        Checks if the target has nearby TOI targets which are likely to be where the transit is from.
+
+        :param target: The target of interest.
+        :return: Whether or not there is at least one problematic nearby target.
+        """
+        nearby_threshold_arcseconds = 31.5  # 1.5 TESS pixels.
+        nearby_target_data_frame = target.retrieve_nearby_tic_targets()
+        problematic_nearby_target_data_frame = nearby_target_data_frame.loc[
+            (pd.notnull(nearby_target_data_frame['TOI'])) &
             (nearby_target_data_frame['Separation (arcsec)'] < nearby_threshold_arcseconds)
         ]
         if problematic_nearby_target_data_frame.shape[0] == 0:

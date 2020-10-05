@@ -31,14 +31,30 @@ class TestTransitVetter:
                                  ([5], [18], True),
                                  ([50, 1], [18, 12], False)
                              ])
-    def test_can_check_if_nearby_targets_will_not_be_troublesome(self, nearby_separations, nearby_magnitudes,
-                                                                 expected_ruling):
+    def test_can_check_if_nearby_targets_might_be_background_eclipsing_binary(self, nearby_separations,
+                                                                              nearby_magnitudes, expected_ruling):
         stub_target = TessTarget()
         stub_target.magnitude = 10
         stub_target.retrieve_nearby_tic_targets = lambda: pd.DataFrame({'Separation (arcsec)': nearby_separations,
                                                                         'TESS Mag': nearby_magnitudes})
         transit_vetter = TransitVetter()
 
-        has_problematic_nearby_targets = transit_vetter.has_problematic_nearby_targets(stub_target)
+        has_problematic_nearby_targets = transit_vetter.has_no_nearby_likely_eclipsing_binary_background_targets(stub_target)
+
+        assert has_problematic_nearby_targets == expected_ruling
+
+    @pytest.mark.parametrize('nearby_toi, nearby_separations, expected_ruling',
+                             [
+                                 ([1], [50], True),
+                                 ([1], [10], False),
+                                 ([1, 2], [50, 10], False)
+                             ])
+    def test_can_check_if_nearby_targets_are_known_toi_targets(self, nearby_toi, nearby_separations, expected_ruling):
+        stub_target = TessTarget()
+        stub_target.retrieve_nearby_tic_targets = lambda: pd.DataFrame({'Separation (arcsec)': nearby_separations,
+                                                                        'TOI': nearby_toi})
+        transit_vetter = TransitVetter()
+
+        has_problematic_nearby_targets = transit_vetter.has_no_nearby_toi_targets(stub_target)
 
         assert has_problematic_nearby_targets == expected_ruling
