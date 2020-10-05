@@ -74,7 +74,7 @@ class TessTarget:
         """
         return self.radius * math.sqrt(transit_depth / (1 - self.contamination_ratio))
 
-    def retrieve_nearby_tic_targets(self):
+    def retrieve_nearby_tic_targets(self) -> pd.DataFrame:
         """
         Retrieves the data frame of nearby targets from ExoFOP.
 
