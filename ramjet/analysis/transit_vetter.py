@@ -25,3 +25,23 @@ class TransitVetter:
             return True
         else:
             return False
+
+    @staticmethod
+    def has_problematic_nearby_targets(target: TessTarget) -> bool:
+        """
+        Checks if the target has problematic nearby targets.
+
+        :param target: The target of interest.
+        :return: Whether or not there is at least one problematic nearby target.
+        """
+        nearby_threshold_arcseconds = 21  # 21 arcseconds is the size of the side of a TESS pixel.
+        magnitude_difference_threshold = 5
+        nearby_target_data_frame = target.retrieve_nearby_tic_targets()
+        problematic_nearby_target_data_frame = nearby_target_data_frame.loc[
+            (nearby_target_data_frame['TESS Mag'] < target.magnitude + magnitude_difference_threshold) &
+            (nearby_target_data_frame['Separation (arcsec)'] < nearby_threshold_arcseconds)
+        ]
+        if problematic_nearby_target_data_frame.shape[0] == 0:
+            return True
+        else:
+            return False

@@ -85,4 +85,5 @@ class TessTarget:
         if 'Distance Err' not in csv_string:  # Correct ExoFOP bug where distance error column header is missing.
             csv_string = csv_string.replace('Distance(pc)', 'Distance (pc),Distance Err (pc)')
         data_frame = pd.read_csv(io.StringIO(csv_string), index_col=False)
+        data_frame = data_frame[data_frame['TIC ID'] != self.tic_id]  # Remove row of current target.
         return data_frame

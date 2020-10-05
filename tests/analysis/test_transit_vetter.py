@@ -1,8 +1,7 @@
-from unittest.mock import patch
 
 import pytest
+import pandas as pd
 
-import ramjet.analysis.transit_vetter as module
 from ramjet.analysis.transit_vetter import TransitVetter
 from ramjet.photometric_database.tess_target import TessTarget
 
@@ -25,6 +24,21 @@ class TestTransitVetter:
 
         assert is_physical == expected_is_physical
 
-    def test_can_check_if_nearby_targets_could_be_troublesome(self):
+    @pytest.mark.parametrize('nearby_separations, nearby_magnitudes, expected_ruling',
+                             [
+                                 ([30], [12], True),
+                                 ([5], [12], False),
+                                 ([5], [18], True),
+                                 ([50, 1], [18, 12], False)
+                             ])
+    def test_can_check_if_nearby_targets_will_not_be_troublesome(self, nearby_separations, nearby_magnitudes,
+                                                                 expected_ruling):
         stub_target = TessTarget()
-        stub_target.tic_id = 1
+        stub_target.magnitude = 10
+        stub_target.retrieve_nearby_tic_targets = lambda: pd.DataFrame({'Separation (arcsec)': nearby_separations,
+                                                                        'TESS Mag': nearby_magnitudes})
+        transit_vetter = TransitVetter()
+
+        has_problematic_nearby_targets = transit_vetter.has_problematic_nearby_targets(stub_target)
+
+        assert has_problematic_nearby_targets == expected_ruling
