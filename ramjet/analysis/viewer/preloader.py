@@ -5,17 +5,12 @@ import asyncio
 from asyncio import Task
 from collections import deque
 import warnings
-from typing import Union, List, NamedTuple, Deque, Any
+from typing import Union, List, Deque, Any
 
+from ramjet.analysis.viewer.view_entity import ViewEntity
 from ramjet.data_interface.tess_data_interface import NoDataProductsFoundException
 from ramjet.photometric_database.light_curve import LightCurve
 from ramjet.photometric_database.tess_two_minute_cadence_light_curve import TessTwoMinuteCadenceLightCurve
-
-
-class IndexLightCurvePair(NamedTuple):
-    """A simple tuple linking an index and a light curve."""
-    index: int
-    light_curve: LightCurve
 
 
 class Preloader:
@@ -26,9 +21,9 @@ class Preloader:
     maximum_preloaded = 10
 
     def __init__(self):
-        self.current_index_light_curve_pair: Union[None, IndexLightCurvePair] = None
-        self.next_index_light_curve_pair_deque: Deque[IndexLightCurvePair] = deque(maxlen=self.maximum_preloaded)
-        self.previous_index_light_curve_pair_deque: Deque[IndexLightCurvePair] = deque(maxlen=self.maximum_preloaded)
+        self.current_index_light_curve_pair: Union[None, ViewEntity] = None
+        self.next_index_light_curve_pair_deque: Deque[ViewEntity] = deque(maxlen=self.maximum_preloaded)
+        self.previous_index_light_curve_pair_deque: Deque[ViewEntity] = deque(maxlen=self.maximum_preloaded)
         self.light_curve_identifiers: List[Any] = []
         self.running_loading_task: Union[Task, None] = None
 
@@ -42,7 +37,7 @@ class Preloader:
         await self.cancel_loading_task()
         current_light_curve = await loop.run_in_executor(None, self.load_light_curve_from_identifier,
                                                          self.light_curve_identifiers[index])
-        self.current_index_light_curve_pair = IndexLightCurvePair(index, current_light_curve)
+        self.current_index_light_curve_pair = ViewEntity(index, current_light_curve)
         await self.reset_deques()
 
     async def load_surrounding_light_curves(self):
@@ -70,7 +65,7 @@ class Preloader:
             except NoDataProductsFoundException:
                 warnings.warn(f'No light curve found for identifier {self.light_curve_identifiers[last_index]}.')
                 continue
-            last_index_light_curve_pair = IndexLightCurvePair(last_index, last_light_curve)
+            last_index_light_curve_pair = ViewEntity(last_index, last_light_curve)
             self.next_index_light_curve_pair_deque.append(last_index_light_curve_pair)
 
     async def load_previous_light_curves(self):
@@ -91,30 +86,32 @@ class Preloader:
             except NoDataProductsFoundException:
                 warnings.warn(f'No light curve found for identifier {self.light_curve_identifiers[first_index]}.')
                 continue
-            first_index_light_curve_pair = IndexLightCurvePair(first_index, first_light_curve)
+            first_index_light_curve_pair = ViewEntity(first_index, first_light_curve)
             self.previous_index_light_curve_pair_deque.appendleft(first_index_light_curve_pair)
 
-    async def increment(self) -> IndexLightCurvePair:
+    async def increment(self) -> ViewEntity:
         """
         Increments to the next light curve, and calls loading as necessary.
 
         :return: The new current index and light curve pair.
         """
         self.previous_index_light_curve_pair_deque.append(self.current_index_light_curve_pair)
-        if len(self.next_index_light_curve_pair_deque) == 0 and not self.running_loading_task.done():
+        if len(self.next_index_light_curve_pair_deque) == 0 and (
+                self.running_loading_task is not None and not self.running_loading_task.done()):
             await self.running_loading_task
         self.current_index_light_curve_pair = self.next_index_light_curve_pair_deque.popleft()
         await self.refresh_surrounding_light_curve_loading()
         return self.current_index_light_curve_pair
 
-    async def decrement(self) -> IndexLightCurvePair:
+    async def decrement(self) -> ViewEntity:
         """
         Decrements to the previous light curve, and calls loading as necessary.
 
         :return: The new current index and light curve pair.
         """
         self.next_index_light_curve_pair_deque.appendleft(self.current_index_light_curve_pair)
-        while len(self.previous_index_light_curve_pair_deque) == 0 and not self.running_loading_task.done():
+        while len(self.previous_index_light_curve_pair_deque) == 0 and (
+                self.running_loading_task is not None and not self.running_loading_task.done()):
             await self.running_loading_task
         self.current_index_light_curve_pair = self.previous_index_light_curve_pair_deque.pop()
         await self.refresh_surrounding_light_curve_loading()

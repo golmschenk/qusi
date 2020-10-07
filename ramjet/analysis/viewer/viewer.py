@@ -113,7 +113,7 @@ class Viewer:
         Starts the light curve preloader.
         """
         paths_data_frame = pd.read_csv(self.csv_path)
-        path_strings = paths_data_frame['Light curve path']
+        path_strings = paths_data_frame['light_curve_path']
         identifiers = list(map(Path, path_strings))
         self.preloader = await Preloader.from_identifier_list(identifiers)
         initial_light_curve = self.preloader.current_index_light_curve_pair.light_curve
