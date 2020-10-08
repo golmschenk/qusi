@@ -16,7 +16,6 @@ from bokeh.server.server import Server
 
 from ramjet.analysis.viewer.light_curve_display import LightCurveDisplay
 from ramjet.analysis.viewer.preloader import Preloader
-from ramjet.data_interface.tess_toi_data_interface import TessToiDataInterface
 from ramjet.photometric_database.tess_two_minute_cadence_light_curve import TessTwoMinuteCadenceLightCurve, \
     TessTwoMinuteCadenceColumnName
 
@@ -31,7 +30,6 @@ class Viewer:
         self.previous_button: Union[Button, None] = None
         self.next_button: Union[Button, None] = None
         self.information_div: Union[Div, None] = None
-        self.csv_path: Union[Path, None] = None
         self.document: Union[Document, None] = None
 
     async def update_light_curve_with_document_lock(self, light_curve):
@@ -47,16 +45,16 @@ class Viewer:
         """
         Moves to the next light curve.
         """
-        next_index_light_curve_pair = await self.preloader.increment()
-        next_light_curve = next_index_light_curve_pair.light_curve
+        next_view_entity = await self.preloader.increment()
+        next_light_curve = next_view_entity.light_curve
         await self.update_light_curve_with_document_lock(next_light_curve)
 
     async def display_previous_light_curve(self):
         """
         Moves to the previous light curve.
         """
-        previous_index_light_curve_pair = await self.preloader.decrement()
-        previous_light_curve = previous_index_light_curve_pair.light_curve
+        previous_view_entity = await self.preloader.decrement()
+        previous_light_curve = previous_view_entity.light_curve
         await self.update_light_curve_with_document_lock(previous_light_curve)
 
     def create_display_next_light_curve_task(self):
@@ -105,18 +103,15 @@ class Viewer:
         # bokeh_document.add_root(viewer.information_div)
         bokeh_document.add_root(viewer.light_curve_display.figure)
         loop = asyncio.get_running_loop()
-        loop.create_task(viewer.start_preloader())
+        loop.create_task(viewer.start_preloader(csv_path))
         return viewer
 
-    async def start_preloader(self):
+    async def start_preloader(self, csv_path):
         """
         Starts the light curve preloader.
         """
-        paths_data_frame = pd.read_csv(self.csv_path)
-        path_strings = paths_data_frame['light_curve_path']
-        identifiers = list(map(Path, path_strings))
-        self.preloader = await Preloader.from_identifier_list(identifiers)
-        initial_light_curve = self.preloader.current_index_light_curve_pair.light_curve
+        self.preloader = await Preloader.from_csv_path(csv_path)
+        initial_light_curve = self.preloader.current_view_entity.light_curve
         await self.update_light_curve_with_document_lock(initial_light_curve)
 
 
@@ -138,4 +133,3 @@ if __name__ == '__main__':
     server.start()
     server.io_loop.add_callback(server.show, "/")
     server.io_loop.start()
-

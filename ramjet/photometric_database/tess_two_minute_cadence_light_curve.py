@@ -85,7 +85,8 @@ class TessTwoMinuteCadenceLightCurve(LightCurve):
                                      specific ones may speed the process when loading many light curves.
         :return: The light curve.
         """
-        light_curve_path = cls.mast_tess_data_interface.download_lightcurve(tic_id=tic_id, sector=sector)
+        light_curve_path = cls.mast_tess_data_interface.download_two_minute_cadence_lightcurve(tic_id=tic_id,
+                                                                                               sector=sector)
         light_curve = cls.from_path(path=light_curve_path, fits_indexes_to_load=fits_indexes_to_load)
         return light_curve
 
