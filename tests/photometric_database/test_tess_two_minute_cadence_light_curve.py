@@ -78,12 +78,12 @@ class TestTessTwoMinuteCadenceFileBasedLightCurve:
     def test_from_mast_factory_requests_a_mast_download_and_uses_the_resulting_file_with_the_path_factory(self):
         mock_light_curve = Mock()
         mock_light_curve_path = Mock()
-        mock_download_light_curve = Mock(return_value=mock_light_curve_path)
-        TessTwoMinuteCadenceLightCurve.mast_tess_data_interface.download_lightcurve = mock_download_light_curve
+        mock_download = Mock(return_value=mock_light_curve_path)
+        TessTwoMinuteCadenceLightCurve.mast_tess_data_interface.download_two_minute_cadence_lightcurve = mock_download
         mock_from_path = Mock(return_value=mock_light_curve)
         TessTwoMinuteCadenceLightCurve.from_path = mock_from_path
         light_curve = TessTwoMinuteCadenceLightCurve.from_mast(tic_id=1, sector=2)
-        assert mock_download_light_curve.call_args[1]['tic_id'] == 1
-        assert mock_download_light_curve.call_args[1]['sector'] == 2
+        assert mock_download.call_args[1]['tic_id'] == 1
+        assert mock_download.call_args[1]['sector'] == 2
         assert mock_from_path.call_args[1]['path'] == mock_light_curve_path
         assert light_curve is mock_light_curve
