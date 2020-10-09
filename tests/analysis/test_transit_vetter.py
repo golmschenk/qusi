@@ -58,3 +58,18 @@ class TestTransitVetter:
         has_problematic_nearby_targets = transit_vetter.has_no_nearby_toi_targets(stub_target)
 
         assert has_problematic_nearby_targets == expected_ruling
+
+    @pytest.mark.parametrize('target_radius, target_contamination_ratio, expected_maximum_depth',
+                             [(1.0, 0.0, 0.032750864),
+                              (3.0, 0.5, 0.0024259899)])
+    def test_can_check_if_depth_for_tic_id_is_physical_for_planet(self, target_radius, target_contamination_ratio,
+                                                                  expected_maximum_depth):
+        stub_target = TessTarget()
+        stub_target.tic_id = 1
+        stub_target.radius = target_radius
+        stub_target.contamination_ratio = target_contamination_ratio
+        transit_vetter = TransitVetter()
+
+        maximum_depth = transit_vetter.get_maximum_physical_depth_for_planet_for_target(target=stub_target)
+
+        assert maximum_depth == pytest.approx(expected_maximum_depth)

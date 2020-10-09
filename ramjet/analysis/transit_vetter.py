@@ -10,8 +10,9 @@ class TransitVetter:
     """
     A class for vetting transit candidates.
     """
-    @staticmethod
-    def is_transit_depth_for_target_physical_for_planet(target: TessTarget, transit_depth: float) -> bool:
+    radius_of_jupiter__solar_radii = 0.10054
+
+    def is_transit_depth_for_target_physical_for_planet(self, target: TessTarget, transit_depth: float) -> bool:
         """
         Check if the depth of a transit is not too deep to be caused by a planet for a given target.
 
@@ -21,8 +22,7 @@ class TransitVetter:
                  False meaning the radius of transiting body is (likely) too large to be a planet.
         """
         transiting_body_radius = target.calculate_transiting_body_radius(transit_depth)
-        radius_of_jupiter__solar_radii = 0.10054
-        planet_radius_threshold = 1.8 * radius_of_jupiter__solar_radii
+        planet_radius_threshold = 1.8 * self.radius_of_jupiter__solar_radii
         if transiting_body_radius < planet_radius_threshold:
             return True
         else:
@@ -66,3 +66,15 @@ class TransitVetter:
             return True
         else:
             return False
+
+    def get_maximum_physical_depth_for_planet_for_target(self, target: TessTarget) -> float:
+        """
+        Determines the maximum depth allowable for a given target for a transit to be caused by a planet.
+
+        :param target: The target to check for.
+        :return: The maximum relative depth allowed.
+        """
+        maximum_planet_radius = 1.8 * self.radius_of_jupiter__solar_radii
+        maximum_physical_depth = (maximum_planet_radius ** 2) / (
+            (target.radius ** 2) * (1 + target.contamination_ratio))
+        return maximum_physical_depth
