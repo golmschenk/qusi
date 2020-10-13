@@ -1,4 +1,4 @@
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import numpy as np
 from collections import defaultdict
@@ -15,9 +15,10 @@ class TestTessTarget:
         stub_tic_row['GAIA'] = 1
         TessTarget.tess_data_interface.get_tess_input_catalog_row = Mock(return_value=stub_tic_row)
         mock_gaia_mass = Mock()
-        TessTarget.get_radius_from_gaia = Mock(return_value=mock_gaia_mass)
+        with patch.object(TessTarget, 'get_radius_from_gaia') as mock_get_radius_from_gaia:
+            mock_get_radius_from_gaia.return_value = mock_gaia_mass
 
-        target = TessTarget.from_tic_id(1)
+            target = TessTarget.from_tic_id(1)
 
         assert target.radius == mock_gaia_mass
 
@@ -64,7 +65,7 @@ class TestTessTarget:
 
         nearby_target_data_frame = target.retrieve_nearby_tic_targets()
 
-        row = nearby_target_data_frame[nearby_target_data_frame['TIC ID'] == 231663901].iloc[0]
-        assert row['PM RA (mas/yr)'] == pytest.approx(12.6409)
-        assert row['Separation (arcsec)'] == 0
-        assert row['Distance Err (pc)'] == pytest.approx(4.411)
+        row = nearby_target_data_frame[nearby_target_data_frame['TIC ID'] == 231663902].iloc[0]
+        assert row['PM RA (mas/yr)'] == pytest.approx(25.0485)
+        assert row['Separation (arcsec)'] == pytest.approx(18.1)
+        assert row['Distance Err (pc)'] == pytest.approx(54)

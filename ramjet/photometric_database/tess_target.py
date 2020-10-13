@@ -41,9 +41,9 @@ class TessTarget:
         tic_row = cls.tess_data_interface.get_tess_input_catalog_row(target.tic_id)
         target.radius = tic_row['rad']
         if np.isnan(target.radius):
-            gaia_source_id = tic_row['GAIA']
-            if not np.isnan(gaia_source_id):
-                target.radius = target.get_radius_from_gaia(gaia_source_id)
+            gaia_source_id_string = tic_row['GAIA']
+            if not pd.notna(gaia_source_id_string):
+                target.radius = target.get_radius_from_gaia(int(gaia_source_id_string))
         target.mass = tic_row['mass']
         # noinspection SpellCheckingInspection
         target.magnitude = tic_row['Tmag']
