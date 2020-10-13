@@ -5,7 +5,7 @@ from typing import Tuple
 from unittest.mock import patch
 
 import ramjet.photometric_database.tess_ffi_light_curve as module
-from ramjet.photometric_database.tess_ffi_light_curve import TessFfiLightCurve
+from ramjet.photometric_database.tess_ffi_light_curve import TessFfiLightCurve, TessFfiColumnName, TessFfiPickleIndex
 
 
 class TestTessFfiDataInterface:
@@ -107,3 +107,17 @@ class TestTessFfiDataInterface:
         assert magnitude1 == 14
         with pytest.raises(ValueError):
             light_curve.get_floor_magnitude_from_file_path('tesslc_12345678.pkl')
+
+    def test_all_ffi_column_names_have_matches_in_the_pickle_indexes(self):
+        index_names = list(map(lambda index: index.name, TessFfiPickleIndex))
+        for column_name in TessFfiColumnName:
+            assert column_name.name in index_names
+
+    @patch.object(module.pickle, 'load')
+    @patch.object(Path, 'open')
+    def test_from_path_factory_sets_the_tic_id_and_sector_of_the_light_curve(self, mock_open, mock_pickle_load,
+                                                                             ffi_pickle_contents):
+        mock_pickle_load.return_value = ffi_pickle_contents
+        light_curve = TessFfiLightCurve.from_path(Path('tesslcs_sector_1_104/tesslcs_tmag_14_15/tesslc_1234567.pkl'))
+        assert light_curve.tic_id == 1234567
+        assert light_curve.sector == 1
