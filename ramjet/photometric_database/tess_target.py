@@ -42,7 +42,7 @@ class TessTarget:
         target.radius = tic_row['rad']
         if np.isnan(target.radius):
             gaia_source_id_string = tic_row['GAIA']
-            if not pd.notna(gaia_source_id_string):
+            if pd.notna(gaia_source_id_string):
                 target.radius = target.get_radius_from_gaia(int(gaia_source_id_string))
         target.mass = tic_row['mass']
         # noinspection SpellCheckingInspection
