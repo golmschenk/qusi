@@ -11,14 +11,14 @@ from typing import List, Union, Any
 from astropy.io import fits
 
 from ramjet.data_interface.tess_data_interface import TessDataInterface
-from ramjet.photometric_database.light_curve import LightCurve
+from ramjet.photometric_database.tess_light_curve import TessLightCurve
 
 
 class TessTwoMinuteCadenceColumnName(Enum):
     """
     An enum to represent the column names of the TESS two minute cadence data.
     """
-    TIME = 'time__btjd'
+    TIME__BTJD = 'time__btjd'
     SAP_FLUX = 'sap_flux'
     PDCSAP_FLUX = 'pdcsap_flux'
     SAP_FLUX_ERROR = 'sap_flux_error'
@@ -36,7 +36,7 @@ class TessTwoMinuteCadenceMastFitsIndex(Enum):
     PDCSAP_FLUX_ERROR = 'PDCSAP_FLUX_ERR'
 
 
-class TessTwoMinuteCadenceLightCurve(LightCurve):
+class TessTwoMinuteCadenceLightCurve(TessLightCurve):
     """
     A class to represent a TESS two minute cadence light curve.
     """
@@ -44,8 +44,6 @@ class TessTwoMinuteCadenceLightCurve(LightCurve):
 
     def __init__(self):
         super().__init__()
-        self.tic_id: Union[int, None] = None
-        self.sector: Union[int, None] = None
         self.flux_column_names = [TessTwoMinuteCadenceColumnName.PDCSAP_FLUX.value,
                                   TessTwoMinuteCadenceColumnName.SAP_FLUX.value]
 
@@ -61,7 +59,7 @@ class TessTwoMinuteCadenceLightCurve(LightCurve):
         :return: The light curve.
         """
         light_curve = cls()
-        light_curve.time_column_name = TessTwoMinuteCadenceColumnName.TIME.value
+        light_curve.time_column_name = TessTwoMinuteCadenceColumnName.TIME__BTJD.value
         if fits_indexes_to_load is None:
             fits_indexes_to_load = list(TessTwoMinuteCadenceMastFitsIndex)
         with fits.open(path) as hdu_list:
