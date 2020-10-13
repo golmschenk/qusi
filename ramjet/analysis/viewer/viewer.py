@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 from functools import partial
 
-import pandas as pd
 from pathlib import Path
 from typing import Union
 
@@ -93,7 +92,7 @@ class Viewer:
         viewer = cls()
         viewer.document = bokeh_document
         viewer.csv_path = csv_path
-        viewer.light_curve_display = LightCurveDisplay.for_columns(TessTwoMinuteCadenceColumnName.TIME.value,
+        viewer.light_curve_display = LightCurveDisplay.for_columns(TessTwoMinuteCadenceColumnName.TIME__BTJD.value,
                                                                    TessTwoMinuteCadenceLightCurve().flux_column_names,
                                                                    flux_axis_label='Relative flux')
         viewer.light_curve_display.exclude_outliers_from_zoom = True

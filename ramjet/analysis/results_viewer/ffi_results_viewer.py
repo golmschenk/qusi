@@ -5,19 +5,18 @@ import numpy as np
 from typing import Union
 
 from ramjet.analysis.results_viewer.results_viewer import ResultsViewer
-from ramjet.data_interface.tess_data_interface import TessDataInterface, TessFluxType
-from ramjet.data_interface.tess_ffi_data_interface import TessFfiDataInterface, FfiDataIndexes
+from ramjet.data_interface.tess_data_interface import TessDataInterface
 from ramjet.data_interface.tess_toi_data_interface import TessToiDataInterface
+from ramjet.photometric_database.tess_ffi_light_curve import TessFfiLightCurve, TessFfiColumnName
 
 tess_data_interface = TessDataInterface()
 tess_toi_data_interface = TessToiDataInterface()
-tess_ffi_data_interface = TessFfiDataInterface()
 
 class Target:
     def __init__(self, lightcurve_path):
         self.loaded = False
         self.lightcurve_path = lightcurve_path
-        self.tic_id, self.sector = tess_ffi_data_interface.get_tic_id_and_sector_from_file_path(lightcurve_path)
+        self.tic_id, self.sector = TessFfiLightCurve.get_tic_id_and_sector_from_file_path(lightcurve_path)
         self.pdcsap_fluxes: Union[np.ndarray, None] = None
         self.normalized_pdcsap_fluxes: Union[np.ndarray, None] = None
         self.pdcsap_flux_errors: Union[np.ndarray, None] = None
@@ -32,14 +31,14 @@ class Target:
 
     def load_lightcurve(self):
         lightcurve_path = self.lightcurve_path
-        self.pdcsap_fluxes, self.pdcsap_flux_errors, self.times = tess_ffi_data_interface.load_fluxes_flux_errors_and_times_from_pickle_file(
-            lightcurve_path, FfiDataIndexes.CORRECTED_FLUX)
+        self.pdcsap_fluxes, self.pdcsap_flux_errors, self.times = TessFfiLightCurve.load_fluxes_flux_errors_and_times_from_pickle_file(
+            lightcurve_path, TessFfiColumnName.CORRECTED_FLUX)
         nonnegative_pdcsap_fluxes = self.pdcsap_fluxes - np.minimum(np.nanmin(self.pdcsap_fluxes), 0)
         pdcsap_flux_median = np.nanmedian(nonnegative_pdcsap_fluxes)
         self.normalized_pdcsap_fluxes = nonnegative_pdcsap_fluxes / pdcsap_flux_median - 1
         self.normalized_pdcsap_flux_errors = self.pdcsap_flux_errors / pdcsap_flux_median
-        self.sap_fluxes, _ = tess_ffi_data_interface.load_fluxes_and_times_from_pickle_file(lightcurve_path,
-                                                                                            FfiDataIndexes.RAW_FLUX)
+        self.sap_fluxes, _ = TessFfiLightCurve.load_fluxes_and_times_from_pickle_file(lightcurve_path,
+                                                                                            TessFfiColumnName.RAW_FLUX)
         nonnegative_sap_fluxes = self.sap_fluxes - np.minimum(np.nanmin(self.sap_fluxes), 0)
         sap_flux_median = np.nanmedian(nonnegative_sap_fluxes)
         self.normalized_sap_fluxes = nonnegative_sap_fluxes / sap_flux_median - 1

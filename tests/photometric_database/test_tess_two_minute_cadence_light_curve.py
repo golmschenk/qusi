@@ -13,7 +13,7 @@ from ramjet.photometric_database.tess_two_minute_cadence_light_curve import Tess
 class TestTessTwoMinuteCadenceFileBasedLightCurve:
     @pytest.fixture
     def fake_hdu_list(self):
-        mock_hdu_data = {TessTwoMinuteCadenceMastFitsIndex.TIME.value: [0, 1],
+        mock_hdu_data = {TessTwoMinuteCadenceMastFitsIndex.TIME__BTJD.value: [0, 1],
                          TessTwoMinuteCadenceMastFitsIndex.PDCSAP_FLUX.value: [2, 3],
                          TessTwoMinuteCadenceMastFitsIndex.SAP_FLUX.value: [4, 5],
                          TessTwoMinuteCadenceMastFitsIndex.PDCSAP_FLUX_ERROR.value: [6, 7],
@@ -40,7 +40,7 @@ class TestTessTwoMinuteCadenceFileBasedLightCurve:
         with patch.object(module.fits, 'open') as mock_open:
             mock_open.return_value.__enter__.return_value = fake_hdu_list
             light_curve = TessTwoMinuteCadenceLightCurve.from_path(Path('TIC 169480782 sector 5.fits'))
-            assert np.array_equal(light_curve.times, fake_hdu_list[1].data[TessTwoMinuteCadenceMastFitsIndex.TIME.value])
+            assert np.array_equal(light_curve.times, fake_hdu_list[1].data[TessTwoMinuteCadenceMastFitsIndex.TIME__BTJD.value])
             assert np.array_equal(light_curve.fluxes,
                                   fake_hdu_list[1].data[TessTwoMinuteCadenceMastFitsIndex.PDCSAP_FLUX.value])
 

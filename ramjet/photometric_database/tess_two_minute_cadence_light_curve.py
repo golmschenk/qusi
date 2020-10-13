@@ -29,7 +29,7 @@ class TessTwoMinuteCadenceMastFitsIndex(Enum):
     """
     An enum to represent the indexes of the TESS two minute cadence data in MAST FITS files.
     """
-    TIME = 'TIME'
+    TIME__BTJD = 'TIME'
     SAP_FLUX = 'SAP_FLUX'
     PDCSAP_FLUX = 'PDCSAP_FLUX'
     SAP_FLUX_ERROR = 'SAP_FLUX_ERR'
