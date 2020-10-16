@@ -1,5 +1,6 @@
 
 import pytest
+import numpy as np
 import pandas as pd
 
 from ramjet.analysis.transit_vetter import TransitVetter
@@ -73,3 +74,21 @@ class TestTransitVetter:
         maximum_depth = transit_vetter.get_maximum_physical_depth_for_planet_for_target(target=stub_target)
 
         assert maximum_depth == pytest.approx(expected_maximum_depth)
+
+    @pytest.mark.parametrize('target_radius, target_contamination_ratio, expected_maximum_depth',
+                             [(1.0, np.nan, 0.032750864)])
+    def test_max_depth_for_planet_uses_zero_contamination_if_contamination_is_not_available(
+            self, target_radius, target_contamination_ratio, expected_maximum_depth):
+        stub_target = TessTarget()
+        stub_target.tic_id = 1
+        stub_target.radius = target_radius
+        stub_target.contamination_ratio = target_contamination_ratio
+        transit_vetter = TransitVetter()
+
+        maximum_depth0 = transit_vetter.get_maximum_physical_depth_for_planet_for_target(
+            target=stub_target, allow_missing_contamination_ratio=True)
+
+        assert maximum_depth0 == pytest.approx(expected_maximum_depth)
+
+        with pytest.raises(ValueError):
+            _ = transit_vetter.get_maximum_physical_depth_for_planet_for_target(target=stub_target)

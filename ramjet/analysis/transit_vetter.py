@@ -67,14 +67,22 @@ class TransitVetter:
         else:
             return False
 
-    def get_maximum_physical_depth_for_planet_for_target(self, target: TessTarget) -> float:
+    def get_maximum_physical_depth_for_planet_for_target(self, target: TessTarget,
+                                                         allow_missing_contamination_ratio: bool = False) -> float:
         """
         Determines the maximum depth allowable for a given target for a transit to be caused by a planet.
 
         :param target: The target to check for.
+        :param allow_missing_contamination: Allow for unknown contamination, which will then default to 0.
         :return: The maximum relative depth allowed.
         """
         maximum_planet_radius = 1.8 * self.radius_of_jupiter__solar_radii
+        contamination_ratio = target.contamination_ratio
+        if pd.isna(contamination_ratio):
+            if allow_missing_contamination_ratio:
+                contamination_ratio = 0
+            else:
+                raise ValueError(f'Contamination ratio {contamination_ratio} is not a number.')
         maximum_physical_depth = (maximum_planet_radius ** 2) / (
-            (target.radius ** 2) * (1 + target.contamination_ratio))
+            (target.radius ** 2) * (1 + contamination_ratio))
         return maximum_physical_depth
