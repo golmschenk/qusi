@@ -1,3 +1,5 @@
+import os
+
 import pandas as pd
 from asyncio import Task
 from collections import deque
@@ -11,6 +13,8 @@ from ramjet.analysis.viewer.preloader import Preloader
 from ramjet.analysis.viewer.view_entity import ViewEntity
 
 
+@pytest.mark.skipif("TRAVIS" in os.environ and os.environ["TRAVIS"] == "true",
+                    reason="Travis CI does not work well with pytest asyncio yet.")
 class TestPreloader:
     @pytest.mark.asyncio
     async def test_loading_view_entity_at_index_as_current_passes_correct_row(self):
