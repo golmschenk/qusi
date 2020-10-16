@@ -46,9 +46,9 @@ class TestTransitVetter:
 
     @pytest.mark.parametrize('nearby_toi, nearby_separations, expected_ruling',
                              [
-                                 ([1], [50], True),
-                                 ([1], [10], False),
-                                 ([1, 2], [50, 10], False)
+                                 ([1], [50], False),
+                                 ([1], [10], True),
+                                 ([1, 2], [50, 10], True)
                              ])
     def test_can_check_if_nearby_targets_are_known_toi_targets(self, nearby_toi, nearby_separations, expected_ruling):
         stub_target = TessTarget()
@@ -56,7 +56,7 @@ class TestTransitVetter:
                                                                         'TOI': nearby_toi})
         transit_vetter = TransitVetter()
 
-        has_problematic_nearby_targets = transit_vetter.has_no_nearby_toi_targets(stub_target)
+        has_problematic_nearby_targets = transit_vetter.has_nearby_toi_targets(stub_target)
 
         assert has_problematic_nearby_targets == expected_ruling
 

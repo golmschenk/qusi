@@ -49,7 +49,7 @@ class TransitVetter:
             return False
 
     @staticmethod
-    def has_no_nearby_toi_targets(target: TessTarget) -> bool:
+    def has_nearby_toi_targets(target: TessTarget) -> bool:
         """
         Checks if the target has nearby TOI targets which are likely to be where the transit is from.
 
@@ -62,7 +62,7 @@ class TransitVetter:
             (pd.notnull(nearby_target_data_frame['TOI'])) &
             (nearby_target_data_frame['Separation (arcsec)'] < nearby_threshold_arcseconds)
         ]
-        if problematic_nearby_target_data_frame.shape[0] == 0:
+        if problematic_nearby_target_data_frame.shape[0] != 0:
             return True
         else:
             return False
@@ -73,7 +73,7 @@ class TransitVetter:
         Determines the maximum depth allowable for a given target for a transit to be caused by a planet.
 
         :param target: The target to check for.
-        :param allow_missing_contamination: Allow for unknown contamination, which will then default to 0.
+        :param allow_missing_contamination_ratio: Allow for unknown contamination, which will then default to 0.
         :return: The maximum relative depth allowed.
         """
         maximum_planet_radius = 1.8 * self.radius_of_jupiter__solar_radii

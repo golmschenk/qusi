@@ -17,8 +17,8 @@ class Preloader:
     """
     A class to load view entities in the background so they show up quickly when displayed.
     """
-    minimum_preloaded = 5
-    maximum_preloaded = 10
+    minimum_preloaded = 25
+    maximum_preloaded = 50
 
     def __init__(self):
         self.current_view_entity: Union[None, ViewEntity] = None

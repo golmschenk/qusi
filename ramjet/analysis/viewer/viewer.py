@@ -2,83 +2,131 @@
 A viewer for a CSV file containing a column of paths.
 """
 from __future__ import annotations
+
 import asyncio
-from functools import partial
-
-from pathlib import Path
+import numpy as np
+import pandas as pd
 from typing import Union
-
-from bokeh.document import Document
+from pathlib import Path
 from bokeh.io import curdoc
-from bokeh.models import Button, Div
+from functools import partial
+from bokeh.models import Button, Div, BoxAnnotation
+from bokeh.document import Document
 from bokeh.server.server import Server
 
+from ramjet.analysis.transit_vetter import TransitVetter
 from ramjet.analysis.viewer.light_curve_display import LightCurveDisplay
 from ramjet.analysis.viewer.preloader import Preloader
-from ramjet.photometric_database.tess_two_minute_cadence_light_curve import TessTwoMinuteCadenceLightCurve, \
-    TessTwoMinuteCadenceColumnName
+from ramjet.analysis.viewer.view_entity import ViewEntity
+from ramjet.photometric_database.tess_ffi_light_curve import TessFfiColumnName, TessFfiLightCurve
 
 
 class Viewer:
     """
     A viewer for a CSV file containing a column of paths.
     """
+    vetter = TransitVetter()
+
     def __init__(self):
         self.light_curve_display: Union[LightCurveDisplay, None] = None
         self.preloader: Union[Preloader, None] = None
+        self.add_to_positives_button: Union[Button, None] = None
         self.previous_button: Union[Button, None] = None
         self.next_button: Union[Button, None] = None
         self.information_div: Union[Div, None] = None
         self.document: Union[Document, None] = None
+        self.maximum_physical_depth_box: Union[BoxAnnotation, None] = None
+        self.view_entity: Union[ViewEntity, None] = None
 
-    async def update_light_curve_with_document_lock(self, light_curve):
+    async def update_view_entity_with_document_lock(self, view_entity: ViewEntity):
         """
         Updates the light curve display using the Bokeh document lock.
 
-        :param light_curve: The light curve to update the display with.
+        :param view_entity: The view entity to update the display with.
         """
+        light_curve = view_entity.light_curve
         self.document.add_next_tick_callback(partial(self.light_curve_display.update_from_light_curve,
                                                      lightcurve=light_curve))
+        self.document.add_next_tick_callback(partial(self.update_information_div_for_view_entity,
+                                                     view_entity=view_entity))
+        self.document.add_next_tick_callback(partial(self.add_physical_depth_range_annotation_to_light_curve_figure,
+                                                     view_entity=view_entity))
+        self.view_entity = view_entity
 
-    async def display_next_light_curve(self):
+    async def add_physical_depth_range_annotation_to_light_curve_figure(self, view_entity: ViewEntity):
+        unknown_radius = False
+        maximum_depth = self.vetter.get_maximum_physical_depth_for_planet_for_target(
+            view_entity.target, allow_missing_contamination_ratio=True)
+        if np.isnan(maximum_depth):
+            maximum_depth = 0.1
+            unknown_radius = True
+        self.maximum_physical_depth_box.bottom = 1 - maximum_depth
+        if view_entity.has_exofop_dispositions:
+            self.maximum_physical_depth_box.fill_color = 'red'
+        elif unknown_radius:
+            self.maximum_physical_depth_box.fill_color = 'yellow'
+        else:
+            self.maximum_physical_depth_box.fill_color = 'green'
+
+
+    async def update_information_div_for_view_entity(self, view_entity: ViewEntity):
+        self.information_div.text = (f'<h1 class="title">TIC {view_entity.light_curve.tic_id} ' +
+                                     f'sector {view_entity.light_curve.sector}</h1>' +
+                                     f'<p>Network confidence: {view_entity.confidence}</p>' +
+                                     f'<p>Result index: {view_entity.index}</p>' +
+                                     f'<p>Star radius (solar radii): {view_entity.target.radius}</p>')
+
+    async def display_next_view_entity(self):
         """
-        Moves to the next light curve.
+        Moves to the next view entity.
         """
         next_view_entity = await self.preloader.increment()
-        next_light_curve = next_view_entity.light_curve
-        await self.update_light_curve_with_document_lock(next_light_curve)
+        await self.update_view_entity_with_document_lock(next_view_entity)
 
-    async def display_previous_light_curve(self):
+    async def display_previous_view_entity(self):
         """
-        Moves to the previous light curve.
+        Moves to the previous view entity.
         """
         previous_view_entity = await self.preloader.decrement()
-        previous_light_curve = previous_view_entity.light_curve
-        await self.update_light_curve_with_document_lock(previous_light_curve)
+        await self.update_view_entity_with_document_lock(previous_view_entity)
 
-    def create_display_next_light_curve_task(self):
+    def create_display_next_view_entity_task(self):
         """
         Creates the async task to move to the next light curve.
         """
-        asyncio.create_task(self.display_next_light_curve())
+        asyncio.create_task(self.display_next_view_entity())
 
-    def create_display_previous_light_curve_task(self):
+    def create_display_previous_view_entity_task(self):
         """
         Creates the async task to move to the previous light curve.
         """
-        asyncio.create_task(self.display_previous_light_curve())
+        asyncio.create_task(self.display_previous_view_entity())
 
     def create_light_curve_switching_buttons(self) -> (Button, Button):
         """
         Creates buttons for switching between light curves.
         """
         next_button = Button(label='Next target')
-        next_button.on_click(self.create_display_next_light_curve_task)
+        next_button.on_click(self.create_display_next_view_entity_task)
         next_button.sizing_mode = 'stretch_width'
         previous_button = Button(label='Previous target')
-        previous_button.on_click(self.create_display_previous_light_curve_task)
+        previous_button.on_click(self.create_display_previous_view_entity_task)
         previous_button.sizing_mode = 'stretch_width'
         return previous_button, next_button
+
+    def create_add_to_positives_button(self) -> Button:
+        add_to_positives_button = Button(label='Add to positives')
+        add_to_positives_button.on_click(self.add_current_to_positives)
+        add_to_positives_button.sizing_mode = 'stretch_width'
+        return add_to_positives_button
+
+    def add_current_to_positives(self):
+        positives_csv_file_path = Path('positives.csv')
+        positives_data_frame = pd.DataFrame({'tic_id': [self.view_entity.target.tic_id]})
+        if positives_csv_file_path.exists():
+            positives_data_frame.to_csv(positives_csv_file_path, mode='a', header=False, index=False)
+        else:
+            positives_data_frame.to_csv(positives_csv_file_path, index=False)
 
     @classmethod
     def from_csv_path(cls, bokeh_document: Document, csv_path: Path) -> Viewer:
@@ -92,14 +140,20 @@ class Viewer:
         viewer = cls()
         viewer.document = bokeh_document
         viewer.csv_path = csv_path
-        viewer.light_curve_display = LightCurveDisplay.for_columns(TessTwoMinuteCadenceColumnName.TIME__BTJD.value,
-                                                                   TessTwoMinuteCadenceLightCurve().flux_column_names,
+        viewer.light_curve_display = LightCurveDisplay.for_columns(TessFfiColumnName.TIME.value,
+                                                                   TessFfiLightCurve().flux_column_names,
                                                                    flux_axis_label='Relative flux')
         viewer.light_curve_display.exclude_outliers_from_zoom = True
+        viewer.maximum_physical_depth_box = BoxAnnotation(bottom=1-0.01, top=1, fill_alpha=0.1, fill_color='green')
+        viewer.light_curve_display.figure.add_layout(viewer.maximum_physical_depth_box)
+        viewer.add_to_positives_button = viewer.create_add_to_positives_button()
+        bokeh_document.add_root(viewer.add_to_positives_button)
         viewer.previous_button, viewer.next_button = viewer.create_light_curve_switching_buttons()
         bokeh_document.add_root(viewer.previous_button)
         bokeh_document.add_root(viewer.next_button)
-        # bokeh_document.add_root(viewer.information_div)
+        viewer.information_div = Div()
+        viewer.information_div.sizing_mode = 'stretch_width'
+        bokeh_document.add_root(viewer.information_div)
         bokeh_document.add_root(viewer.light_curve_display.figure)
         loop = asyncio.get_running_loop()
         loop.create_task(viewer.start_preloader(csv_path))
@@ -109,9 +163,9 @@ class Viewer:
         """
         Starts the light curve preloader.
         """
-        self.preloader = await Preloader.from_csv_path(csv_path)
-        initial_light_curve = self.preloader.current_view_entity.light_curve
-        await self.update_light_curve_with_document_lock(initial_light_curve)
+        self.preloader = await Preloader.from_csv_path(csv_path, starting_index=0)
+        initial_view_entity = self.preloader.current_view_entity
+        await self.update_view_entity_with_document_lock(initial_view_entity)
 
 
 def application(bokeh_document: Document):
@@ -120,9 +174,7 @@ def application(bokeh_document: Document):
 
     :param bokeh_document: The Bokeh document to run the viewer in.
     """
-    csv_path = Path('/Users/golmschenk/Code/ramjet/data/viewer_check.csv')
-    # tess_toi_data_interface = TessToiDataInterface()
-    # toi_dispositions = tess_toi_data_interface.toi_dispositions
+    csv_path = Path('/Users/golmsche/Desktop/infer results 2020-10-09-13-21-21.csv')
     Viewer.from_csv_path(bokeh_document, csv_path)
 
 
