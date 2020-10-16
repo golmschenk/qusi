@@ -7,17 +7,16 @@ from typing import Union, List
 from peewee import Select
 
 from ramjet.data_interface.metadatabase import MetadatabaseModel
-from ramjet.data_interface.tess_ffi_data_interface import TessFfiDataInterface
 from ramjet.data_interface.tess_ffi_lightcurve_metadata_manager import TessFfiLightcurveMetadataManager, \
     TessFfiLightcurveMetadata
 from ramjet.photometric_database.sql_metadata_lightcurve_collection import SqlMetadataLightcurveCollection
+from ramjet.photometric_database.tess_ffi_light_curve import TessFfiLightCurve
 
 
 class TessFfiLightcurveCollection(SqlMetadataLightcurveCollection):
     """
     A lightcurve collection of the TESS two minute cadence data.
     """
-    tess_ffi_data_interface = TessFfiDataInterface()
     tess_ffi_lightcurve_metadata_manger = TessFfiLightcurveMetadataManager()
 
     def __init__(self, dataset_splits: Union[List[int], None] = None,
@@ -63,7 +62,7 @@ class TessFfiLightcurveCollection(SqlMetadataLightcurveCollection):
         :param path: The path to the lightcurve file.
         :return: The times and the fluxes of the lightcurve.
         """
-        fluxes, times = self.tess_ffi_data_interface.load_fluxes_and_times_from_pickle_file(path)
+        fluxes, times = TessFfiLightCurve.load_fluxes_and_times_from_pickle_file(path)
         return times, fluxes
 
     def load_times_and_magnifications_from_path(self, path: Path) -> (np.ndarray, np.ndarray):
@@ -73,6 +72,6 @@ class TessFfiLightcurveCollection(SqlMetadataLightcurveCollection):
         :param path: The path to the lightcurve/signal file.
         :return: The times and the magnifications of the lightcurve/signal.
         """
-        fluxes, times = self.tess_ffi_data_interface.load_fluxes_and_times_from_pickle_file(path)
+        fluxes, times = TessFfiLightCurve.load_fluxes_and_times_from_pickle_file(path)
         magnifications, times = self.generate_synthetic_signal_from_real_data(fluxes, times)
         return times, magnifications

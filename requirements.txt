@@ -17,3 +17,4 @@ matplotlib==3.3.1
 pytest==6.0.1
 muLAn==0.0.3
 pyarrow==0.17.1
+pytest-asyncio==0.14.0
