@@ -56,7 +56,7 @@ class TessTransitMetadataManager:
         metadatabase.drop_tables([TessTransitMetadata])
         metadatabase.create_tables([TessTransitMetadata])
         with metadatabase.atomic():
-            for tic_id, disposition_set in target_grouped_dispositions.iteritems():
+            for tic_id, disposition_set in target_grouped_dispositions.items():
                 # As a target can have multiple dispositions, use the most forgiving available disposition.
                 if 'KP' in disposition_set or 'CP' in disposition_set:
                     database_disposition = Disposition.CONFIRMED.value
