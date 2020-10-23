@@ -12,8 +12,8 @@ def convert_column_name_to_display_name(column_name: str):
     first letter capitalized, spaces between words, and the units in parentheses at the end.
     Example: `transit_duration__days` -> `Transit duration (days)`
 
-    :param column_name:
-    :return:
+    :param column_name: The column whose name should be converted.
+    :return: The display version of the name.
     """
     display_name = re.sub(r'__(.*)', r' (\g<1>)', column_name)  # Move units into parentheses.
     display_name = display_name.replace('_', ' ')
