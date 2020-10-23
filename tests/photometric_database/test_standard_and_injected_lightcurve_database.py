@@ -446,3 +446,17 @@ class TestStandardAndInjectedLightcurveDatabase:
                                                                           stub_load_label_function)
         dataset_list = list(dataset)
         assert np.array_equal(dataset_list[0][1], expected_label)
+
+    def test_expand_to_training_dimensions_expands_a_1d_light_curve_example(self):
+        database = StandardAndInjectedLightcurveDatabase()
+        light_curve = np.array([1, 2, 3])
+        label = 1
+        expanded_light_curve, _ = database.expand_to_training_dimensions(light_curve, label)
+        assert expanded_light_curve.shape == (3, 1)
+
+    def test_expand_to_training_dimensions_does_not_expand_a_2d_light_curve_example(self):
+        database = StandardAndInjectedLightcurveDatabase()
+        light_curve = np.array([[1, -1], [2, -2], [3, -3]])
+        label = 1
+        expanded_light_curve, _ = database.expand_to_training_dimensions(light_curve, label)
+        assert expanded_light_curve.shape == (3, 2)

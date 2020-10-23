@@ -227,7 +227,8 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         """
         Expand the example and label to the appropriate dimensions for training.
         """
-        example = np.expand_dims(example, axis=-1)
+        if len(example.shape) == 1:
+            example = np.expand_dims(example, axis=-1)
         if type(label) is not np.ndarray:
             if type(label) in [list, tuple]:
                 label = np.array(label)
