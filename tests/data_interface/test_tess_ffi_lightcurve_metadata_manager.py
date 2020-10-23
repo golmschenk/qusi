@@ -19,7 +19,7 @@ class TestTessFfiLightcurveMetadataManager:
     @patch.object(module, 'dataset_split_from_uuid')
     @patch.object(module, 'metadatabase_uuid')
     @patch.object(module, 'metadatabase')
-    @patch.object(module.TessFfiDataInterface, 'get_magnitude_from_file')
+    @patch.object(module.TessFfiLightCurve, 'get_magnitude_from_file')
     @patch.object(module.TessFfiLightcurveMetadata, 'insert_many')
     def test_can_insert_multiple_sql_database_rows_from_paths(self, mock_insert_many, mock_get_magnitude_from_file,
                                                               mock_metadatabase, mock_metadatabase_uuid,
@@ -27,8 +27,7 @@ class TestTessFfiLightcurveMetadataManager:
         lightcurve_path0 = Path('tesslcs_sector_1_104/tesslcs_tmag_7_8/tesslc_1111.pkl')
         lightcurve_path1 = Path('tesslcs_sector_12_104/tesslcs_tmag_14_15/tesslc_1234567.pkl')
         lightcurve_paths = [lightcurve_path0, lightcurve_path1]
-        lightcurve_paths = list(map(metadata_manger.tess_ffi_data_interface.lightcurve_root_directory_path.joinpath,
-                                    lightcurve_paths))
+        lightcurve_paths = list(map(metadata_manger.lightcurve_root_directory_path.joinpath, lightcurve_paths))
         mock_get_magnitude_from_file.side_effect = [4.5, 5.5]
         mock_dataset_split_generator.side_effect = [2, 3]
         mock_metadatabase_uuid.side_effect = ['uuid0', 'uuid1']

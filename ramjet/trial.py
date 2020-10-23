@@ -48,13 +48,13 @@ def save_results(confidences_data_frame: pd.DataFrame, infer_results_path: Path,
     :param confidences_data_frame: The data frame of predictions to save.
     :param infer_results_path: The path to save the resulting predictions to.
     :param number_of_top_predictions_to_keep: The number of top results to keep. None will save all results.
-    :return:
+    :return: The updated data frame.
     """
+    try:
+        confidences_data_frame = confidences_data_frame.sort_values('confidence', ascending=False)
+    except KeyError:
+        confidences_data_frame = confidences_data_frame.sort_values('label_0_confidence', ascending=False)
     if number_of_top_predictions_to_keep is not None:
-        try:
-            confidences_data_frame = confidences_data_frame.sort_values('confidence', ascending=False)
-        except KeyError:
-            raise Exception(f'Cannot request keeping top results for multilabel inference.')
         confidences_data_frame = confidences_data_frame.head(number_of_top_predictions_to_keep)
     confidences_data_frame = confidences_data_frame.reset_index(drop=True)
     confidences_data_frame.to_csv(infer_results_path, index_label='index')

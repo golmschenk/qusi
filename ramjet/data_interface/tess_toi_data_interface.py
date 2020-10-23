@@ -133,6 +133,19 @@ class TessToiDataInterface:
         tic_target_dispositions = toi_and_coi_dispositions[toi_and_coi_dispositions['TIC ID'] == tic_id]
         return tic_target_dispositions
 
+    def has_any_exofop_dispositions_for_tic_id(self, tic_id: int) -> bool:
+        """
+        Returns whether or not any dispositions exist for this TIC ID.
+
+        :param tic_id: The TIC ID to check.
+        :return: True if there are dispositions, False if none.
+        """
+        existing_dispositions = self.retrieve_exofop_toi_and_ctoi_planet_disposition_for_tic_id(tic_id)
+        if existing_dispositions.shape[0] != 0:
+            return True
+        else:
+            return False
+
     def print_exofop_toi_and_ctoi_planet_dispositions_for_tic_target(self, tic_id):
         """
         Prints all ExoFOP disposition information for a given TESS target.

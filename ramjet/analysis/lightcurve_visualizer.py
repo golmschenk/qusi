@@ -4,6 +4,8 @@ Code for visualizing lightcurves.
 
 from pathlib import Path
 from typing import Union
+
+import numpy
 import numpy as np
 import matplotlib.pyplot as plt
 from bokeh.plotting import Figure
@@ -95,9 +97,9 @@ def is_outlier(points: np.ndarray, threshold: float = 5):
                       median absolute deviation greater than this value will be classified as outliers.
     """
     assert len(points.shape) == 1  # Only designed to work with 1D data.
-    median = np.median(points, axis=0)
+    median = np.nanmedian(points, axis=0)
     absolute_deviation_from_median = np.abs(points - median)
-    median_absolute_deviation_from_median = np.median(absolute_deviation_from_median)
+    median_absolute_deviation_from_median = np.nanmedian(absolute_deviation_from_median)
     modified_z_score = 0.6745 * absolute_deviation_from_median / median_absolute_deviation_from_median
     return modified_z_score > threshold
 
@@ -130,3 +132,15 @@ def create_dual_lightcurve_figure(fluxes0, times0, name0, fluxes1, times1, name1
     add_lightcurve(times0, fluxes0, name0, 'firebrick')
     add_lightcurve(times1, fluxes1, name1, 'mediumblue')
     return figure
+
+
+async def calculate_inlier_range(points: np.ndarray) -> (float, float):
+    """
+    Calculates the inlier range for a set of points.
+
+    :param points: The points to get the range for.
+    :return: The start and end of the inlier range.
+    """
+    outlier_indices = is_outlier(points)
+    inliers = points[~outlier_indices]
+    return float(np.nanmin(inliers)), float(np.nanmax(inliers))
