@@ -211,6 +211,11 @@ class TestLightcurveDatabase:
             uniform_length_fluxes = database.make_uniform_length(fluxes, 4, randomize=True)
             assert np.array_equal(uniform_length_fluxes, [3, 4, 5, 0])
 
+    def test_make_uniform_length_repeats_elements_in_2d_array_when_input_is_too_short(self, database):
+        fluxes = np.array([[0, 0], [1, -1]])
+        uniform_length_fluxes = database.make_uniform_length(fluxes, 3, randomize=False)
+        assert np.array_equal(uniform_length_fluxes, [[0, 0], [1, -1], [0, 0]])
+
     def test_remove_random_elements_removes_elements(self, database):
         array = np.array([0, 1, 2, 3])
         with patch.object(module.np.random, 'randint') as mock_randint:

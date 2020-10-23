@@ -127,7 +127,7 @@ class LightcurveDatabase(ABC):
 
     def make_uniform_length(self, example: np.ndarray, length: int, randomize: bool = True) -> np.ndarray:
         """Makes the example a specific length, by clipping those too large and repeating those too small."""
-        assert len(example.shape) == 1  # Only tested for 1D cases. Need to add test for 2D before allowing.
+        assert len(example.shape) in [1, 2]  # Only tested for 1D and 2D cases.
         if randomize:
             example = self.randomly_roll_elements(example)
         if example.shape[0] == length:
@@ -136,7 +136,10 @@ class LightcurveDatabase(ABC):
             example = example[:length]
         else:
             elements_to_repeat = length - example.shape[0]
-            example = np.pad(example, (0, elements_to_repeat), mode='wrap')
+            if len(example.shape) == 1:
+                example = np.pad(example, (0, elements_to_repeat), mode='wrap')
+            else:
+                example = np.pad(example, ((0, elements_to_repeat), (0, 0)), mode='wrap')
         return example
 
     @staticmethod
