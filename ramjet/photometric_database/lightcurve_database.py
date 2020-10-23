@@ -89,7 +89,7 @@ class LightcurveDatabase(ABC):
         else:
             values_to_remove = 0
         random_indexes = np.random.choice(range(light_curve_length), values_to_remove, replace=False)
-        return np.delete(lightcurve, random_indexes)
+        return np.delete(lightcurve, random_indexes, axis=0)
 
     def get_ratio_enforced_dataset(self, positive_training_dataset: tf.data.Dataset,
                                    negative_training_dataset: tf.data.Dataset,

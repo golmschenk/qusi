@@ -218,6 +218,13 @@ class TestLightcurveDatabase:
             updated_array = database.remove_random_elements(array, ratio=0.5)
         assert updated_array.shape[0] == 2
 
+    def test_remove_random_elements_acts_on_axis_0(self, database):
+        array = np.array([[0, 0], [1, -1], [2, -2], [3, -3]])
+        with patch.object(module.np.random, 'choice') as mock_random_choice:
+            mock_random_choice.return_value = [0, 2]
+            updated_array = database.remove_random_elements(array)
+        assert np.array_equal(updated_array, np.array([[1, -1], [3, -3]]))
+
     def test_flat_window_zipped_produces_overlapping_window_repeats(self, database):
         examples_dataset = tf.data.Dataset.from_tensor_slices(['a', 'b', 'c', 'd', 'e'])
         labels_dataset = tf.data.Dataset.from_tensor_slices([0, 1, 2, 3, 4])
