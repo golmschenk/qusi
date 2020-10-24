@@ -240,3 +240,19 @@ class TestLightcurveDatabase:
 
         windowed_list = list(windowed_dataset.as_numpy_iterator())
         assert windowed_list == [(b'a', 0), (b'b', 1), (b'c', 2), (b'c', 2), (b'd', 3), (b'e', 4), (b'e', 4)]
+
+    def test_can_normalize_the_flux_channel_of_a_light_curve(self):
+        database = LightcurveDatabase()
+        light_curve = np.array([[1, -1], [2, -2], [3, -3]])
+        mock_normalize = Mock(side_effect=lambda x: x)
+        database.normalize = mock_normalize
+        _ = database.normalize_fluxes(light_curve=light_curve)
+        assert np.array_equal(mock_normalize.call_args[0][0], light_curve[:, 1])  # Channel 1 should be fluxes.
+
+    def test_can_normalize_the_flux_channel_of_a_flux_only_light_curve(self):
+        database = LightcurveDatabase()
+        light_curve = np.array([[1], [2], [3]])
+        mock_normalize = Mock(side_effect=lambda x: x)
+        database.normalize = mock_normalize
+        _ = database.normalize_fluxes(light_curve=light_curve)
+        assert np.array_equal(mock_normalize.call_args[0][0], light_curve[:, 0])  # Channel 1 should be fluxes.

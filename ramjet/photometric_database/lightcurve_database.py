@@ -284,3 +284,16 @@ class LightcurveDatabase(ABC):
             for path in resolved_example_paths:
                 yield str(path)
         return tf.data.Dataset.from_generator(paths_to_strings_generator, output_types=tf.string)
+
+    def normalize_fluxes(self, light_curve: np.ndarray) -> np.ndarray:
+        """
+        Normalizes the flux channel of the light curve.
+
+        :param light_curve: The light curve whose flux channel should be normalized.
+        :return: The light curve with the flux channel normalized.
+        """
+        if light_curve.shape[1] == 1:  # If the light curve has only 1 channel, it is the flux channel.
+            light_curve[:, 0] = self.normalize(light_curve[:, 0])
+        else:  # If the light curve has multiple channels, it's time first, then flux.
+            light_curve[:, 1] = self.normalize(light_curve[:, 1])
+        return light_curve

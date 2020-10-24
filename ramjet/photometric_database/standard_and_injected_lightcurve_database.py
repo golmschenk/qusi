@@ -2,7 +2,6 @@
 An abstract class allowing for any number and combination of standard and injectable/injectee lightcurve collections.
 """
 import math
-import random
 from enum import Enum
 from functools import partial
 
@@ -217,9 +216,9 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         """
         lightcurve_path = Path(lightcurve_path_tensor.numpy().decode('utf-8'))
         times, fluxes = load_times_and_fluxes_from_path_function(lightcurve_path)
-        preprocessed_fluxes = self.preprocess_light_curve(fluxes, evaluation_mode=evaluation_mode)
         label = load_label_from_path_function(lightcurve_path)
-        example, label = self.expand_to_training_dimensions(preprocessed_fluxes, label)
+        light_curve, label = self.expand_to_training_dimensions(fluxes, label)
+        example = self.preprocess_light_curve(light_curve, evaluation_mode=evaluation_mode)
         return example, label
 
     @staticmethod
@@ -275,8 +274,8 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         lightcurve_path_string = lightcurve_path_tensor.numpy().decode('utf-8')
         lightcurve_path = Path(lightcurve_path_string)
         times, fluxes = load_times_and_fluxes_from_path_function(lightcurve_path)
-        preprocessed_fluxes = self.preprocess_light_curve(fluxes, evaluation_mode=True)
-        example = np.expand_dims(preprocessed_fluxes, axis=-1)
+        light_curve = np.expand_dims(fluxes, axis=-1)
+        example = self.preprocess_light_curve(light_curve, evaluation_mode=True)
         return lightcurve_path_string, example
 
     def generate_injected_lightcurve_and_label_dataset(
@@ -344,26 +343,25 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
             injectable_lightcurve_path)
         fluxes = self.inject_signal_into_lightcurve(injectee_fluxes, injectee_times, injectable_magnifications,
                                                     injectable_times)
-        preprocessed_fluxes = self.preprocess_light_curve(fluxes, evaluation_mode=evaluation_mode)
         label = load_label_from_path_function(injectable_lightcurve_path)
-        example, label = self.expand_to_training_dimensions(preprocessed_fluxes, label)
+        light_curve, label = self.expand_to_training_dimensions(fluxes, label)
+        example = self.preprocess_light_curve(light_curve, evaluation_mode=evaluation_mode)
         return example, label
 
-    def preprocess_light_curve(self, fluxes: np.ndarray, evaluation_mode: bool = False) -> np.ndarray:
+    def preprocess_light_curve(self, light_curve: np.ndarray, evaluation_mode: bool = False) -> np.ndarray:
         """
-        Preprocessing for the flux.
+        Preprocessing for the light curve.
 
-        :param fluxes: The flux array to preprocess.
+        :param light_curve: The light curve array to preprocess.
         :param evaluation_mode: If the preprocessing should be consistent for evaluation.
-        :param seed: Seed for the randomization.
         :return: The preprocessed flux array.
         """
         if not evaluation_mode:
-            fluxes = self.remove_random_elements(fluxes)
-        uniform_length_fluxes = self.make_uniform_length(fluxes, self.time_steps_per_example,
-                                                         randomize=not evaluation_mode)
-        normalized_fluxes = self.normalize(uniform_length_fluxes)
-        return normalized_fluxes
+            light_curve = self.remove_random_elements(light_curve)
+        uniform_length_light_curve = self.make_uniform_length(light_curve, self.time_steps_per_example,
+                                                              randomize=not evaluation_mode)
+        preprocessed_light_curve = self.normalize_fluxes(uniform_length_light_curve)
+        return preprocessed_light_curve
 
     def inject_signal_into_lightcurve(self, lightcurve_fluxes: np.ndarray, lightcurve_times: np.ndarray,
                                       signal_magnifications: np.ndarray, signal_times: np.ndarray):

@@ -427,7 +427,7 @@ class TestStandardAndInjectedLightcurveDatabase:
         mock_remove_random_elements = Mock(side_effect=lambda x: x)
         database.remove_random_elements = mock_remove_random_elements
 
-        database.preprocess_light_curve(np.array([0, 1, 2]), evaluation_mode=evaluation_mode)
+        database.preprocess_light_curve(np.array([[0], [1], [2]]), evaluation_mode=evaluation_mode)
 
         assert mock_remove_random_elements.called == called_expectation
 
