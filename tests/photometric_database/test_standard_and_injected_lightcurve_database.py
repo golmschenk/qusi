@@ -145,7 +145,7 @@ class TestStandardAndInjectedLightcurveDatabase:
         stub_load_times_and_fluxes_function = Mock(return_value=(np.array([0, -1, -2]), np.array([0, 1, 2])))
         mock_load_label_function = Mock(return_value=3)
         path_tensor = tf.constant('stub_path.fits')
-        database.flux_preprocessing = lambda identity, *args, **kwargs: identity
+        database.preprocess_light_curve = lambda identity, *args, **kwargs: identity
 
         # noinspection PyTypeChecker
         example, label = database.preprocess_standard_lightcurve(
@@ -162,7 +162,7 @@ class TestStandardAndInjectedLightcurveDatabase:
         stub_load_times_and_fluxes_function = Mock(return_value=(np.array([0, -1, -2]), np.array([0, 1, 2])))
         mock_load_label_function = Mock(return_value=3)
         path_tensor = tf.constant('stub_path.fits')
-        database.flux_preprocessing = lambda identity, *args, **kwargs: identity
+        database.preprocess_light_curve = lambda identity, *args, **kwargs: identity
         database.inject_signal_into_lightcurve = lambda identity, *args, **kwargs: identity
 
         # noinspection PyTypeChecker
@@ -427,7 +427,7 @@ class TestStandardAndInjectedLightcurveDatabase:
         mock_remove_random_elements = Mock(side_effect=lambda x: x)
         database.remove_random_elements = mock_remove_random_elements
 
-        database.flux_preprocessing(np.array([0, 1, 2]), evaluation_mode=evaluation_mode)
+        database.preprocess_light_curve(np.array([0, 1, 2]), evaluation_mode=evaluation_mode)
 
         assert mock_remove_random_elements.called == called_expectation
 

@@ -217,7 +217,7 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         """
         lightcurve_path = Path(lightcurve_path_tensor.numpy().decode('utf-8'))
         times, fluxes = load_times_and_fluxes_from_path_function(lightcurve_path)
-        preprocessed_fluxes = self.flux_preprocessing(fluxes, evaluation_mode=evaluation_mode)
+        preprocessed_fluxes = self.preprocess_light_curve(fluxes, evaluation_mode=evaluation_mode)
         label = load_label_from_path_function(lightcurve_path)
         example, label = self.expand_to_training_dimensions(preprocessed_fluxes, label)
         return example, label
@@ -275,7 +275,7 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         lightcurve_path_string = lightcurve_path_tensor.numpy().decode('utf-8')
         lightcurve_path = Path(lightcurve_path_string)
         times, fluxes = load_times_and_fluxes_from_path_function(lightcurve_path)
-        preprocessed_fluxes = self.flux_preprocessing(fluxes, evaluation_mode=True)
+        preprocessed_fluxes = self.preprocess_light_curve(fluxes, evaluation_mode=True)
         example = np.expand_dims(preprocessed_fluxes, axis=-1)
         return lightcurve_path_string, example
 
@@ -344,12 +344,12 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
             injectable_lightcurve_path)
         fluxes = self.inject_signal_into_lightcurve(injectee_fluxes, injectee_times, injectable_magnifications,
                                                     injectable_times)
-        preprocessed_fluxes = self.flux_preprocessing(fluxes, evaluation_mode=evaluation_mode)
+        preprocessed_fluxes = self.preprocess_light_curve(fluxes, evaluation_mode=evaluation_mode)
         label = load_label_from_path_function(injectable_lightcurve_path)
         example, label = self.expand_to_training_dimensions(preprocessed_fluxes, label)
         return example, label
 
-    def flux_preprocessing(self, fluxes: np.ndarray, evaluation_mode: bool = False) -> np.ndarray:
+    def preprocess_light_curve(self, fluxes: np.ndarray, evaluation_mode: bool = False) -> np.ndarray:
         """
         Preprocessing for the flux.
 
