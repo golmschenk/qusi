@@ -217,18 +217,9 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         lightcurve_path = Path(lightcurve_path_tensor.numpy().decode('utf-8'))
         times, fluxes = load_times_and_fluxes_from_path_function(lightcurve_path)
         label = load_label_from_path_function(lightcurve_path)
-        light_curve, label = self.expand_to_training_dimensions(fluxes, label)
+        light_curve = np.expand_dims(fluxes, axis=-1)
+        label = self.expand_label_to_training_dimensions(label)
         example = self.preprocess_light_curve(light_curve, evaluation_mode=evaluation_mode)
-        return example, label
-
-    @staticmethod
-    def expand_to_training_dimensions(example, label):
-        """
-        Expand the example and label to the appropriate dimensions for training.
-        """
-        if len(example.shape) == 1:
-            example = np.expand_dims(example, axis=-1)
-        label = StandardAndInjectedLightcurveDatabase.expand_label_to_training_dimensions(label)
         return example, label
 
     @staticmethod
@@ -355,7 +346,8 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         fluxes = self.inject_signal_into_lightcurve(injectee_fluxes, injectee_times, injectable_magnifications,
                                                     injectable_times)
         label = load_label_from_path_function(injectable_lightcurve_path)
-        light_curve, label = self.expand_to_training_dimensions(fluxes, label)
+        light_curve = np.expand_dims(fluxes, axis=-1)
+        label = self.expand_label_to_training_dimensions(label)
         example = self.preprocess_light_curve(light_curve, evaluation_mode=evaluation_mode)
         return example, label
 
