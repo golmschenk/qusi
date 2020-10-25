@@ -16,11 +16,12 @@ class LightcurveDatabase(ABC):
 
     def __init__(self, data_directory='data'):
         self.data_directory: Path = Path(data_directory)
-        self.validation_ratio = 0.2
-        self.batch_size = 100
+        self.validation_ratio: float = 0.2
+        self.batch_size: int = 100
         self.trial_directory = None
         self.time_steps_per_example: int
-        self.number_of_parallel_processes_per_map = 16
+        self.number_of_parallel_processes_per_map: int = 16
+        self.use_times: bool = False
 
     @property
     def window_shift(self) -> int:
@@ -296,4 +297,22 @@ class LightcurveDatabase(ABC):
             light_curve[:, 0] = self.normalize(light_curve[:, 0])
         else:  # If the light curve has multiple channels, it's time first, then flux.
             light_curve[:, 1] = self.normalize(light_curve[:, 1])
+        return light_curve
+
+    def build_light_curve_array(self, fluxes: np.ndarray, times: Union[np.ndarray, None] = None,
+                                flux_errors: Union[np.ndarray, None] = None):
+        """
+        Builds the light curve array based on the components required for the specific database setup.
+
+        :param fluxes: The fluxes of the light curve.
+        :param times: The optional times of the light curve.
+        :param flux_errors: The optional flux errors of the light curve.
+        :return: The constructed light curve array.
+        """
+        if flux_errors is not None:
+            raise NotImplementedError
+        if self.use_times:
+            light_curve = np.stack([times, fluxes], axis=-1)
+        else:
+            light_curve = np.expand_dims(fluxes, axis=-1)
         return light_curve

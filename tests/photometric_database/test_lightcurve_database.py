@@ -256,3 +256,28 @@ class TestLightcurveDatabase:
         database.normalize = mock_normalize
         _ = database.normalize_fluxes(light_curve=light_curve)
         assert np.array_equal(mock_normalize.call_args[0][0], light_curve[:, 0])  # Channel 1 should be fluxes.
+
+    def test_building_light_curve_array_using_only_fluxes(self):
+        database = LightcurveDatabase()
+        fluxes = np.array([1, 2, 3])
+        expected_light_curve = np.array([[1], [2], [3]])
+        light_curve = database.build_light_curve_array(fluxes=fluxes)
+        assert np.array_equal(light_curve, expected_light_curve)
+
+    def test_building_light_curve_array_using_times_and_fluxes(self):
+        database = LightcurveDatabase()
+        database.use_times = True
+        times = np.array([1, 2, 3])
+        fluxes = np.array([-1, -2, -3])
+        expected_light_curve = np.array([[1, -1], [2, -2], [3, -3]])
+        light_curve = database.build_light_curve_array(fluxes=fluxes, times=times)
+        assert np.array_equal(light_curve, expected_light_curve)
+
+    def test_building_light_curve_array_passing_times_but_only_using_fluxes(self):
+        database = LightcurveDatabase()
+        database.use_times = False
+        times = np.array([1, 2, 3])
+        fluxes = np.array([-1, -2, -3])
+        expected_light_curve = np.array([[-1], [-2], [-3]])
+        light_curve = database.build_light_curve_array(fluxes=fluxes, times=times)
+        assert np.array_equal(light_curve, expected_light_curve)
