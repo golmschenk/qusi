@@ -460,3 +460,13 @@ class TestStandardAndInjectedLightcurveDatabase:
         label = 1
         expanded_light_curve, _ = database.expand_to_training_dimensions(light_curve, label)
         assert expanded_light_curve.shape == (3, 2)
+
+    @pytest.mark.parametrize('original_label, expected_label', [(0, np.array([0])),
+                                                                ([0], np.array([0])),
+                                                                (np.array([0]), np.array([0])),
+                                                                ([0, 0], np.array([0, 0]))])
+    def test_expand_label_to_training_dimensions(self, original_label, expected_label):
+        database = StandardAndInjectedLightcurveDatabase()
+        label = database.expand_label_to_training_dimensions(original_label)
+        assert type(label) is np.ndarray
+        assert np.array_equal(label, expected_label)

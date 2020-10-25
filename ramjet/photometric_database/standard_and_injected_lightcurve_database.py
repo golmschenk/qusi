@@ -228,12 +228,23 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         """
         if len(example.shape) == 1:
             example = np.expand_dims(example, axis=-1)
+        label = StandardAndInjectedLightcurveDatabase.expand_label_to_training_dimensions(label)
+        return example, label
+
+    @staticmethod
+    def expand_label_to_training_dimensions(label):
+        """
+        Expand the label to the appropriate dimensions for training.
+
+        :param label: The label to convert.
+        :return: The label with the correct dimensions.
+        """
         if type(label) is not np.ndarray:
             if type(label) in [list, tuple]:
                 label = np.array(label)
             else:
                 label = np.array([label])
-        return example, label
+        return label
 
     def generate_infer_path_and_lightcurve_dataset(
             self, paths_dataset: tf.data.Dataset,
