@@ -315,3 +315,25 @@ class LightcurveDatabase(ABC):
         else:
             light_curve = np.expand_dims(fluxes, axis=-1)
         return light_curve
+
+    def preprocess_times(self, light_curve_array: np.ndarray) -> None:
+        """
+        Preprocesses the times of the light curve.
+
+        :param light_curve_array: The light curve array to preprocess.
+        :return: The light curve array with the times preprocessed.
+        """
+        times = light_curve_array[:, 0]
+        light_curve_array[:, 0] = self.calculate_time_differences(times)
+
+    @staticmethod
+    def calculate_time_differences(times: np.ndarray) -> np.ndarray:
+        """
+        Calculates the differences between an array of time, doubling up the first element to make the length the same.
+
+        :param times: The times to difference.
+        :return: The time differences.
+        """
+        difference_times = np.diff(times)
+        difference_times = np.insert(difference_times, 0, difference_times[0], axis=0)
+        return difference_times

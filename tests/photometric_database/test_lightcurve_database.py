@@ -257,7 +257,7 @@ class TestLightcurveDatabase:
         _ = database.normalize_fluxes(light_curve=light_curve)
         assert np.array_equal(mock_normalize.call_args[0][0], light_curve[:, 0])  # Channel 1 should be fluxes.
 
-    def test_can_flux_normalization_occurs_in_place(self):
+    def test_flux_preprocessing_occurs_in_place(self):
         database = LightcurveDatabase()
         light_curve = np.array([[10], [20], [10], [20]])
         expected_light_curve = np.array([[-1], [1], [-1], [1]])
@@ -288,3 +288,19 @@ class TestLightcurveDatabase:
         expected_light_curve = np.array([[-1], [-2], [-3]])
         light_curve = database.build_light_curve_array(fluxes=fluxes, times=times)
         assert np.array_equal(light_curve, expected_light_curve)
+
+    def test_time_preprocessing_occurs_in_place(self):
+        database = LightcurveDatabase()
+        light_curve_array = np.array([[10, 1], [20, 2], [30, 3]])
+        time_differences_result = [10, 10, 10]
+        database.calculate_time_differences = Mock(return_value=time_differences_result)
+        expected_light_curve_array = np.array([[10, 1], [10, 2], [10, 3]])
+        database.preprocess_times(light_curve_array=light_curve_array)
+        assert np.array_equal(light_curve_array, expected_light_curve_array)
+
+    def test_time_normalization_occurs_in_place(self):
+        database = LightcurveDatabase()
+        times = np.array([10, 20, 30])
+        expected_time_differences = np.array([10, 10, 10])
+        time_differences = database.calculate_time_differences(times)
+        assert np.array_equal(time_differences, expected_time_differences)
