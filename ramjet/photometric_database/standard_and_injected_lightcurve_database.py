@@ -361,10 +361,12 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         """
         if not evaluation_mode:
             light_curve = self.remove_random_elements(light_curve)
-        uniform_length_light_curve = self.make_uniform_length(light_curve, self.time_steps_per_example,
-                                                              randomize=not evaluation_mode)
-        preprocessed_light_curve = self.normalize_fluxes(uniform_length_light_curve)
-        return preprocessed_light_curve
+        light_curve = self.make_uniform_length(light_curve, self.time_steps_per_example,
+                                               randomize=not evaluation_mode)
+        self.normalize_fluxes(light_curve)
+        if self.use_times:
+            self.preprocess_times(light_curve)
+        return light_curve
 
     def inject_signal_into_lightcurve(self, lightcurve_fluxes: np.ndarray, lightcurve_times: np.ndarray,
                                       signal_magnifications: np.ndarray, signal_times: np.ndarray):

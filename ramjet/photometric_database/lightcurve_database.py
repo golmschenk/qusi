@@ -286,9 +286,9 @@ class LightcurveDatabase(ABC):
                 yield str(path)
         return tf.data.Dataset.from_generator(paths_to_strings_generator, output_types=tf.string)
 
-    def normalize_fluxes(self, light_curve: np.ndarray) -> np.ndarray:
+    def normalize_fluxes(self, light_curve: np.ndarray) -> None:
         """
-        Normalizes the flux channel of the light curve.
+        Normalizes the flux channel of the light curve in-place.
 
         :param light_curve: The light curve whose flux channel should be normalized.
         :return: The light curve with the flux channel normalized.
@@ -297,7 +297,6 @@ class LightcurveDatabase(ABC):
             light_curve[:, 0] = self.normalize(light_curve[:, 0])
         else:  # If the light curve has multiple channels, it's time first, then flux.
             light_curve[:, 1] = self.normalize(light_curve[:, 1])
-        return light_curve
 
     def build_light_curve_array(self, fluxes: np.ndarray, times: Union[np.ndarray, None] = None,
                                 flux_errors: Union[np.ndarray, None] = None):

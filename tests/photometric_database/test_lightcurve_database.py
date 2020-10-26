@@ -257,6 +257,13 @@ class TestLightcurveDatabase:
         _ = database.normalize_fluxes(light_curve=light_curve)
         assert np.array_equal(mock_normalize.call_args[0][0], light_curve[:, 0])  # Channel 1 should be fluxes.
 
+    def test_can_flux_normalization_occurs_in_place(self):
+        database = LightcurveDatabase()
+        light_curve = np.array([[10], [20], [10], [20]])
+        expected_light_curve = np.array([[-1], [1], [-1], [1]])
+        database.normalize_fluxes(light_curve=light_curve)
+        assert np.array_equal(light_curve, expected_light_curve)
+
     def test_building_light_curve_array_using_only_fluxes(self):
         database = LightcurveDatabase()
         fluxes = np.array([1, 2, 3])
