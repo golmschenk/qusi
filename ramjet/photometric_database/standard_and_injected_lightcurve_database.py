@@ -137,8 +137,8 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
                 return tf.data.Dataset.from_tensors(element).repeat(number_of_elements_repeated_in_a_row)
             injectee_path_dataset = injectee_path_dataset.flat_map(repeat_each_element)
             if injectee_collection_index_in_standard_collection_list is not None:
-                standard_lightcurve_collections.insert(injectee_collection_index_in_standard_collection_list,
-                                                       injectee_path_dataset)
+                standard_paths_datasets.insert(injectee_collection_index_in_standard_collection_list,
+                                               injectee_path_dataset)
         injectable_paths_datasets = self.generate_paths_datasets_from_lightcurve_collection_list(
             injectable_lightcurve_collections, shuffle=shuffle)
         return standard_paths_datasets, injectee_path_dataset, injectable_paths_datasets
@@ -186,6 +186,7 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         :param load_times_and_fluxes_from_path_function: The function defining how to load the times and fluxes of a
                                                          lightcurve from a path.
         :param load_label_from_path_function: The function to load the label to use for the lightcurves in this dataset.
+        :param evaluation_mode: Whether or not the preprocessing should occur in evaluation mode (for repeatability).
         :return: The resulting lightcurve example and label dataset.
         """
         preprocess_map_function = partial(self.preprocess_standard_lightcurve, load_times_and_fluxes_from_path_function,
@@ -212,6 +213,7 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
                                                          file.
         :param load_label_from_path_function: The function to load the label to assign to the lightcurve.
         :param lightcurve_path_tensor: The tensor containing the path to the lightcurve file.
+        :param evaluation_mode: Whether or not the preprocessing should occur in evaluation mode (for repeatability).
         :return: The example and label arrays shaped for use as single example for the network.
         """
         lightcurve_path = Path(lightcurve_path_tensor.numpy().decode('utf-8'))
@@ -299,6 +301,7 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
                                                                             and magnifications of an injectable
                                                                             signal from a path.
         :param load_label_from_path_function: The function to load the label to use for the lightcurves in this dataset.
+        :param evaluation_mode: Whether or not the preprocessing should occur in evaluation mode (for repeatability).
         :return: The resulting lightcurve example and label dataset.
         """
         preprocess_map_function = partial(self.preprocess_injected_lightcurve,
@@ -336,6 +339,7 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         :param load_label_from_path_function: The function to load the label to assign to the lightcurve.
         :param injectee_lightcurve_path_tensor: The tensor containing the path to the injectee lightcurve file.
         :param injectable_lightcurve_path_tensor: The tensor containing the path to the injectable lightcurve file.
+        :param evaluation_mode: Whether or not the preprocessing should occur in evaluation mode (for repeatability).
         :return: The injected example and label arrays shaped for use as single example for the network.
         """
         injectee_lightcurve_path = Path(injectee_lightcurve_path_tensor.numpy().decode('utf-8'))
