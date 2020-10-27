@@ -420,17 +420,6 @@ class TestStandardAndInjectedLightcurveDatabase:
         path_and_lightcurve = next(iter(path_and_lightcurve_dataset))
         assert np.array_equal(lightcurve_and_label[0].numpy(), path_and_lightcurve[1].numpy())
 
-    @pytest.mark.parametrize("evaluation_mode, called_expectation", [(True, False),
-                                                                     (False, True)])
-    def test_flux_preprocessing_evaluation_modes_calling_of_remove_random_elements(self, database, evaluation_mode,
-                                                                                   called_expectation):
-        mock_remove_random_elements = Mock(side_effect=lambda x: x)
-        database.remove_random_elements = mock_remove_random_elements
-
-        database.preprocess_light_curve(np.array([[0], [1], [2]]), evaluation_mode=evaluation_mode)
-
-        assert mock_remove_random_elements.called == called_expectation
-
     @pytest.mark.functional
     def test_can_specify_a_label_with_more_then_size_one_in_preprocessor(self):
         database = StandardAndInjectedLightcurveDatabase()

@@ -304,3 +304,14 @@ class TestLightcurveDatabase:
         expected_time_differences = np.array([10, 10, 10])
         time_differences = database.calculate_time_differences(times)
         assert np.array_equal(time_differences, expected_time_differences)
+
+    @pytest.mark.parametrize("evaluation_mode, called_expectation", [(True, False),
+                                                                     (False, True)])
+    def test_flux_preprocessing_evaluation_modes_calling_of_remove_random_elements(self, database, evaluation_mode,
+                                                                                   called_expectation):
+        mock_remove_random_elements = Mock(side_effect=lambda x: x)
+        database.remove_random_elements = mock_remove_random_elements
+
+        database.preprocess_light_curve(np.array([[0], [1], [2]]), evaluation_mode=evaluation_mode)
+
+        assert mock_remove_random_elements.called == called_expectation

@@ -42,7 +42,6 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         self.validation_injectable_lightcurve_collections: List[LightcurveCollection] = []
         self.inference_lightcurve_collections: List[LightcurveCollection] = []
         self.shuffle_buffer_size = 10000
-        self.time_steps_per_example = 16000
         self.number_of_label_types = 1
         self.out_of_bounds_injection_handling: OutOfBoundsInjectionHandlingMethod = \
             OutOfBoundsInjectionHandlingMethod.ERROR
@@ -354,23 +353,6 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         label = load_label_from_path_function(injectable_lightcurve_path)
         label = self.expand_label_to_training_dimensions(label)
         return example, label
-
-    def preprocess_light_curve(self, light_curve: np.ndarray, evaluation_mode: bool = False) -> np.ndarray:
-        """
-        Preprocessing for the light curve.
-
-        :param light_curve: The light curve array to preprocess.
-        :param evaluation_mode: If the preprocessing should be consistent for evaluation.
-        :return: The preprocessed flux array.
-        """
-        if not evaluation_mode:
-            light_curve = self.remove_random_elements(light_curve)
-        light_curve = self.make_uniform_length(light_curve, self.time_steps_per_example,
-                                               randomize=not evaluation_mode)
-        self.normalize_fluxes(light_curve)
-        if self.use_times:
-            self.preprocess_times(light_curve)
-        return light_curve
 
     def inject_signal_into_lightcurve(self, lightcurve_fluxes: np.ndarray, lightcurve_times: np.ndarray,
                                       signal_magnifications: np.ndarray, signal_times: np.ndarray):

@@ -15,6 +15,7 @@ class LightcurveDatabase(ABC):
     """A base generalized database for photometric data to be subclassed."""
 
     def __init__(self, data_directory='data'):
+        self.time_steps_per_example = 16000
         self.data_directory: Path = Path(data_directory)
         self.validation_ratio: float = 0.2
         self.batch_size: int = 100
@@ -337,3 +338,20 @@ class LightcurveDatabase(ABC):
         difference_times = np.diff(times)
         difference_times = np.insert(difference_times, 0, difference_times[0], axis=0)
         return difference_times
+
+    def preprocess_light_curve(self, light_curve: np.ndarray, evaluation_mode: bool = False) -> np.ndarray:
+        """
+        Preprocessing for the light curve.
+
+        :param light_curve: The light curve array to preprocess.
+        :param evaluation_mode: If the preprocessing should be consistent for evaluation.
+        :return: The preprocessed flux array.
+        """
+        if not evaluation_mode:
+            light_curve = self.remove_random_elements(light_curve)
+        light_curve = self.make_uniform_length(light_curve, self.time_steps_per_example,
+                                               randomize=not evaluation_mode)
+        self.normalize_fluxes(light_curve)
+        if self.use_times:
+            self.preprocess_times(light_curve)
+        return light_curve
