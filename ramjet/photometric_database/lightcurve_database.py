@@ -3,7 +3,6 @@ import math
 import shutil
 from abc import ABC
 import os
-import random
 from pathlib import Path
 from typing import List, Union, Tuple, Callable, Iterable
 
@@ -16,12 +15,14 @@ class LightcurveDatabase(ABC):
     """A base generalized database for photometric data to be subclassed."""
 
     def __init__(self, data_directory='data'):
+        self.time_steps_per_example = 16000
         self.data_directory: Path = Path(data_directory)
-        self.validation_ratio = 0.2
-        self.batch_size = 100
+        self.validation_ratio: float = 0.2
+        self.batch_size: int = 100
         self.trial_directory = None
         self.time_steps_per_example: int
-        self.number_of_parallel_processes_per_map = 16
+        self.number_of_parallel_processes_per_map: int = 16
+        self.use_times: bool = False
 
     @property
     def window_shift(self) -> int:
@@ -81,12 +82,16 @@ class LightcurveDatabase(ABC):
         return np.array(a)[indexes], np.array(b)[indexes]
 
     @staticmethod
-    def remove_random_values(lightcurve: np.ndarray) -> np.ndarray:
+    def remove_random_elements(lightcurve: np.ndarray, ratio: float = 0.01) -> np.ndarray:
         """Removes random values from the lightcurve."""
-        max_values_to_remove = 10
-        values_to_remove = random.randrange(max_values_to_remove)
-        random_indexes = np.random.randint(0, len(lightcurve), size=values_to_remove)
-        return np.delete(lightcurve, random_indexes)
+        light_curve_length = lightcurve.shape[0]
+        max_values_to_remove = int(light_curve_length * ratio)
+        if max_values_to_remove != 0:
+            values_to_remove = np.random.randint(max_values_to_remove)
+        else:
+            values_to_remove = 0
+        random_indexes = np.random.choice(range(light_curve_length), values_to_remove, replace=False)
+        return np.delete(lightcurve, random_indexes, axis=0)
 
     def get_ratio_enforced_dataset(self, positive_training_dataset: tf.data.Dataset,
                                    negative_training_dataset: tf.data.Dataset,
@@ -122,30 +127,27 @@ class LightcurveDatabase(ABC):
         """
         return 'positive' in example_path
 
-    @staticmethod
-    def make_uniform_length(example: np.ndarray, length: int, randomize: bool = True, seed: int = None) -> np.ndarray:
+    def make_uniform_length(self, example: np.ndarray, length: int, randomize: bool = True) -> np.ndarray:
         """Makes the example a specific length, by clipping those too large and repeating those too small."""
-        if seed is not None:
-            np.random.seed(seed)
+        assert len(example.shape) in [1, 2]  # Only tested for 1D and 2D cases.
+        if randomize:
+            example = self.randomly_roll_elements(example)
         if example.shape[0] == length:
             pass
         elif example.shape[0] > length:
-            if randomize:
-                start_slice = np.random.randint(0, example.shape[0] - length)
-            else:
-                start_slice = 0
-            example = example[start_slice:start_slice + length]
+            example = example[:length]
         else:
             elements_to_repeat = length - example.shape[0]
-            if randomize:
-                pre_padding = np.random.randint(0, elements_to_repeat + 1)
+            if len(example.shape) == 1:
+                example = np.pad(example, (0, elements_to_repeat), mode='wrap')
             else:
-                pre_padding = 0
-            post_padding = elements_to_repeat - pre_padding
-            if len(example.shape) == 2:
-                example = np.pad(example, ((pre_padding, post_padding), (0, 0)), mode='wrap')
-            else:
-                example = np.pad(example, (pre_padding, post_padding), mode='wrap')
+                example = np.pad(example, ((0, elements_to_repeat), (0, 0)), mode='wrap')
+        return example
+
+    @staticmethod
+    def randomly_roll_elements(example: np.ndarray) -> np.ndarray:
+        """Randomly rolls the elements."""
+        example = np.roll(example, np.random.randint(example.shape[0]), axis=0)
         return example
 
     def get_training_and_validation_datasets_for_file_paths(
@@ -197,7 +199,9 @@ class LightcurveDatabase(ABC):
         remainder = np.concatenate(remaining_chunks)
         return extracted_chunk, remainder
 
-    def flat_window_zipped_example_and_label_dataset(self, dataset, batch_size, window_shift):
+    @staticmethod
+    def flat_window_zipped_example_and_label_dataset(dataset: tf.data.Dataset, batch_size: int, window_shift: int,
+                                                     ) -> tf.data.Dataset:
         """
         Takes a zipped example and label dataset and repeats examples in a windowed fashion of a given batch size.
         It is expected that the resulting dataset will subsequently be batched in some fashion by the given batch size.
@@ -210,8 +214,8 @@ class LightcurveDatabase(ABC):
         examples_dataset = dataset.map(lambda element, _: element)
         labels_dataset = dataset.map(lambda _, element: element)
         examples_window_dataset = examples_dataset.window(batch_size, shift=window_shift)
-        examples_unbatched_window_dataset = examples_window_dataset.flat_map(lambda element: element)
         labels_window_dataset = labels_dataset.window(batch_size, shift=window_shift)
+        examples_unbatched_window_dataset = examples_window_dataset.flat_map(lambda element: element)
         labels_unbatched_window_dataset = labels_window_dataset.flat_map(lambda element: element)
         unbatched_window_dataset = tf.data.Dataset.zip((examples_unbatched_window_dataset,
                                                         labels_unbatched_window_dataset))
@@ -282,3 +286,72 @@ class LightcurveDatabase(ABC):
             for path in resolved_example_paths:
                 yield str(path)
         return tf.data.Dataset.from_generator(paths_to_strings_generator, output_types=tf.string)
+
+    def normalize_fluxes(self, light_curve: np.ndarray) -> None:
+        """
+        Normalizes the flux channel of the light curve in-place.
+
+        :param light_curve: The light curve whose flux channel should be normalized.
+        :return: The light curve with the flux channel normalized.
+        """
+        if light_curve.shape[1] == 1:  # If the light curve has only 1 channel, it is the flux channel.
+            light_curve[:, 0] = self.normalize(light_curve[:, 0])
+        else:  # If the light curve has multiple channels, it's time first, then flux.
+            light_curve[:, 1] = self.normalize(light_curve[:, 1])
+
+    def build_light_curve_array(self, fluxes: np.ndarray, times: Union[np.ndarray, None] = None,
+                                flux_errors: Union[np.ndarray, None] = None):
+        """
+        Builds the light curve array based on the components required for the specific database setup.
+
+        :param fluxes: The fluxes of the light curve.
+        :param times: The optional times of the light curve.
+        :param flux_errors: The optional flux errors of the light curve.
+        :return: The constructed light curve array.
+        """
+        if flux_errors is not None:
+            raise NotImplementedError
+        if self.use_times:
+            light_curve = np.stack([times, fluxes], axis=-1)
+        else:
+            light_curve = np.expand_dims(fluxes, axis=-1)
+        return light_curve
+
+    def preprocess_times(self, light_curve_array: np.ndarray) -> None:
+        """
+        Preprocesses the times of the light curve.
+
+        :param light_curve_array: The light curve array to preprocess.
+        :return: The light curve array with the times preprocessed.
+        """
+        times = light_curve_array[:, 0]
+        light_curve_array[:, 0] = self.calculate_time_differences(times)
+
+    @staticmethod
+    def calculate_time_differences(times: np.ndarray) -> np.ndarray:
+        """
+        Calculates the differences between an array of time, doubling up the first element to make the length the same.
+
+        :param times: The times to difference.
+        :return: The time differences.
+        """
+        difference_times = np.diff(times)
+        difference_times = np.insert(difference_times, 0, difference_times[0], axis=0)
+        return difference_times
+
+    def preprocess_light_curve(self, light_curve: np.ndarray, evaluation_mode: bool = False) -> np.ndarray:
+        """
+        Preprocessing for the light curve.
+
+        :param light_curve: The light curve array to preprocess.
+        :param evaluation_mode: If the preprocessing should be consistent for evaluation.
+        :return: The preprocessed flux array.
+        """
+        if not evaluation_mode:
+            light_curve = self.remove_random_elements(light_curve)
+        light_curve = self.make_uniform_length(light_curve, self.time_steps_per_example,
+                                               randomize=not evaluation_mode)
+        self.normalize_fluxes(light_curve)
+        if self.use_times:
+            self.preprocess_times(light_curve)
+        return light_curve

@@ -5,9 +5,9 @@ import tensorflow as tf
 from tensorflow.python.keras import callbacks
 from tensorflow.python.keras.losses import BinaryCrossentropy
 
-from ramjet.basic_models import SimpleLightcurveCnn
+from ramjet.models.hades import Hades
 from ramjet.photometric_database.derived.tess_two_minute_cadence_transit_databases import \
-    TessTwoMinuteCadenceStandardTransitDatabase, TessTwoMinuteCadenceStandardAndInjectedTransitDatabase
+    TessTwoMinuteCadenceStandardAndInjectedTransitDatabase
 
 
 def train():
@@ -16,7 +16,7 @@ def train():
     # Basic training settings.
     trial_name = f'baseline'  # Add any desired run name details to this string.
     database = TessTwoMinuteCadenceStandardAndInjectedTransitDatabase()
-    model = SimpleLightcurveCnn(database.number_of_label_types)
+    model = Hades(database.number_of_label_types)
     # database.batch_size = 100  # Reducing the batch size may help if you are running out of memory.
     epochs_to_run = 1000
     logs_directory = 'logs'
@@ -31,8 +31,8 @@ def train():
 
     # Prepare training data and metrics.
     training_dataset, validation_dataset = database.generate_datasets()
-    optimizer = tf.optimizers.Adam(learning_rate=1e-4, beta_1=0.99, beta_2=0.9999)
-    loss_metric = BinaryCrossentropy(name='Loss', label_smoothing=0.1)
+    optimizer = tf.optimizers.Adam(learning_rate=1e-4)
+    loss_metric = BinaryCrossentropy(name='Loss')
     metrics = [tf.keras.metrics.AUC(num_thresholds=20, name='Area_under_ROC_curve', multi_label=True),
                tf.metrics.SpecificityAtSensitivity(0.9, name='Specificity_at_90_percent_sensitivity'),
                tf.metrics.SensitivityAtSpecificity(0.9, name='Sensitivity_at_90_percent_specificity'),

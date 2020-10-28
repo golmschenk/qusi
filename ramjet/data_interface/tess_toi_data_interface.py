@@ -111,10 +111,10 @@ class TessToiDataInterface:
 
         :return: The data frame of the CTOI dispositions table.
         """
-        columns_to_use = ['TIC ID', 'TFOPWG Disposition', 'Midpoint (BJD)', 'Period (days)', 'Duration (hrs)']
+        columns_to_use = ['TIC ID', 'TFOPWG Disposition', 'Transit Epoch (BJD)', 'Period (days)', 'Duration (hrs)']
         dispositions = pd.read_csv(self.ctoi_dispositions_path, usecols=columns_to_use)
         dispositions.rename(columns={'TFOPWG Disposition': ToiColumns.disposition.value,
-                                     'Midpoint (BJD)': ToiColumns.transit_epoch__bjd.value,
+                                     'Transit Epoch (BJD)': ToiColumns.transit_epoch__bjd.value,
                                      'Period (days)': ToiColumns.transit_period__days.value,
                                      'Duration (hrs)': ToiColumns.transit_duration.value}, inplace=True)
         dispositions[ToiColumns.disposition.value] = dispositions[ToiColumns.disposition.value].fillna('')
