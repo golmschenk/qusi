@@ -46,10 +46,10 @@ class CsvLiaison:
                     transiter.id = existing_transiter.id
                 transiter.save()
                 # Add Greg Olmschenk's disposition.
-                if pd.notna(row['greg_initial_disposition']):
+                if pd.notna(row['greg_disposition']):
                     greg_transit_disposition = TessPlanetDisposition()
                     greg_transit_disposition.transiter = transiter
-                    greg_transit_disposition.disposition = Disposition(row['greg_initial_disposition']).value
+                    greg_transit_disposition.disposition = Disposition(row['greg_disposition']).value
                     greg_transit_disposition.source = Source.GREG_OLMSCHENK.value
                     if pd.notna(row['greg_notes']):
                         greg_transit_disposition.notes = row['greg_notes']
