@@ -5,7 +5,7 @@ Code for converting a column name to a display name.
 import re
 
 
-def convert_column_name_to_display_name(column_name: str):
+def convert_column_name_to_display_name(column_name: str) -> str:
     """
     Add method to convert from column style names to human readable display names. Column style names should be
     snake_case with a double underscore before the units (if units are relevant). The display name will have the
