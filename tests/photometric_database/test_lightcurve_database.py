@@ -8,7 +8,7 @@ import numpy as np
 import tensorflow as tf
 import pytest
 
-import ramjet.photometric_database.lightcurve_database
+import ramjet.photometric_database.lightcurve_database as module
 from ramjet.photometric_database.lightcurve_database import LightcurveDatabase
 
 
@@ -60,19 +60,6 @@ class TestLightcurveDatabase:
         assert np.array_equal(batch0[0].numpy(), [[1, 1], [2, 2], [3, 3]])
         batch1 = next(padded_window_iterator)
         assert np.array_equal(batch1[0].numpy(), [[3, 3, 0], [4, 4, 4], [5, 5, 5]])
-
-    @patch.object(ramjet.photometric_database.lightcurve_database.np.random, 'randint')
-    def test_lightcurve_padding_can_be_made_non_random_for_evaluation(self, mock_randint, database, database_module):
-        mock_randint.return_value = 3
-        lightcurve0 = database.make_uniform_length(np.array([10, 20, 30, 40, 50]), length=9, randomize=True)
-        assert np.array_equal(lightcurve0, [30, 40, 50, 10, 20, 30, 40, 50, 10])
-        lightcurve1 = database.make_uniform_length(np.array([10, 20, 30, 40, 50]), length=9, randomize=False)
-        assert np.array_equal(lightcurve1, [10, 20, 30, 40, 50, 10, 20, 30, 40])
-        # Should also work for lightcurves with more than just 1 value over time.
-        lightcurve2 = database.make_uniform_length(np.array([[10], [20], [30], [40], [50]]), length=9, randomize=True)
-        assert np.array_equal(lightcurve2, [[30], [40], [50], [10], [20], [30], [40], [50], [10]])
-        lightcurve3 = database.make_uniform_length(np.array([[10], [20], [30], [40], [50]]), length=9, randomize=False)
-        assert np.array_equal(lightcurve3, [[10], [20], [30], [40], [50], [10], [20], [30], [40]])
 
     def test_splitting_of_training_and_validation_datasets_for_file_paths_with_list_input(self, database):
         paths = [Path('a'), Path('b'), Path('c'), Path('d'), Path('e'), Path('f')]
@@ -187,3 +174,144 @@ class TestLightcurveDatabase:
         batch1 = next(windowed_dataset_iterator)
         assert np.array_equal(batch1[0], [3, 4, 5])
         assert np.array_equal(batch1[1], [-3, -4, -5])
+
+    def test_make_uniform_length_does_not_change_input_that_is_already_the_correct_size(self, database):
+        fluxes = np.array([0, 1, 2, 3, 4, 5])
+        uniform_length_fluxes = database.make_uniform_length(fluxes, 6, randomize=False)
+        assert np.array_equal(uniform_length_fluxes, [0, 1, 2, 3, 4, 5])
+
+    def test_make_uniform_length_with_random_rolls_input_that_is_already_the_correct_size(self, database):
+        fluxes = np.array([0, 1, 2, 3, 4, 5])
+        with patch.object(module.np.random, 'randint') as stub_randint:
+            stub_randint.return_value = 3
+            uniform_length_fluxes = database.make_uniform_length(fluxes, 6, randomize=True)
+            assert np.array_equal(uniform_length_fluxes, [3, 4, 5, 0, 1, 2])
+
+    def test_make_uniform_length_repeats_elements_when_input_is_too_short(self, database):
+        fluxes = np.array([0, 1, 2, 3])
+        uniform_length_fluxes = database.make_uniform_length(fluxes, 6, randomize=False)
+        assert np.array_equal(uniform_length_fluxes, [0, 1, 2, 3, 0, 1])
+
+    def test_make_uniform_length_repeats_elements_when_input_is_too_short_with_random_roll(self, database):
+        fluxes = np.array([0, 1, 2, 3])
+        with patch.object(module.np.random, 'randint') as stub_randint:
+            stub_randint.return_value = 3
+            uniform_length_fluxes = database.make_uniform_length(fluxes, 6)
+            assert np.array_equal(uniform_length_fluxes, [1, 2, 3, 0, 1, 2])
+
+    def test_make_uniform_length_clips_elements_when_input_is_too_long(self, database):
+        fluxes = np.array([0, 1, 2, 3, 4, 5])
+        uniform_length_fluxes = database.make_uniform_length(fluxes, 4, randomize=False)
+        assert np.array_equal(uniform_length_fluxes, [0, 1, 2, 3])
+
+    def test_make_uniform_length_clips_elements_when_input_is_too_long_with_random_roll(self, database):
+        fluxes = np.array([0, 1, 2, 3, 4, 5])
+        with patch.object(module.np.random, 'randint') as stub_randint:
+            stub_randint.return_value = 3
+            uniform_length_fluxes = database.make_uniform_length(fluxes, 4, randomize=True)
+            assert np.array_equal(uniform_length_fluxes, [3, 4, 5, 0])
+
+    def test_make_uniform_length_repeats_elements_in_2d_array_when_input_is_too_short(self, database):
+        fluxes = np.array([[0, 0], [1, -1]])
+        uniform_length_fluxes = database.make_uniform_length(fluxes, 3, randomize=False)
+        assert np.array_equal(uniform_length_fluxes, [[0, 0], [1, -1], [0, 0]])
+
+    def test_remove_random_elements_removes_elements(self, database):
+        array = np.array([0, 1, 2, 3])
+        with patch.object(module.np.random, 'randint') as mock_randint:
+            mock_randint.side_effect = lambda x: x
+            updated_array = database.remove_random_elements(array, ratio=0.5)
+        assert updated_array.shape[0] == 2
+
+    def test_remove_random_elements_acts_on_axis_0(self, database):
+        array = np.array([[0, 0], [1, -1], [2, -2], [3, -3]])
+        with patch.object(module.np.random, 'choice') as mock_random_choice:
+            mock_random_choice.return_value = [0, 2]
+            updated_array = database.remove_random_elements(array)
+        assert np.array_equal(updated_array, np.array([[1, -1], [3, -3]]))
+
+    def test_flat_window_zipped_produces_overlapping_window_repeats(self, database):
+        examples_dataset = tf.data.Dataset.from_tensor_slices(['a', 'b', 'c', 'd', 'e'])
+        labels_dataset = tf.data.Dataset.from_tensor_slices([0, 1, 2, 3, 4])
+        zipped_dataset = tf.data.Dataset.zip((examples_dataset, labels_dataset))
+
+        windowed_dataset = database.flat_window_zipped_example_and_label_dataset(zipped_dataset, batch_size=3,
+                                                                                 window_shift=2)
+
+        windowed_list = list(windowed_dataset.as_numpy_iterator())
+        assert windowed_list == [(b'a', 0), (b'b', 1), (b'c', 2), (b'c', 2), (b'd', 3), (b'e', 4), (b'e', 4)]
+
+    def test_can_normalize_the_flux_channel_of_a_light_curve(self):
+        database = LightcurveDatabase()
+        light_curve = np.array([[1, -1], [2, -2], [3, -3]])
+        mock_normalize = Mock(side_effect=lambda x: x)
+        database.normalize = mock_normalize
+        _ = database.normalize_fluxes(light_curve=light_curve)
+        assert np.array_equal(mock_normalize.call_args[0][0], light_curve[:, 1])  # Channel 1 should be fluxes.
+
+    def test_can_normalize_the_flux_channel_of_a_flux_only_light_curve(self):
+        database = LightcurveDatabase()
+        light_curve = np.array([[1], [2], [3]])
+        mock_normalize = Mock(side_effect=lambda x: x)
+        database.normalize = mock_normalize
+        _ = database.normalize_fluxes(light_curve=light_curve)
+        assert np.array_equal(mock_normalize.call_args[0][0], light_curve[:, 0])  # Channel 1 should be fluxes.
+
+    def test_flux_preprocessing_occurs_in_place(self):
+        database = LightcurveDatabase()
+        light_curve = np.array([[10], [20], [10], [20]])
+        expected_light_curve = np.array([[-1], [1], [-1], [1]])
+        database.normalize_fluxes(light_curve=light_curve)
+        assert np.array_equal(light_curve, expected_light_curve)
+
+    def test_building_light_curve_array_using_only_fluxes(self):
+        database = LightcurveDatabase()
+        fluxes = np.array([1, 2, 3])
+        expected_light_curve = np.array([[1], [2], [3]])
+        light_curve = database.build_light_curve_array(fluxes=fluxes)
+        assert np.array_equal(light_curve, expected_light_curve)
+
+    def test_building_light_curve_array_using_times_and_fluxes(self):
+        database = LightcurveDatabase()
+        database.use_times = True
+        times = np.array([1, 2, 3])
+        fluxes = np.array([-1, -2, -3])
+        expected_light_curve = np.array([[1, -1], [2, -2], [3, -3]])
+        light_curve = database.build_light_curve_array(fluxes=fluxes, times=times)
+        assert np.array_equal(light_curve, expected_light_curve)
+
+    def test_building_light_curve_array_passing_times_but_only_using_fluxes(self):
+        database = LightcurveDatabase()
+        database.use_times = False
+        times = np.array([1, 2, 3])
+        fluxes = np.array([-1, -2, -3])
+        expected_light_curve = np.array([[-1], [-2], [-3]])
+        light_curve = database.build_light_curve_array(fluxes=fluxes, times=times)
+        assert np.array_equal(light_curve, expected_light_curve)
+
+    def test_time_preprocessing_occurs_in_place(self):
+        database = LightcurveDatabase()
+        light_curve_array = np.array([[10, 1], [20, 2], [30, 3]])
+        time_differences_result = [10, 10, 10]
+        database.calculate_time_differences = Mock(return_value=time_differences_result)
+        expected_light_curve_array = np.array([[10, 1], [10, 2], [10, 3]])
+        database.preprocess_times(light_curve_array=light_curve_array)
+        assert np.array_equal(light_curve_array, expected_light_curve_array)
+
+    def test_time_normalization_occurs_in_place(self):
+        database = LightcurveDatabase()
+        times = np.array([10, 20, 30])
+        expected_time_differences = np.array([10, 10, 10])
+        time_differences = database.calculate_time_differences(times)
+        assert np.array_equal(time_differences, expected_time_differences)
+
+    @pytest.mark.parametrize("evaluation_mode, called_expectation", [(True, False),
+                                                                     (False, True)])
+    def test_flux_preprocessing_evaluation_modes_calling_of_remove_random_elements(self, database, evaluation_mode,
+                                                                                   called_expectation):
+        mock_remove_random_elements = Mock(side_effect=lambda x: x)
+        database.remove_random_elements = mock_remove_random_elements
+
+        database.preprocess_light_curve(np.array([[0], [1], [2]]), evaluation_mode=evaluation_mode)
+
+        assert mock_remove_random_elements.called == called_expectation

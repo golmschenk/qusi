@@ -1,14 +1,13 @@
 """
 Code for managing the TESS FFI metadata SQL table.
 """
-import itertools
 from pathlib import Path
-from typing import List, Union, Generator
+from typing import List
 from peewee import IntegerField, CharField, FloatField, SchemaManager
 
 from ramjet.data_interface.metadatabase import MetadatabaseModel, metadatabase, metadatabase_uuid, \
     convert_class_to_table_name, dataset_split_from_uuid
-from ramjet.data_interface.tess_ffi_data_interface import TessFfiDataInterface
+from ramjet.photometric_database.tess_ffi_light_curve import TessFfiLightCurve
 
 
 class TessFfiLightcurveMetadata(MetadatabaseModel):
@@ -34,8 +33,6 @@ class TessFfiLightcurveMetadataManager:
     """
     A class for managing the TESS FFI metadata SQL table.
     """
-    tess_ffi_data_interface = TessFfiDataInterface()
-
     def __init__(self):
         self.lightcurve_root_directory_path = Path('data/tess_ffi_lightcurves')
 
@@ -48,8 +45,8 @@ class TessFfiLightcurveMetadataManager:
         row_dictionary_list = []
         table_name = convert_class_to_table_name(TessFfiLightcurveMetadata)
         for lightcurve_path in lightcurve_paths:
-            tic_id, sector = self.tess_ffi_data_interface.get_tic_id_and_sector_from_file_path(lightcurve_path)
-            magnitude = self.tess_ffi_data_interface.get_floor_magnitude_from_file_path(lightcurve_path)
+            tic_id, sector = TessFfiLightCurve.get_tic_id_and_sector_from_file_path(lightcurve_path)
+            magnitude = TessFfiLightCurve.get_floor_magnitude_from_file_path(lightcurve_path)
             relative_path = lightcurve_path.relative_to(self.lightcurve_root_directory_path)
             uuid_name = f'{table_name} TIC {tic_id} sector {sector}'
             uuid = metadatabase_uuid(uuid_name)

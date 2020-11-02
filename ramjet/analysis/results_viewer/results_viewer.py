@@ -36,7 +36,6 @@ tess_toi_data_interface = TessToiDataInterface()
 
 class Target:
     def __init__(self, lightcurve_path):
-        self.loaded = False
         self.tic_id, self.sector = tess_data_interface.get_tic_id_and_sector_from_file_path(lightcurve_path)
         self.pdcsap_fluxes: Union[np.ndarray, None] = None
         self.normalized_pdcsap_fluxes: Union[np.ndarray, None] = None
@@ -48,7 +47,6 @@ class Target:
         self.has_known_exofop_disposition = self.check_for_known_exofop_dispositions()
         tic_row = tess_data_interface.get_tess_input_catalog_row(self.tic_id)
         self.star_radius = tic_row['rad']
-        self.loaded = True
 
     def load_lightcurve(self):
         lightcurve_path = tess_data_interface.download_two_minute_cadence_lightcurve(self.tic_id, self.sector)

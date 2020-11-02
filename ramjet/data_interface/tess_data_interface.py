@@ -45,6 +45,11 @@ def is_common_mast_connection_error(exception: Exception) -> bool:
             isinstance(exception, requests.exceptions.ConnectionError))
 
 
+class NoDataProductsFoundException(Exception):
+    """An exception when no data products are found from MAST."""
+    pass
+
+
 class TessDataInterface:
     """
     A class for common interfacing with TESS data, such as downloading, sorting, and manipulating.
@@ -147,6 +152,8 @@ class TessDataInterface:
         :return: The manifest of the download. Will be converted from Table to DataFrame for use.
         """
         manifest = Observations.download_products(Table.from_pandas(data_products), download_dir=str(data_directory))
+        if manifest is None:
+            raise NoDataProductsFoundException
         return manifest.to_pandas()
 
     @staticmethod

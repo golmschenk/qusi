@@ -111,10 +111,10 @@ class TessToiDataInterface:
 
         :return: The data frame of the CTOI dispositions table.
         """
-        columns_to_use = ['TIC ID', 'TFOPWG Disposition', 'Midpoint (BJD)', 'Period (days)', 'Duration (hrs)']
+        columns_to_use = ['TIC ID', 'TFOPWG Disposition', 'Transit Epoch (BJD)', 'Period (days)', 'Duration (hrs)']
         dispositions = pd.read_csv(self.ctoi_dispositions_path, usecols=columns_to_use)
         dispositions.rename(columns={'TFOPWG Disposition': ToiColumns.disposition.value,
-                                     'Midpoint (BJD)': ToiColumns.transit_epoch__bjd.value,
+                                     'Transit Epoch (BJD)': ToiColumns.transit_epoch__bjd.value,
                                      'Period (days)': ToiColumns.transit_period__days.value,
                                      'Duration (hrs)': ToiColumns.transit_duration.value}, inplace=True)
         dispositions[ToiColumns.disposition.value] = dispositions[ToiColumns.disposition.value].fillna('')
@@ -132,6 +132,19 @@ class TessToiDataInterface:
         toi_and_coi_dispositions = pd.concat([toi_dispositions, ctoi_dispositions], axis=0, ignore_index=True)
         tic_target_dispositions = toi_and_coi_dispositions[toi_and_coi_dispositions['TIC ID'] == tic_id]
         return tic_target_dispositions
+
+    def has_any_exofop_dispositions_for_tic_id(self, tic_id: int) -> bool:
+        """
+        Returns whether or not any dispositions exist for this TIC ID.
+
+        :param tic_id: The TIC ID to check.
+        :return: True if there are dispositions, False if none.
+        """
+        existing_dispositions = self.retrieve_exofop_toi_and_ctoi_planet_disposition_for_tic_id(tic_id)
+        if existing_dispositions.shape[0] != 0:
+            return True
+        else:
+            return False
 
     def print_exofop_toi_and_ctoi_planet_dispositions_for_tic_target(self, tic_id):
         """

@@ -7,7 +7,7 @@ astroquery
 requests
 pytest
 pyarrow
-Sphinx
+Sphinx<2
 sphinx-autoapi
 sphinx-press-theme
 GitPython
