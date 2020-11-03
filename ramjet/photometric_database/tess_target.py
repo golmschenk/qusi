@@ -75,7 +75,7 @@ class TessTarget:
         :return: The calculated radius of the transiting body.
         """
         contamination_ratio = self.contamination_ratio
-        if np.isnan(contamination_ratio) or contamination_ratio is None:
+        if pd.isna(contamination_ratio):
             if allow_unknown_contamination_ratio:
                 contamination_ratio = 0
             else:
