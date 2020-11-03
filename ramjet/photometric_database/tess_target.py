@@ -65,14 +65,22 @@ class TessTarget:
         radius = query_results_data_frame['radius_val'].iloc[0]
         return radius
 
-    def calculate_transiting_body_radius(self, transit_depth: float) -> float:
+    def calculate_transiting_body_radius(self, transit_depth: float, allow_unknown_contamination_ratio: bool = False
+                                         ) -> float:
         """
         Calculates the radius of a transiting body based on the target parameters and the transit depth.
 
         :param transit_depth: The depth of the transit signal.
+        :param allow_unknown_contamination_ratio: Whether to calculate even without a known contamination ratio.
         :return: The calculated radius of the transiting body.
         """
-        return self.radius * math.sqrt(transit_depth * (1 + self.contamination_ratio))
+        contamination_ratio = self.contamination_ratio
+        if pd.isna(contamination_ratio):
+            if allow_unknown_contamination_ratio:
+                contamination_ratio = 0
+            else:
+                raise ValueError(f'Contamination ratio {contamination_ratio} cannot be used to calculate the radius.')
+        return self.radius * math.sqrt(transit_depth * (1 + contamination_ratio))
 
     def retrieve_nearby_tic_targets(self) -> pd.DataFrame:
         """

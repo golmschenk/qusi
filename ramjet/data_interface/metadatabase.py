@@ -1,10 +1,11 @@
 """
 Code for the the metadatabase.
 """
+import datetime
 from uuid import UUID, uuid5
 from typing import Type
 
-from peewee import Model, SqliteDatabase
+from peewee import Model, SqliteDatabase, DateTimeField
 
 metadatabase = SqliteDatabase('data/metadatabase.sqlite3',
                               pragmas={'journal_mode': 'wal'},
@@ -39,7 +40,7 @@ def metadatabase_uuid(name: str) -> UUID:
     Generates a reproducible UUID for the metadatabase based on a name string.
 
     :param name: The string used to produce the UUID.
-    :return: The UUID
+    :return: The UUID.
     """
     return uuid5(metadatabase_uuid_namespace, name)
 

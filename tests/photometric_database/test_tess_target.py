@@ -44,6 +44,38 @@ class TestTessTarget:
 
         assert body_radius == pytest.approx(expected_body_radius)
 
+    @pytest.mark.parametrize('contamination_ratio, allow_unknown_contamination_ratio',
+                             [(np.nan, False),
+                              (None, False)])
+    def test_not_allowing_estimate_radius_of_transiting_body_with_unknown_contamination(
+            self, contamination_ratio, allow_unknown_contamination_ratio):
+        transit_depth = 0.01011
+        target_radius = 1.0
+        target = TessTarget()
+        target.radius = target_radius
+        target.contamination_ratio = contamination_ratio
+
+        with pytest.raises(ValueError):
+            _ = target.calculate_transiting_body_radius(
+                transit_depth=transit_depth, allow_unknown_contamination_ratio=allow_unknown_contamination_ratio)
+
+    @pytest.mark.parametrize('contamination_ratio, allow_unknown_contamination_ratio',
+                             [(np.nan, True),
+                              (None, True)])
+    def test_allowing_estimate_radius_of_transiting_body_with_unknown_contamination(
+            self, contamination_ratio, allow_unknown_contamination_ratio):
+        transit_depth = 0.01011
+        target_radius = 1.0
+        expected_body_radius = 0.1005484
+        target = TessTarget()
+        target.radius = target_radius
+        target.contamination_ratio = contamination_ratio
+
+        body_radius = target.calculate_transiting_body_radius(
+            transit_depth=transit_depth, allow_unknown_contamination_ratio=allow_unknown_contamination_ratio)
+
+        assert body_radius == pytest.approx(expected_body_radius)
+
     @pytest.mark.external
     def test_can_retrieve_nearby_tic_target_data_frame(self):
         # Information from https://exofop.ipac.caltech.edu/tess/nearbytarget.php?id=231663901
