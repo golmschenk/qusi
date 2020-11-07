@@ -1,6 +1,7 @@
 """
 Code for managing the TESS transit metadata.
 """
+import sqlite3
 import warnings
 from typing import List
 
@@ -99,5 +100,8 @@ class TessTransitMetadataManager:
 if __name__ == '__main__':
     tess_transit_metadata_manager = TessTransitMetadataManager()
     tess_transit_metadata_manager.build_table()
-    tess_transit_metadata_manager.add_tic_ids_as_confirmed(
-        TessPlanetDisposition.get_tic_ids_of_passing_vetted_transiting_planet_candidates())
+    try:
+        tess_transit_metadata_manager.add_tic_ids_as_confirmed(
+            TessPlanetDisposition.get_tic_ids_of_passing_vetted_transiting_planet_candidates())
+    except sqlite3.OperationalError:
+        pass
