@@ -2,6 +2,7 @@
 A model for the database entity of a TESS planet disposition.
 """
 from enum import Enum
+from typing import List
 
 from peewee import ForeignKeyField, CharField, TextField, AutoField
 
