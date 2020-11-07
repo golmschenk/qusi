@@ -10,7 +10,7 @@ from peewee import IntegerField, CharField
 
 from ramjet.data_interface.metadatabase import MetadatabaseModel, metadatabase
 from ramjet.data_interface.tess_toi_data_interface import TessToiDataInterface, ToiColumns
-from ramjet.database.tess_target import TessTarget
+from ramjet.database.tess_planet_disposition import TessPlanetDisposition
 
 
 class Disposition(Enum):
@@ -100,4 +100,4 @@ if __name__ == '__main__':
     tess_transit_metadata_manager = TessTransitMetadataManager()
     tess_transit_metadata_manager.build_table()
     tess_transit_metadata_manager.add_tic_ids_as_confirmed(
-        TessTarget.get_tic_ids_of_passing_vetted_transiting_planet_candidates())
+        TessPlanetDisposition.get_tic_ids_of_passing_vetted_transiting_planet_candidates())
