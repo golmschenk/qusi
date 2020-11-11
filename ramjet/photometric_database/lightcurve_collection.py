@@ -110,3 +110,17 @@ class LightcurveCollection:
         times, fluxes = self.load_times_and_fluxes_from_path(path)
         flux_errors = None
         return times, fluxes, flux_errors
+
+    def load_times_magnifications_and_magnification_errors_from_path(
+            self, path: Path) -> (np.ndarray, np.ndarray, Union[np.ndarray, None]):
+        """
+        Loads the times, magnifications, and magnification_errors of a light curve from a path to the data.
+        Unless overridden, defaults to using the method to load only the times and magnifications,
+        and returns None for magnification errors.
+
+        :param path: The path of the file containing the light curve data.
+        :return: The times, magnifications, and magnification errors.
+        """
+        times, fluxes = self.load_times_and_magnifications_from_path(path)
+        flux_errors = None
+        return times, fluxes, flux_errors

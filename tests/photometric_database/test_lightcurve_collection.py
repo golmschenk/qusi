@@ -98,3 +98,12 @@ class TestLightcurveCollection:
         assert np.array_equal(times, [0])
         assert np.array_equal(fluxes, [1])
         assert flux_errors is None
+
+    def test_load_times_magnifications_and_magnification_errors_defaults_to_just_the_times_and_fluxes_loading(self):
+        light_curve_collection = LightcurveCollection()
+        light_curve_collection.load_times_and_magnifications_from_path = lambda path: ([0], [1])
+        times, magnifications, magnification_errors = \
+            light_curve_collection.load_times_magnifications_and_magnification_errors_from_path(Path('fake'))
+        assert np.array_equal(times, [0])
+        assert np.array_equal(magnifications, [1])
+        assert magnification_errors is None
