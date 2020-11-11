@@ -19,7 +19,6 @@ class LightcurveDatabase(ABC):
         self.data_directory: Path = Path(data_directory)
         self.validation_ratio: float = 0.2
         self.batch_size: int = 100
-        self.trial_directory = None
         self.time_steps_per_example: int
         self.number_of_parallel_processes_per_map: int = 16
         self.use_times: bool = False
@@ -32,13 +31,6 @@ class LightcurveDatabase(ABC):
         :return: The window shift size.
         """
         return self.batch_size // 10
-
-    def log_dataset_file_names(self, dataset: tf.data.Dataset, dataset_name: str):
-        """Saves the names of the files used in a dataset to a CSV file in the trail directory."""
-        os.makedirs(self.trial_directory, exist_ok=True)
-        training_example_paths = [example.numpy().decode('utf-8') for example in list(dataset)]
-        series = pd.Series(training_example_paths)
-        series.to_csv(os.path.join(self.trial_directory, f'{dataset_name}.csv'), header=False, index=False)
 
     @staticmethod
     def normalize_log_0_to_1(lightcurve: np.ndarray) -> np.ndarray:

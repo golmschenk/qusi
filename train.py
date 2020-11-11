@@ -25,7 +25,6 @@ def train():
     datetime_string = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
     trial_directory = os.path.join(logs_directory, f'{trial_name} {datetime_string}')
     tensorboard_callback = callbacks.TensorBoard(log_dir=trial_directory)
-    database.trial_directory = trial_directory
     model_save_path = os.path.join(trial_directory, 'model.ckpt')
     model_checkpoint_callback = callbacks.ModelCheckpoint(model_save_path, save_weights_only=True)
 
