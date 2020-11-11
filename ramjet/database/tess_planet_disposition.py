@@ -64,4 +64,4 @@ class TessPlanetDisposition(BaseModel):
                 TessPlanetDisposition.select(TessPlanetDisposition.transiter).where(
                     TessPlanetDisposition.disposition == Disposition.FAIL.value))
         ).order_by(TessTarget.tic_id)
-        return list(candidate_tic_id_query)
+        return [candidate.tic_id for candidate in candidate_tic_id_query]
