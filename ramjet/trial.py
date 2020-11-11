@@ -92,7 +92,11 @@ def create_logging_callbacks(logs_directory: Path, trial_name: str) -> List[call
     datetime_string = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
     trial_directory = logs_directory.joinpath(f'{trial_name} {datetime_string}')
     tensorboard_callback = callbacks.TensorBoard(log_dir=trial_directory)
-    model_save_path = trial_directory.joinpath('model.ckpt')
-    model_checkpoint_callback = callbacks.ModelCheckpoint(model_save_path, save_weights_only=True)
-    logging_callbacks = [tensorboard_callback, model_checkpoint_callback]
+    latest_model_save_path = trial_directory.joinpath('latest_model.ckpt')
+    latest_checkpoint_callback = callbacks.ModelCheckpoint(latest_model_save_path, save_weights_only=True)
+    best_validation_model_save_path = trial_directory.joinpath('best_validation_model.ckpt')
+    best_validation_checkpoint_callback = callbacks.ModelCheckpoint(
+        best_validation_model_save_path, monitor='Area_under_ROC_curve', mode='max', save_best_only=True,
+        save_weights_only=True)
+    logging_callbacks = [tensorboard_callback, latest_checkpoint_callback, best_validation_checkpoint_callback]
     return logging_callbacks
