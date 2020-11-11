@@ -1,10 +1,15 @@
 """
 Boilerplate code for running trials.
 """
+import datetime
+
 import numpy as np
 import pandas as pd
 import tensorflow as tf
+from typing import List
 from pathlib import Path
+
+from tensorflow.python.keras import callbacks
 
 
 def infer(model: tf.keras.Model, dataset: tf.data.Dataset, infer_results_path: Path,
@@ -41,7 +46,7 @@ def infer(model: tf.keras.Model, dataset: tf.data.Dataset, infer_results_path: P
 
 
 def save_results(confidences_data_frame: pd.DataFrame, infer_results_path: Path,
-                 number_of_top_predictions_to_keep: int = None):
+                 number_of_top_predictions_to_keep: int = None) -> pd.DataFrame:
     """
     Saves a predictions data frame to a file.
 
@@ -59,3 +64,35 @@ def save_results(confidences_data_frame: pd.DataFrame, infer_results_path: Path,
     confidences_data_frame = confidences_data_frame.reset_index(drop=True)
     confidences_data_frame.to_csv(infer_results_path, index_label='index')
     return confidences_data_frame
+
+
+def create_logging_metrics() -> List[tf.metrics.Metric]:
+    """
+    Creates the standard metrics to be used in logging.
+
+    :return: The list of metrics.
+    """
+    metrics = [tf.keras.metrics.AUC(num_thresholds=20, name='Area_under_ROC_curve', multi_label=True),
+               tf.metrics.SpecificityAtSensitivity(0.9, name='Specificity_at_90_percent_sensitivity'),
+               tf.metrics.SensitivityAtSpecificity(0.9, name='Sensitivity_at_90_percent_specificity'),
+               tf.metrics.BinaryAccuracy(name='Accuracy'),
+               tf.metrics.Precision(name='Precision'),
+               tf.metrics.Recall(name='Recall')]
+    return metrics
+
+
+def create_logging_callbacks(logs_directory: Path, trial_name: str) -> List[callbacks.Callback]:
+    """
+    Creates the callbacks to perform the logging.
+
+    :param logs_directory: The directory to log to.
+    :param trial_name: The name of the trial.
+    :return: The callbacks to perform the logging.
+    """
+    datetime_string = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+    trial_directory = logs_directory.joinpath(f'{trial_name} {datetime_string}')
+    tensorboard_callback = callbacks.TensorBoard(log_dir=trial_directory)
+    model_save_path = trial_directory.joinpath('model.ckpt')
+    model_checkpoint_callback = callbacks.ModelCheckpoint(model_save_path, save_weights_only=True)
+    logging_callbacks = [tensorboard_callback, model_checkpoint_callback]
+    return logging_callbacks
