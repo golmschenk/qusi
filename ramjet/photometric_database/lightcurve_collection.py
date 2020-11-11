@@ -97,3 +97,16 @@ class LightcurveCollection:
         paths_array = np.concatenate(dataset_split_arrays_to_keep)
         dataset_split_paths = list(map(Path, paths_array))
         return dataset_split_paths
+
+    def load_times_fluxes_and_flux_errors_from_path(self, path: Path
+                                                    ) -> (np.ndarray, np.ndarray, Union[np.ndarray, None]):
+        """
+        Loads the times, fluxes, and errors of a light curve from a path to the data.
+        Unless overridden, defaults to using the method to load only the times and fluxes, and returns None for errors.
+
+        :param path: The path of the file containing the light curve data.
+        :return: The times, fluxes, and flux errors.
+        """
+        times, fluxes = self.load_times_and_fluxes_from_path(path)
+        flux_errors = None
+        return times, fluxes, flux_errors
