@@ -20,7 +20,7 @@ inference_dataset = database.generate_inference_dataset()
 
 print('Loading model...', flush=True)
 model = Hades(database.number_of_label_types)
-model.load_weights(str(saved_log_directory.joinpath('model.ckpt'))).expect_partial()
+model.load_weights(str(saved_log_directory.joinpath('latest_model.ckpt'))).expect_partial()
 
 print('Inferring...', flush=True)
 infer_results_path = saved_log_directory.joinpath(f'infer results {datetime_string}.csv')

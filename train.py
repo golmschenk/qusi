@@ -1,13 +1,12 @@
 """Code for running training."""
-import datetime
-import os
 import tensorflow as tf
-from tensorflow.python.keras import callbacks
 from tensorflow.python.keras.losses import BinaryCrossentropy
+from pathlib import Path
 
 from ramjet.models.hades import Hades
 from ramjet.photometric_database.derived.tess_two_minute_cadence_transit_databases import \
     TessTwoMinuteCadenceStandardAndInjectedTransitDatabase
+from ramjet.trial import create_logging_metrics, create_logging_callbacks
 
 
 def train():
@@ -19,36 +18,19 @@ def train():
     model = Hades(database.number_of_label_types)
     # database.batch_size = 100  # Reducing the batch size may help if you are running out of memory.
     epochs_to_run = 1000
-    logs_directory = 'logs'
+    logs_directory = Path('logs')
 
-    # Setup logging.
-    datetime_string = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-    trial_directory = os.path.join(logs_directory, f'{trial_name} {datetime_string}')
-    tensorboard_callback = callbacks.TensorBoard(log_dir=trial_directory)
-    database.trial_directory = trial_directory
-    model_save_path = os.path.join(trial_directory, 'model.ckpt')
-    model_checkpoint_callback = callbacks.ModelCheckpoint(model_save_path, save_weights_only=True)
-
-    # Prepare training data and metrics.
+    # Setup training data, metrics, and logging.
     training_dataset, validation_dataset = database.generate_datasets()
-    optimizer = tf.optimizers.Adam(learning_rate=1e-4)
+    logging_callbacks = create_logging_callbacks(logs_directory, trial_name)
     loss_metric = BinaryCrossentropy(name='Loss')
-    metrics = [tf.keras.metrics.AUC(num_thresholds=20, name='Area_under_ROC_curve', multi_label=True),
-               tf.metrics.SpecificityAtSensitivity(0.9, name='Specificity_at_90_percent_sensitivity'),
-               tf.metrics.SensitivityAtSpecificity(0.9, name='Sensitivity_at_90_percent_specificity'),
-               tf.metrics.BinaryAccuracy(name='Accuracy'), tf.metrics.Precision(name='Precision'),
-               tf.metrics.Recall(name='Recall')]
+    metrics = create_logging_metrics()
+    optimizer = tf.optimizers.Adam(learning_rate=1e-4)
 
     # Compile and train model.
     model.compile(optimizer=optimizer, loss=loss_metric, metrics=metrics)
-    try:
-        model.fit(training_dataset, epochs=epochs_to_run, validation_data=validation_dataset,
-                  callbacks=[tensorboard_callback, model_checkpoint_callback], steps_per_epoch=5000,
-                  validation_steps=500)
-    except KeyboardInterrupt:
-        print('Interrupted. Saving model before quitting...', flush=True)
-    finally:
-        model.save_weights(model_save_path)
+    model.fit(training_dataset, epochs=epochs_to_run, validation_data=validation_dataset, callbacks=logging_callbacks,
+              steps_per_epoch=5000, validation_steps=500)
     print('Training done.', flush=True)
 
 
