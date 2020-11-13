@@ -284,10 +284,17 @@ class LightcurveDatabase(ABC):
         :param light_curve: The light curve whose flux channel should be normalized.
         :return: The light curve with the flux channel normalized.
         """
-        if light_curve.shape[1] == 1:  # If the light curve has only 1 channel, it is the flux channel.
+        if self.include_time_as_channel:
+            if self.include_flux_errors_as_channel:
+                assert light_curve.shape[1] == 3
+                light_curve[:, 1], light_curve[:, 2] = self.normalize_on_percentiles_with_errors(
+                    light_curve[:, 1], light_curve[:, 2])
+            else:
+                assert light_curve.shape[1] == 2
+                light_curve[:, 1] = self.normalize_on_percentiles(light_curve[:, 1])
+        else:
+            assert light_curve.shape[1] == 1
             light_curve[:, 0] = self.normalize_on_percentiles(light_curve[:, 0])
-        else:  # If the light curve has multiple channels, it's time first, then flux.
-            light_curve[:, 1] = self.normalize_on_percentiles(light_curve[:, 1])
 
     def build_light_curve_array(self, fluxes: np.ndarray, times: Union[np.ndarray, None] = None,
                                 flux_errors: Union[np.ndarray, None] = None):

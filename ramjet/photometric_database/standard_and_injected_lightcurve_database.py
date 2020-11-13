@@ -224,8 +224,6 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         """
         lightcurve_path = Path(lightcurve_path_tensor.numpy().decode('utf-8'))
         times, fluxes, flux_errors = load_times_fluxes_and_flux_errors_from_path_function(lightcurve_path)
-        if flux_errors is not None:
-            raise NotImplementedError
         light_curve = self.build_light_curve_array(fluxes=fluxes, times=times, flux_errors=flux_errors)
         example = self.preprocess_light_curve(light_curve, evaluation_mode=evaluation_mode)
         label = load_label_from_path_function(lightcurve_path)
@@ -289,8 +287,6 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         lightcurve_path_string = lightcurve_path_tensor.numpy().decode('utf-8')
         lightcurve_path = Path(lightcurve_path_string)
         times, fluxes, flux_errors = load_times_fluxes_and_flux_errors_from_path_function(lightcurve_path)
-        if flux_errors is not None:
-            raise NotImplementedError
         light_curve = self.build_light_curve_array(fluxes=fluxes, times=times, flux_errors=flux_errors)
         example = self.preprocess_light_curve(light_curve, evaluation_mode=True)
         return lightcurve_path_string, example

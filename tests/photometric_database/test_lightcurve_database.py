@@ -263,10 +263,11 @@ class TestLightcurveDatabase:
 
     def test_can_normalize_the_flux_channel_of_a_light_curve(self):
         database = LightcurveDatabase()
+        database.include_time_as_channel = True
         light_curve = np.array([[1, -1], [2, -2], [3, -3]])
         mock_normalize = Mock(side_effect=lambda x: x)
         database.normalize_on_percentiles = mock_normalize
-        _ = database.normalize_fluxes(light_curve=light_curve)
+        database.normalize_fluxes(light_curve=light_curve)
         assert np.array_equal(mock_normalize.call_args[0][0], light_curve[:, 1])  # Channel 1 should be fluxes.
 
     def test_can_normalize_the_flux_channel_of_a_flux_only_light_curve(self):
@@ -274,13 +275,22 @@ class TestLightcurveDatabase:
         light_curve = np.array([[1], [2], [3]])
         mock_normalize = Mock(side_effect=lambda x: x)
         database.normalize_on_percentiles = mock_normalize
-        _ = database.normalize_fluxes(light_curve=light_curve)
+        database.normalize_fluxes(light_curve=light_curve)
         assert np.array_equal(mock_normalize.call_args[0][0], light_curve[:, 0])  # Channel 1 should be fluxes.
 
     def test_flux_preprocessing_occurs_in_place(self):
         database = LightcurveDatabase()
         light_curve = np.array([[10], [20], [10], [20]])
         expected_light_curve = np.array([[-1], [1], [-1], [1]])
+        database.normalize_fluxes(light_curve=light_curve)
+        assert np.array_equal(light_curve, expected_light_curve)
+
+    def test_flux_preprocessing_with_times_and_errors(self):
+        database = LightcurveDatabase()
+        database.include_time_as_channel = True
+        database.include_flux_errors_as_channel = True
+        light_curve = np.array([[1, 10, 10], [2, 20, 20], [3, 10, 30], [4, 20, 40]])
+        expected_light_curve = np.array([[1, -1, 2], [2, 1, 4], [3, -1, 6], [4, 1, 8]])
         database.normalize_fluxes(light_curve=light_curve)
         assert np.array_equal(light_curve, expected_light_curve)
 
