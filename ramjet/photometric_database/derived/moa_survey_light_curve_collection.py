@@ -15,7 +15,8 @@ class MoaSurveyLightCurveCollection(LightcurveCollection):
 
     def __init__(self, survey_tags: List[str], dataset_splits: Union[List[int], None] = None,
                  label: Union[float, List[float], np.ndarray, None] = None):
-        super().__init__(label=label)
+        super().__init__()
+        self.label = label
         self.survey_tags: List[str] = survey_tags
         self.dataset_splits: Union[List[int], None] = dataset_splits
 
