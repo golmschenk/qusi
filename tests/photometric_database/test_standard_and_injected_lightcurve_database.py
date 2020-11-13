@@ -63,7 +63,7 @@ class TestStandardAndInjectedLightcurveDatabase:
         def mock_window(dataset, batch_size, window_shift):
             return dataset.batch(batch_size)
         database.window_dataset_for_zipped_example_and_label_dataset = mock_window  # Disable windowing.
-        database.normalize = lambda fluxes: fluxes  # Don't normalize values to keep it simple.
+        database.normalize_on_percentiles = lambda fluxes: fluxes  # Don't normalize values to keep it simple.
         return database
 
     @pytest.fixture

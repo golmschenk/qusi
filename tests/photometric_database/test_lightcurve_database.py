@@ -125,24 +125,24 @@ class TestLightcurveDatabase:
 
     def test_normalization_does_not_invert_lightcurve_shape_when_there_are_negative_values(self, database):
         unnormalized_positive_lightcurve_fluxes = np.array([10, 20, 30, 25, 15], dtype=np.float32)
-        normalized_positive_lightcurve_fluxes = database.normalize(unnormalized_positive_lightcurve_fluxes)
+        normalized_positive_lightcurve_fluxes = database.normalize_on_percentiles(unnormalized_positive_lightcurve_fluxes)
         assert normalized_positive_lightcurve_fluxes.argmax() == 2
         assert normalized_positive_lightcurve_fluxes.argmin() == 0
         unnormalized_negative_lightcurve_fluxes = np.array([-30, -20, -10, -15, -25], dtype=np.float32)
-        normalized_negative_lightcurve_fluxes = database.normalize(unnormalized_negative_lightcurve_fluxes)
+        normalized_negative_lightcurve_fluxes = database.normalize_on_percentiles(unnormalized_negative_lightcurve_fluxes)
         assert normalized_negative_lightcurve_fluxes.argmax() == 2
         assert normalized_negative_lightcurve_fluxes.argmin() == 0
 
     def test_normalization_brings_values_close_to_negative_one_to_one_range(self, database):
         epsilon = 0.6
         unnormalized_positive_lightcurve_fluxes = np.array([10, 20, 30, 20, 10], dtype=np.float32)
-        normalized_positive_lightcurve_fluxes = database.normalize(unnormalized_positive_lightcurve_fluxes)
+        normalized_positive_lightcurve_fluxes = database.normalize_on_percentiles(unnormalized_positive_lightcurve_fluxes)
         assert (normalized_positive_lightcurve_fluxes > (-1 - epsilon)).all()
         assert (normalized_positive_lightcurve_fluxes < (1 + epsilon)).all()
         assert np.min(normalized_positive_lightcurve_fluxes) < (-1 + epsilon)
         assert np.max(normalized_positive_lightcurve_fluxes) > (1 - epsilon)
         unnormalized_negative_lightcurve_fluxes = np.array([-30, -20, -10, -20, -30], dtype=np.float32)
-        normalized_negative_lightcurve_fluxes = database.normalize(unnormalized_negative_lightcurve_fluxes)
+        normalized_negative_lightcurve_fluxes = database.normalize_on_percentiles(unnormalized_negative_lightcurve_fluxes)
         assert (normalized_negative_lightcurve_fluxes > (-1 - epsilon)).all()
         assert (normalized_negative_lightcurve_fluxes < (1 + epsilon)).all()
         assert np.min(normalized_negative_lightcurve_fluxes) < (-1 + epsilon)
@@ -245,7 +245,7 @@ class TestLightcurveDatabase:
         database = LightcurveDatabase()
         light_curve = np.array([[1, -1], [2, -2], [3, -3]])
         mock_normalize = Mock(side_effect=lambda x: x)
-        database.normalize = mock_normalize
+        database.normalize_on_percentiles = mock_normalize
         _ = database.normalize_fluxes(light_curve=light_curve)
         assert np.array_equal(mock_normalize.call_args[0][0], light_curve[:, 1])  # Channel 1 should be fluxes.
 
@@ -253,7 +253,7 @@ class TestLightcurveDatabase:
         database = LightcurveDatabase()
         light_curve = np.array([[1], [2], [3]])
         mock_normalize = Mock(side_effect=lambda x: x)
-        database.normalize = mock_normalize
+        database.normalize_on_percentiles = mock_normalize
         _ = database.normalize_fluxes(light_curve=light_curve)
         assert np.array_equal(mock_normalize.call_args[0][0], light_curve[:, 0])  # Channel 1 should be fluxes.
 
@@ -273,7 +273,7 @@ class TestLightcurveDatabase:
 
     def test_building_light_curve_array_using_times_and_fluxes(self):
         database = LightcurveDatabase()
-        database.use_times = True
+        database.include_time_as_channel = True
         times = np.array([1, 2, 3])
         fluxes = np.array([-1, -2, -3])
         expected_light_curve = np.array([[1, -1], [2, -2], [3, -3]])
@@ -282,11 +282,32 @@ class TestLightcurveDatabase:
 
     def test_building_light_curve_array_passing_times_but_only_using_fluxes(self):
         database = LightcurveDatabase()
-        database.use_times = False
+        database.include_time_as_channel = False
         times = np.array([1, 2, 3])
         fluxes = np.array([-1, -2, -3])
         expected_light_curve = np.array([[-1], [-2], [-3]])
         light_curve = database.build_light_curve_array(fluxes=fluxes, times=times)
+        assert np.array_equal(light_curve, expected_light_curve)
+
+    def test_building_light_curve_array_passing_flux_errors_but_only_using_them(self):
+        database = LightcurveDatabase()
+        database.include_time_as_channel = False
+        times = np.array([1, 2, 3])
+        fluxes = np.array([-1, -2, -3])
+        flux_errors = np.array([0.1, 0.2, 0.3])
+        expected_light_curve = np.array([[-1], [-2], [-3]])
+        light_curve = database.build_light_curve_array(fluxes=fluxes, times=times, flux_errors=flux_errors)
+        assert np.array_equal(light_curve, expected_light_curve)
+
+    def test_building_light_curve_array_using_times_fluxes_and_flux_errors(self):
+        database = LightcurveDatabase()
+        database.include_time_as_channel = True
+        database.include_flux_errors_as_channel = True
+        times = np.array([1, 2, 3])
+        fluxes = np.array([-1, -2, -3])
+        flux_errors = np.array([0.1, 0.2, 0.3])
+        expected_light_curve = np.array([[1, -1, 0.1], [2, -2, 0.2], [3, -3, 0.3]])
+        light_curve = database.build_light_curve_array(fluxes=fluxes, times=times, flux_errors=flux_errors)
         assert np.array_equal(light_curve, expected_light_curve)
 
     def test_time_preprocessing_occurs_in_place(self):
