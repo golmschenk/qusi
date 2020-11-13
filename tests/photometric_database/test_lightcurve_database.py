@@ -160,6 +160,26 @@ class TestLightcurveDatabase:
         assert normalized_lightcurve_fluxes[10] == 0
         assert normalized_lightcurve_fluxes[90] == 0
 
+    def test_percentile_normalization_can_normalize_an_array_and_errors(self, database):
+        unnormalized_fluxes = np.linspace(0, 100, num=101, dtype=np.float32)
+        unnormalized_flux_errors = np.linspace(0, 10, num=101, dtype=np.float32)
+        normalized_fluxes, normalized_flux_errors = database.normalize_on_percentiles_with_errors(
+            array=unnormalized_fluxes, array_errors=unnormalized_flux_errors)
+        assert normalized_fluxes[10] == -1
+        assert normalized_fluxes[90] == 1
+        assert normalized_flux_errors[10] == pytest.approx(0.025)
+        assert normalized_flux_errors[90] == pytest.approx(0.225)
+
+    def test_percentile_normalization_zeroes_when_array_is_all_same_value_with_errors(self, database):
+        unnormalized_fluxes = np.full(shape=[100], fill_value=50)
+        unnormalized_flux_errors = np.linspace(0, 10, num=101, dtype=np.float32)
+        normalized_fluxes, normalized_flux_errors = database.normalize_on_percentiles_with_errors(
+            array=unnormalized_fluxes, array_errors=unnormalized_flux_errors)
+        assert normalized_fluxes[10] == 0
+        assert normalized_fluxes[90] == 0
+        assert normalized_flux_errors[10] == 0
+        assert normalized_flux_errors[90] == 0
+
     def test_window_dataset_for_zipped_example_and_label_dataset_produces_windowed_batches(self, database):
         example_dataset = tf.data.Dataset.from_tensor_slices([1, 2, 3, 4, 5])
         label_dataset = tf.data.Dataset.from_tensor_slices([-1, -2, -3, -4, -5])

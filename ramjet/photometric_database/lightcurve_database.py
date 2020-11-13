@@ -44,16 +44,33 @@ class LightcurveDatabase(ABC):
     @staticmethod
     def normalize_on_percentiles(array: np.ndarray) -> np.ndarray:
         """
-        Normalizes light curve using percentiles. The 10th percentile is normalized to -1, the 90th to 1.
+        Normalizes an array using percentiles. The 10th percentile is normalized to -1, the 90th to 1.
         """
         percentile_10 = np.percentile(array, 10)
         percentile_90 = np.percentile(array, 90)
         percentile_difference = percentile_90 - percentile_10
         if percentile_difference == 0:
-            normalized_lightcurve = np.zeros_like(array)
+            normalized_array = np.zeros_like(array)
         else:
-            normalized_lightcurve = ((array - percentile_10) / (percentile_difference / 2)) - 1
-        return normalized_lightcurve
+            normalized_array = ((array - percentile_10) / (percentile_difference / 2)) - 1
+        return normalized_array
+
+    @staticmethod
+    def normalize_on_percentiles_with_errors(array: np.ndarray, array_errors: np.ndarray) -> (np.ndarray, np.ndarray):
+        """
+        Normalizes an array using percentiles. The 10th percentile is normalized to -1, the 90th to 1.
+        Scales the errors by the corresponding scaling factor.
+        """
+        percentile_10 = np.percentile(array, 10)
+        percentile_90 = np.percentile(array, 90)
+        percentile_difference = percentile_90 - percentile_10
+        if percentile_difference == 0:
+            normalized_array = np.zeros_like(array)
+            normalized_array_errors = np.zeros_like(array_errors)
+        else:
+            normalized_array = ((array - percentile_10) / (percentile_difference / 2)) - 1
+            normalized_array_errors = array_errors / (percentile_difference / 2)
+        return normalized_array, normalized_array_errors
 
     @staticmethod
     def shuffle_in_unison(a, b, seed=None):
