@@ -101,7 +101,7 @@ class LightcurveCollection:
     def load_times_fluxes_and_flux_errors_from_path(self, path: Path
                                                     ) -> (np.ndarray, np.ndarray, Union[np.ndarray, None]):
         """
-        Loads the times, fluxes, and errors of a light curve from a path to the data.
+        Loads the times, fluxes, and flux errors of a light curve from a path to the data.
         Unless overridden, defaults to using the method to load only the times and fluxes, and returns None for errors.
 
         :param path: The path of the file containing the light curve data.

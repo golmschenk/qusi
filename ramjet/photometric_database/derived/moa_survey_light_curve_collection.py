@@ -46,3 +46,17 @@ class MoaSurveyLightCurveCollection(LightcurveCollection):
         times = lightcurve_dataframe['HJD'].values
         fluxes = lightcurve_dataframe['flux'].values
         return times, fluxes
+
+    def load_times_fluxes_and_flux_errors_from_path(self, path: Path
+                                                    ) -> (np.ndarray, np.ndarray, Union[np.ndarray, None]):
+        """
+        Loads the times, fluxes, and flux errors of a light curve from a path to the data.
+
+        :param path: The path of the file containing the light curve data.
+        :return: The times, fluxes, and flux errors.
+        """
+        light_curve_dataframe = pd.read_feather(path)
+        times = light_curve_dataframe['HJD'].values
+        fluxes = light_curve_dataframe['flux'].values
+        flux_errors = light_curve_dataframe['flux_err'].values
+        return times, fluxes, flux_errors
