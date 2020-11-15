@@ -46,6 +46,15 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         self.out_of_bounds_injection_handling: OutOfBoundsInjectionHandlingMethod = \
             OutOfBoundsInjectionHandlingMethod.ERROR
 
+    @property
+    def number_of_input_channels(self) -> int:
+        channels = 1
+        if self.include_time_as_channel:
+            channels += 1
+        if self.include_flux_errors_as_channel:
+            channels += 1
+        return channels
+
     def generate_datasets(self) -> (tf.data.Dataset, tf.data.Dataset):
         """
         Generates the training and validation datasets for the database.
@@ -196,7 +205,7 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
                                           load_label_from_path_function,
                                           evaluation_mode=evaluation_mode)
         output_types = (tf.float32, tf.float32)
-        output_shapes = [(self.time_steps_per_example, 1), (self.number_of_label_types,)]
+        output_shapes = [(self.time_steps_per_example, self.number_of_input_channels), (self.number_of_label_types,)]
         example_and_label_dataset = map_py_function_to_dataset(paths_dataset,
                                                                preprocess_map_function,
                                                                self.number_of_parallel_processes_per_map,
@@ -261,7 +270,7 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         preprocess_map_function = partial(self.preprocess_infer_lightcurve,
                                           load_times_fluxes_and_flux_errors_from_path_function)
         output_types = (tf.string, tf.float32)
-        output_shapes = [(), (self.time_steps_per_example, 1)]
+        output_shapes = [(), (self.time_steps_per_example, self.number_of_input_channels)]
         example_and_label_dataset = map_py_function_to_dataset(paths_dataset,
                                                                preprocess_map_function,
                                                                self.number_of_parallel_processes_per_map,
@@ -320,7 +329,7 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
             load_label_from_path_function,
             evaluation_mode=evaluation_mode)
         output_types = (tf.float32, tf.float32)
-        output_shapes = [(self.time_steps_per_example, 1), (self.number_of_label_types,)]
+        output_shapes = [(self.time_steps_per_example, self.number_of_input_channels), (self.number_of_label_types,)]
         zipped_paths_dataset = tf.data.Dataset.zip((injectee_paths_dataset, injectable_paths_dataset))
         example_and_label_dataset = map_py_function_to_dataset(zipped_paths_dataset,
                                                                preprocess_map_function,
