@@ -140,7 +140,7 @@ class Viewer:
         viewer = cls()
         viewer.document = bokeh_document
         viewer.csv_path = csv_path
-        viewer.light_curve_display = LightCurveDisplay.for_columns(TessFfiColumnName.TIME.value,
+        viewer.light_curve_display = LightCurveDisplay.for_columns(TessFfiColumnName.TIME__BTJD.value,
                                                                    TessFfiLightCurve().flux_column_names,
                                                                    flux_axis_label='Relative flux')
         viewer.light_curve_display.exclude_outliers_from_zoom = True
