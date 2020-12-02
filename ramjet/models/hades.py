@@ -17,7 +17,7 @@ class Hades(Model):
         self.block5 = LightCurveNetworkBlock(filters=128, kernel_size=3, pooling_size=2)
         self.block6 = LightCurveNetworkBlock(filters=128, kernel_size=3, pooling_size=2)
         self.block7 = LightCurveNetworkBlock(filters=128, kernel_size=3, pooling_size=2)
-        self.block8 = LightCurveNetworkBlock(filters=20, kernel_size=3, pooling_size=2, spatial=False)
+        self.block8 = LightCurveNetworkBlock(filters=20, kernel_size=3, pooling_size=2, spatial=False, batch_normalization=False)
         self.block9 = LightCurveNetworkBlock(filters=20, kernel_size=7, pooling_size=1)
         self.block10 = LightCurveNetworkBlock(filters=20, kernel_size=1, pooling_size=1, batch_normalization=False,
                                               dropout_rate=0)
