@@ -6,12 +6,12 @@ stages:
         - "pip install -r requirements.txt"
         - "pytest"
 
-test-python-3.7:
-    extends: .run-pytest
-    stage: test
-    image: python:3.7
-
 test-python-3.8:
     extends: .run-pytest
     stage: test
     image: python:3.8
+
+test-python-3.9:
+    extends: .run-pytest
+    stage: test
+    image: python:3.9
