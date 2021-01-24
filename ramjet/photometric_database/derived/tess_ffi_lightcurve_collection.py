@@ -34,8 +34,8 @@ class TessFfiLightcurveCollection(SqlMetadataLightcurveCollection):
         :return: The SQL query.
         """
         query = TessFfiLightcurveMetadata().select()
-        query = self.order_by_dataset_split_with_random_start(query, TessFfiLightcurveMetadata.dataset_split,
-                                                              self.dataset_splits)
+        # query = self.order_by_dataset_split_with_random_start(query, TessFfiLightcurveMetadata.dataset_split,
+        #                                                       self.dataset_splits)
         if self.magnitude_range[0] is not None and self.magnitude_range[1] is not None:
             query = query.where(TessFfiLightcurveMetadata.magnitude.between(*self.magnitude_range))
         elif self.magnitude_range[0] is not None:

@@ -5,7 +5,10 @@ import tensorflow as tf
 from tensorflow.python.keras import callbacks
 from tensorflow.python.keras.losses import BinaryCrossentropy
 
-from ramjet.models.hades import Hades
+from ramjet.basic_models import SimplePoolingLightcurveCnn2, FfiSimplePoolingLightcurveCnn2
+from ramjet.models.hades import Hades, FfiHades
+from ramjet.photometric_database.derived.tess_ffi_transit_databases import \
+    TessFfiStandardAndInjectedTransitAntiEclipsingBinaryDatabase
 from ramjet.photometric_database.derived.tess_two_minute_cadence_transit_databases import \
     TessTwoMinuteCadenceStandardAndInjectedTransitDatabase
 
@@ -14,9 +17,9 @@ def train():
     """Runs the training."""
     print('Starting training process...', flush=True)
     # Basic training settings.
-    trial_name = f'baseline'  # Add any desired run name details to this string.
-    database = TessTwoMinuteCadenceStandardAndInjectedTransitDatabase()
-    model = Hades(database.number_of_label_types)
+    trial_name = f'FFI transit sai aeb FfiHades mag14 quick pos no neg cont from existing no random start'  # Add any desired run name details to this string.
+    model = FfiHades()
+    database = TessFfiStandardAndInjectedTransitAntiEclipsingBinaryDatabase()
     # database.batch_size = 100  # Reducing the batch size may help if you are running out of memory.
     epochs_to_run = 1000
     logs_directory = 'logs'
@@ -33,7 +36,7 @@ def train():
     training_dataset, validation_dataset = database.generate_datasets()
     optimizer = tf.optimizers.Adam(learning_rate=1e-4)
     loss_metric = BinaryCrossentropy(name='Loss')
-    metrics = [tf.keras.metrics.AUC(num_thresholds=20, name='Area_under_ROC_curve', multi_label=True),
+    metrics = [tf.keras.metrics.AUC(num_thresholds=20, name='Area_under_ROC_curve'),
                tf.metrics.SpecificityAtSensitivity(0.9, name='Specificity_at_90_percent_sensitivity'),
                tf.metrics.SensitivityAtSpecificity(0.9, name='Sensitivity_at_90_percent_specificity'),
                tf.metrics.BinaryAccuracy(name='Accuracy'), tf.metrics.Precision(name='Precision'),
@@ -41,6 +44,7 @@ def train():
 
     # Compile and train model.
     model.compile(optimizer=optimizer, loss=loss_metric, metrics=metrics)
+    model.load_weights('/att/gpfsfs/briskfs01/ppl/golmsche/ramjet/logs/FFI transit sai aeb FfiHades mag13 quick pos no neg cont from existing no random start 2020-10-08-17-11-05/model.ckpt')
     try:
         model.fit(training_dataset, epochs=epochs_to_run, validation_data=validation_dataset,
                   callbacks=[tensorboard_callback, model_checkpoint_callback], steps_per_epoch=5000,

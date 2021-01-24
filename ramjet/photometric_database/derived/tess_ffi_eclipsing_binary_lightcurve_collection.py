@@ -1,7 +1,9 @@
 """
 Code representing the collection of TESS two minute cadence lightcurves containing eclipsing binaries.
 """
-from typing import Union, List
+import pandas as pd
+from pathlib import Path
+from typing import Union, List, Iterable
 
 from peewee import Select
 
@@ -56,3 +58,15 @@ class TessFfiAntiEclipsingBinaryForTransitLightcurveCollection(TessFfiLightcurve
             TessEclipsingBinaryMetadata.tic_id.not_in(transit_tic_id_query))
         query = query.where(TessFfiLightcurveMetadata.tic_id.in_(eclipsing_binary_tic_id_query))
         return query
+
+
+class TessFfiQuickTransitNegativeLightcurveCollection(TessFfiLightcurveCollection):
+    def __init__(self, dataset_splits: Union[List[int], None] = None,
+                 magnitude_range: (Union[float, None], Union[float, None]) = (None, None)):
+        super().__init__(dataset_splits=dataset_splits, magnitude_range=magnitude_range)
+        self.label = 0
+
+    def get_paths(self) -> Iterable[Path]:
+        data_frame = pd.read_csv('quick_negative_paths.csv')
+        paths = list(map(Path, data_frame['Lightcurve path'].values))
+        return paths

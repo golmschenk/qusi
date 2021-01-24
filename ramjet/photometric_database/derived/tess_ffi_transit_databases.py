@@ -1,5 +1,5 @@
 from ramjet.photometric_database.derived.tess_ffi_eclipsing_binary_lightcurve_collection import \
-    TessFfiAntiEclipsingBinaryForTransitLightcurveCollection
+    TessFfiAntiEclipsingBinaryForTransitLightcurveCollection, TessFfiQuickTransitNegativeLightcurveCollection
 from ramjet.photometric_database.derived.tess_ffi_lightcurve_collection import TessFfiLightcurveCollection
 from ramjet.photometric_database.derived.tess_ffi_transit_lightcurve_collections import \
     TessFfiConfirmedTransitLightcurveCollection, TessFfiNonTransitLightcurveCollection
@@ -15,11 +15,11 @@ class TessFfiDatabase(StandardAndInjectedLightcurveDatabase):
         super().__init__()
         self.batch_size = 1000
         self.time_steps_per_example = 1000
-        self.shuffle_buffer_size = 100000
+        self.shuffle_buffer_size = 10000
         self.out_of_bounds_injection_handling = OutOfBoundsInjectionHandlingMethod.RANDOM_INJECTION_LOCATION
 
 
-magnitude_range = (0, 11)
+magnitude_range = (0, 14)
 
 
 class TessFfiStandardTransitDatabase(TessFfiDatabase):
@@ -106,11 +106,15 @@ class TessFfiStandardAndInjectedTransitAntiEclipsingBinaryDatabase(TessFfiDataba
     """
     def __init__(self):
         super().__init__()
+        self.shuffle_buffer_size = 10000
+        self.number_of_parallel_processes_per_map = 6
         self.training_standard_lightcurve_collections = [
             TessFfiConfirmedTransitLightcurveCollection(dataset_splits=list(range(8)), magnitude_range=magnitude_range),
             TessFfiNonTransitLightcurveCollection(dataset_splits=list(range(8)), magnitude_range=magnitude_range),
             TessFfiAntiEclipsingBinaryForTransitLightcurveCollection(dataset_splits=list(range(8)),
-                                                                     magnitude_range=magnitude_range)
+                                                                     magnitude_range=magnitude_range),
+            # TessFfiQuickTransitNegativeLightcurveCollection(dataset_splits=list(range(8)),
+            #                                                 magnitude_range=magnitude_range)
         ]
         self.training_injectee_lightcurve_collection = TessFfiNonTransitLightcurveCollection(
             dataset_splits=list(range(8)), magnitude_range=magnitude_range)
@@ -118,11 +122,16 @@ class TessFfiStandardAndInjectedTransitAntiEclipsingBinaryDatabase(TessFfiDataba
             TessFfiConfirmedTransitLightcurveCollection(dataset_splits=list(range(8)), magnitude_range=magnitude_range),
             TessFfiNonTransitLightcurveCollection(dataset_splits=list(range(8)), magnitude_range=magnitude_range),
             TessFfiAntiEclipsingBinaryForTransitLightcurveCollection(dataset_splits=list(range(8)),
-                                                                     magnitude_range=magnitude_range)
+                                                                     magnitude_range=magnitude_range),
+            # TessFfiQuickTransitNegativeLightcurveCollection(dataset_splits=list(range(8)),
+            #                                                 magnitude_range=magnitude_range)
         ]
         self.validation_standard_lightcurve_collections = [
             TessFfiConfirmedTransitLightcurveCollection(dataset_splits=[8], magnitude_range=magnitude_range),
             TessFfiNonTransitLightcurveCollection(dataset_splits=[8], magnitude_range=magnitude_range),
             TessFfiAntiEclipsingBinaryForTransitLightcurveCollection(dataset_splits=list(range(8)),
-                                                                     magnitude_range=magnitude_range)
+                                                                     magnitude_range=magnitude_range),
+            # TessFfiQuickTransitNegativeLightcurveCollection(dataset_splits=list(range(8)),
+            #                                                 magnitude_range=magnitude_range)
         ]
+        self.inference_lightcurve_collections = [TessFfiLightcurveCollection(magnitude_range=magnitude_range)]

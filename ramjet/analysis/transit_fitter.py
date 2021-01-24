@@ -350,7 +350,7 @@ class TransitFitter:
 if __name__ == '__main__':
     print('Opening Bokeh application on http://localhost:5006/')
     # Start the server.
-    server = Server({'/': TransitFitter(tic_id=362043085).bokeh_application})
+    server = Server({'/': TransitFitter(tic_id=297678377).bokeh_application})
     server.start()
     # Start the specific application on the server.
     server.io_loop.add_callback(server.show, "/")
