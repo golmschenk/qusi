@@ -1,3 +1,6 @@
+"""
+Code for a model replacing batch normalization with SELUs.
+"""
 from tensorflow import sigmoid
 from tensorflow.keras import Model
 from tensorflow.keras.layers import Convolution1D, Reshape
@@ -6,6 +9,9 @@ from ramjet.models.components.selu_light_curve_network_block import SeluLightCur
 
 
 class Eos(Model):
+    """
+    A model replacing batch normalization with SELUs.
+    """
     def __init__(self):
         super().__init__()
         self.block0 = SeluLightCurveNetworkBlock(filters=5, kernel_size=3, pooling_size=2, dropout_rate=0)

@@ -1,3 +1,6 @@
+"""
+Code for a model with gaps in batch normalization usage.
+"""
 from tensorflow import sigmoid
 from tensorflow.keras import Model
 from tensorflow.keras.layers import Convolution1D, Reshape
@@ -6,6 +9,9 @@ from ramjet.models.components.light_curve_network_block import LightCurveNetwork
 
 
 class Nyx(Model):
+    """
+    A model with gaps in batch normalization usage.
+    """
     def __init__(self):
         super().__init__()
         self.block0 = LightCurveNetworkBlock(filters=5, kernel_size=3, pooling_size=2, batch_normalization=False,
