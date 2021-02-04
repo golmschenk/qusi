@@ -36,9 +36,6 @@ class TessTwoMinuteCadenceLightcurveCollection(SqlMetadataLightcurveCollection):
         :return: The SQL query.
         """
         query = TessTwoMinuteCadenceLightcurveMetadata().select(TessTwoMinuteCadenceLightcurveMetadata.path)
-        query = self.order_by_dataset_split_with_random_start(query,
-                                                              TessTwoMinuteCadenceLightcurveMetadata.dataset_split,
-                                                              self.dataset_splits)
         if self.dataset_splits is not None:
             query = query.where(TessTwoMinuteCadenceLightcurveMetadata.dataset_split.in_(self.dataset_splits))
         return query
@@ -94,9 +91,6 @@ class TessTwoMinuteCadenceTargetDatasetSplitLightcurveCollection(TessTwoMinuteCa
         query = TessTwoMinuteCadenceLightcurveMetadata().select(TessTwoMinuteCadenceLightcurveMetadata.path)
         query = query.join(TessTargetMetadata,
                            on=TessTwoMinuteCadenceLightcurveMetadata.tic_id == TessTargetMetadata.tic_id)
-        query = self.order_by_dataset_split_with_random_start(query,
-                                                              TessTargetMetadata.dataset_split,
-                                                              self.dataset_splits)
         if self.dataset_splits is not None:
             query = query.where(TessTargetMetadata.dataset_split.in_(self.dataset_splits))
         return query

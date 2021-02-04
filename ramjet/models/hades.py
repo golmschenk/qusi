@@ -1,11 +1,17 @@
+"""
+Code for a general convolutional model for light curve data.
+"""
 from tensorflow import sigmoid
 from tensorflow.keras import Model
-from tensorflow.keras.layers import Dense, Reshape, Convolution1D
+from tensorflow.keras.layers import Reshape, Convolution1D
 
 from ramjet.models.components.light_curve_network_block import LightCurveNetworkBlock
 
 
 class Hades(Model):
+    """
+    A general convolutional model for light curve data.
+    """
     def __init__(self, number_of_label_types=1):
         super().__init__()
         self.block0 = LightCurveNetworkBlock(filters=8, kernel_size=3, pooling_size=3, batch_normalization=False,
