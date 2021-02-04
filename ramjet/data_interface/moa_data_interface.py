@@ -40,8 +40,8 @@ class MoaDataInterface:
         column_names = ['field', 'clr', 'chip', 'subfield', 'id', 'tag', 'x', 'y', '2006_2007_tag',
                         '2006_2007_separation', '2006_2007_id', '2006_2007_x', '2006_2007_y', 'alert_tag',
                         'alert_separation', 'alert_name', 'alert_x', 'alert_y']
-        widths = [4, 2, 3, 2, 7, 3, 10, 10, 3, 6, 13, 10, 10, 3, 6, 13, 10, 10]
-        data_frame = pd.read_fwf(path, comment='#', skiprows=23, names=column_names, widths=widths)
+        data_frame = pd.read_csv(path, comment='#', names=column_names, delim_whitespace=True, skipinitialspace=True,
+                                 skiprows=23)
         data_frame = data_frame.set_index(['field', 'clr', 'chip', 'subfield', 'id'], drop=False)
         data_frame = data_frame.sort_index()
         return data_frame
