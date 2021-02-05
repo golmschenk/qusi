@@ -27,7 +27,7 @@ class MoaDataInterface:
         :return: The survey tag to path list dictionary
         """
         if self.survey_tag_to_path_list_dictionary_ is None:
-            takahiro_sumi_nine_year_events_data_frame = self.read_takahiro_sumi_nine_year_events_table_as_data_frame(
+            takahiro_sumi_nine_year_events_data_frame = self.read_corrected_nine_year_events_table_as_data_frame(
                 Path('data/moa_microlensing/moa9yr_events_oct2018.txt'))
             self.survey_tag_to_path_list_dictionary_ = self.group_paths_by_tag_in_events_data_frame(
                 list(Path('data/moa_microlensing').glob('**/*.cor.feather')), takahiro_sumi_nine_year_events_data_frame)
@@ -35,6 +35,13 @@ class MoaDataInterface:
 
     @staticmethod
     def read_corrected_nine_year_events_table_as_data_frame(path: Path) -> pd.DataFrame:
+        """
+        Reads Takahiro Sumi's 9-year events table as a Pandas data frame, correcting for updates that appear on Yuki
+        Hirao's website of the events (http://iral2.ess.sci.osaka-u.ac.jp/~moa/anomaly/9year/).
+
+        :param path: The path to the events table file.
+        :return: The data frame.
+        """
         data_frame = MoaDataInterface.read_takahiro_sumi_nine_year_events_table_as_data_frame(path)
         yuki_hirao_data_frame = MoaDataInterface.get_yuki_hirao_events_data_frame()
         yuki_hirao_tag_data_frame = yuki_hirao_data_frame.filter(['tag'])
@@ -72,6 +79,12 @@ class MoaDataInterface:
 
     @staticmethod
     def get_yuki_hirao_events_data_frame() -> pd.DataFrame:
+        """
+        Loads the events data from Yuki Hirao's website of events
+        (http://iral2.ess.sci.osaka-u.ac.jp/~moa/anomaly/9year/).
+
+        :return: The data frame of the events.
+        """
         url = 'http://iral2.ess.sci.osaka-u.ac.jp/~moa/anomaly/9year/'
         page = requests.get(url)
         soup = BeautifulSoup(page.content, 'lxml')
@@ -120,9 +133,3 @@ class MoaDataInterface:
             tag = self.get_tag_for_path_from_data_frame(path, events_data_frame)
             tag_path_list_dictionary[tag].append(path)
         return tag_path_list_dictionary
-
-
-if __name__ == '__main__':
-    data_frame_ = MoaDataInterface.read_corrected_nine_year_events_table_as_data_frame(
-                Path('data/moa_microlensing/moa9yr_events_oct2018.txt'))
-    print()
