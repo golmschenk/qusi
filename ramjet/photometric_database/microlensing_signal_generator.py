@@ -116,15 +116,17 @@ class MagnificationSignal:
         plt.show()
 
     @classmethod
-    def generate_randomly_based_on_moa_observations(cls):
+    def generate_randomly_based_on_moa_observations(cls, time_range: float = 30):
         microlensing_signal = cls()
+        microlensing_signal.timeseries = np.linspace(-time_range, time_range, microlensing_signal.n_data_points)
         microlensing_signal.getting_random_values()
         microlensing_signal.generating_magnification()
         return microlensing_signal
 
     @classmethod
-    def generate_approximately_pspl_randomly_based_on_moa_observations(cls):
+    def generate_approximately_pspl_randomly_based_on_moa_observations(cls, time_range: float = 30):
         microlensing_signal = cls()
+        microlensing_signal.timeseries = np.linspace(-time_range, time_range, microlensing_signal.n_data_points)
         microlensing_signal.getting_random_values()
         microlensing_signal.q = 0.00001
         microlensing_signal.s = 10
