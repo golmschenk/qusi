@@ -25,7 +25,7 @@ class TestTessToiDataInterface:
         target_dispositions = dispositions[dispositions['TIC ID'] == 307210830]
         assert target_dispositions['Disposition'].iloc[0] == 'CP'
         target_planet_sectors = target_dispositions['Sector'].unique()
-        assert np.array_equal(np.sort(np.array(target_planet_sectors)), [2, 5, 8, 9, 10, 11, 12, 28, 29])
+        assert np.array_equal(np.sort(np.array(target_planet_sectors)), [2, 5, 8, 9, 10, 11, 12, 28, 29, 32])
 
     def test_can_get_exofop_planet_disposition_for_tic_id(self, data_interface):
         mock_dispositions = pd.DataFrame({'TIC ID': [231663901, 266980320], 'Disposition': ['KP', 'CP']})

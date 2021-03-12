@@ -61,8 +61,8 @@ class TestTransitVetter:
         assert has_problematic_nearby_targets == expected_ruling
 
     @pytest.mark.parametrize('target_radius, target_contamination_ratio, expected_maximum_depth',
-                             [(1.0, 0.0, 0.032750864),
-                              (3.0, 0.5, 0.0024259899)])
+                             [(1.0, 0.0, 0.0342398016),
+                              (3.0, 0.5, 0.0025362816)])
     def test_can_check_if_depth_for_tic_id_is_physical_for_planet(self, target_radius, target_contamination_ratio,
                                                                   expected_maximum_depth):
         stub_target = TessTarget()
@@ -76,7 +76,7 @@ class TestTransitVetter:
         assert maximum_depth == pytest.approx(expected_maximum_depth)
 
     @pytest.mark.parametrize('target_radius, target_contamination_ratio, expected_maximum_depth',
-                             [(1.0, np.nan, 0.032750864)])
+                             [(1.0, np.nan, 0.0342398016)])
     def test_max_depth_for_planet_uses_zero_contamination_if_contamination_is_not_available(
             self, target_radius, target_contamination_ratio, expected_maximum_depth):
         stub_target = TessTarget()
