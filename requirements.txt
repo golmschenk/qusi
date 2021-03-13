@@ -4,7 +4,6 @@ bokeh==2.2.1
 scipy==1.5.2
 astroquery==0.4.1
 astropy==4.0.1.post1
-Theano==1.0.5
 pandas==1.1.1
 tornado==6.0.4
 pathos==0.2.6
