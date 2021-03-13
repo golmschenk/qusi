@@ -10,7 +10,7 @@ class TransitVetter:
     """
     A class for vetting transit candidates.
     """
-    radius_of_jupiter__solar_radii = 0.10054
+    radius_of_jupiter__solar_radii = 0.1028
 
     def is_transit_depth_for_target_physical_for_planet(self, target: TessTarget, transit_depth: float) -> bool:
         """

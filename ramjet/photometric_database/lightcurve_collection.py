@@ -1,6 +1,9 @@
+"""
+Code for representing a collection of light curves.
+"""
 import numpy as np
 from pathlib import Path
-from typing import Callable, Iterable, Union, Tuple, List
+from typing import Iterable, Union, List
 
 
 class LightcurveCollectionMethodNotImplementedError(RuntimeError):
@@ -15,31 +18,13 @@ class LightcurveCollectionMethodNotImplementedError(RuntimeError):
 class LightcurveCollection:
     """
     A class representing a collection of lightcurves. Used to define how to find, load, and label a set of lightcurves.
+
+    :ivar label: The default label to be used if the `load_label_from_path` method is not overridden.
+    :ivar paths: The default list of paths to be used if the `get_paths` method is not overridden.
     """
-    def __init__(self, label: Union[float, List[float], np.ndarray, None] = None, paths: Union[List[Path], None] = None,
-                 function_to_get_paths: Union[Callable[[], Iterable[Path]], None] = None,
-                 function_to_load_times_and_fluxes_from_path: Union[
-                     Callable[[Path], Tuple[np.ndarray, np.ndarray]], None] = None,
-                 function_to_load_times_and_magnifications_from_path: Union[
-                     Callable[[Path], Tuple[np.ndarray, np.ndarray]], None] = None):
-        """
-        :param label: The label corresponding to the lightcurves in the collection.
-        :param function_to_get_paths: A function which returns an iterable of the lightcurve paths.
-        :param function_to_load_times_and_fluxes_from_path: A function which, given a lightcurve path, will
-                                                            load the times and fluxes of the lightcurve.
-        :param function_to_load_times_and_magnifications_from_path: A function which, given a lightcurve path, will
-                                                                    load the times and magnifications of the lightcurve.
-        """
-        if function_to_get_paths is not None:
-            self.get_paths: Callable[[], Iterable[Path]] = function_to_get_paths
-        if function_to_load_times_and_fluxes_from_path is not None:
-            self.load_times_and_fluxes_from_path: Callable[
-                [Path], Tuple[np.ndarray, np.ndarray]] = function_to_load_times_and_fluxes_from_path
-        if function_to_load_times_and_magnifications_from_path is not None:
-            self.load_times_and_magnifications_from_path: Callable[
-                [Path], Tuple[np.ndarray, np.ndarray]] = function_to_load_times_and_magnifications_from_path
-        self.label: Union[float, List[float], np.ndarray, None] = label
-        self.paths: Union[List[Path], None] = paths
+    def __init__(self):
+        self.label: Union[float, List[float], np.ndarray, None] = None
+        self.paths: Union[List[Path], None] = None
 
     def get_paths(self) -> Iterable[Path]:
         """
@@ -112,3 +97,30 @@ class LightcurveCollection:
         paths_array = np.concatenate(dataset_split_arrays_to_keep)
         dataset_split_paths = list(map(Path, paths_array))
         return dataset_split_paths
+
+    def load_times_fluxes_and_flux_errors_from_path(self, path: Path
+                                                    ) -> (np.ndarray, np.ndarray, Union[np.ndarray, None]):
+        """
+        Loads the times, fluxes, and flux errors of a light curve from a path to the data.
+        Unless overridden, defaults to using the method to load only the times and fluxes, and returns None for errors.
+
+        :param path: The path of the file containing the light curve data.
+        :return: The times, fluxes, and flux errors.
+        """
+        times, fluxes = self.load_times_and_fluxes_from_path(path)
+        flux_errors = None
+        return times, fluxes, flux_errors
+
+    def load_times_magnifications_and_magnification_errors_from_path(
+            self, path: Path) -> (np.ndarray, np.ndarray, Union[np.ndarray, None]):
+        """
+        Loads the times, magnifications, and magnification_errors of a light curve from a path to the data.
+        Unless overridden, defaults to using the method to load only the times and magnifications,
+        and returns None for magnification errors.
+
+        :param path: The path of the file containing the light curve data.
+        :return: The times, magnifications, and magnification errors.
+        """
+        times, fluxes = self.load_times_and_magnifications_from_path(path)
+        flux_errors = None
+        return times, fluxes, flux_errors

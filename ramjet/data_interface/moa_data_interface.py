@@ -1,10 +1,14 @@
 """
 Code for interacting with MOA light curve files and metadata.
 """
+import numpy as np
 import pandas as pd
 from collections import defaultdict
 from typing import List, Dict, Union
 from pathlib import Path
+
+import requests
+from bs4 import BeautifulSoup
 
 
 class MoaDataInterface:
@@ -23,11 +27,38 @@ class MoaDataInterface:
         :return: The survey tag to path list dictionary
         """
         if self.survey_tag_to_path_list_dictionary_ is None:
-            takahiro_sumi_nine_year_events_data_frame = self.read_takahiro_sumi_nine_year_events_table_as_data_frame(
+            takahiro_sumi_nine_year_events_data_frame = self.read_corrected_nine_year_events_table_as_data_frame(
                 Path('data/moa_microlensing/moa9yr_events_oct2018.txt'))
             self.survey_tag_to_path_list_dictionary_ = self.group_paths_by_tag_in_events_data_frame(
                 list(Path('data/moa_microlensing').glob('**/*.cor.feather')), takahiro_sumi_nine_year_events_data_frame)
         return self.survey_tag_to_path_list_dictionary_
+
+    @staticmethod
+    def read_corrected_nine_year_events_table_as_data_frame(path: Path) -> pd.DataFrame:
+        """
+        Reads Takahiro Sumi's 9-year events table as a Pandas data frame, correcting for updates that appear on Yuki
+        Hirao's website of the events (http://iral2.ess.sci.osaka-u.ac.jp/~moa/anomaly/9year/).
+
+        :param path: The path to the events table file.
+        :return: The data frame.
+        """
+        data_frame = MoaDataInterface.read_takahiro_sumi_nine_year_events_table_as_data_frame(path)
+        yuki_hirao_data_frame = MoaDataInterface.get_yuki_hirao_events_data_frame()
+        yuki_hirao_tag_data_frame = yuki_hirao_data_frame.filter(['tag'])
+        data_frame.update(yuki_hirao_tag_data_frame)
+        yuki_hirao_class_data_frame = yuki_hirao_data_frame.filter(['class'])
+        data_frame: pd.DataFrame = data_frame.merge(yuki_hirao_class_data_frame, how='left', left_index=True,
+                                                    right_index=True)
+        data_frame.loc[(data_frame['class'].str.contains('b') |
+                        data_frame['class'].str.contains('d') |
+                        data_frame['class'].str.contains('p')) &
+                       (data_frame['tag'] != 'cb'), 'tag'] = 'cb'
+        data_frame.loc[(data_frame['tag'] == 'cb') &
+                       (data_frame['class'].isin(['s'])), 'tag'] = 'c'  # Yuki Hirao labeled as single.
+        data_frame.loc[(data_frame['tag'] == 'cb') &
+                       (data_frame['class'].isin(['c'])), 'tag'] = 'n'  # Yuki Hirao labeled as cataclysmic variable.
+        data_frame = data_frame.drop(columns='class')
+        return data_frame
 
     @staticmethod
     def read_takahiro_sumi_nine_year_events_table_as_data_frame(path: Path) -> pd.DataFrame:
@@ -40,11 +71,33 @@ class MoaDataInterface:
         column_names = ['field', 'clr', 'chip', 'subfield', 'id', 'tag', 'x', 'y', '2006_2007_tag',
                         '2006_2007_separation', '2006_2007_id', '2006_2007_x', '2006_2007_y', 'alert_tag',
                         'alert_separation', 'alert_name', 'alert_x', 'alert_y']
-        widths = [4, 2, 3, 2, 7, 3, 10, 10, 3, 6, 13, 10, 10, 3, 6, 13, 10, 10]
-        data_frame = pd.read_fwf(path, comment='#', skiprows=23, names=column_names, widths=widths)
+        data_frame = pd.read_csv(path, comment='#', names=column_names, delim_whitespace=True, skipinitialspace=True,
+                                 skiprows=23)
         data_frame = data_frame.set_index(['field', 'clr', 'chip', 'subfield', 'id'], drop=False)
         data_frame = data_frame.sort_index()
         return data_frame
+
+    @staticmethod
+    def get_yuki_hirao_events_data_frame() -> pd.DataFrame:
+        """
+        Loads the events data from Yuki Hirao's website of events
+        (http://iral2.ess.sci.osaka-u.ac.jp/~moa/anomaly/9year/).
+
+        :return: The data frame of the events.
+        """
+        url = 'http://iral2.ess.sci.osaka-u.ac.jp/~moa/anomaly/9year/'
+        page = requests.get(url)
+        soup = BeautifulSoup(page.content, 'lxml')
+        tbl = soup.find("table")
+        events_data_frame = pd.read_html(str(tbl))[0]
+        events_data_frame[['field', 'clr', 'chip', 'subfield', 'id']] = events_data_frame['MOA INTERNAL ID'].str.split(
+            '-', 4, expand=True)
+        events_data_frame['chip'] = events_data_frame['chip'].astype(np.int64)
+        events_data_frame['subfield'] = events_data_frame['subfield'].astype(np.int64)
+        events_data_frame['id'] = events_data_frame['id'].astype(np.int64)
+        events_data_frame = events_data_frame.set_index(['field', 'clr', 'chip', 'subfield', 'id'], drop=False)
+        events_data_frame = events_data_frame.sort_index()
+        return events_data_frame
 
     def get_tag_for_path_from_data_frame(self, path: Path, events_data_frame: pd.DataFrame) -> str:
         """

@@ -68,17 +68,17 @@ class MagnificationSignal:
         normalized by the angular Einstein radius), q (Mass ratio M_planet/M_host), alpha (Trajectory angle)
         """
 
-        u0_list = np.linspace(-3.5, 3.5, 1000)
+        u0_list = np.linspace(-1, 1, 1000)
         self.u0 = np.random.choice(u0_list)
 
         self.tE = float(np.random.choice(self.tE_list))
 
         self.rho = float(np.random.choice(self.rho_list))
 
-        s_list = np.linspace(0.01, 3.5, 100)
+        s_list = np.linspace(0.5, 2.0, 100)
         self.s = np.random.choice(s_list)
 
-        q_list = np.power(10, (np.linspace(-5, 0, 3000)))
+        q_list = np.power(10, (np.linspace(-4, -0.3, 1000)))
         self.q = np.random.choice(q_list)
 
         alpha_list = np.linspace(0, 2 * np.pi, 60)
@@ -116,9 +116,21 @@ class MagnificationSignal:
         plt.show()
 
     @classmethod
-    def generate_randomly_based_on_moa_observations(cls):
+    def generate_randomly_based_on_moa_observations(cls, time_range: float = 30):
         microlensing_signal = cls()
+        microlensing_signal.timeseries = np.linspace(-time_range, time_range, microlensing_signal.n_data_points)
         microlensing_signal.getting_random_values()
+        microlensing_signal.generating_magnification()
+        return microlensing_signal
+
+    @classmethod
+    def generate_approximately_pspl_randomly_based_on_moa_observations(cls, time_range: float = 30):
+        microlensing_signal = cls()
+        microlensing_signal.timeseries = np.linspace(-time_range, time_range, microlensing_signal.n_data_points)
+        microlensing_signal.getting_random_values()
+        microlensing_signal.q = 0.00001
+        microlensing_signal.s = 10
+        microlensing_signal.alpha = np.pi / 2
         microlensing_signal.generating_magnification()
         return microlensing_signal
 

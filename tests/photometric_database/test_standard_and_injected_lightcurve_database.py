@@ -15,6 +15,7 @@ from ramjet.photometric_database.standard_and_injected_lightcurve_database impor
 class TestStandardAndInjectedLightcurveDatabase:
     @pytest.fixture
     def database(self) -> StandardAndInjectedLightcurveDatabase:
+        """A fixture of a blank database."""
         return StandardAndInjectedLightcurveDatabase()
 
     @pytest.fixture
@@ -22,28 +23,31 @@ class TestStandardAndInjectedLightcurveDatabase:
         """A fixture of the database with lightcurve collections pre-prepared"""
         database = StandardAndInjectedLightcurveDatabase()
         # Setup mock lightcurve collections.
-        standard_lightcurve_collection0 = LightcurveCollection(
-            function_to_get_paths=lambda: [Path('standard_path0.ext')],
-            function_to_load_times_and_fluxes_from_path=lambda path: (np.array([10, 20, 30]), np.array([0, 1, 2])),
-            label=0)
-        standard_lightcurve_collection1 = LightcurveCollection(
-            function_to_get_paths=lambda: [Path('standard_path1.ext')],
-            function_to_load_times_and_fluxes_from_path=lambda path: (np.array([20, 30, 40]), np.array([1, 2, 3])),
-            label=1)
-        injectee_lightcurve_collection = LightcurveCollection(
-            function_to_get_paths=lambda: [Path('injectee_path.ext')],
-            function_to_load_times_and_fluxes_from_path=lambda path: (np.array([30, 40, 50]), np.array([2, 3, 4])),
-            label=0)
-        injectable_lightcurve_collection0 = LightcurveCollection(
-            function_to_get_paths=lambda: [Path('injectable_path0.ext')],
-            function_to_load_times_and_magnifications_from_path=lambda path: (np.array([0, 10, 20]),
-                                                                              np.array([0.5, 1, 1.5])),
-            label=0)
-        injectable_lightcurve_collection1 = LightcurveCollection(
-            function_to_get_paths=lambda: [Path('injectable_path1.ext')],
-            function_to_load_times_and_magnifications_from_path=lambda path: (np.array([0, 10, 20, 30]),
-                                                                              np.array([0, 1, 1, 0])),
-            label=1)
+        standard_lightcurve_collection0 = LightcurveCollection()
+        standard_lightcurve_collection0.get_paths = lambda: [Path('standard_path0.ext')]
+        standard_lightcurve_collection0.load_times_and_fluxes_from_path = lambda path: (np.array([10, 20, 30]),
+                                                                                        np.array([0, 1, 2]))
+        standard_lightcurve_collection0.label = 0
+        standard_lightcurve_collection1 = LightcurveCollection()
+        standard_lightcurve_collection1.get_paths = lambda: [Path('standard_path1.ext')]
+        standard_lightcurve_collection1.load_times_and_fluxes_from_path = lambda path: (np.array([20, 30, 40]),
+                                                                                        np.array([1, 2, 3]))
+        standard_lightcurve_collection1.label = 1
+        injectee_lightcurve_collection = LightcurveCollection()
+        injectee_lightcurve_collection.get_paths = lambda: [Path('injectee_path.ext')]
+        injectee_lightcurve_collection.load_times_and_fluxes_from_path = lambda path: (np.array([30, 40, 50]),
+                                                                                       np.array([2, 3, 4]))
+        injectee_lightcurve_collection.label = 0
+        injectable_lightcurve_collection0 = LightcurveCollection()
+        injectable_lightcurve_collection0.get_paths = lambda: [Path('injectable_path0.ext')]
+        injectable_lightcurve_collection0.load_times_and_magnifications_from_path = lambda path: (
+            np.array([0, 10, 20]), np.array([0.5, 1, 1.5]))
+        injectable_lightcurve_collection0.label = 0
+        injectable_lightcurve_collection1 = LightcurveCollection()
+        injectable_lightcurve_collection1.get_paths = lambda: [Path('injectable_path1.ext')]
+        injectable_lightcurve_collection1.load_times_and_magnifications_from_path = lambda path: (
+            np.array([0, 10, 20, 30]), np.array([0, 1, 1, 0]))
+        injectable_lightcurve_collection1.label = 1
         database.training_standard_lightcurve_collections = [standard_lightcurve_collection0,
                                                              standard_lightcurve_collection1]
         database.training_injectee_lightcurve_collection = injectee_lightcurve_collection
@@ -56,12 +60,10 @@ class TestStandardAndInjectedLightcurveDatabase:
         database.batch_size = 4
         database.time_steps_per_example = 3
         database.number_of_parallel_processes_per_map = 1
-
         def mock_window(dataset, batch_size, window_shift):
             return dataset.batch(batch_size)
-
         database.window_dataset_for_zipped_example_and_label_dataset = mock_window  # Disable windowing.
-        database.normalize = lambda fluxes: fluxes  # Don't normalize values to keep it simple.
+        database.normalize_on_percentiles = lambda fluxes: fluxes  # Don't normalize values to keep it simple.
         return database
 
     @pytest.fixture
@@ -118,7 +120,7 @@ class TestStandardAndInjectedLightcurveDatabase:
         lightcurve_collection = database.training_standard_lightcurve_collections[0]
         paths_dataset = database.generate_paths_dataset_from_lightcurve_collection(lightcurve_collection)
         lightcurve_and_label_dataset = database.generate_standard_lightcurve_and_label_dataset(
-            paths_dataset, lightcurve_collection.load_times_and_fluxes_from_path,
+            paths_dataset, lightcurve_collection.load_times_fluxes_and_flux_errors_from_path,
             lightcurve_collection.load_label_from_path)
         lightcurve_and_label = next(iter(lightcurve_and_label_dataset))
         assert lightcurve_and_label[0].numpy().shape == (3, 1)
@@ -132,7 +134,7 @@ class TestStandardAndInjectedLightcurveDatabase:
         lightcurve_path = lightcurve_collection.get_paths()[0]
         load_label_from_path_function = lightcurve_collection.load_label_from_path
         expected_label = load_label_from_path_function(Path())
-        load_from_path_function = lightcurve_collection.load_times_and_fluxes_from_path
+        load_from_path_function = lightcurve_collection.load_times_fluxes_and_flux_errors_from_path
         lightcurve, label = database.preprocess_standard_lightcurve(load_from_path_function,
                                                                     load_label_from_path_function,
                                                                     tf.convert_to_tensor(str(lightcurve_path)))
@@ -142,14 +144,15 @@ class TestStandardAndInjectedLightcurveDatabase:
 
     def test_can_preprocess_standard_lightcurve_with_passed_functions(self):
         database = StandardAndInjectedLightcurveDatabase()
-        stub_load_times_and_fluxes_function = Mock(return_value=(np.array([0, -1, -2]), np.array([0, 1, 2])))
+        stub_load_times_fluxes_flux_errors_function = Mock(
+            return_value=(np.array([0, -1, -2]), np.array([0, 1, 2]), None))
         mock_load_label_function = Mock(return_value=3)
         path_tensor = tf.constant('stub_path.fits')
         database.preprocess_light_curve = lambda identity, *args, **kwargs: identity
 
         # noinspection PyTypeChecker
         example, label = database.preprocess_standard_lightcurve(
-            load_times_and_fluxes_from_path_function=stub_load_times_and_fluxes_function,
+            load_times_fluxes_and_flux_errors_from_path_function=stub_load_times_fluxes_flux_errors_function,
             load_label_from_path_function=mock_load_label_function,
             lightcurve_path_tensor=path_tensor
         )
@@ -159,7 +162,7 @@ class TestStandardAndInjectedLightcurveDatabase:
 
     def test_can_preprocess_injected_lightcurve_with_passed_functions(self):
         database = StandardAndInjectedLightcurveDatabase()
-        stub_load_times_and_fluxes_function = Mock(return_value=(np.array([0, -1, -2]), np.array([0, 1, 2])))
+        stub_load_function = Mock(return_value=(np.array([0, -1, -2]), np.array([0, 1, 2]), None))
         mock_load_label_function = Mock(return_value=3)
         path_tensor = tf.constant('stub_path.fits')
         database.preprocess_light_curve = lambda identity, *args, **kwargs: identity
@@ -167,8 +170,8 @@ class TestStandardAndInjectedLightcurveDatabase:
 
         # noinspection PyTypeChecker
         example, label = database.preprocess_injected_lightcurve(
-            injectee_load_times_and_fluxes_from_path_function=stub_load_times_and_fluxes_function,
-            injectable_load_times_and_magnifications_from_path_function=stub_load_times_and_fluxes_function,
+            injectee_load_times_fluxes_and_flux_errors_from_path_function=stub_load_function,
+            injectable_load_times_magnifications_and_magnification_errors_from_path_function=stub_load_function,
             load_label_from_path_function=mock_load_label_function,
             injectable_lightcurve_path_tensor=path_tensor,
             injectee_lightcurve_path_tensor=path_tensor
@@ -191,8 +194,10 @@ class TestStandardAndInjectedLightcurveDatabase:
         injectable_paths_dataset = database_with_collections.generate_paths_dataset_from_lightcurve_collection(
             injectable_lightcurve_collection)
         lightcurve_and_label_dataset = database_with_collections.generate_injected_lightcurve_and_label_dataset(
-            injectee_paths_dataset, injectee_lightcurve_collection.load_times_and_fluxes_from_path,
-            injectable_paths_dataset, injectable_lightcurve_collection.load_times_and_magnifications_from_path,
+            injectee_paths_dataset,
+            injectee_lightcurve_collection.load_times_fluxes_and_flux_errors_from_path,
+            injectable_paths_dataset,
+            injectable_lightcurve_collection.load_times_magnifications_and_magnification_errors_from_path,
             injectable_lightcurve_collection.load_label_from_path)
         lightcurve_and_label = next(iter(lightcurve_and_label_dataset))
         assert lightcurve_and_label[0].numpy().shape == (3, 1)
@@ -205,12 +210,13 @@ class TestStandardAndInjectedLightcurveDatabase:
         injectable_lightcurve_collection = database.training_injectable_lightcurve_collections[0]
         # noinspection PyUnresolvedReferences
         injectee_lightcurve_path = injectee_lightcurve_collection.get_paths()[0]
-        injectee_load_from_path_function = injectee_lightcurve_collection.load_times_and_fluxes_from_path
+        injectee_load_from_path_function = injectee_lightcurve_collection.load_times_fluxes_and_flux_errors_from_path
         # noinspection PyUnresolvedReferences
         injectable_lightcurve_path = injectable_lightcurve_collection.get_paths()[0]
         load_label_from_path_function = injectable_lightcurve_collection.load_label_from_path
         expected_label = load_label_from_path_function(Path())
-        injectable_load_from_path_function = injectable_lightcurve_collection.load_times_and_magnifications_from_path
+        injectable_load_from_path_function = \
+            injectable_lightcurve_collection.load_times_magnifications_and_magnification_errors_from_path
         lightcurve, label = database.preprocess_injected_lightcurve(
             injectee_load_from_path_function, injectable_load_from_path_function, load_label_from_path_function,
             tf.convert_to_tensor(str(injectee_lightcurve_path)), tf.convert_to_tensor(str(injectable_lightcurve_path)))
@@ -385,7 +391,7 @@ class TestStandardAndInjectedLightcurveDatabase:
         paths_dataset = database_with_collections.generate_paths_dataset_from_lightcurve_collection(
             lightcurve_collection)
         path_and_lightcurve_dataset = database_with_collections.generate_infer_path_and_lightcurve_dataset(
-            paths_dataset, lightcurve_collection.load_times_and_fluxes_from_path)
+            paths_dataset, lightcurve_collection.load_times_fluxes_and_flux_errors_from_path)
         path_and_lightcurve = next(iter(path_and_lightcurve_dataset))
         assert np.array_equal(path_and_lightcurve[0].numpy(), b'standard_path0.ext')  # Standard path 0.
         assert path_and_lightcurve[1].numpy().shape == (3, 1)
@@ -396,7 +402,7 @@ class TestStandardAndInjectedLightcurveDatabase:
         # noinspection PyUnresolvedReferences
         lightcurve_path = lightcurve_collection.get_paths()[0]
         expected_label = lightcurve_collection.label
-        load_from_path_function = lightcurve_collection.load_times_and_fluxes_from_path
+        load_from_path_function = lightcurve_collection.load_times_fluxes_and_flux_errors_from_path
         path, lightcurve = database_with_collections.preprocess_infer_lightcurve(
             load_from_path_function, tf.convert_to_tensor(str(lightcurve_path)))
         assert np.array_equal(path, 'standard_path0.ext')  # Standard path 0.
@@ -410,13 +416,13 @@ class TestStandardAndInjectedLightcurveDatabase:
         paths_dataset0 = database_with_collections.generate_paths_dataset_from_lightcurve_collection(
             lightcurve_collection)
         lightcurve_and_label_dataset = database_with_collections.generate_standard_lightcurve_and_label_dataset(
-            paths_dataset0, lightcurve_collection.load_times_and_fluxes_from_path,
-            lightcurve_collection.load_label_from_path)
+            paths_dataset0, lightcurve_collection.load_times_fluxes_and_flux_errors_from_path,
+            lightcurve_collection.load_label_from_path, evaluation_mode=True)
         lightcurve_and_label = next(iter(lightcurve_and_label_dataset))
         paths_dataset1 = database_with_collections.generate_paths_dataset_from_lightcurve_collection(
             lightcurve_collection)
         path_and_lightcurve_dataset = database_with_collections.generate_infer_path_and_lightcurve_dataset(
-            paths_dataset1, lightcurve_collection.load_times_and_fluxes_from_path)
+            paths_dataset1, lightcurve_collection.load_times_fluxes_and_flux_errors_from_path)
         path_and_lightcurve = next(iter(path_and_lightcurve_dataset))
         assert np.array_equal(lightcurve_and_label[0].numpy(), path_and_lightcurve[1].numpy())
 
@@ -426,12 +432,12 @@ class TestStandardAndInjectedLightcurveDatabase:
         database.number_of_parallel_processes_per_map = 1
         database.time_steps_per_example = 3
         database.number_of_label_types = 2
-        stub_load_times_and_fluxes_function = lambda path: (np.array([0, -1, -2]), np.array([0, 1, 2]))
+        stub_load_times_fluxes_and_flux_errors = lambda path: (np.array([0, -1, -2]), np.array([0, 1, 2]), None)
         expected_label = np.array([0, 1])
         stub_load_label_function = lambda path: expected_label
         paths_dataset = tf.data.Dataset.from_tensor_slices(['a.fits', 'b.fits'])
         dataset = database.generate_standard_lightcurve_and_label_dataset(paths_dataset,
-                                                                          stub_load_times_and_fluxes_function,
+                                                                          stub_load_times_fluxes_and_flux_errors,
                                                                           stub_load_label_function)
         dataset_list = list(dataset)
         assert np.array_equal(dataset_list[0][1], expected_label)

@@ -2,12 +2,10 @@
 import math
 import shutil
 from abc import ABC
-import os
 from pathlib import Path
 from typing import List, Union, Tuple, Callable, Iterable
 
 import numpy as np
-import pandas as pd
 import tensorflow as tf
 
 
@@ -21,7 +19,8 @@ class LightcurveDatabase(ABC):
         self.batch_size: int = 100
         self.time_steps_per_example: int
         self.number_of_parallel_processes_per_map: int = 16
-        self.use_times: bool = False
+        self.include_time_as_channel: bool = False
+        self.include_flux_errors_as_channel: bool = False
 
     @property
     def window_shift(self) -> int:
@@ -42,28 +41,36 @@ class LightcurveDatabase(ABC):
             lightcurve /= array_max
         return lightcurve
 
-    def normalize(self, lightcurve: np.ndarray) -> np.ndarray:
-        """
-        Normalizes the lightcurve.
-
-        :param lightcurve: The lightcurve to normalize.
-        :return: The normalized lightcurve.
-        """
-        return self.normalize_on_percentiles(lightcurve)
-
     @staticmethod
-    def normalize_on_percentiles(lightcurve: np.ndarray) -> np.ndarray:
+    def normalize_on_percentiles(array: np.ndarray) -> np.ndarray:
         """
-        Normalizes light curve using percentiles. The 10th percentile is normalized to -1, the 90th to 1.
+        Normalizes an array using percentiles. The 10th percentile is normalized to -1, the 90th to 1.
         """
-        percentile_10 = np.percentile(lightcurve, 10)
-        percentile_90 = np.percentile(lightcurve, 90)
+        percentile_10 = np.percentile(array, 10)
+        percentile_90 = np.percentile(array, 90)
         percentile_difference = percentile_90 - percentile_10
         if percentile_difference == 0:
-            normalized_lightcurve = np.zeros_like(lightcurve)
+            normalized_array = np.zeros_like(array)
         else:
-            normalized_lightcurve = ((lightcurve - percentile_10) / (percentile_difference / 2)) - 1
-        return normalized_lightcurve
+            normalized_array = ((array - percentile_10) / (percentile_difference / 2)) - 1
+        return normalized_array
+
+    @staticmethod
+    def normalize_on_percentiles_with_errors(array: np.ndarray, array_errors: np.ndarray) -> (np.ndarray, np.ndarray):
+        """
+        Normalizes an array using percentiles. The 10th percentile is normalized to -1, the 90th to 1.
+        Scales the errors by the corresponding scaling factor.
+        """
+        percentile_10 = np.percentile(array, 10)
+        percentile_90 = np.percentile(array, 90)
+        percentile_difference = percentile_90 - percentile_10
+        if percentile_difference == 0:
+            normalized_array = np.zeros_like(array)
+            normalized_array_errors = np.zeros_like(array_errors)
+        else:
+            normalized_array = ((array - percentile_10) / (percentile_difference / 2)) - 1
+            normalized_array_errors = array_errors / (percentile_difference / 2)
+        return normalized_array, normalized_array_errors
 
     @staticmethod
     def shuffle_in_unison(a, b, seed=None):
@@ -109,15 +116,6 @@ class LightcurveDatabase(ABC):
         current_size = len(list(dataset))
         times_to_repeat = math.ceil(size / current_size)
         return dataset.repeat(times_to_repeat).take(size)
-
-    def is_positive(self, example_path):
-        """
-        Checks if an example contains a microlensing event or not.
-
-        :param example_path: The path to the example to check.
-        :return: Whether or not the example contains a microlensing event.
-        """
-        return 'positive' in example_path
 
     def make_uniform_length(self, example: np.ndarray, length: int, randomize: bool = True) -> np.ndarray:
         """Makes the example a specific length, by clipping those too large and repeating those too small."""
@@ -286,10 +284,17 @@ class LightcurveDatabase(ABC):
         :param light_curve: The light curve whose flux channel should be normalized.
         :return: The light curve with the flux channel normalized.
         """
-        if light_curve.shape[1] == 1:  # If the light curve has only 1 channel, it is the flux channel.
-            light_curve[:, 0] = self.normalize(light_curve[:, 0])
-        else:  # If the light curve has multiple channels, it's time first, then flux.
-            light_curve[:, 1] = self.normalize(light_curve[:, 1])
+        if self.include_time_as_channel:
+            if self.include_flux_errors_as_channel:
+                assert light_curve.shape[1] == 3
+                light_curve[:, 1], light_curve[:, 2] = self.normalize_on_percentiles_with_errors(
+                    light_curve[:, 1], light_curve[:, 2])
+            else:
+                assert light_curve.shape[1] == 2
+                light_curve[:, 1] = self.normalize_on_percentiles(light_curve[:, 1])
+        else:
+            assert light_curve.shape[1] == 1
+            light_curve[:, 0] = self.normalize_on_percentiles(light_curve[:, 0])
 
     def build_light_curve_array(self, fluxes: np.ndarray, times: Union[np.ndarray, None] = None,
                                 flux_errors: Union[np.ndarray, None] = None):
@@ -301,9 +306,11 @@ class LightcurveDatabase(ABC):
         :param flux_errors: The optional flux errors of the light curve.
         :return: The constructed light curve array.
         """
-        if flux_errors is not None:
-            raise NotImplementedError
-        if self.use_times:
+        if self.include_flux_errors_as_channel:
+            if not self.include_time_as_channel:
+                raise NotImplementedError
+            light_curve = np.stack([times, fluxes, flux_errors], axis=-1)
+        elif self.include_time_as_channel:
             light_curve = np.stack([times, fluxes], axis=-1)
         else:
             light_curve = np.expand_dims(fluxes, axis=-1)
@@ -344,6 +351,6 @@ class LightcurveDatabase(ABC):
         light_curve = self.make_uniform_length(light_curve, self.time_steps_per_example,
                                                randomize=not evaluation_mode)
         self.normalize_fluxes(light_curve)
-        if self.use_times:
+        if self.include_time_as_channel:
             self.preprocess_times(light_curve)
         return light_curve
