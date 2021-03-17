@@ -15,8 +15,8 @@ def train():
     # Basic training settings.
     model = SimpleLightcurveCnn()
     database = ToiDatabase()
-    # database.batch_size = 100  # Reducing the batch size may help if you are running out of memory.
-    epochs_to_run = 1000
+    database.batch_size = 50  # Reducing the batch size may help if you are running out of memory.
+    epochs_to_run = 2
     trial_name = 'baseline'
     logs_directory = 'logs'
 
