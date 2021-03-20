@@ -1,7 +1,9 @@
 """
 Code for managing the TESS transit metadata.
 """
+import sqlite3
 import warnings
+from typing import List
 
 import pandas as pd
 from enum import Enum
@@ -9,6 +11,7 @@ from peewee import IntegerField, CharField
 
 from ramjet.data_interface.metadatabase import MetadatabaseModel, metadatabase
 from ramjet.data_interface.tess_toi_data_interface import TessToiDataInterface, ToiColumns
+from ramjet.database.tess_planet_disposition import TessPlanetDisposition
 
 
 class Disposition(Enum):
@@ -56,7 +59,7 @@ class TessTransitMetadataManager:
         metadatabase.drop_tables([TessTransitMetadata])
         metadatabase.create_tables([TessTransitMetadata])
         with metadatabase.atomic():
-            for tic_id, disposition_set in target_grouped_dispositions.iteritems():
+            for tic_id, disposition_set in target_grouped_dispositions.items():
                 # As a target can have multiple dispositions, use the most forgiving available disposition.
                 if 'KP' in disposition_set or 'CP' in disposition_set:
                     database_disposition = Disposition.CONFIRMED.value
@@ -73,8 +76,32 @@ class TessTransitMetadataManager:
                 row_count += 1
         print(f'Table built. {row_count} rows added.')
 
+    @staticmethod
+    def add_tic_ids_as_confirmed(tic_ids: List[int]):
+        """
+        Adds the passed TIC IDs as confirmed transits.
+
+        :param tic_ids: The list of TIC IDs.
+        """
+        rows_added = 0
+        with metadatabase.atomic():
+            for tic_id in tic_ids:
+                query = TessTransitMetadata.select().where(TessTransitMetadata.tic_id == tic_id)
+                if query.exists():
+                    continue
+                transit = TessTransitMetadata()
+                transit.tic_id = tic_id
+                transit.disposition = Disposition.CONFIRMED.value
+                transit.save()
+                rows_added += 1
+        print(f'{rows_added} rows added.')
+
 
 if __name__ == '__main__':
     tess_transit_metadata_manager = TessTransitMetadataManager()
     tess_transit_metadata_manager.build_table()
-
+    try:
+        tess_transit_metadata_manager.add_tic_ids_as_confirmed(
+            TessPlanetDisposition.get_tic_ids_of_passing_vetted_transiting_planet_candidates())
+    except sqlite3.OperationalError:
+        pass

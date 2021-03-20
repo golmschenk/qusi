@@ -19,7 +19,7 @@ class MoaSurveyNoneSingleAndBinaryDatabase(StandardAndInjectedLightcurveDatabase
         self.time_steps_per_example = 18000
         self.training_standard_lightcurve_collections = [
             MoaSurveyLightCurveCollection(survey_tags=['v', 'n', 'nr', 'm', 'j', self.moa_data_interface.no_tag_string],
-                                          label = [0, 0], dataset_splits=list(range(8))),
+                                          label=[0, 0], dataset_splits=list(range(8))),
             MoaSurveyLightCurveCollection(survey_tags=['c', 'cf', 'cp', 'cw', 'cs', 'cb'], label=[1, 0],
                                           dataset_splits=list(range(8))),
             MoaSurveyLightCurveCollection(survey_tags=['cb'], label=[1, 1],
@@ -27,7 +27,7 @@ class MoaSurveyNoneSingleAndBinaryDatabase(StandardAndInjectedLightcurveDatabase
         ]
         self.validation_standard_lightcurve_collections = [
             MoaSurveyLightCurveCollection(survey_tags=['v', 'n', 'nr', 'm', 'j', self.moa_data_interface.no_tag_string],
-                                          label = [0, 0], dataset_splits=[8]),
+                                          label=[0, 0], dataset_splits=[8]),
             MoaSurveyLightCurveCollection(survey_tags=['c', 'cf', 'cp', 'cw', 'cs', 'cb'], label=[1, 0],
                                           dataset_splits=[8]),
             MoaSurveyLightCurveCollection(survey_tags=['cb'], label=[1, 1],
@@ -35,7 +35,7 @@ class MoaSurveyNoneSingleAndBinaryDatabase(StandardAndInjectedLightcurveDatabase
         ]
         self.inference_lightcurve_collections = [
             MoaSurveyLightCurveCollection(survey_tags=['v', 'n', 'nr', 'm', 'j', self.moa_data_interface.no_tag_string],
-                                          label = [0, 0], dataset_splits=[9]),
+                                          label=[0, 0], dataset_splits=[9]),
             MoaSurveyLightCurveCollection(survey_tags=['c', 'cf', 'cp', 'cw', 'cs', 'cb'], label=[1, 0],
                                           dataset_splits=[9]),
             MoaSurveyLightCurveCollection(survey_tags=['cb'], label=[1, 1],
