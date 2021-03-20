@@ -4,8 +4,7 @@ import datetime
 from pathlib import Path
 
 from ramjet.models.hades import Hades
-from ramjet.photometric_database.derived.tess_two_minute_cadence_transit_databases import \
-    TessTwoMinuteCadenceStandardAndInjectedTransitDatabase
+from ramjet.photometric_database.derived.simple_light_curve_collection import SimpleLightCurveCollectionGroup
 from ramjet.analysis.model_loader import get_latest_log_directory
 from ramjet.trial import infer
 
@@ -15,7 +14,7 @@ saved_log_directory = Path(f'{log_name}')
 datetime_string = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
 
 print('Setting up dataset...', flush=True)
-database = TessTwoMinuteCadenceStandardAndInjectedTransitDatabase()
+database = SimpleLightCurveCollectionGroup()
 inference_dataset = database.generate_inference_dataset()
 
 print('Loading model...', flush=True)

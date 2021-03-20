@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Iterable
 
 from ramjet.photometric_database.lightcurve_collection import LightcurveCollection
+from ramjet.photometric_database.standard_and_injected_lightcurve_database import StandardAndInjectedLightcurveDatabase
 
 
 class SimpleLightCurveCollection(LightcurveCollection):
@@ -32,3 +33,12 @@ class SimpleLightCurveCollection(LightcurveCollection):
         times = contents['times']
         fluxes = contents['fluxes']
         return times, fluxes
+
+
+class SimpleLightCurveCollectionGroup(StandardAndInjectedLightcurveDatabase):
+    """
+    A simple positive and negative directory based light curve collection group.
+    """
+    def __init__(self):
+        super().__init__()
+        self.inference_lightcurve_collections = [SimpleLightCurveCollection()]
