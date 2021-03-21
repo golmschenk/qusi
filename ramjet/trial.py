@@ -13,7 +13,7 @@ from tensorflow.python.keras import callbacks
 
 
 def infer(model: tf.keras.Model, dataset: tf.data.Dataset, infer_results_path: Path,
-          number_of_top_predictions_to_keep: int = None):
+          number_of_top_predictions_to_keep: int = None, batch_limit: int = None):
     """
     Performs inference of a model on a dataset saving the results to a file.
 
@@ -25,6 +25,8 @@ def infer(model: tf.keras.Model, dataset: tf.data.Dataset, infer_results_path: P
     confidences_data_frame = None
     examples_count = 0
     for batch_index, (paths, examples) in enumerate(dataset):
+        if batch_limit is not None and batch_index >= batch_limit:
+            break
         confidences = model(examples, training=False)
         if confidences.shape[1] == 1:
             batch_confidences_data_frame = pd.DataFrame({'light_curve_path': paths.numpy().astype(str),

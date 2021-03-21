@@ -1,6 +1,7 @@
 """Code for inference on the contents of a directory."""
 
 import datetime
+import sys
 from pathlib import Path
 
 from ramjet.models.hades import Hades
@@ -23,7 +24,11 @@ model.load_weights(str(saved_log_directory.joinpath('latest_model.ckpt'))).expec
 
 print('Inferring...', flush=True)
 infer_results_path = saved_log_directory.joinpath(f'infer results {datetime_string}.csv')
-infer(model, inference_dataset, infer_results_path)
+if len(sys.argv) >= 2:
+    batch_limit = int(sys.argv[1])
+else:
+    batch_limit = None
+infer(model, inference_dataset, infer_results_path, batch_limit=batch_limit)
 print('............')
 print('... Done ...')
 print('............')
