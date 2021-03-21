@@ -8,8 +8,8 @@ from ramjet.photometric_database.derived.simple_light_curve_collection import Si
 from ramjet.analysis.model_loader import get_latest_log_directory
 from ramjet.trial import infer
 
-log_name = get_latest_log_directory(logs_directory='logs')  # Uses the latest model in the log directory.
-# log_name = 'logs/baseline YYYY-MM-DD-hh-mm-ss'  # Specify the path to the model to use.
+# log_name = get_latest_log_directory(logs_directory='logs')  # Uses the latest model in the log directory.
+log_name = 'logs/pretrained_two_minute_transit_model'  # Specify the path to the model to use.
 saved_log_directory = Path(f'{log_name}')
 datetime_string = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
 
