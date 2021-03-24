@@ -8,10 +8,12 @@ from functools import partial
 import numpy as np
 import tensorflow as tf
 from pathlib import Path
-from typing import List, Union, Callable, Tuple
-
+from typing import List, Union, Callable, Tuple, Optional
 from scipy.interpolate import interp1d
 
+from ramjet.logging.wandb_logger import WandbLogger, ExampleRequestQueue, WandbLoggableLightCurve, \
+    WandbLoggableInjection
+from ramjet.photometric_database.light_curve import LightCurve
 from ramjet.photometric_database.lightcurve_collection import LightcurveCollection
 from ramjet.photometric_database.lightcurve_database import LightcurveDatabase
 from ramjet.py_mapper import map_py_function_to_dataset
@@ -45,6 +47,7 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         self.number_of_label_types = 1
         self.out_of_bounds_injection_handling: OutOfBoundsInjectionHandlingMethod = \
             OutOfBoundsInjectionHandlingMethod.ERROR
+        self.logger: Optional[WandbLogger] = None
 
     @property
     def number_of_input_channels(self) -> int:
@@ -72,43 +75,47 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
                 self.validation_injectable_lightcurve_collections, shuffle=False
             )
         training_lightcurve_and_label_datasets = []
-        for paths_dataset, lightcurve_collection in zip(training_standard_paths_datasets,
-                                                        self.training_standard_lightcurve_collections):
+        for index, (paths_dataset, lightcurve_collection) in enumerate(zip(training_standard_paths_datasets,
+                                                                           self.training_standard_lightcurve_collections)):
             lightcurve_and_label_dataset = self.generate_standard_lightcurve_and_label_dataset(
                 paths_dataset, lightcurve_collection.load_times_fluxes_and_flux_errors_from_path,
-                lightcurve_collection.load_label_from_path
+                lightcurve_collection.load_label_from_path,
+                name=f"{type(lightcurve_collection).__name__}_standard_train_{index}"
             )
             training_lightcurve_and_label_datasets.append(lightcurve_and_label_dataset)
-        for paths_dataset, injectable_lightcurve_collection in zip(training_injectable_paths_datasets,
-                                                                   self.training_injectable_lightcurve_collections):
+        for index, (paths_dataset, injectable_lightcurve_collection) in enumerate(
+                zip(training_injectable_paths_datasets, self.training_injectable_lightcurve_collections)):
             lightcurve_and_label_dataset = self.generate_injected_lightcurve_and_label_dataset(
                 training_injectee_path_dataset,
                 self.training_injectee_lightcurve_collection.load_times_fluxes_and_flux_errors_from_path,
                 paths_dataset,
                 injectable_lightcurve_collection.load_times_magnifications_and_magnification_errors_from_path,
-                injectable_lightcurve_collection.load_label_from_path
+                injectable_lightcurve_collection.load_label_from_path,
+                name=f"{type(injectable_lightcurve_collection).__name__}_injected_train_{index}"
             )
             training_lightcurve_and_label_datasets.append(lightcurve_and_label_dataset)
         training_dataset = self.intersperse_datasets(training_lightcurve_and_label_datasets)
         training_dataset = self.window_dataset_for_zipped_example_and_label_dataset(training_dataset, self.batch_size,
                                                                                     self.window_shift)
         validation_lightcurve_and_label_datasets = []
-        for paths_dataset, lightcurve_collection in zip(validation_standard_paths_datasets,
-                                                        self.validation_standard_lightcurve_collections):
+        for index, (paths_dataset, lightcurve_collection) in enumerate(
+                zip(validation_standard_paths_datasets, self.validation_standard_lightcurve_collections)):
             lightcurve_and_label_dataset = self.generate_standard_lightcurve_and_label_dataset(
                 paths_dataset, lightcurve_collection.load_times_fluxes_and_flux_errors_from_path,
-                lightcurve_collection.load_label_from_path, evaluation_mode=True
+                lightcurve_collection.load_label_from_path, evaluation_mode=True,
+                name=f"{type(lightcurve_collection).__name__}_standard_validation_{index}"
             )
             validation_lightcurve_and_label_datasets.append(lightcurve_and_label_dataset)
-        for paths_dataset, injectable_lightcurve_collection in zip(validation_injectable_paths_datasets,
-                                                                   self.validation_injectable_lightcurve_collections):
+        for index, (paths_dataset, injectable_lightcurve_collection) in enumerate(
+                zip(validation_injectable_paths_datasets, self.validation_injectable_lightcurve_collections)):
             lightcurve_and_label_dataset = self.generate_injected_lightcurve_and_label_dataset(
                 validation_injectee_path_dataset,
                 self.validation_injectee_lightcurve_collection.load_times_fluxes_and_flux_errors_from_path,
                 paths_dataset,
                 injectable_lightcurve_collection.load_times_magnifications_and_magnification_errors_from_path,
                 injectable_lightcurve_collection.load_label_from_path,
-                evaluation_mode=True
+                evaluation_mode=True,
+                name=f"{type(injectable_lightcurve_collection).__name__}_injected_validation_{index}"
             )
             validation_lightcurve_and_label_datasets.append(lightcurve_and_label_dataset)
         validation_dataset = self.intersperse_datasets(validation_lightcurve_and_label_datasets)
@@ -188,7 +195,8 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
             self, paths_dataset: tf.data.Dataset,
             load_times_fluxes_and_flux_errors_from_path_function: Callable[
                 [Path], Tuple[np.ndarray, np.ndarray, Union[np.ndarray, None]]],
-            load_label_from_path_function: Callable[[Path], Union[float, np.ndarray]], evaluation_mode: bool = False):
+            load_label_from_path_function: Callable[[Path], Union[float, np.ndarray]], evaluation_mode: bool = False,
+            name: Optional[str] = None):
         """
         Generates a lightcurve and label dataset from a paths dataset using a passed function defining
         how to load the values from the lightcurve file and the label value to use.
@@ -200,10 +208,15 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         :param evaluation_mode: Whether or not the preprocessing should occur in evaluation mode (for repeatability).
         :return: The resulting lightcurve example and label dataset.
         """
+        if self.logger is not None:
+            request_queue = self.logger.create_request_queue_for_collection(name)
+        else:
+            request_queue = None
         preprocess_map_function = partial(self.preprocess_standard_lightcurve,
                                           load_times_fluxes_and_flux_errors_from_path_function,
                                           load_label_from_path_function,
-                                          evaluation_mode=evaluation_mode)
+                                          evaluation_mode=evaluation_mode,
+                                          request_queue=request_queue)
         output_types = (tf.float32, tf.float32)
         output_shapes = [(self.time_steps_per_example, self.number_of_input_channels), (self.number_of_label_types,)]
         example_and_label_dataset = map_py_function_to_dataset(paths_dataset,
@@ -218,7 +231,8 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
             load_times_fluxes_and_flux_errors_from_path_function: Callable[
                 [Path], Tuple[np.ndarray, np.ndarray, Union[np.ndarray, None]]],
             load_label_from_path_function: Callable[[Path], Union[float, np.ndarray]],
-            lightcurve_path_tensor: tf.Tensor, evaluation_mode: bool = False) -> (np.ndarray, np.ndarray):
+            lightcurve_path_tensor: tf.Tensor, evaluation_mode: bool = False,
+            request_queue: Optional[ExampleRequestQueue] = None) -> (np.ndarray, np.ndarray):
         """
         Preprocesses a individual standard lightcurve from a lightcurve path tensor, using a passed function defining
         how to load the values from the lightcurve file and the label value to use. Designed to be used with `partial`
@@ -233,6 +247,12 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         """
         lightcurve_path = Path(lightcurve_path_tensor.numpy().decode('utf-8'))
         times, fluxes, flux_errors = load_times_fluxes_and_flux_errors_from_path_function(lightcurve_path)
+        if self.logger is not None and self.logger.should_produce_example(request_queue):
+            lightcurve = LightCurve.from_times_and_fluxes(times, fluxes)
+            loggable_light_curve = WandbLoggableLightCurve(identifier=request_queue.name,
+                                                           light_curve_name=lightcurve_path.name,
+                                                           light_curve=lightcurve)
+            self.logger.submit_loggable(loggable_light_curve)
         light_curve = self.build_light_curve_array(fluxes=fluxes, times=times, flux_errors=flux_errors)
         example = self.preprocess_light_curve(light_curve, evaluation_mode=evaluation_mode)
         label = load_label_from_path_function(lightcurve_path)
@@ -307,7 +327,8 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
             injectable_paths_dataset: tf.data.Dataset,
             injectable_load_times_magnifications_and_magnification_errors_from_path_function: Callable[
                 [Path], Tuple[np.ndarray, np.ndarray, Union[np.ndarray, None]]],
-            load_label_from_path_function: Callable[[Path], Union[float, np.ndarray]], evaluation_mode: bool = False):
+            load_label_from_path_function: Callable[[Path], Union[float, np.ndarray]], evaluation_mode: bool = False,
+            name: Optional[str] = None):
         """
         Generates a lightcurve and label dataset from an injectee and injectable paths dataset, using passed functions
         defining how to load the values from the lightcurve files for each and the label value to use.
@@ -322,12 +343,16 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         :param evaluation_mode: Whether or not the preprocessing should occur in evaluation mode (for repeatability).
         :return: The resulting lightcurve example and label dataset.
         """
+        if self.logger is not None:
+            request_queue = self.logger.create_request_queue_for_collection(name)
+        else:
+            request_queue = None
         preprocess_map_function = partial(
             self.preprocess_injected_lightcurve,
             injectee_load_times_fluxes_and_flux_errors_from_path_function,
             injectable_load_times_magnifications_and_magnification_errors_from_path_function,
             load_label_from_path_function,
-            evaluation_mode=evaluation_mode)
+            evaluation_mode=evaluation_mode, request_queue=request_queue)
         output_types = (tf.float32, tf.float32)
         output_shapes = [(self.time_steps_per_example, self.number_of_input_channels), (self.number_of_label_types,)]
         zipped_paths_dataset = tf.data.Dataset.zip((injectee_paths_dataset, injectable_paths_dataset))
@@ -346,7 +371,7 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
                 [Path], Tuple[np.ndarray, np.ndarray, Union[np.ndarray, None]]],
             load_label_from_path_function: Callable[[Path], Union[float, np.ndarray]],
             injectee_lightcurve_path_tensor: tf.Tensor, injectable_lightcurve_path_tensor: tf.Tensor,
-            evaluation_mode: bool = False
+            evaluation_mode: bool = False, request_queue: Optional[ExampleRequestQueue] = None
     ) -> (np.ndarray, np.ndarray):
         """
         Preprocesses a individual injected lightcurve from an injectee and an injectable lightcurve path tensor,
@@ -373,8 +398,22 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         injectable_times, injectable_magnifications, injectable_magnification_errors = injectable_arrays
         if injectee_flux_errors is not None or injectable_magnification_errors is not None:
             raise NotImplementedError
+        loggable_injection = None
+        if self.logger is not None and self.logger.should_produce_example(request_queue):
+            loggable_injection = WandbLoggableInjection.new(identifier=request_queue.name)
         fluxes = self.inject_signal_into_lightcurve(injectee_fluxes, injectee_times, injectable_magnifications,
-                                                    injectable_times)
+                                                    injectable_times, loggable_injection)
+        if loggable_injection is not None:
+            injectee_light_curve = LightCurve.from_times_and_fluxes(injectee_times, injectee_fluxes)
+            injectable_light_curve = LightCurve.from_times_and_fluxes(injectable_times, injectable_magnifications)
+            injected_light_curve = LightCurve.from_times_and_fluxes(injectee_times, fluxes)
+            loggable_injection.identifier = request_queue.name
+            loggable_injection.injectee_name = injectee_lightcurve_path.name
+            loggable_injection.injectee_light_curve = injectee_light_curve
+            loggable_injection.injectable_name = injectable_lightcurve_path.name
+            loggable_injection.injectable_light_curve = injectable_light_curve
+            loggable_injection.injected_light_curve = injected_light_curve
+            self.logger.submit_loggable(loggable_injection)
         light_curve = self.build_light_curve_array(fluxes=fluxes, times=injectee_times)
         example = self.preprocess_light_curve(light_curve, evaluation_mode=evaluation_mode)
         label = load_label_from_path_function(injectable_lightcurve_path)
@@ -382,7 +421,8 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         return example, label
 
     def inject_signal_into_lightcurve(self, lightcurve_fluxes: np.ndarray, lightcurve_times: np.ndarray,
-                                      signal_magnifications: np.ndarray, signal_times: np.ndarray):
+                                      signal_magnifications: np.ndarray, signal_times: np.ndarray,
+                                      wandb_loggable_injection: Optional[WandbLoggableInjection] = None) -> np.ndarray:
         """
         Injects a synthetic magnification signal into real lightcurve fluxes.
 
@@ -425,6 +465,13 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
             signal_flux_interpolator = interp1d(offset_signal_times, signal_fluxes, bounds_error=True)
         interpolated_signal_fluxes = signal_flux_interpolator(lightcurve_times)
         fluxes_with_injected_signal = lightcurve_fluxes + interpolated_signal_fluxes
+        if wandb_loggable_injection is not None:
+            wandb_loggable_injection.aligned_injectee_light_curve = LightCurve.from_times_and_fluxes(
+                lightcurve_times, lightcurve_fluxes)
+            wandb_loggable_injection.aligned_injectable_light_curve = LightCurve.from_times_and_fluxes(
+                offset_signal_times, signal_fluxes)
+            wandb_loggable_injection.aligned_injected_light_curve = LightCurve.from_times_and_fluxes(
+                lightcurve_times, fluxes_with_injected_signal)
         return fluxes_with_injected_signal
 
     @staticmethod
