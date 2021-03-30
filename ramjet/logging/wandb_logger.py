@@ -5,8 +5,10 @@ from __future__ import annotations
 
 import queue
 import uuid
+from abc import ABC, abstractmethod
+
 import wandb
-from typing import Optional, List
+from typing import Optional, Dict
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from tensorflow import keras
@@ -28,19 +30,37 @@ class ExampleRequestQueue:
         self.queue: multiprocess.Queue = manager.Queue()
 
 
-class WandbLoggable:
-    def __init__(self, identifier: str):
-        self.identifier: str = identifier
+class WandbLoggable(ABC):
+    @abstractmethod
+    def log(self, summary_name: str):
+        raise NotImplementedError
+
+    def log_figure(self, summary_name, figure):
+        if summary_name in wandb.run.summary.keys():
+            wandb.run.summary.update({summary_name: wandb.Plotly(figure)})
+        else:
+            wandb.log({summary_name: wandb.Plotly(figure)})
+
 
 class WandbLoggableLightCurve(WandbLoggable):
-    def __init__(self, identifier: str, light_curve_name: str, light_curve: LightCurve):
-        super().__init__(identifier)
+    def __init__(self, light_curve_name: str, light_curve: LightCurve):
+        super().__init__()
         self.light_curve_name: str = light_curve_name
         self.light_curve: LightCurve = light_curve
 
+    def log(self, summary_name: str):
+        figure = go.Figure()
+        figure.add_trace(go.Scatter(x=self.light_curve.times,
+                                    y=self.light_curve.fluxes,
+                                    mode='lines+markers'))
+        figure.update_layout(title=self.light_curve_name,
+                             margin={'l': 0, 'r': 0, 'b': 0, 't': 0})
+        self.log_figure(summary_name, figure)
+
+
 class WandbLoggableInjection(WandbLoggable):
-    def __init__(self, identifier: str):
-        super().__init__(identifier)
+    def __init__(self):
+        super().__init__()
         self.injectee_name:  Optional[str] = None
         self.injectee_light_curve: Optional[LightCurve] = None
         self.injectable_name:  Optional[str] = None
@@ -53,8 +73,39 @@ class WandbLoggableInjection(WandbLoggable):
         self.aligned_injected_light_curve: Optional[LightCurve] = None
 
     @classmethod
-    def new(cls, identifier) -> WandbLoggableInjection:
-        return cls(identifier)
+    def new(cls) -> WandbLoggableInjection:
+        return cls()
+
+    def log(self, summary_name: str):
+        figure = make_subplots(rows=3, cols=1)
+        figure.add_trace(go.Scatter(x=self.injectee_light_curve.times,
+                                    y=self.injectee_light_curve.fluxes,
+                                    mode='lines+markers', name="injectee"), row=1, col=1)
+        figure.add_trace(go.Scatter(x=self.injectable_light_curve.times,
+                                    y=self.injectable_light_curve.fluxes,
+                                    mode='lines+markers', name="injectable"), row=2, col=1)
+        figure.add_trace(go.Scatter(x=self.injected_light_curve.times,
+                                    y=self.injected_light_curve.fluxes,
+                                    mode='lines+markers', name="injected"), row=3, col=1)
+        figure.update_layout(title_text=f"{self.injectable_name} injected into "
+                                        f"{self.injectee_name}",
+                             margin={'l': 0, 'r': 0, 'b': 0, 't': 0})
+        self.log_figure(summary_name, figure)
+        aligned_figure = make_subplots(rows=2, cols=1, shared_xaxes=True)
+        aligned_figure.add_trace(go.Scatter(x=self.aligned_injectee_light_curve.times,
+                                    y=self.aligned_injectee_light_curve.fluxes,
+                                    mode='lines+markers', name="injectee"), row=1, col=1)
+        aligned_figure.add_trace(go.Scatter(x=self.aligned_injectable_light_curve.times,
+                                    y=self.aligned_injectable_light_curve.fluxes,
+                                    mode='lines+markers', name="injectable"), row=2, col=1)
+        aligned_figure.add_trace(go.Scatter(x=self.aligned_injected_light_curve.times,
+                                    y=self.aligned_injected_light_curve.fluxes,
+                                    mode='lines+markers', name="injected"), row=1, col=1)
+        aligned_figure.update_layout(title_text=f"Aligned {self.injectable_name} injected into "
+                                                f"{self.injectee_name}",
+                                     margin={'l': 0, 'r': 0, 'b': 0, 't': 0})
+        aligned_summary_name = summary_name + 'aligned'
+        self.log_figure(aligned_summary_name, aligned_figure)
 
 
 class WandbLogger:
@@ -65,8 +116,9 @@ class WandbLogger:
 
     def __init__(self):
         manager = multiprocess.Manager()
-        self.queue = manager.Queue()
-        self.request_queues: List[multiprocess.Queue] = []
+        self.lock = manager.Lock()
+        self.request_queues: Dict[str, multiprocess.Queue] = {}
+        self.example_queues: Dict[str, multiprocess.Queue] = {}
 
     @classmethod
     def new(cls) -> Optional[WandbLogger]:
@@ -74,97 +126,53 @@ class WandbLogger:
         return cls()
 
     def process_queue(self):
-        while True:
-            try:
-                queue_item = self.queue.get(block=False)
-                if isinstance(queue_item, WandbLoggable):
-                    self.log(queue_item)
-                else:
-                    raise ValueError(f"{queue_item} is not a handled logger type.")
-            except queue.Empty:
-                break
-
-    def add_mapper_request_queue(self, mapper_publish_queue: ExampleRequestQueue):
-        self.request_queues.append(mapper_publish_queue)
+        for example_queue_name, example_queue in self.example_queues.items():
+            while True:
+                try:
+                    queue_item = example_queue.get(block=False)
+                    pass
+                    if isinstance(queue_item, WandbLoggable):
+                        queue_item.log(example_queue_name)
+                    else:
+                        raise ValueError(f"{queue_item} is not a handled logger type.")
+                except queue.Empty:
+                    break
 
     def request_examples(self):
-        for request_queue in self.request_queues:
-            request_queue.queue.put(ExampleRequest())
-
-    def log_light_curve(self, loggable_light_curve: WandbLoggableLightCurve):
-        figure = go.Figure()
-        figure.add_trace(go.Scatter(x=loggable_light_curve.light_curve.times,
-                                    y=loggable_light_curve.light_curve.fluxes,
-                                    mode='lines+markers'))
-        figure.update_layout(title=loggable_light_curve.light_curve_name,
-                             margin={'l': 0, 'r': 0, 'b': 0, 't': 0})
-        if loggable_light_curve.identifier in wandb.run.summary.keys():
-            wandb.run.summary.update({loggable_light_curve.identifier: wandb.Plotly(figure)})
-        else:
-            wandb.log({loggable_light_curve.identifier: wandb.Plotly(figure)})
-
-    def log_injection(self, loggable_injection: WandbLoggableInjection):
-        figure = make_subplots(rows=3, cols=1)
-        figure.add_trace(go.Scatter(x=loggable_injection.injectee_light_curve.times,
-                                    y=loggable_injection.injectee_light_curve.fluxes,
-                                    mode='lines+markers', name="injectee"), row=1, col=1)
-        figure.add_trace(go.Scatter(x=loggable_injection.injectable_light_curve.times,
-                                    y=loggable_injection.injectable_light_curve.fluxes,
-                                    mode='lines+markers', name="injectable"), row=2, col=1)
-        figure.add_trace(go.Scatter(x=loggable_injection.injected_light_curve.times,
-                                    y=loggable_injection.injected_light_curve.fluxes,
-                                    mode='lines+markers', name="injected"), row=3, col=1)
-        figure.update_layout(title_text=f"{loggable_injection.injectable_name} injected into "
-                                        f"{loggable_injection.injectee_name}",
-                             margin={'l': 0, 'r': 0, 'b': 0, 't': 0})
-        if loggable_injection.identifier in wandb.run.summary.keys():
-            wandb.run.summary.update({loggable_injection.identifier: wandb.Plotly(figure)})
-        else:
-            wandb.log({loggable_injection.identifier: wandb.Plotly(figure)}, commit=False)
-        aligned_figure = make_subplots(rows=2, cols=1, shared_xaxes=True)
-        aligned_figure.add_trace(go.Scatter(x=loggable_injection.aligned_injectee_light_curve.times,
-                                    y=loggable_injection.aligned_injectee_light_curve.fluxes,
-                                    mode='lines+markers', name="injectee"), row=1, col=1)
-        aligned_figure.add_trace(go.Scatter(x=loggable_injection.aligned_injectable_light_curve.times,
-                                    y=loggable_injection.aligned_injectable_light_curve.fluxes,
-                                    mode='lines+markers', name="injectable"), row=2, col=1)
-        aligned_figure.add_trace(go.Scatter(x=loggable_injection.aligned_injected_light_curve.times,
-                                    y=loggable_injection.aligned_injected_light_curve.fluxes,
-                                    mode='lines+markers', name="injected"), row=1, col=1)
-        aligned_figure.update_layout(title_text=f"Aligned {loggable_injection.injectable_name} injected into "
-                                                f"{loggable_injection.injectee_name}",
-                                     margin={'l': 0, 'r': 0, 'b': 0, 't': 0})
-        aligned_identifier = loggable_injection.identifier + 'aligned'
-        if aligned_identifier in wandb.run.summary.keys():
-            wandb.run.summary.update({aligned_identifier: wandb.Plotly(aligned_figure)})
-        else:
-            wandb.log({aligned_identifier: wandb.Plotly(aligned_figure)}, commit=False)
-
-    def log(self, wandb_loggable):
-        if isinstance(wandb_loggable, WandbLoggableLightCurve):
-            self.log_light_curve(wandb_loggable)
-        elif isinstance(wandb_loggable, WandbLoggableInjection):
-            self.log_injection(wandb_loggable)
-        else:
-            raise ValueError(f"{wandb_loggable} does not contain a known loggable type.")
+        for request_queue_name, request_queue in self.request_queues.items():
+            request_queue.put(ExampleRequest())
 
     def create_callback(self) -> WandbLoggerCallback:
         return WandbLoggerCallback(self)
 
-    def create_request_queue_for_collection(self, name: str) -> ExampleRequestQueue:
-        example_request_queue = ExampleRequestQueue(name)
-        self.request_queues.append(example_request_queue)
-        return example_request_queue
+    def create_request_queue_for_collection(self, name: str) -> multiprocess.Queue:
+        assert name not in self.request_queues.keys()
+        manager = multiprocess.Manager()
+        queue_ = manager.Queue()
+        self.request_queues[name] = queue_
+        return queue_
 
-    def should_produce_example(self, request_queue: ExampleRequestQueue) -> bool:
+    def create_example_queue_for_collection(self, name: str) -> multiprocess.Queue:
+        assert name not in self.example_queues.keys()
+        manager = multiprocess.Manager()
+        queue_ = manager.Queue()
+        self.example_queues[name] = queue_
+        return queue_
+
+    def should_produce_example(self, request_queue: multiprocess.Queue) -> bool:
         try:
-            request_queue.queue.get(block=False)
+            request_queue.get(block=False)
             return True
         except queue.Empty:
             return False
 
-    def submit_loggable(self, loggable: WandbLoggable):
-        self.queue.put(loggable)
+    def submit_loggable(self, example_queue: multiprocess.Queue, loggable: WandbLoggable):
+        while True:  # This loop should not be required, but it seems there is a bug in multiprocessing.
+            try:     # https://stackoverflow.com/q/29277150/1191087
+                example_queue.put(loggable)
+                break
+            except TypeError:
+                continue
 
 
 class WandbLoggerCallback(keras.callbacks.Callback):

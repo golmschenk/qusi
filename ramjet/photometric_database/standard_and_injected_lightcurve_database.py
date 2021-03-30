@@ -4,6 +4,7 @@ An abstract class allowing for any number and combination of standard and inject
 import math
 from enum import Enum
 from functools import partial
+from queue import Queue
 
 import numpy as np
 import tensorflow as tf
@@ -208,15 +209,14 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         :param evaluation_mode: Whether or not the preprocessing should occur in evaluation mode (for repeatability).
         :return: The resulting lightcurve example and label dataset.
         """
-        if self.logger is not None:
-            request_queue = self.logger.create_request_queue_for_collection(name)
-        else:
-            request_queue = None
         preprocess_map_function = partial(self.preprocess_standard_lightcurve,
                                           load_times_fluxes_and_flux_errors_from_path_function,
                                           load_label_from_path_function,
-                                          evaluation_mode=evaluation_mode,
-                                          request_queue=request_queue)
+                                          evaluation_mode=evaluation_mode)
+        if self.logger is not None:
+            preprocess_map_function = partial(preprocess_map_function,
+                                              request_queue=self.logger.create_request_queue_for_collection(name),
+                                              example_queue=self.logger.create_example_queue_for_collection(name))
         output_types = (tf.float32, tf.float32)
         output_shapes = [(self.time_steps_per_example, self.number_of_input_channels), (self.number_of_label_types,)]
         example_and_label_dataset = map_py_function_to_dataset(paths_dataset,
@@ -232,7 +232,8 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
                 [Path], Tuple[np.ndarray, np.ndarray, Union[np.ndarray, None]]],
             load_label_from_path_function: Callable[[Path], Union[float, np.ndarray]],
             lightcurve_path_tensor: tf.Tensor, evaluation_mode: bool = False,
-            request_queue: Optional[ExampleRequestQueue] = None) -> (np.ndarray, np.ndarray):
+            request_queue: Optional[Queue] = None,
+            example_queue: Optional[Queue] = None) -> (np.ndarray, np.ndarray):
         """
         Preprocesses a individual standard lightcurve from a lightcurve path tensor, using a passed function defining
         how to load the values from the lightcurve file and the label value to use. Designed to be used with `partial`
@@ -249,10 +250,9 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         times, fluxes, flux_errors = load_times_fluxes_and_flux_errors_from_path_function(lightcurve_path)
         if self.logger is not None and self.logger.should_produce_example(request_queue):
             lightcurve = LightCurve.from_times_and_fluxes(times, fluxes)
-            loggable_light_curve = WandbLoggableLightCurve(identifier=request_queue.name,
-                                                           light_curve_name=lightcurve_path.name,
+            loggable_light_curve = WandbLoggableLightCurve(light_curve_name=lightcurve_path.name,
                                                            light_curve=lightcurve)
-            self.logger.submit_loggable(loggable_light_curve)
+            self.logger.submit_loggable(example_queue, loggable_light_curve)
         light_curve = self.build_light_curve_array(fluxes=fluxes, times=times, flux_errors=flux_errors)
         example = self.preprocess_light_curve(light_curve, evaluation_mode=evaluation_mode)
         label = load_label_from_path_function(lightcurve_path)
@@ -343,16 +343,16 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         :param evaluation_mode: Whether or not the preprocessing should occur in evaluation mode (for repeatability).
         :return: The resulting lightcurve example and label dataset.
         """
-        if self.logger is not None:
-            request_queue = self.logger.create_request_queue_for_collection(name)
-        else:
-            request_queue = None
         preprocess_map_function = partial(
             self.preprocess_injected_lightcurve,
             injectee_load_times_fluxes_and_flux_errors_from_path_function,
             injectable_load_times_magnifications_and_magnification_errors_from_path_function,
             load_label_from_path_function,
-            evaluation_mode=evaluation_mode, request_queue=request_queue)
+            evaluation_mode=evaluation_mode)
+        if self.logger is not None:
+            preprocess_map_function = partial(preprocess_map_function,
+                                              request_queue=self.logger.create_request_queue_for_collection(name),
+                                              example_queue=self.logger.create_example_queue_for_collection(name))
         output_types = (tf.float32, tf.float32)
         output_shapes = [(self.time_steps_per_example, self.number_of_input_channels), (self.number_of_label_types,)]
         zipped_paths_dataset = tf.data.Dataset.zip((injectee_paths_dataset, injectable_paths_dataset))
@@ -371,7 +371,8 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
                 [Path], Tuple[np.ndarray, np.ndarray, Union[np.ndarray, None]]],
             load_label_from_path_function: Callable[[Path], Union[float, np.ndarray]],
             injectee_lightcurve_path_tensor: tf.Tensor, injectable_lightcurve_path_tensor: tf.Tensor,
-            evaluation_mode: bool = False, request_queue: Optional[ExampleRequestQueue] = None
+            evaluation_mode: bool = False, request_queue: Optional[Queue] = None,
+            example_queue: Optional[Queue] = None
     ) -> (np.ndarray, np.ndarray):
         """
         Preprocesses a individual injected lightcurve from an injectee and an injectable lightcurve path tensor,
@@ -400,20 +401,16 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
             raise NotImplementedError
         loggable_injection = None
         if self.logger is not None and self.logger.should_produce_example(request_queue):
-            loggable_injection = WandbLoggableInjection.new(identifier=request_queue.name)
+            loggable_injection = WandbLoggableInjection.new()
         fluxes = self.inject_signal_into_lightcurve(injectee_fluxes, injectee_times, injectable_magnifications,
                                                     injectable_times, loggable_injection)
         if loggable_injection is not None:
-            injectee_light_curve = LightCurve.from_times_and_fluxes(injectee_times, injectee_fluxes)
-            injectable_light_curve = LightCurve.from_times_and_fluxes(injectable_times, injectable_magnifications)
-            injected_light_curve = LightCurve.from_times_and_fluxes(injectee_times, fluxes)
-            loggable_injection.identifier = request_queue.name
             loggable_injection.injectee_name = injectee_lightcurve_path.name
-            loggable_injection.injectee_light_curve = injectee_light_curve
+            loggable_injection.injectee_light_curve = LightCurve.from_times_and_fluxes(injectee_times, injectee_fluxes)
             loggable_injection.injectable_name = injectable_lightcurve_path.name
-            loggable_injection.injectable_light_curve = injectable_light_curve
-            loggable_injection.injected_light_curve = injected_light_curve
-            self.logger.submit_loggable(loggable_injection)
+            loggable_injection.injectable_light_curve = LightCurve.from_times_and_fluxes(injectable_times, injectable_magnifications)
+            loggable_injection.injected_light_curve = LightCurve.from_times_and_fluxes(injectee_times, fluxes)
+            self.logger.submit_loggable(example_queue=example_queue, loggable=loggable_injection)
         light_curve = self.build_light_curve_array(fluxes=fluxes, times=injectee_times)
         example = self.preprocess_light_curve(light_curve, evaluation_mode=evaluation_mode)
         label = load_label_from_path_function(injectable_lightcurve_path)
