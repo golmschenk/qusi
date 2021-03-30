@@ -7,6 +7,7 @@ from functools import partial
 from queue import Queue
 
 import numpy as np
+import scipy.stats
 import tensorflow as tf
 from pathlib import Path
 from typing import List, Union, Callable, Tuple, Optional
@@ -29,6 +30,11 @@ class OutOfBoundsInjectionHandlingMethod(Enum):
     RANDOM_INJECTION_LOCATION = 'random_inject_location'
 
 
+class BaselineFluxEstimationMethod(Enum):
+    MEDIAN = 'median'
+    MEDIAN_ABSOLUTE_DEVIATION = 'median_absolute_deviation'
+
+
 class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
     """
     An abstract class allowing for any number and combination of standard and injectable/injectee lightcurve collections
@@ -48,6 +54,7 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         self.number_of_label_types = 1
         self.out_of_bounds_injection_handling: OutOfBoundsInjectionHandlingMethod = \
             OutOfBoundsInjectionHandlingMethod.ERROR
+        self.baseline_flux_estimation_method = BaselineFluxEstimationMethod.MEDIAN
         self.logger: Optional[WandbLogger] = None
 
     @property
@@ -437,8 +444,11 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         time_length_difference = lightcurve_time_length - signal_time_length
         signal_start_offset = (np.random.random() * time_length_difference) + minimum_lightcurve_time
         offset_signal_times = relative_signal_times + signal_start_offset
-        median_flux = np.median(lightcurve_fluxes)
-        signal_fluxes = (signal_magnifications * median_flux) - median_flux
+        if self.baseline_flux_estimation_method == BaselineFluxEstimationMethod.MEDIAN_ABSOLUTE_DEVIATION:
+            baseline_flux = scipy.stats.median_abs_deviation(lightcurve_fluxes)
+        else:
+            baseline_flux = np.median(lightcurve_fluxes)
+        signal_fluxes = (signal_magnifications * baseline_flux) - baseline_flux
         if self.out_of_bounds_injection_handling is OutOfBoundsInjectionHandlingMethod.RANDOM_INJECTION_LOCATION:
             signal_flux_interpolator = interp1d(offset_signal_times, signal_fluxes, bounds_error=False, fill_value=0)
         elif (self.out_of_bounds_injection_handling is OutOfBoundsInjectionHandlingMethod.REPEAT_SIGNAL and
