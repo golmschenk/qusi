@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import List, Union, Callable, Tuple, Optional
 from scipy.interpolate import interp1d
 
-from ramjet.logging.wandb_logger import WandbLogger, ExampleRequestQueue, WandbLoggableLightCurve, \
+from ramjet.logging.wandb_logger import WandbLogger, WandbLoggableLightCurve, \
     WandbLoggableInjection
 from ramjet.photometric_database.light_curve import LightCurve
 from ramjet.photometric_database.lightcurve_collection import LightcurveCollection
@@ -31,6 +31,9 @@ class OutOfBoundsInjectionHandlingMethod(Enum):
 
 
 class BaselineFluxEstimationMethod(Enum):
+    """
+    An enum of to designate the type of baseline flux estimation method to use during training.
+    """
     MEDIAN = 'median'
     MEDIAN_ABSOLUTE_DEVIATION = 'median_absolute_deviation'
 
@@ -59,6 +62,11 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
 
     @property
     def number_of_input_channels(self) -> int:
+        """
+        Determines the number of input channels that should exist for this database.
+
+        :return: The number of channels.
+        """
         channels = 1
         if self.include_time_as_channel:
             channels += 1
@@ -83,8 +91,8 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
                 self.validation_injectable_lightcurve_collections, shuffle=False
             )
         training_lightcurve_and_label_datasets = []
-        for index, (paths_dataset, lightcurve_collection) in enumerate(zip(training_standard_paths_datasets,
-                                                                           self.training_standard_lightcurve_collections)):
+        for index, (paths_dataset, lightcurve_collection) in enumerate(
+                zip(training_standard_paths_datasets, self.training_standard_lightcurve_collections)):
             lightcurve_and_label_dataset = self.generate_standard_lightcurve_and_label_dataset(
                 paths_dataset, lightcurve_collection.load_times_fluxes_and_flux_errors_from_path,
                 lightcurve_collection.load_label_from_path,
@@ -214,16 +222,14 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
                                                                      fluxes of a lightcurve from a path.
         :param load_label_from_path_function: The function to load the label to use for the lightcurves in this dataset.
         :param evaluation_mode: Whether or not the preprocessing should occur in evaluation mode (for repeatability).
+        :param name: The name of the dataset.
         :return: The resulting lightcurve example and label dataset.
         """
         preprocess_map_function = partial(self.preprocess_standard_lightcurve,
                                           load_times_fluxes_and_flux_errors_from_path_function,
                                           load_label_from_path_function,
                                           evaluation_mode=evaluation_mode)
-        if self.logger is not None:
-            preprocess_map_function = partial(preprocess_map_function,
-                                              request_queue=self.logger.create_request_queue_for_collection(name),
-                                              example_queue=self.logger.create_example_queue_for_collection(name))
+        preprocess_map_function = self.add_logging_queues_to_map_function(preprocess_map_function, name)
         output_types = (tf.float32, tf.float32)
         output_shapes = [(self.time_steps_per_example, self.number_of_input_channels), (self.number_of_label_types,)]
         example_and_label_dataset = map_py_function_to_dataset(paths_dataset,
@@ -233,6 +239,20 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
                                                                output_shapes=output_shapes)
         return example_and_label_dataset
 
+    def add_logging_queues_to_map_function(self, preprocess_map_function: Callable, name: Optional[str]) -> Callable:
+        """
+        Adds logging queues to the map functions.
+
+        :param preprocess_map_function: The function to map.
+        :param name: The name of the dataset.
+        :return: The updated map function.
+        """
+        if self.logger is not None:
+            preprocess_map_function = partial(preprocess_map_function,
+                                              request_queue=self.logger.create_request_queue_for_collection(name),
+                                              example_queue=self.logger.create_example_queue_for_collection(name))
+        return preprocess_map_function
+
     def preprocess_standard_lightcurve(
             self,
             load_times_fluxes_and_flux_errors_from_path_function: Callable[
@@ -240,7 +260,8 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
             load_label_from_path_function: Callable[[Path], Union[float, np.ndarray]],
             lightcurve_path_tensor: tf.Tensor, evaluation_mode: bool = False,
             request_queue: Optional[Queue] = None,
-            example_queue: Optional[Queue] = None) -> (np.ndarray, np.ndarray):
+            example_queue: Optional[Queue] = None
+    ) -> (np.ndarray, np.ndarray):
         """
         Preprocesses a individual standard lightcurve from a lightcurve path tensor, using a passed function defining
         how to load the values from the lightcurve file and the label value to use. Designed to be used with `partial`
@@ -251,6 +272,8 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         :param load_label_from_path_function: The function to load the label to assign to the lightcurve.
         :param lightcurve_path_tensor: The tensor containing the path to the lightcurve file.
         :param evaluation_mode: Whether or not the preprocessing should occur in evaluation mode (for repeatability).
+        :param request_queue: The logging request queue.
+        :param example_queue: The logging example queue.
         :return: The example and label arrays shaped for use as single example for the network.
         """
         lightcurve_path = Path(lightcurve_path_tensor.numpy().decode('utf-8'))
@@ -348,6 +371,7 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
             how to load the times and magnifications of an injectable signal from a path.
         :param load_label_from_path_function: The function to load the label to use for the lightcurves in this dataset.
         :param evaluation_mode: Whether or not the preprocessing should occur in evaluation mode (for repeatability).
+        :param name: The name of the dataset.
         :return: The resulting lightcurve example and label dataset.
         """
         preprocess_map_function = partial(
@@ -356,10 +380,7 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
             injectable_load_times_magnifications_and_magnification_errors_from_path_function,
             load_label_from_path_function,
             evaluation_mode=evaluation_mode)
-        if self.logger is not None:
-            preprocess_map_function = partial(preprocess_map_function,
-                                              request_queue=self.logger.create_request_queue_for_collection(name),
-                                              example_queue=self.logger.create_example_queue_for_collection(name))
+        preprocess_map_function = self.add_logging_queues_to_map_function(preprocess_map_function, name)
         output_types = (tf.float32, tf.float32)
         output_shapes = [(self.time_steps_per_example, self.number_of_input_channels), (self.number_of_label_types,)]
         zipped_paths_dataset = tf.data.Dataset.zip((injectee_paths_dataset, injectable_paths_dataset))
@@ -395,6 +416,8 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         :param injectee_lightcurve_path_tensor: The tensor containing the path to the injectee lightcurve file.
         :param injectable_lightcurve_path_tensor: The tensor containing the path to the injectable lightcurve file.
         :param evaluation_mode: Whether or not the preprocessing should occur in evaluation mode (for repeatability).
+        :param request_queue: The logging request queue.
+        :param example_queue: The logging example queue.
         :return: The injected example and label arrays shaped for use as single example for the network.
         """
         injectee_lightcurve_path = Path(injectee_lightcurve_path_tensor.numpy().decode('utf-8'))
@@ -408,14 +431,15 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
             raise NotImplementedError
         loggable_injection = None
         if self.logger is not None and self.logger.should_produce_example(request_queue):
-            loggable_injection = WandbLoggableInjection.new()
+            loggable_injection = WandbLoggableInjection()
         fluxes = self.inject_signal_into_lightcurve(injectee_fluxes, injectee_times, injectable_magnifications,
                                                     injectable_times, loggable_injection)
         if loggable_injection is not None:
             loggable_injection.injectee_name = injectee_lightcurve_path.name
             loggable_injection.injectee_light_curve = LightCurve.from_times_and_fluxes(injectee_times, injectee_fluxes)
             loggable_injection.injectable_name = injectable_lightcurve_path.name
-            loggable_injection.injectable_light_curve = LightCurve.from_times_and_fluxes(injectable_times, injectable_magnifications)
+            loggable_injection.injectable_light_curve = LightCurve.from_times_and_fluxes(injectable_times,
+                                                                                         injectable_magnifications)
             loggable_injection.injected_light_curve = LightCurve.from_times_and_fluxes(injectee_times, fluxes)
             self.logger.submit_loggable(example_queue=example_queue, loggable=loggable_injection)
         light_curve = self.build_light_curve_array(fluxes=fluxes, times=injectee_times)
@@ -434,6 +458,7 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         :param lightcurve_times: The times of the flux observations of the lightcurve.
         :param signal_magnifications: The synthetic magnifications to inject.
         :param signal_times: The times of the synthetic magnifications.
+        :param wandb_loggable_injection: The object to log the injection process.
         :return: The fluxes with the injected signal.
         """
         minimum_lightcurve_time = np.min(lightcurve_times)
