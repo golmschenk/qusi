@@ -36,7 +36,7 @@ def train():
     model.compile(optimizer=optimizer, loss=loss_metric, metrics=metrics)
     model.run_eagerly = True
     model.fit(training_dataset, epochs=epochs_to_run, validation_data=validation_dataset, callbacks=logging_callbacks,
-              steps_per_epoch=10, validation_steps=10)
+              steps_per_epoch=5000, validation_steps=500)
     print('Training done.', flush=True)
 
 

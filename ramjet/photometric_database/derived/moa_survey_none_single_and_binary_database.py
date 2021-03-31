@@ -3,12 +3,14 @@ Code for a database of MOA light curves including non-microlensing, single lensi
 """
 from ramjet.data_interface.moa_data_interface import MoaDataInterface
 from ramjet.photometric_database.derived.moa_survey_light_curve_collection import MoaSurveyLightCurveCollection
-from ramjet.photometric_database.standard_and_injected_lightcurve_database import StandardAndInjectedLightcurveDatabase
+from ramjet.photometric_database.standard_and_injected_lightcurve_database import \
+    StandardAndInjectedLightcurveDatabase, OutOfBoundsInjectionHandlingMethod, BaselineFluxEstimationMethod
 
 
 class MoaSurveyNoneSingleAndBinaryDatabase(StandardAndInjectedLightcurveDatabase):
     """
-    A class for a database of MOA light curves including non-microlensing, single lensing, and binary lensing collcetions.
+    A class for a database of MOA light curves including non-microlensing, single lensing, and binary lensing
+    collections.
     """
     moa_data_interface = MoaDataInterface()
 
@@ -17,6 +19,8 @@ class MoaSurveyNoneSingleAndBinaryDatabase(StandardAndInjectedLightcurveDatabase
         self.number_of_label_types = 2
         self.number_of_parallel_processes_per_map = 3
         self.time_steps_per_example = 18000
+        self.out_of_bounds_injection_handling = OutOfBoundsInjectionHandlingMethod.RANDOM_INJECTION_LOCATION
+        self.baseline_flux_estimation_method = BaselineFluxEstimationMethod.MEDIAN_ABSOLUTE_DEVIATION
         self.training_standard_lightcurve_collections = [
             MoaSurveyLightCurveCollection(survey_tags=['v', 'n', 'nr', 'm', 'j', self.moa_data_interface.no_tag_string],
                                           label=[0, 0], dataset_splits=list(range(8))),

@@ -60,3 +60,14 @@ class MoaSurveyLightCurveCollection(LightcurveCollection):
         fluxes = light_curve_dataframe['flux'].values
         flux_errors = light_curve_dataframe['flux_err'].values
         return times, fluxes, flux_errors
+
+    def load_times_and_magnifications_from_path(self, path: Path) -> (np.ndarray, np.ndarray):
+        """
+        Loads the times and magnifications from a given path as an injectable signal.
+
+        :param path: The path to the lightcurve/signal file.
+        :return: The times and the magnifications of the lightcurve/signal.
+        """
+        times, fluxes = self.load_times_and_fluxes_from_path(path)
+        magnifications, times = self.generate_synthetic_signal_from_real_data(fluxes, times)
+        return times, magnifications
