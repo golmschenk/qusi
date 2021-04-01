@@ -23,7 +23,7 @@ def train():
     logs_directory = Path('logs')
 
     # Setup training data, metrics, and logging.
-    wandb_logger = WandbLogger.new()
+    wandb_logger = WandbLogger.new(logs_directory)
     database.logger = wandb_logger
     training_dataset, validation_dataset = database.generate_datasets()
     logging_callbacks = create_logging_callbacks(logs_directory, trial_name)

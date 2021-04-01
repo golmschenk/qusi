@@ -6,6 +6,7 @@ from __future__ import annotations
 import math
 import queue
 from abc import ABC, abstractmethod
+from pathlib import Path
 
 import plotly
 import wandb
@@ -31,23 +32,25 @@ class WandbLoggable(ABC):
     """
 
     @abstractmethod
-    def log(self, summary_name: str) -> None:
+    def log(self, summary_name: str, epoch: int) -> None:
         """
         Logs self to wandb.
 
         :param summary_name: The name of the summary to use on wandb.
+        :param epoch: The current epoch to log with.
         """
         raise NotImplementedError
 
     @staticmethod
-    def log_figure(summary_name: str, figure: plotly.graph_objects.Figure) -> None:
+    def log_figure(summary_name: str, figure: plotly.graph_objects.Figure, epoch: int) -> None:
         """
         Logs a figure to wandb.
 
         :param summary_name: The name of the summary to use on wandb.
         :param figure: The figure to be logged.
+        :param epoch: The current epoch to log with.
         """
-        wandb.log({summary_name: wandb.Plotly(figure)}, commit=False)
+        wandb.log({summary_name: wandb.Plotly(figure)}, step=epoch)
 
 
 class WandbLoggableLightCurve(WandbLoggable):
@@ -59,11 +62,12 @@ class WandbLoggableLightCurve(WandbLoggable):
         self.light_curve_name: str = light_curve_name
         self.light_curve: LightCurve = light_curve
 
-    def log(self, summary_name: str) -> None:
+    def log(self, summary_name: str, epoch: int) -> None:
         """
         Logs self to wandb.
 
         :param summary_name: The name of the summary to use on wandb.
+        :param epoch: The current epoch to log with.
         """
         figure = go.Figure()
         figure.add_trace(go.Scatter(x=self.light_curve.times,
@@ -71,7 +75,7 @@ class WandbLoggableLightCurve(WandbLoggable):
                                     mode='lines+markers'))
         figure.update_layout(title=self.light_curve_name,
                              margin={'l': 0, 'r': 0, 'b': 0, 't': 0})
-        self.log_figure(summary_name, figure)
+        self.log_figure(summary_name, figure, epoch)
 
 
 class WandbLoggableInjection(WandbLoggable):
@@ -91,11 +95,12 @@ class WandbLoggableInjection(WandbLoggable):
         self.aligned_injectee_light_curve: Optional[LightCurve] = None
         self.aligned_injected_light_curve: Optional[LightCurve] = None
 
-    def log(self, summary_name: str):
+    def log(self, summary_name: str, epoch: int):
         """
         Logs self to wandb.
 
         :param summary_name: The name of the summary to use on wandb.
+        :param epoch: The current epoch to log with.
         """
         figure = make_subplots(rows=3, cols=1)
         figure.add_trace(go.Scatter(x=self.injectee_light_curve.times,
@@ -110,7 +115,7 @@ class WandbLoggableInjection(WandbLoggable):
         figure.update_layout(title_text=f"{self.injectable_name} injected into "
                                         f"{self.injectee_name}",
                              margin={'l': 0, 'r': 0, 'b': 0, 't': 0})
-        self.log_figure(summary_name, figure)
+        self.log_figure(summary_name, figure, epoch)
         aligned_figure = make_subplots(rows=2, cols=1, shared_xaxes=True)
         aligned_figure.add_trace(go.Scatter(x=self.aligned_injectee_light_curve.times,
                                             y=self.aligned_injectee_light_curve.fluxes,
@@ -125,7 +130,7 @@ class WandbLoggableInjection(WandbLoggable):
                                                 f"{self.injectee_name}",
                                      margin={'l': 0, 'r': 0, 'b': 0, 't': 0})
         aligned_summary_name = summary_name + 'aligned'
-        self.log_figure(aligned_summary_name, aligned_figure)
+        self.log_figure(aligned_summary_name, aligned_figure, epoch)
 
 
 class WandbLogger:
@@ -141,16 +146,17 @@ class WandbLogger:
         self.example_queues: Dict[str, multiprocess.Queue] = {}
 
     @classmethod
-    def new(cls) -> WandbLogger:
+    def new(cls, logs_directory: Path) -> WandbLogger:
         """
         Creates a new logger.
 
         :return: The logger.
         """
-        wandb.init(project='qusi', sync_tensorboard=True)
+        wandb.tensorboard.patch(root_logdir=str(logs_directory))
+        wandb.init(entity='ramjet', project='qusi', sync_tensorboard=True)
         return cls()
 
-    def process_py_mapper_example_queues(self) -> None:
+    def process_py_mapper_example_queues(self, epoch: int) -> None:
         """
         Processes the example queues, logging the items to wandb.
         """
@@ -160,7 +166,7 @@ class WandbLogger:
                     queue_item = example_queue.get(block=False)
                     pass
                     if isinstance(queue_item, WandbLoggable):
-                        queue_item.log(example_queue_name)
+                        queue_item.log(example_queue_name, epoch)
                     else:
                         raise ValueError(f"{queue_item} is not a handled logger type.")
                 except queue.Empty:
@@ -207,7 +213,8 @@ class WandbLogger:
         self.example_queues[name] = queue_
         return queue_
 
-    def should_produce_example(self, request_queue: multiprocess.Queue) -> bool:
+    @staticmethod
+    def should_produce_example(request_queue: multiprocess.Queue) -> bool:
         """
         Checks a request queue to see if an example has been requested.
 
@@ -251,7 +258,7 @@ class WandbLoggerCallback(keras.callbacks.Callback):
 
     def on_epoch_end(self, epoch, logs=None):
         """Called at the end of an epoch."""
-        self.logger.process_py_mapper_example_queues()
+        self.logger.process_py_mapper_example_queues(epoch)
 
     @staticmethod
     def is_power(number: int, base: int) -> bool:
