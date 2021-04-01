@@ -3,6 +3,7 @@ Code for a logging agent to wandb.
 """
 from __future__ import annotations
 
+import math
 import queue
 from abc import ABC, abstractmethod
 
@@ -38,18 +39,15 @@ class WandbLoggable(ABC):
         """
         raise NotImplementedError
 
-    def log_latest_figure(self, summary_name: str, figure: plotly.graph_objects.Figure) -> None:
+    @staticmethod
+    def log_figure(summary_name: str, figure: plotly.graph_objects.Figure) -> None:
         """
-        Logs a figure to wandb, keeping only the most recent one.
+        Logs a figure to wandb.
 
         :param summary_name: The name of the summary to use on wandb.
         :param figure: The figure to be logged.
-        :return:
         """
-        if summary_name in wandb.run.summary.keys():
-            wandb.run.summary.update({summary_name: wandb.Plotly(figure)})
-        else:
-            wandb.log({summary_name: wandb.Plotly(figure)})
+        wandb.log({summary_name: wandb.Plotly(figure)}, commit=False)
 
 
 class WandbLoggableLightCurve(WandbLoggable):
@@ -73,7 +71,7 @@ class WandbLoggableLightCurve(WandbLoggable):
                                     mode='lines+markers'))
         figure.update_layout(title=self.light_curve_name,
                              margin={'l': 0, 'r': 0, 'b': 0, 't': 0})
-        self.log_latest_figure(summary_name, figure)
+        self.log_figure(summary_name, figure)
 
 
 class WandbLoggableInjection(WandbLoggable):
@@ -112,7 +110,7 @@ class WandbLoggableInjection(WandbLoggable):
         figure.update_layout(title_text=f"{self.injectable_name} injected into "
                                         f"{self.injectee_name}",
                              margin={'l': 0, 'r': 0, 'b': 0, 't': 0})
-        self.log_latest_figure(summary_name, figure)
+        self.log_figure(summary_name, figure)
         aligned_figure = make_subplots(rows=2, cols=1, shared_xaxes=True)
         aligned_figure.add_trace(go.Scatter(x=self.aligned_injectee_light_curve.times,
                                             y=self.aligned_injectee_light_curve.fluxes,
@@ -127,7 +125,7 @@ class WandbLoggableInjection(WandbLoggable):
                                                 f"{self.injectee_name}",
                                      margin={'l': 0, 'r': 0, 'b': 0, 't': 0})
         aligned_summary_name = summary_name + 'aligned'
-        self.log_latest_figure(aligned_summary_name, aligned_figure)
+        self.log_figure(aligned_summary_name, aligned_figure)
 
 
 class WandbLogger:
@@ -248,8 +246,23 @@ class WandbLoggerCallback(keras.callbacks.Callback):
 
     def on_epoch_begin(self, epoch, logs=None):
         """Called at the beginning of an epoch."""
-        self.logger.request_examples_from_py_mapper_processes()
+        if epoch == 0 or self.is_power(epoch, 10):
+            self.logger.request_examples_from_py_mapper_processes()
 
     def on_epoch_end(self, epoch, logs=None):
         """Called at the end of an epoch."""
         self.logger.process_py_mapper_example_queues()
+
+    @staticmethod
+    def is_power(number: int, base: int) -> bool:
+        """
+        Checks if number is a power of the given base.
+
+        :param number: The number.
+        :param base: The base.
+        :return: Whether the number is a power of the base.
+        """
+        if base in {0, 1}:
+            return number == base
+        power = int(math.log(number, base) + 0.5)
+        return base ** power == number
