@@ -471,6 +471,8 @@ class StandardAndInjectedLightcurveDatabase(LightcurveDatabase):
         offset_signal_times = relative_signal_times + signal_start_offset
         if self.baseline_flux_estimation_method == BaselineFluxEstimationMethod.MEDIAN_ABSOLUTE_DEVIATION:
             baseline_flux = scipy.stats.median_abs_deviation(lightcurve_fluxes)
+            baseline_to_median_absolute_deviation_ratio = 10  # Arbitrarily chosen to give a reasonable scale.
+            baseline_flux *= baseline_to_median_absolute_deviation_ratio
         else:
             baseline_flux = np.median(lightcurve_fluxes)
         signal_fluxes = (signal_magnifications * baseline_flux) - baseline_flux
