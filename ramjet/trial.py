@@ -9,7 +9,11 @@ import tensorflow as tf
 from typing import List
 from pathlib import Path
 
+import wandb.keras
 from tensorflow.python.keras import callbacks
+
+from ramjet.logging.wandb_logger import WandbLogger
+from ramjet.photometric_database.standard_and_injected_lightcurve_database import StandardAndInjectedLightcurveDatabase
 
 
 def infer(model: tf.keras.Model, dataset: tf.data.Dataset, infer_results_path: Path,
@@ -81,7 +85,8 @@ def create_logging_metrics() -> List[tf.metrics.Metric]:
     return metrics
 
 
-def create_logging_callbacks(logs_directory: Path, trial_name: str) -> List[callbacks.Callback]:
+def create_logging_callbacks(logs_directory: Path, trial_name: str, database: StandardAndInjectedLightcurveDatabase,
+                             logging_tool: str = 'wandb') -> List[callbacks.Callback]:
     """
     Creates the callbacks to perform the logging.
 
@@ -91,12 +96,19 @@ def create_logging_callbacks(logs_directory: Path, trial_name: str) -> List[call
     """
     datetime_string = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
     trial_directory = logs_directory.joinpath(f'{trial_name} {datetime_string}')
-    tensorboard_callback = callbacks.TensorBoard(log_dir=trial_directory)
+    trial_directory.mkdir(exist_ok=True)
     latest_model_save_path = trial_directory.joinpath('latest_model.ckpt')
     latest_checkpoint_callback = callbacks.ModelCheckpoint(latest_model_save_path, save_weights_only=True)
     best_validation_model_save_path = trial_directory.joinpath('best_validation_model.ckpt')
     best_validation_checkpoint_callback = callbacks.ModelCheckpoint(
         best_validation_model_save_path, monitor='Area_under_ROC_curve', mode='max', save_best_only=True,
         save_weights_only=True)
-    logging_callbacks = [tensorboard_callback, latest_checkpoint_callback, best_validation_checkpoint_callback]
+    logging_callbacks = [latest_checkpoint_callback, best_validation_checkpoint_callback]
+    if logging_tool is 'tensorboard':
+        tensorboard_callback = callbacks.TensorBoard(log_dir=trial_directory)
+        logging_callbacks.append(tensorboard_callback)
+    else:
+        logger = WandbLogger.new(trial_directory)
+        database.logger = logger
+        logging_callbacks.extend([logger.create_callback(), wandb.keras.WandbCallback()])
     return logging_callbacks
