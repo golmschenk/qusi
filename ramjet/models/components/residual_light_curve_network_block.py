@@ -4,12 +4,12 @@ Code for a residual light curve network block.
 from typing import Optional
 
 from tensorflow.keras.layers import LeakyReLU, Convolution1D, MaxPooling1D, BatchNormalization,\
-    Layer, Permute, ZeroPadding1D
+    Layer, Permute, ZeroPadding1D, SpatialDropout1D
 
 
 class ResidualLightCurveNetworkBlock(Layer):
     def __init__(self, output_channels: int, input_channels: Optional[int] = None, kernel_size: int = 3,
-                 pooling_size: int = 1, batch_normalization: bool = True):
+                 pooling_size: int = 1, batch_normalization: bool = True, dropout_rate: float = 0.0):
         super().__init__()
         leaky_relu = LeakyReLU(alpha=0.01)
         dimension_decrease_factor = 4
@@ -38,6 +38,10 @@ class ResidualLightCurveNetworkBlock(Layer):
             self.dimension_change_permute1 = Permute((2, 1))
         else:
             self.dimension_change_layer = None
+        if dropout_rate > 0:
+            self.dropout_layer = SpatialDropout1D(rate=dropout_rate)
+        else:
+            self.dropout_layer = None
 
     def call(self, inputs, training=False, mask=None):
         """
@@ -62,4 +66,6 @@ class ResidualLightCurveNetworkBlock(Layer):
             x = self.dimension_change_permute0(x, training=training)
             x = self.dimension_change_layer(x, training=training)
             x = self.dimension_change_permute1(x, training=training)
+        if self.dropout_layer is not None:
+            y = self.dropout_layer(y, training=training)
         return x + y
