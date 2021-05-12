@@ -26,3 +26,4 @@ wandb
 plotly
 tornado
 beautifulsoup4
+lxml
