@@ -104,7 +104,7 @@ def create_logging_callbacks(logs_directory: Path, trial_name: str, database: St
         best_validation_model_save_path, monitor='Area_under_ROC_curve', mode='max', save_best_only=True,
         save_weights_only=True)
     logging_callbacks = [latest_checkpoint_callback, best_validation_checkpoint_callback]
-    if logging_tool is 'tensorboard':
+    if logging_tool == 'tensorboard':
         tensorboard_callback = callbacks.TensorBoard(log_dir=trial_directory)
         logging_callbacks.append(tensorboard_callback)
     else:
