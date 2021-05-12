@@ -1,6 +1,7 @@
 """
 Code for a general light curve network block.
 """
+from tensorflow.keras import regularizers
 from tensorflow.keras.layers import LeakyReLU, Conv1D, SpatialDropout1D, Dropout, MaxPooling1D, BatchNormalization,\
     Layer
 from tensorflow.keras.layers import Reshape
@@ -9,10 +10,15 @@ from tensorflow.keras.layers import Reshape
 class LightCurveNetworkBlock(Layer):
     """A block containing a convolution and all the fixings that go with it."""
     def __init__(self, filters: int, kernel_size: int, pooling_size: int, dropout_rate: float = 0.1,
-                 batch_normalization: bool = True, spatial: bool = True):
+                 batch_normalization: bool = True, spatial: bool = True, l2_regularization: float = 0.0):
         super().__init__()
         leaky_relu = LeakyReLU(alpha=0.01)
-        self.convolution = Conv1D(filters, kernel_size=kernel_size, activation=leaky_relu)
+        if l2_regularization != 0:
+            kernel_regularizer = regularizers.L2(l2=l2_regularization)
+        else:
+            kernel_regularizer = None
+        self.convolution = Conv1D(filters, kernel_size=kernel_size, activation=leaky_relu,
+                                  kernel_regularizer=kernel_regularizer)
         if dropout_rate > 0:
             if spatial:
                 self.dropout = SpatialDropout1D(dropout_rate)
