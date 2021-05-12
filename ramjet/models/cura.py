@@ -1,6 +1,6 @@
 from tensorflow import sigmoid
 from tensorflow.keras import Model
-from tensorflow.keras.layers import Reshape, Convolution1D, MaxPooling1D
+from tensorflow.keras.layers import Reshape, Convolution1D, MaxPooling1D, AveragePooling1D
 
 from ramjet.models.components.residual_light_curve_network_block import ResidualLightCurveNetworkBlock
 
@@ -23,7 +23,7 @@ class Cura(Model):
             for _ in range(2):
                 self.blocks.append(ResidualLightCurveNetworkBlock(output_channels=output_channels))
             input_channels = output_channels
-        self.final_pooling = MaxPooling1D(pool_size=5)
+        self.final_pooling = AveragePooling1D(pool_size=5)
         self.prediction_layer = Convolution1D(number_of_label_types, kernel_size=1, activation=sigmoid)
         self.reshape = Reshape([number_of_label_types])
 
