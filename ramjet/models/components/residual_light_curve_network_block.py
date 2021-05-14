@@ -5,11 +5,12 @@ from typing import Optional
 
 from tensorflow.keras.layers import LeakyReLU, Convolution1D, MaxPooling1D, BatchNormalization,\
     Layer, Permute, ZeroPadding1D, SpatialDropout1D
+from tensorflow.keras.regularizers import L2
 
 
 class ResidualLightCurveNetworkBlock(Layer):
     def __init__(self, output_channels: int, input_channels: Optional[int] = None, kernel_size: int = 3,
-                 pooling_size: int = 1, batch_normalization: bool = True, dropout_rate: float = 0.0):
+                 pooling_size: int = 1, batch_normalization: bool = True, dropout_rate: float = 0.0, l2_regularization: float = 0.0):
         super().__init__()
         leaky_relu = LeakyReLU(alpha=0.01)
         dimension_decrease_factor = 4
@@ -17,13 +18,17 @@ class ResidualLightCurveNetworkBlock(Layer):
             self.batch_normalization = BatchNormalization(scale=False)
         else:
             self.batch_normalization = None
+        if l2_regularization > 0:
+            l2_regularizer = L2(l2_regularization)
+        else:
+            l2_regularizer = None
         self.dimension_decrease_layer = Convolution1D(
-            output_channels // dimension_decrease_factor, kernel_size=1, activation=leaky_relu)
+            output_channels // dimension_decrease_factor, kernel_size=1, activation=leaky_relu, kernel_regularizer=l2_regularizer)
         self.convolutional_layer = Convolution1D(
             output_channels // dimension_decrease_factor, kernel_size=kernel_size, activation=leaky_relu,
-            padding='same')
+            padding='same', kernel_regularizer=l2_regularizer)
         self.dimension_increase_layer = Convolution1D(
-            output_channels, kernel_size=1, activation=leaky_relu)
+            output_channels, kernel_size=1, activation=leaky_relu, kernel_regularizer=l2_regularizer)
         if pooling_size > 1:
             self.pooling_layer = MaxPooling1D(pool_size=pooling_size, padding='same')
         else:

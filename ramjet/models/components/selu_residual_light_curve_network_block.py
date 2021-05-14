@@ -38,7 +38,7 @@ class SeluResidualLightCurveNetworkBlock(Layer):
         else:
             self.dimension_change_layer = None
         if dropout_rate > 0:
-            self.dropout_layer = AlphaDropout(rate=dropout_rate, noise_shape=(None, 1, output_channels))
+            self.dropout_layer = AlphaDropout(rate=dropout_rate, noise_shape=(50, 1, output_channels))
         else:
             self.dropout_layer = None
 
