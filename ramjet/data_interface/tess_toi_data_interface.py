@@ -21,6 +21,16 @@ class ToiColumns(Enum):
     sector = 'Sector'
 
 
+class ExofopDisposition(Enum):
+    """
+    An enum for the ExoFOP dispositions.
+    """
+    CONFIRMED_PLANET = 'CP'
+    KEPLER_CONFIRMED_PLANET = 'KP'
+    PLANET_CANDIDATE = 'PC'
+    FALSE_POSITIVE = 'FP'
+
+
 class TessToiDataInterface:
     """
     A data interface for working with the TESS table of objects of interest.
