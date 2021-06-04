@@ -40,7 +40,7 @@ def train():
         wandb.run.notes = trial_name
         loss_metric = BinaryCrossentropy(name='Loss')
         metrics = create_logging_metrics()
-        optimizer = tf.optimizers.Adam(learning_rate=1e-4)
+        optimizer = tf.optimizers.Adam(learning_rate=1e-3)
 
     # Compile and train model.
     model.compile(optimizer=optimizer, loss=loss_metric, metrics=metrics)
