@@ -7,6 +7,7 @@ from tensorflow.python.keras.losses import BinaryCrossentropy
 from pathlib import Path
 # from pathos.helpers import mp as multiprocess
 # multiprocess.set_start_method('spawn', force=True)
+from ramjet.configuration import Configuration
 from ramjet.models.cura import Cura, CuraWithDropout, CuraFinalAveragePool, CuraFinalAveragePoolNarrowerer
 from ramjet.models.gml_model import GmlModel, GmlModel2, GmlModel2Wider, GmlModel2LessBatchNorm, GmlModel2NoL2, \
     GmlModel2WiderNoL2, GmlModel2Wider4NoL2, GmlModel2Wider4NoL2NoDo, GmlModel2Wider4, GmlModel3, GmlModel3Narrower, \

@@ -8,12 +8,21 @@ import pandas as pd
 import tensorflow as tf
 from typing import List
 from pathlib import Path
+try:
+    from enum import StrEnum
+except ImportError:
+    from backports.strenum import StrEnum
 
 import wandb.keras
 from tensorflow.python.keras import callbacks
 
 from ramjet.logging.wandb_logger import WandbLogger
 from ramjet.photometric_database.standard_and_injected_lightcurve_database import StandardAndInjectedLightcurveDatabase
+
+
+class LoggingToolName(StrEnum):
+    WANDB = 'wandb'
+    TENSORBOARD = 'tensorboard'
 
 
 def infer(model: tf.keras.Model, dataset: tf.data.Dataset, infer_results_path: Path,
@@ -86,7 +95,7 @@ def create_logging_metrics() -> List[tf.metrics.Metric]:
 
 
 def create_logging_callbacks(logs_directory: Path, trial_name: str, database: StandardAndInjectedLightcurveDatabase,
-                             logging_tool: str = 'wandb') -> List[callbacks.Callback]:
+                             logging_tool_name: LoggingToolName = LoggingToolName.WANDB) -> List[callbacks.Callback]:
     """
     Creates the callbacks to perform the logging.
 
@@ -104,7 +113,7 @@ def create_logging_callbacks(logs_directory: Path, trial_name: str, database: St
         best_validation_model_save_path, monitor='Area_under_ROC_curve', mode='max', save_best_only=True,
         save_weights_only=True)
     logging_callbacks = [latest_checkpoint_callback, best_validation_checkpoint_callback]
-    if logging_tool == 'tensorboard':
+    if logging_tool_name == 'tensorboard':
         tensorboard_callback = callbacks.TensorBoard(log_dir=trial_directory)
         logging_callbacks.append(tensorboard_callback)
     else:
