@@ -1,23 +1,16 @@
 """Code for running training."""
-# import os
-# os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 import tensorflow as tf
-import wandb
 from tensorflow.python.keras.losses import BinaryCrossentropy
 from pathlib import Path
-# from pathos.helpers import mp as multiprocess
-# multiprocess.set_start_method('spawn', force=True)
 from ramjet.models.cura import Cura, CuraWithDropout, CuraFinalAveragePool, CuraFinalAveragePoolNarrowerer
 from ramjet.models.gml_model import GmlModel, GmlModel2, GmlModel2Wider, GmlModel2LessBatchNorm, GmlModel2NoL2, \
     GmlModel2WiderNoL2, GmlModel2Wider4NoL2, GmlModel2Wider4NoL2NoDo, GmlModel2Wider4, GmlModel3, GmlModel3Narrower, \
     GmlModel3NarrowerNoL2
-from ramjet.models.hades import Hades
 from ramjet.photometric_database.derived.moa_survey_none_single_and_binary_database import \
     MoaSurveyNoneSingleAndBinaryDatabase
 from ramjet.photometric_database.derived.tess_two_minute_cadence_transit_databases import \
     TessTwoMinuteCadenceStandardAndInjectedTransitDatabase
 from ramjet.trial import create_logging_metrics, create_logging_callbacks
-from ramjet.logging.wandb_logger import WandbLogger
 
 
 def train():
@@ -37,7 +30,6 @@ def train():
         # Setup training data, metrics, and logging.
         logging_callbacks = create_logging_callbacks(logs_directory, trial_name, database)
         training_dataset, validation_dataset = database.generate_datasets()
-        wandb.run.notes = trial_name
         loss_metric = BinaryCrossentropy(name='Loss')
         metrics = create_logging_metrics()
         optimizer = tf.optimizers.Adam(learning_rate=1e-3)

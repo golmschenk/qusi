@@ -2,9 +2,6 @@
 Code for a database of MOA light curves including non-microlensing, single lensing, and binary lensing collcetions.
 """
 from ramjet.data_interface.moa_data_interface import MoaDataInterface
-from ramjet.photometric_database.derived.moa_microlensing_lightcurve_collection import \
-    MicrolensingSyntheticGeneratedDuringRunningSignalCollection, \
-    MicrolensingSyntheticApproximatePsplGeneratedDuringRunningSignalCollection
 from ramjet.photometric_database.derived.moa_survey_light_curve_collection import MoaSurveyLightCurveCollection
 from ramjet.photometric_database.standard_and_injected_lightcurve_database import \
     StandardAndInjectedLightcurveDatabase, OutOfBoundsInjectionHandlingMethod, BaselineFluxEstimationMethod

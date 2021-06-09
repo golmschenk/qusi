@@ -118,6 +118,7 @@ def create_logging_callbacks(logs_directory: Path, trial_name: str, database: St
         logging_callbacks.append(tensorboard_callback)
     else:
         logger = WandbLogger.new(trial_directory)
+        wandb.run.notes = trial_name
         database.logger = logger
         logging_callbacks.extend([logger.create_callback(), wandb.keras.WandbCallback()])
     return logging_callbacks
