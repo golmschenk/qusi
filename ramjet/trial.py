@@ -105,7 +105,7 @@ def create_logging_callbacks(logs_directory: Path, trial_name: str, database: St
     """
     datetime_string = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
     trial_directory = logs_directory.joinpath(f'{trial_name} {datetime_string}')
-    trial_directory.mkdir(exist_ok=True)
+    trial_directory.mkdir(exist_ok=True, parents=True)
     latest_model_save_path = trial_directory.joinpath('latest_model.ckpt')
     latest_checkpoint_callback = callbacks.ModelCheckpoint(latest_model_save_path, save_weights_only=True)
     best_validation_model_save_path = trial_directory.joinpath('best_validation_model.ckpt')

@@ -152,7 +152,7 @@ class WandbLogger:
 
         :return: The logger.
         """
-        wandb.init(entity='ramjet', project='check', dir=trial_directory)
+        wandb.init(entity='ramjet', project='gml', dir=trial_directory, settings=wandb.Settings(start_method='fork'))
         return cls()
 
     def process_py_mapper_example_queues(self, epoch: int) -> None:
