@@ -190,7 +190,7 @@ class Cura(Model):
             for _ in range(2):
                 self.blocks.append(BottleNeckResidualLightCurveNetworkBlock(output_channels=output_channels, dropout_rate=0.5))
             input_channels = output_channels
-        self.final_pooling = AveragePooling1D(pool_size=5)
+        self.final_pooling = AveragePooling1D(pool_size=4)
         self.prediction_layer = Convolution1D(number_of_label_types, kernel_size=1, activation=sigmoid)
         self.reshape = Reshape([number_of_label_types])
 
