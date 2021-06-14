@@ -14,10 +14,9 @@ def train():
     """Runs the training."""
     print('Starting training process...', flush=True)
     # Basic training settings.
-    database = MoaSurveyNoneSingleAndBinaryDatabase()
+    database = TessTwoMinuteCadenceStandardAndInjectedTransitDatabase()
     mirrored_strategy = tf.distribute.MirroredStrategy()
     with mirrored_strategy.scope():
-    # if True:
         model = Cura(database.number_of_label_types, database.number_of_input_channels)
         trial_name = f'{type(model).__name__}'  # Add any desired run name details to this string.
         # database.batch_size = 100  # Reducing the batch size may help if you are running out of memory.
