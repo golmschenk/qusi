@@ -10,7 +10,7 @@ from ramjet.models.components.residual_light_curve_network_block import Residual
 from ramjet.models.components.selu_residual_light_curve_network_block import SeluResidualLightCurveNetworkBlock
 
 
-class Cura(Model):
+class OldCura(Model):
     """
     A general convolutional model for light curve data.
     """
@@ -171,7 +171,7 @@ class CuraWithDropout(Model):
         outputs = self.reshape(x, training=training)
         return outputs
 
-class CuraFinalAveragePool(Model):
+class Cura(Model):
     """
     A general convolutional model for light curve data.
     """

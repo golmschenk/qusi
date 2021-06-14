@@ -2,10 +2,7 @@
 import tensorflow as tf
 from tensorflow.python.keras.losses import BinaryCrossentropy
 from pathlib import Path
-from ramjet.models.cura import Cura, CuraWithDropout, CuraFinalAveragePool, CuraFinalAveragePoolNarrowerer
-from ramjet.models.gml_model import GmlModel, GmlModel2, GmlModel2Wider, GmlModel2LessBatchNorm, GmlModel2NoL2, \
-    GmlModel2WiderNoL2, GmlModel2Wider4NoL2, GmlModel2Wider4NoL2NoDo, GmlModel2Wider4, GmlModel3, GmlModel3Narrower, \
-    GmlModel3NarrowerNoL2
+from ramjet.models.cura import Cura
 from ramjet.photometric_database.derived.moa_survey_none_single_and_binary_database import \
     MoaSurveyNoneSingleAndBinaryDatabase
 from ramjet.photometric_database.derived.tess_two_minute_cadence_transit_databases import \
@@ -21,7 +18,7 @@ def train():
     mirrored_strategy = tf.distribute.MirroredStrategy()
     with mirrored_strategy.scope():
     # if True:
-        model = CuraFinalAveragePoolNarrowerer(database.number_of_label_types, database.number_of_input_channels)
+        model = Cura(database.number_of_label_types, database.number_of_input_channels)
         trial_name = f'{type(model).__name__}'  # Add any desired run name details to this string.
         # database.batch_size = 100  # Reducing the batch size may help if you are running out of memory.
         epochs_to_run = 1000
