@@ -24,7 +24,8 @@ def train():
         logs_directory = Path('logs')
 
         # Setup training data, metrics, and logging.
-        logging_callbacks = create_logging_callbacks(logs_directory, trial_name, database)
+        logging_callbacks = create_logging_callbacks(logs_directory, trial_name, database,
+                                                     wandb_entity='ramjet', wandb_project='transit')
         training_dataset, validation_dataset = database.generate_datasets()
         loss_metric = BinaryCrossentropy(name='Loss')
         metrics = create_logging_metrics()

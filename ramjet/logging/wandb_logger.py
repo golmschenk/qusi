@@ -146,13 +146,13 @@ class WandbLogger:
         self.example_queues: Dict[str, multiprocess.Queue] = {}
 
     @classmethod
-    def new(cls, trial_directory: Path) -> WandbLogger:
+    def new(cls, entity: Optional[str] = None, project: Optional[str] = None) -> WandbLogger:
         """
         Creates a new logger.
 
         :return: The logger.
         """
-        wandb.init(entity='ramjet', project='gml', dir=trial_directory, settings=wandb.Settings(start_method='fork'))
+        wandb.init(entity=entity, project=project, settings=wandb.Settings(start_method='fork'))
         return cls()
 
     def process_py_mapper_example_queues(self, epoch: int) -> None:

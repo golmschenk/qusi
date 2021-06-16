@@ -6,7 +6,7 @@ import datetime
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-from typing import List
+from typing import List, Optional
 from pathlib import Path
 try:
     from enum import StrEnum
@@ -95,7 +95,9 @@ def create_logging_metrics() -> List[tf.metrics.Metric]:
 
 
 def create_logging_callbacks(logs_directory: Path, trial_name: str, database: StandardAndInjectedLightcurveDatabase,
-                             logging_tool_name: LoggingToolName = LoggingToolName.WANDB) -> List[callbacks.Callback]:
+                             logging_tool_name: LoggingToolName = LoggingToolName.WANDB,
+                             wandb_entity: Optional[str] = None, wandb_project: Optional[str] = None
+                             ) -> List[callbacks.Callback]:
     """
     Creates the callbacks to perform the logging.
 
@@ -117,7 +119,8 @@ def create_logging_callbacks(logs_directory: Path, trial_name: str, database: St
         tensorboard_callback = callbacks.TensorBoard(log_dir=trial_directory)
         logging_callbacks.append(tensorboard_callback)
     else:
-        logger = WandbLogger.new(trial_directory)
+        assert wandb_entity is not None and wandb_project is not None
+        logger = WandbLogger.new(entity=wandb_entity, project=wandb_project)
         wandb.run.notes = trial_name
         database.logger = logger
         logging_callbacks.extend([logger.create_callback(), wandb.keras.WandbCallback()])
