@@ -1,6 +1,11 @@
 """
 Code for a class for common interfacing with TESS data, such as downloading, sorting, and manipulating.
 """
+try:
+    from enum import StrEnum
+except ImportError:
+    from backports.strenum import StrEnum
+
 import math
 import re
 import shutil
@@ -31,6 +36,14 @@ class TessFluxType(Enum):
     """
     SAP = 'SAP_FLUX'
     PDCSAP = 'PDCSAP_FLUX'
+
+
+class ColumnName(StrEnum):
+    """
+    An enum for the names of the columns produced by the data interface class.
+    """
+    TIC_ID = 'TIC ID'
+    SECTOR = 'Sector'
 
 
 def is_common_mast_connection_error(exception: Exception) -> bool:
@@ -222,7 +235,7 @@ class TessDataInterface:
         :param data_frame: The data frame of single-sector entries.
         :return: The table with the added TIC ID column.
         """
-        data_frame['TIC ID'] = data_frame['obs_id'].map(self.get_tic_id_from_single_sector_obs_id)
+        data_frame[ColumnName.TIC_ID] = data_frame['obs_id'].map(self.get_tic_id_from_single_sector_obs_id)
         return data_frame
 
     def add_sector_column_to_single_sector_observations(self, observations: pd.DataFrame) -> pd.DataFrame:
@@ -232,7 +245,7 @@ class TessDataInterface:
         :param observations: The table of single-sector observations.
         :return: The table with the added sector column.
         """
-        observations['Sector'] = observations['obs_id'].map(self.get_sector_from_single_sector_obs_id)
+        observations[ColumnName.SECTOR] = observations['obs_id'].map(self.get_sector_from_single_sector_obs_id)
         return observations
 
     def load_lightcurve_from_fits_file(self, lightcurve_path: Union[str, Path]) -> Dict[str, np.ndarray]:
@@ -318,7 +331,8 @@ class TessDataInterface:
         two_minute_observations = self.filter_out_twenty_second_cadence_observations(single_sector_observations)
         observations_with_sectors = self.add_sector_column_to_single_sector_observations(two_minute_observations)
         if sector is not None:
-            observations_with_sectors = observations_with_sectors[observations_with_sectors['Sector'] == sector]
+            observations_with_sectors = observations_with_sectors[
+                observations_with_sectors[ColumnName.SECTOR] == sector]
         else:
             observations_with_sectors = observations_with_sectors.head(1)
         product_list = self.get_product_list(observations_with_sectors)
@@ -503,7 +517,7 @@ class TessDataInterface:
         single_sector_observations = self.filter_for_single_sector_observations(time_series_observations)
         two_minute_observations = self.filter_out_twenty_second_cadence_observations(single_sector_observations)
         single_sector_observations = self.add_sector_column_to_single_sector_observations(two_minute_observations)
-        return sorted(single_sector_observations['Sector'].unique())
+        return sorted(single_sector_observations[ColumnName.SECTOR].unique())
 
     def get_all_two_minute_single_sector_observations(self, tic_ids: List[int] = None) -> pd.DataFrame:
         """
