@@ -27,3 +27,4 @@ plotly
 tornado
 beautifulsoup4
 lxml
+backports.strenum
