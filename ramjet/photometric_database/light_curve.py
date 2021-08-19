@@ -1,6 +1,8 @@
 """
 Code for a class to represent a light curve. See the contained class docstring for more details.
 """
+from __future__ import annotations
+
 from abc import ABC
 from typing import Union, List
 
@@ -71,3 +73,10 @@ class LightCurve(ABC):
         Converts the light curve to relative scale.
         """
         self.convert_columns_to_relative_scale(self.flux_column_names)
+
+    @classmethod
+    def from_times_and_fluxes(cls, times: np.ndarray, fluxes: np.ndarray) -> LightCurve:
+        light_curve = LightCurve()
+        light_curve.times = times
+        light_curve.fluxes = fluxes
+        return light_curve

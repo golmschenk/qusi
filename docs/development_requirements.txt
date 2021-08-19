@@ -21,3 +21,6 @@ setuptools
 dataset
 pathos
 peewee
+backports.strenum
+plotly
+wandb

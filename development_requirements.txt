@@ -22,3 +22,9 @@ dataset
 pathos
 peewee
 pytest-asyncio
+wandb
+plotly
+tornado
+beautifulsoup4
+lxml
+backports.strenum

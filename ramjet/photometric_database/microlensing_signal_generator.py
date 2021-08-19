@@ -12,7 +12,7 @@ from pathlib import Path
 try:
     from muLAn.models.vbb.vbb import vbbmagU
 except ModuleNotFoundError as error:
-    raise ModuleNotFoundError(f'{__file__} module requires the muLAn package. Please install separately.') from error
+    vbbmagU = None
 
 
 class MagnificationSignal:
@@ -27,12 +27,12 @@ class MagnificationSignal:
     > The distribution for tE and rho are based on the MOA observations
     > No parallax effect is considered
     """
-    tE_list: pd.Series = None
-    rho_list: pd.Series = None
+    tE_list: np.ndarray = None
+    rho_list: np.ndarray = None
 
     def __init__(self):
         self.load_moa_meta_data_to_class_attributes()
-        self.n_data_points = 40000
+        self.n_data_points = 80000
         self.timeseries = np.linspace(-30, 30, self.n_data_points)
         self.magnification = None
         self.magnification_signal_curve = None
@@ -58,8 +58,11 @@ class MagnificationSignal:
                     csv_file.write(response.content)
             data = pd.read_csv(microlensing_meta_data_path, header=None, delim_whitespace=True, comment='#',
                                usecols=[19, 36], names=['tE', 'rho'])
-            self.tE_list = data['tE']
-            self.rho_list = data['rho']
+            self.tE_list: np.ndarray = data['tE'].values
+            self.rho_list: np.ndarray = data['rho'].values
+            bad_indexes = np.argwhere(self.tE_list > 6000)
+            self.tE_list = np.delete(self.tE_list, bad_indexes)
+            self.rho_list = np.delete(self.rho_list, bad_indexes)
 
     def getting_random_values(self):
         """
@@ -68,20 +71,22 @@ class MagnificationSignal:
         normalized by the angular Einstein radius), q (Mass ratio M_planet/M_host), alpha (Trajectory angle)
         """
 
-        u0_list = np.linspace(-1, 1, 1000)
+        u0_list = np.linspace(-0.1, 0, 1000)
         self.u0 = np.random.choice(u0_list)
 
-        self.tE = float(np.random.choice(self.tE_list))
+        index = np.random.choice(np.arange(self.tE_list.shape[0]))
+        self.tE = float(self.tE_list[index])
+        self.rho = float(self.rho_list[index])
 
-        self.rho = float(np.random.choice(self.rho_list))
-
-        s_list = np.linspace(0.5, 2.0, 100)
+        s_list = np.linspace(0.7, 1.3, 100)
         self.s = np.random.choice(s_list)
 
-        q_list = np.power(10, (np.linspace(-4, -0.3, 1000)))
+        q_list = np.power(10, (np.linspace(-2.5, -0.3, 1000)))
         self.q = np.random.choice(q_list)
 
-        alpha_list = np.linspace(0, 2 * np.pi, 60)
+        pi_denomintor = 128
+        alpha_list = np.concatenate([np.linspace(0, np.pi / pi_denomintor),
+                                     np.linspace(np.pi - (np.pi / pi_denomintor), np.pi)])
         self.alpha = np.random.choice(alpha_list)
 
     def generating_magnification(self):
