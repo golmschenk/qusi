@@ -13,7 +13,7 @@ def download():
     Downloads and prepares the data needed for the GPU experiments.
     """
     tess_data_interface = TessDataInterface()
-    tess_data_interface.download_two_minute_cadence_lightcurves(Path('data/tess_two_minute_cadence_lightcurves'))
+    tess_data_interface.download_two_minute_cadence_light_curves(Path('data/tess_two_minute_cadence_light_curves'))
     build_tables()
 
 

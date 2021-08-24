@@ -9,7 +9,7 @@ import numpy as np
 import tensorflow as tf
 
 
-class LightcurveDatabase(ABC):
+class LightCurveDatabase(ABC):
     """A base generalized database for photometric data to be subclassed."""
 
     def __init__(self, data_directory='data'):
@@ -32,14 +32,14 @@ class LightcurveDatabase(ABC):
         return self.batch_size // 10
 
     @staticmethod
-    def normalize_log_0_to_1(lightcurve: np.ndarray) -> np.ndarray:
-        """Normalizes from 0 to 1 on the logarithm of the lightcurve."""
-        lightcurve -= np.min(lightcurve)
-        lightcurve = np.log1p(lightcurve)
-        array_max = np.max(lightcurve)
+    def normalize_log_0_to_1(light_curve: np.ndarray) -> np.ndarray:
+        """Normalizes from 0 to 1 on the logarithm of the light curve."""
+        light_curve -= np.min(light_curve)
+        light_curve = np.log1p(light_curve)
+        array_max = np.max(light_curve)
         if array_max != 0:
-            lightcurve /= array_max
-        return lightcurve
+            light_curve /= array_max
+        return light_curve
 
     @staticmethod
     def normalize_on_percentiles(array: np.ndarray) -> np.ndarray:
@@ -81,16 +81,16 @@ class LightcurveDatabase(ABC):
         return np.array(a)[indexes], np.array(b)[indexes]
 
     @staticmethod
-    def remove_random_elements(lightcurve: np.ndarray, ratio: float = 0.01) -> np.ndarray:
-        """Removes random values from the lightcurve."""
-        light_curve_length = lightcurve.shape[0]
+    def remove_random_elements(light_curve: np.ndarray, ratio: float = 0.01) -> np.ndarray:
+        """Removes random values from the light_curve."""
+        light_curve_length = light_curve.shape[0]
         max_values_to_remove = int(light_curve_length * ratio)
         if max_values_to_remove != 0:
             values_to_remove = np.random.randint(max_values_to_remove)
         else:
             values_to_remove = 0
         random_indexes = np.random.choice(range(light_curve_length), values_to_remove, replace=False)
-        return np.delete(lightcurve, random_indexes, axis=0)
+        return np.delete(light_curve, random_indexes, axis=0)
 
     def get_ratio_enforced_dataset(self, positive_training_dataset: tf.data.Dataset,
                                    negative_training_dataset: tf.data.Dataset,

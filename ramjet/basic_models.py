@@ -53,8 +53,8 @@ class SimpleCubeCnn(Sequential):
         self.add(Reshape([1]))
 
 
-class SimpleLightcurveCnn(Model):
-    """A simple 1D CNN for lightcurves."""
+class SimpleLightCurveCnn(Model):
+    """A simple 1D CNN for light curves."""
 
     def __init__(self, number_of_label_types=1):
         super().__init__()
@@ -133,8 +133,8 @@ class SimpleLightcurveCnn(Model):
         return x
 
 
-class SimpleFfiLightcurveCnn(Model):
-    """A simple 1D CNN for FFI lightcurves."""
+class SimpleFfiLightCurveCnn(Model):
+    """A simple 1D CNN for FFI light curves."""
 
     def __init__(self):
         super().__init__()
@@ -213,8 +213,8 @@ class SimpleFfiLightcurveCnn(Model):
         return x
 
 
-class SmallFfiLightcurveCnn(Model):
-    """A simple 1D CNN for FFI lightcurves."""
+class SmallFfiLightCurveCnn(Model):
+    """A simple 1D CNN for FFI light curves."""
 
     def __init__(self):
         super().__init__()
@@ -268,8 +268,8 @@ class SmallFfiLightcurveCnn(Model):
         return x
 
 
-class SimpleLightcurveLstm(Model):
-    """A simple LSTM model for lightcurves."""
+class SimpleLightCurveLstm(Model):
+    """A simple LSTM model for light curves."""
 
     def __init__(self):
         super().__init__()
@@ -295,8 +295,8 @@ class SimpleLightcurveLstm(Model):
         return x
 
 
-class SimpleLightcurveCnnPerTimeStepLabel(Model):
-    """A simple 1D CNN for lightcurves."""
+class SimpleLightCurveCnnPerTimeStepLabel(Model):
+    """A simple 1D CNN for light curves."""
 
     def __init__(self):
         super().__init__()
@@ -583,8 +583,8 @@ class ConvolutionalLstmMeanFinal(Model):
         return x
 
 
-class SimpleLightcurveCnnWithLstmLayers(Model):
-    """A simple 1D CNN for lightcurves."""
+class SimpleLightCurveCnnWithLstmLayers(Model):
+    """A simple 1D CNN for light curves."""
 
     def __init__(self):
         super().__init__()
@@ -742,8 +742,8 @@ class ResnetBlock1D(Layer):
         return output
 
 
-class SimpleLightcurveCnnWithSkipConnections(Model):
-    """A simple 1D CNN for lightcurves."""
+class SimpleLightCurveCnnWithSkipConnections(Model):
+    """A simple 1D CNN for light curves."""
 
     def __init__(self):
         super().__init__()
@@ -775,8 +775,8 @@ class SimpleLightcurveCnnWithSkipConnections(Model):
         outputs = self.reshape(end_convolution1_outputs, training=training)
         return outputs
 
-class HalfDepthSimpleLightcurveCnn(Model):
-    """A simple 1D CNN for lightcurves."""
+class HalfDepthSimpleLightCurveCnn(Model):
+    """A simple 1D CNN for light curves."""
     def __init__(self):
         super().__init__()
         leaky_relu = LeakyReLU(alpha=0.01)
@@ -824,8 +824,8 @@ class HalfDepthSimpleLightcurveCnn(Model):
         return outputs
 
 
-class QuarterDepthSimpleLightcurveCnn(Model):
-    """A simple 1D CNN for lightcurves."""
+class QuarterDepthSimpleLightCurveCnn(Model):
+    """A simple 1D CNN for light curves."""
     def __init__(self):
         super().__init__()
         leaky_relu = LeakyReLU(alpha=0.01)
@@ -863,8 +863,8 @@ class QuarterDepthSimpleLightcurveCnn(Model):
         return outputs
 
 
-class DoubleDepthSimpleLightcurveCnn(Model):
-    """A simple 1D CNN for lightcurves."""
+class DoubleDepthSimpleLightCurveCnn(Model):
+    """A simple 1D CNN for light curves."""
     def __init__(self):
         super().__init__()
         leaky_relu = LeakyReLU(alpha=0.01)
@@ -986,8 +986,8 @@ class DoubleDepthSimpleLightcurveCnn(Model):
         x = self.reshape(x, training=training)
         return x
 
-class MiniDepthSimpleLightcurveCnn(Model):
-    """A simple 1D CNN for lightcurves."""
+class MiniDepthSimpleLightCurveCnn(Model):
+    """A simple 1D CNN for light curves."""
     def __init__(self):
         super().__init__()
         leaky_relu = LeakyReLU(alpha=0.01)
@@ -1017,7 +1017,7 @@ class MiniDepthSimpleLightcurveCnn(Model):
         return outputs
 
 
-class SimplePoolingLightcurveCnn(Model):
+class SimplePoolingLightCurveCnn(Model):
     """A simple CNN using max pooling to reduce the time dimension."""
     def __init__(self):
         super().__init__()
@@ -1052,7 +1052,7 @@ class SimplePoolingLightcurveCnn(Model):
         outputs = self.reshape(x, training=training)
         return outputs
 
-class SimplePoolingLightcurveCnn2(Model):
+class SimplePoolingLightCurveCnn2(Model):
     """A simple CNN using max pooling to reduce the time dimension."""
     def __init__(self):
         super().__init__()
@@ -1089,7 +1089,7 @@ class SimplePoolingLightcurveCnn2(Model):
         outputs = self.reshape(x, training=training)
         return outputs
 
-class FfiSimplePoolingLightcurveCnn2(Model):
+class FfiSimplePoolingLightCurveCnn2(Model):
     """A simple CNN using max pooling to reduce the time dimension."""
     def __init__(self):
         super().__init__()

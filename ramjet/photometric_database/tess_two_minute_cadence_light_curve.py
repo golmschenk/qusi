@@ -63,7 +63,7 @@ class TessTwoMinuteCadenceLightCurve(TessLightCurve):
         if fits_indexes_to_load is None:
             fits_indexes_to_load = list(TessTwoMinuteCadenceMastFitsIndex)
         with fits.open(path) as hdu_list:
-            light_curve_table = hdu_list[1].data  # Lightcurve information is in first extension table.
+            light_curve_table = hdu_list[1].data  # Light curve information is in first extension table.
             for fits_index in fits_indexes_to_load:
                 column_name = TessTwoMinuteCadenceColumnName[fits_index.name]
                 light_curve.data_frame[column_name.value] = light_curve_table[fits_index.value]
@@ -83,8 +83,8 @@ class TessTwoMinuteCadenceLightCurve(TessLightCurve):
                                      specific ones may speed the process when loading many light curves.
         :return: The light curve.
         """
-        light_curve_path = cls.mast_tess_data_interface.download_two_minute_cadence_lightcurve(tic_id=tic_id,
-                                                                                               sector=sector)
+        light_curve_path = cls.mast_tess_data_interface.download_two_minute_cadence_light_curve(tic_id=tic_id,
+                                                                                                sector=sector)
         light_curve = cls.from_path(path=light_curve_path, fits_indexes_to_load=fits_indexes_to_load)
         return light_curve
 

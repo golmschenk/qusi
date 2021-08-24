@@ -118,11 +118,11 @@ class TestTessDataInterface:
         expected_fluxes = np.array([1, 2, 3], dtype=np.float32)
         expected_times = np.array([4, 5, 6], dtype=np.float32)
         hdu = Mock(data={'PDCSAP_FLUX': expected_fluxes, 'TIME': expected_times})
-        hdu_list = [None, hdu]  # Lightcurve information is in first extension table in TESS data.
+        hdu_list = [None, hdu]  # LightCurve information is in first extension table in TESS data.
         mock_fits_open.return_value.__enter__.return_value = hdu_list
-        lightcurve_path = 'path/to/lightcurve'
-        fluxes, times = tess_data_interface.load_fluxes_and_times_from_fits_file(lightcurve_path)
-        mock_fits_open.assert_called_with(lightcurve_path)
+        light_curve_path = 'path/to/light_curve'
+        fluxes, times = tess_data_interface.load_fluxes_and_times_from_fits_file(light_curve_path)
+        mock_fits_open.assert_called_with(light_curve_path)
         assert np.array_equal(fluxes, expected_fluxes)
         assert np.array_equal(times, expected_times)
 
@@ -131,10 +131,10 @@ class TestTessDataInterface:
         fits_fluxes = np.array([np.nan, 2, 3], dtype=np.float32)
         fits_times = np.array([4, 5, np.nan], dtype=np.float32)
         hdu = Mock(data={'PDCSAP_FLUX': fits_fluxes, 'TIME': fits_times})
-        hdu_list = [None, hdu]  # Lightcurve information is in first extension table in TESS data.
+        hdu_list = [None, hdu]  # LightCurve information is in first extension table in TESS data.
         mock_fits_open.return_value.__enter__.return_value = hdu_list
-        lightcurve_path = 'path/to/lightcurve'
-        fluxes, times = tess_data_interface.load_fluxes_and_times_from_fits_file(lightcurve_path)
+        light_curve_path = 'path/to/light_curve'
+        fluxes, times = tess_data_interface.load_fluxes_and_times_from_fits_file(light_curve_path)
         assert np.array_equal(fluxes, np.array([2], dtype=np.float32))
         assert np.array_equal(times, np.array([5], dtype=np.float32))
 
@@ -143,10 +143,10 @@ class TestTessDataInterface:
         fits_fluxes = np.array([np.nan, 2, 3], dtype=np.float32)
         fits_times = np.array([4, 5, np.nan], dtype=np.float32)
         hdu = Mock(data={'PDCSAP_FLUX': fits_fluxes, 'TIME': fits_times})
-        hdu_list = [None, hdu]  # Lightcurve information is in first extension table in TESS data.
+        hdu_list = [None, hdu]  # LightCurve information is in first extension table in TESS data.
         mock_fits_open.return_value.__enter__.return_value = hdu_list
-        lightcurve_path = 'path/to/lightcurve'
-        fluxes, times = tess_data_interface.load_fluxes_and_times_from_fits_file(lightcurve_path, remove_nans=False)
+        light_curve_path = 'path/to/light_curve'
+        fluxes, times = tess_data_interface.load_fluxes_and_times_from_fits_file(light_curve_path, remove_nans=False)
         assert np.allclose(fluxes, np.array([np.nan, 2, 3], dtype=np.float32), equal_nan=True)
         assert np.allclose(times, np.array([4, 5, np.nan], dtype=np.float32), equal_nan=True)
 
@@ -156,11 +156,11 @@ class TestTessDataInterface:
         fits_pdcsap_fluxes = np.array([4, 5, 6], dtype=np.float32)
         fits_times = np.array([7, 8, 9], dtype=np.float32)
         hdu = Mock(data={'SAP_FLUX': fits_sap_fluxes, 'PDCSAP_FLUX': fits_pdcsap_fluxes, 'TIME': fits_times})
-        hdu_list = [None, hdu]  # Lightcurve information is in first extension table in TESS data.
+        hdu_list = [None, hdu]  # LightCurve information is in first extension table in TESS data.
         mock_fits_open.return_value.__enter__.return_value = hdu_list
-        lightcurve_path = 'path/to/lightcurve'
-        sap_fluxes, _ = tess_data_interface.load_fluxes_and_times_from_fits_file(lightcurve_path, TessFluxType.SAP)
-        pdcsap_fluxes, _ = tess_data_interface.load_fluxes_and_times_from_fits_file(lightcurve_path,
+        light_curve_path = 'path/to/light_curve'
+        sap_fluxes, _ = tess_data_interface.load_fluxes_and_times_from_fits_file(light_curve_path, TessFluxType.SAP)
+        pdcsap_fluxes, _ = tess_data_interface.load_fluxes_and_times_from_fits_file(light_curve_path,
                                                                                     TessFluxType.PDCSAP)
         assert np.array_equal(sap_fluxes, fits_sap_fluxes)
         assert np.array_equal(pdcsap_fluxes, fits_pdcsap_fluxes)
@@ -172,11 +172,12 @@ class TestTessDataInterface:
         expected_times = np.array([7, 8, 9], dtype=np.float32)
         hdu = Mock(data={'PDCSAP_FLUX': expected_fluxes, 'PDCSAP_FLUX_ERR': expected_flux_errors,
                          'TIME': expected_times})
-        hdu_list = [None, hdu]  # Lightcurve information is in first extension table in TESS data.
+        hdu_list = [None, hdu]  # LightCurve information is in first extension table in TESS data.
         mock_fits_open.return_value.__enter__.return_value = hdu_list
-        lightcurve_path = 'path/to/lightcurve'
-        fluxes, flux_errors, times = tess_data_interface.load_fluxes_flux_errors_and_times_from_fits_file(lightcurve_path)
-        mock_fits_open.assert_called_with(lightcurve_path)
+        light_curve_path = 'path/to/light_curve'
+        fluxes, flux_errors, times = tess_data_interface.load_fluxes_flux_errors_and_times_from_fits_file(
+            light_curve_path)
+        mock_fits_open.assert_called_with(light_curve_path)
         assert np.array_equal(fluxes, expected_fluxes)
         assert np.array_equal(flux_errors, expected_flux_errors)
         assert np.array_equal(times, expected_times)
@@ -188,12 +189,12 @@ class TestTessDataInterface:
         expected_times = np.array([np.nan, 8, 9], dtype=np.float32)
         hdu = Mock(data={'PDCSAP_FLUX': expected_fluxes, 'PDCSAP_FLUX_ERR': expected_flux_errors,
                          'TIME': expected_times})
-        hdu_list = [None, hdu]  # Lightcurve information is in first extension table in TESS data.
+        hdu_list = [None, hdu]  # LightCurve information is in first extension table in TESS data.
         mock_fits_open.return_value.__enter__.return_value = hdu_list
-        lightcurve_path = 'path/to/lightcurve'
+        light_curve_path = 'path/to/light_curve'
         fluxes, flux_errors, times = tess_data_interface.load_fluxes_flux_errors_and_times_from_fits_file(
-            lightcurve_path)
-        mock_fits_open.assert_called_with(lightcurve_path)
+            light_curve_path)
+        mock_fits_open.assert_called_with(light_curve_path)
         assert np.array_equal(fluxes, [2])
         assert np.array_equal(flux_errors, [5])
         assert np.array_equal(times, [8])
@@ -205,12 +206,12 @@ class TestTessDataInterface:
         expected_times = np.array([np.nan, 8, 9], dtype=np.float32)
         hdu = Mock(data={'PDCSAP_FLUX': expected_fluxes, 'PDCSAP_FLUX_ERR': expected_flux_errors,
                          'TIME': expected_times})
-        hdu_list = [None, hdu]  # Lightcurve information is in first extension table in TESS data.
+        hdu_list = [None, hdu]  # LightCurve information is in first extension table in TESS data.
         mock_fits_open.return_value.__enter__.return_value = hdu_list
-        lightcurve_path = 'path/to/lightcurve'
+        light_curve_path = 'path/to/light_curve'
         fluxes, flux_errors, times = tess_data_interface.load_fluxes_flux_errors_and_times_from_fits_file(
-            lightcurve_path, remove_nans=False)
-        mock_fits_open.assert_called_with(lightcurve_path)
+            light_curve_path, remove_nans=False)
+        mock_fits_open.assert_called_with(light_curve_path)
         assert np.allclose(fluxes, expected_fluxes, equal_nan=True)
         assert np.allclose(flux_errors, expected_flux_errors, equal_nan=True)
         assert np.allclose(times, expected_times, equal_nan=True)

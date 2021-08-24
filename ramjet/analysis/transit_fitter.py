@@ -41,8 +41,8 @@ class TransitFitter:
         if isinstance(sectors, int):
             sectors = [sectors]
         self.sectors = sectors
-        lightcurve = self.stitch_fluxes_flux_errors_and_times_for_target_from_mast(tic_id, sectors)
-        relative_flux_errors, relative_fluxes, times = lightcurve
+        light_curve = self.stitch_fluxes_flux_errors_and_times_for_target_from_mast(tic_id, sectors)
+        relative_flux_errors, relative_fluxes, times = light_curve
         self.tic_id = tic_id
         self.times = times
         self.relative_fluxes = relative_fluxes
@@ -55,19 +55,19 @@ class TransitFitter:
         self.transit_epoch = None
 
     def bokeh_application(self, bokeh_document):
-        lightcurve_figure = self.create_lightcurve_figure()
-        folded_figure = self.create_folded_figured_based_on_clicks_in_unfolded_figure(lightcurve_figure)
+        light_curve_figure = self.create_light_curve_figure()
+        folded_figure = self.create_folded_figured_based_on_clicks_in_unfolded_figure(light_curve_figure)
         run_fitting_button = Button(label='Run fitting')
         initial_fit_figure, parameters_table = self.create_mcmc_fit_figures(run_fitting_button)
-        column = Column(lightcurve_figure, folded_figure, run_fitting_button, initial_fit_figure, parameters_table)
+        column = Column(light_curve_figure, folded_figure, run_fitting_button, initial_fit_figure, parameters_table)
         column.sizing_mode = 'stretch_width'
         bokeh_document.add_root(column)
 
-    def create_lightcurve_figure(self):
+    def create_light_curve_figure(self):
         figure = Figure(title=self.title, x_axis_label='Time (BTJD)', y_axis_label='Relative flux',
                         active_drag='box_zoom')
         data_source = ColumnDataSource({'Time (BTJD)': self.times, 'Relative flux': self.relative_fluxes})
-        self.plot_lightcurve_source(figure, data_source)
+        self.plot_light_curve_source(figure, data_source)
         figure.sizing_mode = 'stretch_width'
         return figure
 
@@ -83,7 +83,7 @@ class TransitFitter:
                                                'Time (BTJD)': self.times})
         folded_figure = Figure(x_axis_label='Folded time (days)', y_axis_label='Relative flux',
                                title=f'Folded {self.title}')
-        self.plot_lightcurve_source(folded_figure, folded_data_source, time_column_name='Folded time (days)')
+        self.plot_light_curve_source(folded_figure, folded_data_source, time_column_name='Folded time (days)')
         folded_figure.sizing_mode = 'stretch_width'
         self_ = self
 
@@ -233,22 +233,22 @@ class TransitFitter:
             # worksheet.update_cell(empty_row_index, 8, trace_summary['mean']['ror'] * self_.star_radius)
 
         run_fitting_button.on_click(run_fitting)
-        self.plot_lightcurve_source(initial_fit_figure, initial_fit_data_source, time_column_name='Folded time (days)')
+        self.plot_light_curve_source(initial_fit_figure, initial_fit_data_source, time_column_name='Folded time (days)')
         initial_fit_figure.line('Fit time', 'Fit', source=initial_fit_data_source, color='black', line_width=3)
         initial_fit_figure.sizing_mode = 'stretch_width'
 
         return initial_fit_figure, parameters_table
 
     @staticmethod
-    def plot_lightcurve_source(figure: Figure, data_source: ColumnDataSource,
+    def plot_light_curve_source(figure: Figure, data_source: ColumnDataSource,
                                time_column_name: str = 'Time (BTJD)',
                                flux_column_name: str = 'Relative flux',
                                color_value_column_name: str = 'Time (BTJD)'):
         """
-        Plots the lightcurve data source on the passed figure.
+        Plots the light curve data source on the passed figure.
 
         :param figure: The figure to plot to.
-        :param data_source: The data source containing the lightcurve data.
+        :param data_source: The data source containing the light curve data.
         :param time_column_name: The name of the time column whose values will be used on the x axis.
         :param flux_column_name: The name of the flux column whose values will be used on the y axis.
         :param color_value_column_name: The name of the column whose values will be used to determine data point color.
@@ -264,19 +264,19 @@ class TransitFitter:
                                                                  sectors: Union[int, List[int], None] = None
                                                                  ) -> (np.ndarray, np.ndarray, np.ndarray):
         """
-        Downloads lightcurves from MAST for a given TIC ID and stitches them together.
+        Downloads light curves from MAST for a given TIC ID and stitches them together.
 
         :param tic_id: The target TIC ID.
         :param sectors: The sectors to download and stitch together. Defaults to None which will download all available.
-        :return: The fluxes, flux errors, and times of the stitched lightcurves.
+        :return: The fluxes, flux errors, and times of the stitched light curves.
         """
         relative_fluxes_arrays = []
         relative_flux_errors_arrays = []
         times_arrays = []
         for sector in sectors:
-            lightcurve_path = self.tess_data_interface.download_two_minute_cadence_lightcurve(tic_id, sector)
-            lightcurve = self.tess_data_interface.load_fluxes_flux_errors_and_times_from_fits_file(lightcurve_path)
-            sector_fluxes, sector_flux_errors, sector_times = lightcurve
+            light_curve_path = self.tess_data_interface.download_two_minute_cadence_light_curve(tic_id, sector)
+            light_curve = self.tess_data_interface.load_fluxes_flux_errors_and_times_from_fits_file(light_curve_path)
+            sector_fluxes, sector_flux_errors, sector_times = light_curve
             sector_flux_median = np.median(sector_fluxes)
             sector_normalized_fluxes = sector_fluxes / sector_flux_median - 1
             sector_normalized_flux_errors = sector_flux_errors / sector_flux_median

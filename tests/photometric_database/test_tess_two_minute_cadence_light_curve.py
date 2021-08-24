@@ -79,7 +79,7 @@ class TestTessTwoMinuteCadenceFileBasedLightCurve:
         mock_light_curve = Mock()
         mock_light_curve_path = Mock()
         mock_download = Mock(return_value=mock_light_curve_path)
-        TessTwoMinuteCadenceLightCurve.mast_tess_data_interface.download_two_minute_cadence_lightcurve = mock_download
+        TessTwoMinuteCadenceLightCurve.mast_tess_data_interface.download_two_minute_cadence_light_curve = mock_download
         mock_from_path = Mock(return_value=mock_light_curve)
         TessTwoMinuteCadenceLightCurve.from_path = mock_from_path
         light_curve = TessTwoMinuteCadenceLightCurve.from_mast(tic_id=1, sector=2)

@@ -3,11 +3,11 @@ Code for a database of MOA light curves including non-microlensing, single lensi
 """
 from ramjet.data_interface.moa_data_interface import MoaDataInterface
 from ramjet.photometric_database.derived.moa_survey_light_curve_collection import MoaSurveyLightCurveCollection
-from ramjet.photometric_database.standard_and_injected_lightcurve_database import \
-    StandardAndInjectedLightcurveDatabase, OutOfBoundsInjectionHandlingMethod, BaselineFluxEstimationMethod
+from ramjet.photometric_database.standard_and_injected_light_curve_database import \
+    StandardAndInjectedLightCurveDatabase, OutOfBoundsInjectionHandlingMethod, BaselineFluxEstimationMethod
 
 
-class MoaSurveyNoneSingleAndBinaryDatabase(StandardAndInjectedLightcurveDatabase):
+class MoaSurveyNoneSingleAndBinaryDatabase(StandardAndInjectedLightCurveDatabase):
     """
     A class for a database of MOA light curves including non-microlensing, single lensing, and binary lensing
     collections.
@@ -27,15 +27,15 @@ class MoaSurveyNoneSingleAndBinaryDatabase(StandardAndInjectedLightcurveDatabase
         negative_training = MoaSurveyLightCurveCollection(
             survey_tags=['v', 'n', 'nr', 'm', 'j', self.moa_data_interface.no_tag_string], label=0,
             dataset_splits=list(range(8)))
-        self.training_standard_lightcurve_collections = [
+        self.training_standard_light_curve_collections = [
             negative_training,
             MoaSurveyLightCurveCollection(survey_tags=['c', 'cf', 'cp', 'cw', 'cs', 'cb'], label=0,
                                           dataset_splits=list(range(8))),
             MoaSurveyLightCurveCollection(survey_tags=['cb'], label=1,
                                           dataset_splits=list(range(8)))
         ]
-        # self.training_injectee_lightcurve_collection = negative_training
-        # self.training_injectable_lightcurve_collections = [
+        # self.training_injectee_light_curve_collection = negative_training
+        # self.training_injectable_light_curve_collections = [
         #     # MicrolensingSyntheticGeneratedDuringRunningSignalCollection(),
         #     # MicrolensingSyntheticApproximatePsplGeneratedDuringRunningSignalCollection()
         #     MoaSurveyLightCurveCollection(survey_tags=['c', 'cf', 'cp', 'cw', 'cs', 'cb'], label=0,
@@ -43,7 +43,7 @@ class MoaSurveyNoneSingleAndBinaryDatabase(StandardAndInjectedLightcurveDatabase
         #     MoaSurveyLightCurveCollection(survey_tags=['cb'], label=1,
         #                                   dataset_splits=list(range(8)))
         # ]
-        self.validation_standard_lightcurve_collections = [
+        self.validation_standard_light_curve_collections = [
             MoaSurveyLightCurveCollection(survey_tags=['v', 'n', 'nr', 'm', 'j', self.moa_data_interface.no_tag_string],
                                           label=0, dataset_splits=[8]),
             MoaSurveyLightCurveCollection(survey_tags=['c', 'cf', 'cp', 'cw', 'cs', 'cb'], label=0,
@@ -51,7 +51,7 @@ class MoaSurveyNoneSingleAndBinaryDatabase(StandardAndInjectedLightcurveDatabase
             MoaSurveyLightCurveCollection(survey_tags=['cb'], label=1,
                                           dataset_splits=[8])
         ]
-        self.inference_lightcurve_collections = [
+        self.inference_light_curve_collections = [
             MoaSurveyLightCurveCollection(survey_tags=['v', 'n', 'nr', 'm', 'j', self.moa_data_interface.no_tag_string],
                                           label=0, dataset_splits=[9]),
             MoaSurveyLightCurveCollection(survey_tags=['c', 'cf', 'cp', 'cw', 'cs', 'cb'], label=0,

@@ -9,8 +9,8 @@ from bokeh.colors import Color
 from bokeh.models import ColumnDataSource, GlyphRenderer, CustomJS
 from bokeh.plotting import Figure
 
-from ramjet.analysis.color_palette import lightcurve_colors
-from ramjet.analysis.lightcurve_visualizer import calculate_inlier_range
+from ramjet.analysis.color_palette import light_curve_colors
+from ramjet.analysis.light_curve_visualizer import calculate_inlier_range
 from ramjet.analysis.convert_column_name_to_display_name import convert_column_name_to_display_name
 from ramjet.photometric_database.light_curve import LightCurve
 
@@ -31,7 +31,7 @@ class LightCurveDisplay:
     @classmethod
     def for_columns(cls, time_column_name: str, flux_column_names: List[str], flux_axis_label: str = 'Flux'):
         """
-        Creates a lightcurve display object with the specified columns prepared for display.
+        Creates a light curve display object with the specified columns prepared for display.
 
         :param time_column_name: The name of the time column in the data.
         :param flux_column_names: The names of the flux columns in the data.
@@ -44,7 +44,7 @@ class LightCurveDisplay:
         time_axis_label = convert_column_name_to_display_name(time_column_name)
         display.initialize_figure(time_axis_label=time_axis_label, flux_axis_label=flux_axis_label)
         display.initialize_data_source(column_names=[time_column_name] + flux_column_names)
-        for flux_column_name, color in zip(display.flux_column_names, lightcurve_colors):
+        for flux_column_name, color in zip(display.flux_column_names, light_curve_colors):
             display.add_flux_data_source_line_to_figure(time_column_name=time_column_name, flux_column_name=flux_column_name,
                                                         color=color)
         return display
@@ -84,16 +84,16 @@ class LightCurveDisplay:
         self.figure.circle(x=time_column_name, y=flux_column_name, source=self.data_source, legend_label=legend_label,
                            line_color=color, line_alpha=0.4, fill_color=color, fill_alpha=0.1)
 
-    async def update_from_light_curve(self, lightcurve: LightCurve):
+    async def update_from_light_curve(self, light_curve: LightCurve):
         """
         Update the data for the display based on a light curve.
 
-        :param lightcurve: The light curve to display.
+        :param light_curve: The light curve to display.
         """
-        self.data_source.data = lightcurve.data_frame
+        self.data_source.data = light_curve.data_frame
         if self.exclude_outliers_from_zoom:
-            y_range_minimum, y_range_maximum = await calculate_inlier_range(lightcurve.fluxes)
-            await self.set_view_ranges(x_range=(np.nanmin(lightcurve.times), np.nanmax(lightcurve.times)),
+            y_range_minimum, y_range_maximum = await calculate_inlier_range(light_curve.fluxes)
+            await self.set_view_ranges(x_range=(np.nanmin(light_curve.times), np.nanmax(light_curve.times)),
                                        y_range=(y_range_minimum, y_range_maximum))
 
     async def set_view_ranges(self, x_range: (float, float), y_range: (float, float)):

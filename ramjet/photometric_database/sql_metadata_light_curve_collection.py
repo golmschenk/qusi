@@ -1,5 +1,5 @@
 """
-Code for a lightcurve collection that stores its metadata in the SQL database.
+Code for a light curve collection that stores its metadata in the SQL database.
 """
 import random
 from pathlib import Path
@@ -9,24 +9,24 @@ from uuid import uuid4
 from peewee import Select, Field, Case
 
 from ramjet.data_interface.metadatabase import MetadatabaseModel
-from ramjet.photometric_database.lightcurve_collection import LightcurveCollection, \
-    LightcurveCollectionMethodNotImplementedError
+from ramjet.photometric_database.light_curve_collection import LightCurveCollection, \
+    LightCurveCollectionMethodNotImplementedError
 
 
-class SqlMetadataLightcurveCollection(LightcurveCollection):
+class SqlMetadataLightCurveCollection(LightCurveCollection):
     """
-    Class for a lightcurve collection that stores its metadata in the SQL database.
+    Class for a light curve collection that stores its metadata in the SQL database.
     """
     def __init__(self):
         super().__init__()
 
     def get_sql_query(self) -> Select:
         """
-        Gets the SQL query for the database models for the lightcurve collection.
+        Gets the SQL query for the database models for the light curve collection.
 
         :return: The SQL query.
         """
-        raise LightcurveCollectionMethodNotImplementedError
+        raise LightCurveCollectionMethodNotImplementedError
 
     def sql_count(self) -> int:
         """
@@ -38,17 +38,17 @@ class SqlMetadataLightcurveCollection(LightcurveCollection):
 
     def get_path_from_model(self, model: MetadatabaseModel) -> Path:
         """
-        Gets the lightcurve path from the SQL database model.
+        Gets the light curve path from the SQL database model.
 
-        :return: The path to the lightcurve.
+        :return: The path to the light curve.
         """
-        raise LightcurveCollectionMethodNotImplementedError
+        raise LightCurveCollectionMethodNotImplementedError
 
     def get_paths(self) -> Iterable[Path]:
         """
-        Gets the paths for the lightcurves in the collection.
+        Gets the paths for the light curves in the collection.
 
-        :return: An iterable of the lightcurve paths.
+        :return: An iterable of the light curve paths.
         """
         query = self.get_sql_query()
         query = query.objects().iterator()  # Disable Peewee's cache and graph for better performance.

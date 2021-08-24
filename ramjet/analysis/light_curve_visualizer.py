@@ -1,5 +1,5 @@
 """
-Code for visualizing lightcurves.
+Code for visualizing light curves.
 """
 
 from pathlib import Path
@@ -12,13 +12,13 @@ from bokeh.plotting import Figure
 from matplotlib.colors import LinearSegmentedColormap
 
 
-def plot_lightcurve(times: np.ndarray, fluxes: np.ndarray, labels: np.ndarray = None, predictions: np.ndarray = None,
+def plot_light_curve(times: np.ndarray, fluxes: np.ndarray, labels: np.ndarray = None, predictions: np.ndarray = None,
                     title: str = None, x_label: str = 'Days', y_label: str = 'Flux',
                     x_limits: (float, float) = (None, None), y_limits: (float, float) = (None, None),
                     save_path: Union[Path, str] = None, exclude_flux_outliers: bool = False,
                     base_data_point_size: float = 3):
     """
-    Plots a lightcurve with a consistent styling. If true labels and/or predictions are included, these will
+    Plots a light curve with a consistent styling. If true labels and/or predictions are included, these will
     additionally be plotted.
 
     :param times: The times of the measurements.
@@ -104,10 +104,10 @@ def is_outlier(points: np.ndarray, threshold: float = 5):
     return modified_z_score > threshold
 
 
-def create_dual_lightcurve_figure(fluxes0, times0, name0, fluxes1, times1, name1, title, x_axis_label='Time (days)',
+def create_dual_light_curve_figure(fluxes0, times0, name0, fluxes1, times1, name1, title, x_axis_label='Time (days)',
                                   y_axis_label='Relative flux') -> Figure:
     """
-    Plots two lightcurves together. Mostly for comparing a lightcurve cleaned by two different methods.
+    Plots two light curves together. Mostly for comparing a light curve cleaned by two different methods.
 
     :param fluxes0: The fluxes of the first plot.
     :param times0: The times of the first plot.
@@ -122,15 +122,16 @@ def create_dual_lightcurve_figure(fluxes0, times0, name0, fluxes1, times1, name1
     """
     figure = Figure(title=title, x_axis_label=x_axis_label, y_axis_label=y_axis_label, active_drag='box_zoom')
 
-    def add_lightcurve(times, fluxes, legend_label, color):
-        """Adds a lightcurve to the figure."""
+    def add_light_curve(times, fluxes, legend_label, color):
+        """Adds a light curve to the figure."""
         fluxes -= np.minimum(np.nanmin(fluxes), 0)
         flux_median = np.median(fluxes)
         figure.line(times, fluxes / flux_median, line_color=color, line_alpha=0.1)
         figure.circle(times, fluxes / flux_median, legend_label=legend_label, line_color=color, line_alpha=0.4,
                       fill_color=color, fill_alpha=0.1)
-    add_lightcurve(times0, fluxes0, name0, 'firebrick')
-    add_lightcurve(times1, fluxes1, name1, 'mediumblue')
+
+    add_light_curve(times0, fluxes0, name0, 'firebrick')
+    add_light_curve(times1, fluxes1, name1, 'mediumblue')
     return figure
 
 

@@ -46,7 +46,7 @@ class Viewer:
         """
         light_curve = view_entity.light_curve
         self.document.add_next_tick_callback(partial(self.light_curve_display.update_from_light_curve,
-                                                     lightcurve=light_curve))
+                                                     light_curve=light_curve))
         self.document.add_next_tick_callback(partial(self.update_information_div_for_view_entity,
                                                      view_entity=view_entity))
         self.document.add_next_tick_callback(partial(self.add_physical_depth_range_annotation_to_light_curve_figure,

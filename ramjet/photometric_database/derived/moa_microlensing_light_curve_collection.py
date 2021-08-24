@@ -1,19 +1,19 @@
 """
-Code for a lightcurve collection of the MOA data.
+Code for a light curve collection of the MOA data.
 """
 from pathlib import Path
 from typing import Iterable
 import numpy as np
 import pandas as pd
 
-from ramjet.photometric_database.lightcurve_collection import LightcurveCollection
+from ramjet.photometric_database.light_curve_collection import LightCurveCollection
 from ramjet.photometric_database.microlensing_signal_generator import MagnificationSignal
 import random
 
 
-class MOAPositiveMicrolensingLightcurveCollection(LightcurveCollection):
+class MOAPositiveMicrolensingLightCurveCollection(LightCurveCollection):
     """
-    A lightcurve collection of the MOA data with previously detected microlensing events.
+    A light curve collection of the MOA data with previously detected microlensing events.
     """
 
     def __init__(self, dataset_splits=None, split_pieces=5):
@@ -26,9 +26,9 @@ class MOAPositiveMicrolensingLightcurveCollection(LightcurveCollection):
 
     def get_paths(self) -> Iterable[Path]:
         """
-        Gets the paths for the lightcurves in the positive collection.
+        Gets the paths for the light curves in the positive collection.
 
-        :return: An iterable of the lightcurve paths.
+        :return: An iterable of the light curve paths.
         """
         paths = Path('/local/data/fugu3/sishitan/ramjet/data/moa_microlensing/positive').glob('*.feather')
         path_list = list(paths)
@@ -48,20 +48,20 @@ class MOAPositiveMicrolensingLightcurveCollection(LightcurveCollection):
 
     def load_times_and_fluxes_from_path(self, path: Path) -> (np.ndarray, np.ndarray):
         """
-        Loads the times and fluxes from a given lightcurve path.
+        Loads the times and fluxes from a given light curve path.
 
-        :param path: The path to the lightcurve file.
-        :return: The times and the fluxes of the lightcurve.
+        :param path: The path to the light curve file.
+        :return: The times and the fluxes of the light curve.
         """
-        lightcurve_dataframe = pd.read_feather(path)
-        times = lightcurve_dataframe['HJD'].values
-        fluxes = lightcurve_dataframe['flux'].values
+        light_curve_dataframe = pd.read_feather(path)
+        times = light_curve_dataframe['HJD'].values
+        fluxes = light_curve_dataframe['flux'].values
         return times, fluxes
 
 
-class MOANegativeMicrolensingLightcurveCollection(LightcurveCollection):
+class MOANegativeMicrolensingLightCurveCollection(LightCurveCollection):
     """
-    A lightcurve collection of the MOA data with no microlensing event.
+    A light curve collection of the MOA data with no microlensing event.
     """
 
     def __init__(self, dataset_splits=None, split_pieces=5):
@@ -74,9 +74,9 @@ class MOANegativeMicrolensingLightcurveCollection(LightcurveCollection):
 
     def get_paths(self):
         """
-        Gets the paths for the lightcurves in the negative collection.
+        Gets the paths for the light curves in the negative collection.
 
-        :return: An iterable of the lightcurve paths.
+        :return: An iterable of the light curve paths.
         """
         paths = Path('/local/data/fugu3/sishitan/ramjet/data/moa_microlensing/negative').glob('*.feather')
         path_list = list(paths)
@@ -96,18 +96,18 @@ class MOANegativeMicrolensingLightcurveCollection(LightcurveCollection):
 
     def load_times_and_fluxes_from_path(self, path: Path) -> (np.ndarray, np.ndarray):
         """
-        Loads the times and fluxes from a given lightcurve path.
+        Loads the times and fluxes from a given light curve path.
 
-        :param path: The path to the lightcurve file.
-        :return: The times and the fluxes of the lightcurve.
+        :param path: The path to the light curve file.
+        :return: The times and the fluxes of the light curve.
         """
-        lightcurve_dataframe = pd.read_feather(path)
-        times = lightcurve_dataframe['HJD'].values
-        fluxes = lightcurve_dataframe['flux'].values
+        light_curve_dataframe = pd.read_feather(path)
+        times = light_curve_dataframe['HJD'].values
+        fluxes = light_curve_dataframe['flux'].values
         return times, fluxes
 
 
-class MicrolensingSyntheticPSPLSignalCollection(LightcurveCollection):
+class MicrolensingSyntheticPSPLSignalCollection(LightCurveCollection):
     def __init__(self):
         super().__init__()
         self.label = 1
@@ -116,7 +116,7 @@ class MicrolensingSyntheticPSPLSignalCollection(LightcurveCollection):
         """
         Gets the paths for the PSPL microlensing signals.
 
-        :return: An iterable of the lightcurve paths.
+        :return: An iterable of the light curve paths.
         """
         paths = Path('/local/data/fugu3/sishitan/muLAn_project/PSPL').glob('*.feather')
         return paths
@@ -125,8 +125,8 @@ class MicrolensingSyntheticPSPLSignalCollection(LightcurveCollection):
         """
         Loads the times and magnifications from a given path as an injectable signal.
 
-        :param path: The path to the lightcurve/signal file.
-        :return: The times and the magnifications of the lightcurve/signal.
+        :param path: The path to the light curve/signal file.
+        :return: The times and the magnifications of the light curve/signal.
         """
         signal_dataframe = pd.read_feather(path)
         times = signal_dataframe['Time'].values
@@ -134,7 +134,7 @@ class MicrolensingSyntheticPSPLSignalCollection(LightcurveCollection):
         return times, magnifications
 
 
-class MicrolensingSyntheticGeneratedDuringRunningSignalCollection(LightcurveCollection):
+class MicrolensingSyntheticGeneratedDuringRunningSignalCollection(LightCurveCollection):
     def __init__(self):
         super().__init__()
         self.label = 1

@@ -18,7 +18,7 @@ class TestTransitFitter:
         :return: The transit fitter.
         """
         mock_tess_data_interface = Mock()
-        mock_tess_data_interface.download_lightcurve = Mock()
+        mock_tess_data_interface.download_light_curve = Mock()
         mock_tess_data_interface.load_fluxes_flux_errors_and_times_from_fits_file = Mock(return_value=(
             np.array([1, 2, 3, 4, 5]), np.array([0.1, 0.2, 0.3, 0.4, 0.5]), np.array([10, 20, 30, 40, 50])
         ))
