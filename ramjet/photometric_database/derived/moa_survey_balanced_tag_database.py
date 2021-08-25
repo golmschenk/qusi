@@ -2,10 +2,10 @@ from typing import Union, List
 
 from ramjet.data_interface.moa_data_interface import MoaDataInterface
 from ramjet.photometric_database.derived.moa_survey_light_curve_collection import MoaSurveyLightCurveCollection
-from ramjet.photometric_database.standard_and_injected_lightcurve_database import StandardAndInjectedLightcurveDatabase
+from ramjet.photometric_database.standard_and_injected_light_curve_database import StandardAndInjectedLightCurveDatabase
 
 
-class MoaSurveyBalancedTagDatabase(StandardAndInjectedLightcurveDatabase):
+class MoaSurveyBalancedTagDatabase(StandardAndInjectedLightCurveDatabase):
     """
     A database to train a network to find MOA events, balancing the training of each tag.
     """
@@ -16,10 +16,10 @@ class MoaSurveyBalancedTagDatabase(StandardAndInjectedLightcurveDatabase):
         self.number_of_label_types = 2
         self.number_of_parallel_processes_per_map = 3
         self.time_steps_per_example = 18000
-        self.training_standard_lightcurve_collections = self.create_collection_for_each_tag(
+        self.training_standard_light_curve_collections = self.create_collection_for_each_tag(
             dataset_splits=list(range(8)))
-        self.validation_standard_lightcurve_collections = self.create_collection_for_each_tag(dataset_splits=[8])
-        self.inference_lightcurve_collections = self.create_collection_for_each_tag(dataset_splits=[9])
+        self.validation_standard_light_curve_collections = self.create_collection_for_each_tag(dataset_splits=[8])
+        self.inference_light_curve_collections = self.create_collection_for_each_tag(dataset_splits=[9])
 
     def create_collection_for_each_tag(self, dataset_splits: Union[List[int], None]
                                        ) -> List[MoaSurveyLightCurveCollection]:

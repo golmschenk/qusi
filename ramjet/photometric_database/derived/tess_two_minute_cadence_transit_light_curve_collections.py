@@ -1,20 +1,20 @@
 """
-Code representing the collection of TESS two minute cadence lightcurves containing transits.
+Code representing the collection of TESS two minute cadence light curves containing transits.
 """
 from typing import List, Union
 from peewee import Select
 
 from ramjet.data_interface.tess_transit_metadata_manager import TessTransitMetadata, Disposition
-from ramjet.data_interface.tess_two_minute_cadence_lightcurve_metadata_manager import \
-    TessTwoMinuteCadenceLightcurveMetadata
-from ramjet.photometric_database.derived.tess_two_minute_cadence_lightcurve_collection import \
-    TessTwoMinuteCadenceTargetDatasetSplitLightcurveCollection
+from ramjet.data_interface.tess_two_minute_cadence_light_curve_metadata_manager import \
+    TessTwoMinuteCadenceLightCurveMetadata
+from ramjet.photometric_database.derived.tess_two_minute_cadence_light_curve_collection import \
+    TessTwoMinuteCadenceTargetDatasetSplitLightCurveCollection
 
 
-class TessTwoMinuteCadenceConfirmedTransitLightcurveCollection(
-    TessTwoMinuteCadenceTargetDatasetSplitLightcurveCollection):
+class TessTwoMinuteCadenceConfirmedTransitLightCurveCollection(
+    TessTwoMinuteCadenceTargetDatasetSplitLightCurveCollection):
     """
-    A class representing the collection of TESS two minute cadence lightcurves containing transits.
+    A class representing the collection of TESS two minute cadence light curves containing transits.
     """
     def __init__(self, dataset_splits: Union[List[int], None] = None):
         super().__init__(dataset_splits=dataset_splits)
@@ -22,21 +22,21 @@ class TessTwoMinuteCadenceConfirmedTransitLightcurveCollection(
 
     def get_sql_query(self) -> Select:
         """
-        Gets the SQL query for the database models for the lightcurve collection.
+        Gets the SQL query for the database models for the light curve collection.
 
         :return: The SQL query.
         """
         query = super().get_sql_query()
         transit_tic_id_query = TessTransitMetadata.select(TessTransitMetadata.tic_id).where(
             TessTransitMetadata.disposition == Disposition.CONFIRMED.value)
-        query = query.where(TessTwoMinuteCadenceLightcurveMetadata.tic_id.in_(transit_tic_id_query))
+        query = query.where(TessTwoMinuteCadenceLightCurveMetadata.tic_id.in_(transit_tic_id_query))
         return query
 
 
-class TessTwoMinuteCadenceConfirmedAndCandidateTransitLightcurveCollection(
-    TessTwoMinuteCadenceTargetDatasetSplitLightcurveCollection):
+class TessTwoMinuteCadenceConfirmedAndCandidateTransitLightCurveCollection(
+    TessTwoMinuteCadenceTargetDatasetSplitLightCurveCollection):
     """
-    A class representing the collection of TESS two minute cadence lightcurves containing transits.
+    A class representing the collection of TESS two minute cadence light curves containing transits.
     """
     def __init__(self, dataset_splits: Union[List[int], None] = None):
         super().__init__(dataset_splits=dataset_splits)
@@ -44,7 +44,7 @@ class TessTwoMinuteCadenceConfirmedAndCandidateTransitLightcurveCollection(
 
     def get_sql_query(self) -> Select:
         """
-        Gets the SQL query for the database models for the lightcurve collection.
+        Gets the SQL query for the database models for the light curve collection.
 
         :return: The SQL query.
         """
@@ -52,13 +52,13 @@ class TessTwoMinuteCadenceConfirmedAndCandidateTransitLightcurveCollection(
         transit_tic_id_query = TessTransitMetadata.select(TessTransitMetadata.tic_id).where(
             (TessTransitMetadata.disposition == Disposition.CONFIRMED.value) |
             (TessTransitMetadata.disposition == Disposition.CANDIDATE.value))
-        query = query.where(TessTwoMinuteCadenceLightcurveMetadata.tic_id.in_(transit_tic_id_query))
+        query = query.where(TessTwoMinuteCadenceLightCurveMetadata.tic_id.in_(transit_tic_id_query))
         return query
 
 
-class TessTwoMinuteCadenceNonTransitLightcurveCollection(TessTwoMinuteCadenceTargetDatasetSplitLightcurveCollection):
+class TessTwoMinuteCadenceNonTransitLightCurveCollection(TessTwoMinuteCadenceTargetDatasetSplitLightCurveCollection):
     """
-    A class representing the collection of TESS two minute cadence lightcurves containing transits.
+    A class representing the collection of TESS two minute cadence light curves containing transits.
     """
     def __init__(self, dataset_splits: Union[List[int], None] = None):
         super().__init__(dataset_splits=dataset_splits)
@@ -66,7 +66,7 @@ class TessTwoMinuteCadenceNonTransitLightcurveCollection(TessTwoMinuteCadenceTar
 
     def get_sql_query(self) -> Select:
         """
-        Gets the SQL query for the database models for the lightcurve collection.
+        Gets the SQL query for the database models for the light curve collection.
 
         :return: The SQL query.
         """
@@ -74,5 +74,5 @@ class TessTwoMinuteCadenceNonTransitLightcurveCollection(TessTwoMinuteCadenceTar
         transit_candidate_tic_id_query = TessTransitMetadata.select(TessTransitMetadata.tic_id).where(
             (TessTransitMetadata.disposition == Disposition.CONFIRMED.value) |
             (TessTransitMetadata.disposition == Disposition.CANDIDATE.value))
-        query = query.where(TessTwoMinuteCadenceLightcurveMetadata.tic_id.not_in(transit_candidate_tic_id_query))
+        query = query.where(TessTwoMinuteCadenceLightCurveMetadata.tic_id.not_in(transit_candidate_tic_id_query))
         return query

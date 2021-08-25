@@ -1,5 +1,5 @@
 """
-Code for a lightcurve collection of Agnieszka Cieplak's synthetic signals.
+Code for a light curve collection of Agnieszka Cieplak's synthetic signals.
 """
 import re
 import tarfile
@@ -9,12 +9,12 @@ import pandas as pd
 from pathlib import Path
 from typing import Iterable
 
-from ramjet.photometric_database.lightcurve_collection import LightcurveCollection
+from ramjet.photometric_database.light_curve_collection import LightCurveCollection
 
 
-class SelfLensingBinarySyntheticSignalsLightcurveCollection(LightcurveCollection):
+class SelfLensingBinarySyntheticSignalsLightCurveCollection(LightCurveCollection):
     """
-    A lightcurve collection for Agnieszka Cieplak's synthetic signals.
+    A light curve collection for Agnieszka Cieplak's synthetic signals.
     """
 
     def __init__(self):
@@ -55,9 +55,9 @@ class SelfLensingBinarySyntheticSignalsLightcurveCollection(LightcurveCollection
 
     def get_paths(self) -> Iterable[Path]:
         """
-        Gets the paths for the lightcurves in the collection.
+        Gets the paths for the light curves in the collection.
 
-        :return: An iterable of the lightcurve paths.
+        :return: An iterable of the light curve paths.
         """
         return self.data_directory.glob('*.feather')
 
@@ -65,8 +65,8 @@ class SelfLensingBinarySyntheticSignalsLightcurveCollection(LightcurveCollection
         """
         Loads the times and magnifications from a given path as an injectable signal.
 
-        :param path: The path to the lightcurve/signal file.
-        :return: The times and the magnifications of the lightcurve/signal.
+        :param path: The path to the light curve/signal file.
+        :return: The times and the magnifications of the light curve/signal.
         """
         synthetic_signal_data_frame = pd.read_feather(path)
         times = synthetic_signal_data_frame['time__days'].values
@@ -74,10 +74,10 @@ class SelfLensingBinarySyntheticSignalsLightcurveCollection(LightcurveCollection
         return times, magnifications
 
 
-class ReversedSelfLensingBinarySyntheticSignalsLightcurveCollection(
-    SelfLensingBinarySyntheticSignalsLightcurveCollection):
+class ReversedSelfLensingBinarySyntheticSignalsLightCurveCollection(
+    SelfLensingBinarySyntheticSignalsLightCurveCollection):
     """
-    A lightcurve collection for a time reversed version Agnieszka Cieplak's synthetic signals. Useful as a negative
+    A light curve collection for a time reversed version Agnieszka Cieplak's synthetic signals. Useful as a negative
     training dataset, as the lensing signals will only occur in a specific order relative to the other signal
     components.
     """
@@ -102,8 +102,8 @@ class ReversedSelfLensingBinarySyntheticSignalsLightcurveCollection(
         """
         Loads the times and magnifications from a given path as an injectable signal.
 
-        :param path: The path to the lightcurve/signal file.
-        :return: The times and the magnifications of the lightcurve/signal.
+        :param path: The path to the light curve/signal file.
+        :return: The times and the magnifications of the light curve/signal.
         """
         original_times, original_magnitudes = super().load_times_and_magnifications_from_path(path)
         times, magnifications = self.reverse_signal(original_times, original_magnitudes)
@@ -111,8 +111,8 @@ class ReversedSelfLensingBinarySyntheticSignalsLightcurveCollection(
 
 
 if __name__ == '__main__':
-    lightcurve_collection = SelfLensingBinarySyntheticSignalsLightcurveCollection()
-    lightcurve_collection.data_directory.mkdir(parents=True, exist_ok=True)
-    lightcurve_collection.download_csv_files()
-    lightcurve_collection.convert_csv_files_to_project_format()
-    print('Self lensing binary synthetic signal lightcurve collection ready.')
+    light_curve_collection = SelfLensingBinarySyntheticSignalsLightCurveCollection()
+    light_curve_collection.data_directory.mkdir(parents=True, exist_ok=True)
+    light_curve_collection.download_csv_files()
+    light_curve_collection.convert_csv_files_to_project_format()
+    print('Self lensing binary synthetic signal light curve collection ready.')

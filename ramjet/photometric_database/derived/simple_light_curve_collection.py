@@ -2,10 +2,10 @@ import numpy as np
 from pathlib import Path
 from typing import Iterable
 
-from ramjet.photometric_database.lightcurve_collection import LightcurveCollection
+from ramjet.photometric_database.light_curve_collection import LightCurveCollection
 
 
-class SimpleLightCurveCollection(LightcurveCollection):
+class SimpleLightCurveCollection(LightCurveCollection):
     """
     A simple positive and negative directory based light curve collection.
     """
@@ -15,18 +15,18 @@ class SimpleLightCurveCollection(LightcurveCollection):
 
     def get_paths(self) -> Iterable[Path]:
         """
-        Gets the paths for the lightcurves in the collection.
+        Gets the paths for the light curves in the collection.
 
-        :return: An iterable of the lightcurve paths.
+        :return: An iterable of the light curve paths.
         """
         return self.collection_directory.glob('**/*.npz')
 
     def load_times_and_fluxes_from_path(self, path: Path) -> (np.ndarray, np.ndarray):
         """
-        Loads the times and fluxes from a given lightcurve path.
+        Loads the times and fluxes from a given light curve path.
 
-        :param path: The path to the lightcurve file.
-        :return: The times and the fluxes of the lightcurve.
+        :param path: The path to the light curve file.
+        :return: The times and the fluxes of the light curve.
         """
         contents = np.load(str(path))
         times = contents['times']

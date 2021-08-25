@@ -108,7 +108,7 @@ class MagnificationSignal:
 
     def plot_magnification(self):
         """
-        Plot the lightcurve.
+        Plot the light curve.
         """
         # PLOT
         plt.plot(self.timeseries, self.magnification)

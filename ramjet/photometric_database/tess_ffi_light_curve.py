@@ -127,8 +127,8 @@ class TessFfiLightCurve(TessLightCurve):
         :return: The magnitude of the target.
         """
         with file_path.open('rb') as pickle_file:
-            lightcurve = pickle.load(pickle_file)
-        magnitude = lightcurve[TessFfiPickleIndex.TESS_MAGNITUDE.value]
+            light_curve = pickle.load(pickle_file)
+        magnitude = light_curve[TessFfiPickleIndex.TESS_MAGNITUDE.value]
         return magnitude
 
     @classmethod

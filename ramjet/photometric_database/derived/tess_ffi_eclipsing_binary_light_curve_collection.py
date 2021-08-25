@@ -1,19 +1,19 @@
 """
-Code representing the collection of TESS two minute cadence lightcurves containing eclipsing binaries.
+Code representing the collection of TESS two minute cadence light curves containing eclipsing binaries.
 """
 from typing import Union, List
 
 from peewee import Select
 
 from ramjet.data_interface.tess_eclipsing_binary_metadata_manager import TessEclipsingBinaryMetadata
-from ramjet.data_interface.tess_ffi_lightcurve_metadata_manager import TessFfiLightcurveMetadata
+from ramjet.data_interface.tess_ffi_light_curve_metadata_manager import TessFfiLightCurveMetadata
 from ramjet.data_interface.tess_transit_metadata_manager import TessTransitMetadata, Disposition as TransitDisposition
-from ramjet.photometric_database.derived.tess_ffi_lightcurve_collection import TessFfiLightcurveCollection
+from ramjet.photometric_database.derived.tess_ffi_light_curve_collection import TessFfiLightCurveCollection
 
 
-class TessFfiEclipsingBinaryLightcurveCollection(TessFfiLightcurveCollection):
+class TessFfiEclipsingBinaryLightCurveCollection(TessFfiLightCurveCollection):
     """
-    A class representing the collection of TESS two minute cadence lightcurves containing eclipsing binaries.
+    A class representing the collection of TESS two minute cadence light curves containing eclipsing binaries.
     """
     def __init__(self, dataset_splits: Union[List[int], None] = None,
                  magnitude_range: (Union[float, None], Union[float, None]) = (None, None)):
@@ -22,19 +22,19 @@ class TessFfiEclipsingBinaryLightcurveCollection(TessFfiLightcurveCollection):
 
     def get_sql_query(self) -> Select:
         """
-        Gets the SQL query for the database models for the lightcurve collection.
+        Gets the SQL query for the database models for the light curve collection.
 
         :return: The SQL query.
         """
         query = super().get_sql_query()
         eclipsing_binary_tic_id_query = TessEclipsingBinaryMetadata.select(TessEclipsingBinaryMetadata.tic_id)
-        query = query.where(TessFfiLightcurveMetadata.tic_id.in_(eclipsing_binary_tic_id_query))
+        query = query.where(TessFfiLightCurveMetadata.tic_id.in_(eclipsing_binary_tic_id_query))
         return query
 
 
-class TessFfiAntiEclipsingBinaryForTransitLightcurveCollection(TessFfiLightcurveCollection):
+class TessFfiAntiEclipsingBinaryForTransitLightCurveCollection(TessFfiLightCurveCollection):
     """
-    A class representing the collection of TESS two minute cadence lightcurves flagged as eclipsing binaries which are
+    A class representing the collection of TESS two minute cadence light curves flagged as eclipsing binaries which are
     not a suspected transit.
     """
     def __init__(self, dataset_splits: Union[List[int], None] = None,
@@ -44,7 +44,7 @@ class TessFfiAntiEclipsingBinaryForTransitLightcurveCollection(TessFfiLightcurve
 
     def get_sql_query(self) -> Select:
         """
-        Gets the SQL query for the database models for the lightcurve collection.
+        Gets the SQL query for the database models for the light curve collection.
 
         :return: The SQL query.
         """
@@ -54,5 +54,5 @@ class TessFfiAntiEclipsingBinaryForTransitLightcurveCollection(TessFfiLightcurve
             (TessTransitMetadata.disposition == TransitDisposition.CANDIDATE.value))
         eclipsing_binary_tic_id_query = TessEclipsingBinaryMetadata.select(TessEclipsingBinaryMetadata.tic_id).where(
             TessEclipsingBinaryMetadata.tic_id.not_in(transit_tic_id_query))
-        query = query.where(TessFfiLightcurveMetadata.tic_id.in_(eclipsing_binary_tic_id_query))
+        query = query.where(TessFfiLightCurveMetadata.tic_id.in_(eclipsing_binary_tic_id_query))
         return query

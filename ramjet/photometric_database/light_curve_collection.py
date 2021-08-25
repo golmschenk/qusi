@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Iterable, Union, List
 
 
-class LightcurveCollectionMethodNotImplementedError(RuntimeError):
+class LightCurveCollectionMethodNotImplementedError(RuntimeError):
     """
     An error to raise if a collection method that is not implemented is attempted to be used.
     Note, the standard NotImplementedError is not supposed to be used for cases when non-implemented functions are
@@ -15,9 +15,10 @@ class LightcurveCollectionMethodNotImplementedError(RuntimeError):
     pass
 
 
-class LightcurveCollection:
+class LightCurveCollection:
     """
-    A class representing a collection of lightcurves. Used to define how to find, load, and label a set of lightcurves.
+    A class representing a collection of light curves. Used to define how to find, load, and label a set of light 
+    curves.
 
     :ivar label: The default label to be used if the `load_label_from_path` method is not overridden.
     :ivar paths: The default list of paths to be used if the `get_paths` method is not overridden.
@@ -28,37 +29,37 @@ class LightcurveCollection:
 
     def get_paths(self) -> Iterable[Path]:
         """
-        Gets the paths for the lightcurves in the collection.
+        Gets the paths for the light curves in the collection.
 
-        :return: An iterable of the lightcurve paths.
+        :return: An iterable of the light curve paths.
         """
         return self.paths
 
     def load_times_and_fluxes_from_path(self, path: Path) -> (np.ndarray, np.ndarray):
         """
-        Loads the times and fluxes from a given lightcurve path.
+        Loads the times and fluxes from a given light curve path.
 
-        :param path: The path to the lightcurve file.
-        :return: The times and the fluxes of the lightcurve.
+        :param path: The path to the light curve file.
+        :return: The times and the fluxes of the light curve.
         """
-        raise LightcurveCollectionMethodNotImplementedError
+        raise LightCurveCollectionMethodNotImplementedError
 
     def load_times_and_magnifications_from_path(self, path: Path) -> (np.ndarray, np.ndarray):
         """
         Loads the times and magnifications from a given path as an injectable signal.
 
-        :param path: The path to the lightcurve/signal file.
-        :return: The times and the magnifications of the lightcurve/signal.
+        :param path: The path to the light curve/signal file.
+        :return: The times and the magnifications of the light curve/signal.
         """
-        raise LightcurveCollectionMethodNotImplementedError
+        raise LightCurveCollectionMethodNotImplementedError
 
     @staticmethod
     def generate_synthetic_signal_from_real_data(fluxes: np.ndarray, times: np.ndarray) -> (np.ndarray, np.ndarray):
         """
-        Takes real lightcurve data and converts it to a form that can be used for synthetic lightcurve injection.
+        Takes real light curve data and converts it to a form that can be used for synthetic light curve injection.
 
-        :param fluxes: The real lightcurve fluxes.
-        :param times: The real lightcurve times.
+        :param fluxes: The real light curve fluxes.
+        :param times: The real light curve times.
         :return: Fake synthetic magnifications and times.
         """
         fluxes -= np.minimum(np.min(fluxes), 0)  # Fix negative flux cases if they exist.

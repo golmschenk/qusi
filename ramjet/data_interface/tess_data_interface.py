@@ -27,7 +27,7 @@ from bokeh.io import show
 from retrying import retry
 from bokeh.plotting import Figure
 
-from ramjet.analysis.lightcurve_visualizer import plot_lightcurve, create_dual_lightcurve_figure
+from ramjet.analysis.light_curve_visualizer import plot_light_curve, create_dual_light_curve_figure
 
 
 class TessFluxType(Enum):
@@ -248,39 +248,40 @@ class TessDataInterface:
         observations[ColumnName.SECTOR] = observations['obs_id'].map(self.get_sector_from_single_sector_obs_id)
         return observations
 
-    def load_lightcurve_from_fits_file(self, lightcurve_path: Union[str, Path]) -> Dict[str, np.ndarray]:
+    def load_light_curve_from_fits_file(self, light_curve_path: Union[str, Path]) -> Dict[str, np.ndarray]:
         """
-        Loads a lightcurve from a FITS file in a dictionary form with the structure of the FITS arrays.
+        Loads a light_curve from a FITS file in a dictionary form with the structure of the FITS arrays.
 
-        :param lightcurve_path: The path to the FITS file.
-        :return: The lightcurve.
+        :param light_curve_path: The path to the FITS file.
+        :return: The light_curve.
         """
         try:
-            with fits.open(lightcurve_path) as hdu_list:
-                lightcurve = hdu_list[1].data  # Lightcurve information is in first extension table.
+            with fits.open(light_curve_path) as hdu_list:
+                light_curve = hdu_list[1].data  # Light curve information is in first extension table.
         except OSError:  # If the FITS file is corrupt, re-download (seems to happen often enough).
-            lightcurve_path = Path(lightcurve_path)  # In case it's currently a string.
-            lightcurve_path.unlink()
-            tic_id, sector = self.get_tic_id_and_sector_from_file_path(lightcurve_path)
-            self.download_two_minute_cadence_lightcurve(tic_id=tic_id, sector=sector, save_directory=lightcurve_path.parent)
-            with fits.open(lightcurve_path) as hdu_list:
-                lightcurve = hdu_list[1].data  # Lightcurve information is in first extension table.
-        return lightcurve
+            light_curve_path = Path(light_curve_path)  # In case it's currently a string.
+            light_curve_path.unlink()
+            tic_id, sector = self.get_tic_id_and_sector_from_file_path(light_curve_path)
+            self.download_two_minute_cadence_light_curve(tic_id=tic_id, sector=sector,
+                                                         save_directory=light_curve_path.parent)
+            with fits.open(light_curve_path) as hdu_list:
+                light_curve = hdu_list[1].data  # Light curve information is in first extension table.
+        return light_curve
 
-    def load_fluxes_and_times_from_fits_file(self, lightcurve_path: Union[str, Path],
+    def load_fluxes_and_times_from_fits_file(self, light_curve_path: Union[str, Path],
                                              flux_type: TessFluxType = TessFluxType.PDCSAP,
                                              remove_nans: bool = True) -> (np.ndarray, np.ndarray):
         """
         Extract the flux and time values from a TESS FITS file.
 
-        :param lightcurve_path: The path to the FITS file.
+        :param light_curve_path: The path to the FITS file.
         :param flux_type: The flux type to extract from the FITS file.
         :param remove_nans: Whether or not to remove nans.
         :return: The flux and times values from the FITS file.
         """
-        lightcurve = self.load_lightcurve_from_fits_file(lightcurve_path)
-        fluxes = lightcurve[flux_type.value]
-        times = lightcurve['TIME']
+        light_curve = self.load_light_curve_from_fits_file(light_curve_path)
+        fluxes = light_curve[flux_type.value]
+        times = light_curve['TIME']
         assert times.shape == fluxes.shape
         if remove_nans:
             # noinspection PyUnresolvedReferences
@@ -289,22 +290,22 @@ class TessDataInterface:
             times = np.delete(times, nan_indexes)
         return fluxes, times
 
-    def load_fluxes_flux_errors_and_times_from_fits_file(self, lightcurve_path: Union[str, Path],
+    def load_fluxes_flux_errors_and_times_from_fits_file(self, light_curve_path: Union[str, Path],
                                                          flux_type: TessFluxType = TessFluxType.PDCSAP,
                                                          remove_nans: bool = True
                                                          ) -> (np.ndarray, np.ndarray, np.ndarray):
         """
         Extract the flux and time values from a TESS FITS file.
 
-        :param lightcurve_path: The path to the FITS file.
+        :param light_curve_path: The path to the FITS file.
         :param flux_type: The flux type to extract from the FITS file.
         :param remove_nans: Whether or not to remove nans.
         :return: The flux and times values from the FITS file.
         """
-        lightcurve = self.load_lightcurve_from_fits_file(lightcurve_path)
-        fluxes = lightcurve[flux_type.value]
-        flux_errors = lightcurve[flux_type.value + '_ERR']
-        times = lightcurve['TIME']
+        light_curve = self.load_light_curve_from_fits_file(light_curve_path)
+        fluxes = light_curve[flux_type.value]
+        flux_errors = light_curve[flux_type.value + '_ERR']
+        times = light_curve['TIME']
         assert times.shape == fluxes.shape
         if remove_nans:
             # noinspection PyUnresolvedReferences
@@ -315,12 +316,12 @@ class TessDataInterface:
             times = np.delete(times, nan_indexes)
         return fluxes, flux_errors, times
 
-    def download_two_minute_cadence_lightcurve(self, tic_id: int, sector: int = None,
+    def download_two_minute_cadence_light_curve(self, tic_id: int, sector: int = None,
                                                save_directory: Union[Path, str] = None) -> Path:
         """
-        Downloads a lightcurve from MAST.
+        Downloads a light curve from MAST.
 
-        :param tic_id: The TIC ID of the lightcurve target to download.
+        :param tic_id: The TIC ID of the light curve target to download.
         :param sector: The sector to download. If not specified, downloads first available sector.
         :param save_directory: The directory to save the FITS file to. If not specified, uses the system temporary
                                directory.
@@ -336,77 +337,77 @@ class TessDataInterface:
         else:
             observations_with_sectors = observations_with_sectors.head(1)
         product_list = self.get_product_list(observations_with_sectors)
-        lightcurves_product_list = product_list[product_list['productSubGroupDescription'] == 'LC']
-        manifest = self.download_products(lightcurves_product_list, data_directory=Path(tempfile.gettempdir()))
-        lightcurve_path = Path(manifest['Local Path'].iloc[0])
+        light_curves_product_list = product_list[product_list['productSubGroupDescription'] == 'LC']
+        manifest = self.download_products(light_curves_product_list, data_directory=Path(tempfile.gettempdir()))
+        light_curve_path = Path(manifest['Local Path'].iloc[0])
         if save_directory is not None:
             save_directory = Path(save_directory)
             save_directory.mkdir(parents=True, exist_ok=True)
-            new_lightcurve_path = str(save_directory.joinpath(lightcurve_path.name))
-            shutil.move(str(lightcurve_path), new_lightcurve_path)
-            lightcurve_path = new_lightcurve_path
-        return lightcurve_path
+            new_light_curve_path = str(save_directory.joinpath(light_curve_path.name))
+            shutil.move(str(light_curve_path), new_light_curve_path)
+            light_curve_path = new_light_curve_path
+        return light_curve_path
 
-    def plot_lightcurve_from_mast(self, tic_id: int, sector: int = None, exclude_flux_outliers: bool = False,
+    def plot_light_curve_from_mast(self, tic_id: int, sector: int = None, exclude_flux_outliers: bool = False,
                                   base_data_point_size=3):
         """
-        Downloads and plots a lightcurve from MAST.
+        Downloads and plots a light curve from MAST.
 
-        :param tic_id: The TIC ID of the lightcurve target to download.
+        :param tic_id: The TIC ID of the light curve target to download.
         :param sector: The sector to download. If not specified, downloads first available sector.
         :param exclude_flux_outliers: Whether or not to exclude flux outlier data points when plotting.
         :param base_data_point_size: The size of the data points to use when plotting (and related sizes).
         """
-        lightcurve_path = self.download_two_minute_cadence_lightcurve(tic_id, sector)
-        fluxes, times = self.load_fluxes_and_times_from_fits_file(lightcurve_path)
+        light_curve_path = self.download_two_minute_cadence_light_curve(tic_id, sector)
+        fluxes, times = self.load_fluxes_and_times_from_fits_file(light_curve_path)
         if sector is None:
-            sector = self.get_sector_from_single_sector_obs_id(str(lightcurve_path.stem))
+            sector = self.get_sector_from_single_sector_obs_id(str(light_curve_path.stem))
         title = f'TIC {tic_id} sector {sector}'
         if exclude_flux_outliers:
             title += ' (outliers removed)'
-        plot_lightcurve(times=times, fluxes=fluxes, exclude_flux_outliers=exclude_flux_outliers, title=title,
-                        base_data_point_size=base_data_point_size)
+        plot_light_curve(times=times, fluxes=fluxes, title=title, exclude_flux_outliers=exclude_flux_outliers,
+                         base_data_point_size=base_data_point_size)
 
     def create_pdcsap_and_sap_comparison_figure_from_mast(self, tic_id: int, sector: int = None) -> Figure:
         """
         Creates a comparison figure containing both the PDCSAP and SAP signals.
 
-        :param tic_id: The TIC ID of the lightcurve to plot.
-        :param sector: The sector of the lightcurve to plot.
+        :param tic_id: The TIC ID of the light curve to plot.
+        :param sector: The sector of the light curve to plot.
         :return: The generated figure.
         """
-        lightcurve_path = self.download_two_minute_cadence_lightcurve(tic_id, sector)
-        pdcsap_fluxes, pdcsap_times = self.load_fluxes_and_times_from_fits_file(lightcurve_path, TessFluxType.PDCSAP)
+        light_curve_path = self.download_two_minute_cadence_light_curve(tic_id, sector)
+        pdcsap_fluxes, pdcsap_times = self.load_fluxes_and_times_from_fits_file(light_curve_path, TessFluxType.PDCSAP)
         normalized_pdcsap_fluxes = pdcsap_fluxes / np.median(pdcsap_fluxes)
-        sap_fluxes, sap_times = self.load_fluxes_and_times_from_fits_file(lightcurve_path, TessFluxType.SAP)
+        sap_fluxes, sap_times = self.load_fluxes_and_times_from_fits_file(light_curve_path, TessFluxType.SAP)
         normalized_sap_fluxes = sap_fluxes / np.median(sap_fluxes)
         if sector is None:
-            _, sector = self.get_tic_id_and_sector_from_file_path(lightcurve_path)
+            _, sector = self.get_tic_id_and_sector_from_file_path(light_curve_path)
         title = f'TIC {tic_id} sector {sector}'
-        figure = create_dual_lightcurve_figure(fluxes0=normalized_pdcsap_fluxes, times0=pdcsap_times, name0='PDCSAP',
-                                               fluxes1=normalized_sap_fluxes, times1=sap_times, name1='SAP',
-                                               title=title, x_axis_label='Time (BTJD)')
+        figure = create_dual_light_curve_figure(fluxes0=normalized_pdcsap_fluxes, times0=pdcsap_times, name0='PDCSAP',
+                                                fluxes1=normalized_sap_fluxes, times1=sap_times, name1='SAP',
+                                                title=title, x_axis_label='Time (BTJD)')
         return figure
 
     def show_pdcsap_and_sap_comparison_from_mast(self, tic_id: int, sector: int = None):
         """
         Shows a comparison figure containing both the PDCSAP and SAP signals.
 
-        :param tic_id: The TIC ID of the lightcurve to plot.
-        :param sector: The sector of the lightcurve to plot.
+        :param tic_id: The TIC ID of the light curve to plot.
+        :param sector: The sector of the light curve to plot.
         """
         comparison_figure = self.create_pdcsap_and_sap_comparison_figure_from_mast(tic_id, sector)
         comparison_figure.sizing_mode = 'stretch_width'
         show(comparison_figure)
 
-    def show_lightcurve(self, lightcurve_path: Path):
+    def show_light_curve(self, light_curve_path: Path):
         """
-        Shows a figure of the lightcurve at the passed path.
+        Shows a figure of the light curve at the passed path.
 
-        :param lightcurve_path: The path of the lightcurve.
+        :param light_curve_path: The path of the light curve.
         """
-        fluxes, times = self.load_fluxes_and_times_from_fits_file(lightcurve_path)
-        figure = Figure(title=str(lightcurve_path), x_axis_label='Flux', y_axis_label='Time', active_drag='box_zoom')
+        fluxes, times = self.load_fluxes_and_times_from_fits_file(light_curve_path)
+        figure = Figure(title=str(light_curve_path), x_axis_label='Flux', y_axis_label='Time', active_drag='box_zoom')
         color = 'mediumblue'
         figure.line(times, fluxes, line_color=color, line_alpha=0.1)
         figure.circle(times, fluxes, line_color=color, line_alpha=0.4, fill_color=color, fill_alpha=0.1)
@@ -481,25 +482,25 @@ class TessDataInterface:
         print_data_frame.reset_index(drop=True, inplace=True)
         print(print_data_frame)
 
-    def download_two_minute_cadence_lightcurves(self, save_directory: Path, limit: Union[None, int] = None):
+    def download_two_minute_cadence_light_curves(self, save_directory: Path, limit: Union[None, int] = None):
         """
-        Downloads all two minute cadence lightcurves from TESS.
+        Downloads all two minute cadence light curves from TESS.
 
-        :param save_directory: The directory to save the lightcurves to.
-        :param limit: Limits the number of lightcurves downloaded. Default of None will download all lightcurves.
+        :param save_directory: The directory to save the light curves to.
+        :param limit: Limits the number of light curves downloaded. Default of None will download all light curves.
         """
-        print(f'Starting download of 2-minute cadence lightcurves to directory `{save_directory}`.')
+        print(f'Starting download of 2-minute cadence light curves to directory `{save_directory}`.')
         save_directory.mkdir(parents=True, exist_ok=True)
         print(f'Retrieving observations list from MAST...')
         single_sector_observations = self.get_all_two_minute_single_sector_observations()
         print(f'Retrieving data products list from MAST...')
         data_products = self.get_product_list(single_sector_observations)
-        print(f'Downloading lightcurves...')
-        lightcurve_data_products = data_products[data_products['productFilename'].str.endswith('lc.fits')]
+        print(f'Downloading light curves...')
+        light_curve_data_products = data_products[data_products['productFilename'].str.endswith('lc.fits')]
         if limit is not None:
-            lightcurve_data_products = lightcurve_data_products.sample(frac=1, random_state=0).head(limit)
-        download_manifest = self.download_products(lightcurve_data_products, data_directory=save_directory)
-        print(f'Moving lightcurves to {save_directory}...')
+            light_curve_data_products = light_curve_data_products.sample(frac=1, random_state=0).head(limit)
+        download_manifest = self.download_products(light_curve_data_products, data_directory=save_directory)
+        print(f'Moving light curves to {save_directory}...')
         for _, manifest_row in download_manifest.iterrows():
             if manifest_row['Status'] == 'COMPLETE':
                 file_path = Path(manifest_row['Local Path'])
@@ -535,21 +536,21 @@ class TessDataInterface:
             two_minute_observations)
         return two_minute_observations
 
-    def verify_lightcurve(self, lightcurve_path: Path):
+    def verify_light_curve(self, light_curve_path: Path):
         """
-        The lightcurve is checked if it's malformed, and if it is, it is re-downloaded.
+        The light_curve is checked if it's malformed, and if it is, it is re-downloaded.
 
-        :param lightcurve_path: The path of the lightcurve.
+        :param light_curve_path: The path of the light_curve.
         """
         try:
-            hdu_list = fits.open(str(lightcurve_path))
-            lightcurve = hdu_list[1].data
-            _ = lightcurve['TIME'][0]  # Basic check if the lightcurve file is malformed.
+            hdu_list = fits.open(str(light_curve_path))
+            light_curve = hdu_list[1].data
+            _ = light_curve['TIME'][0]  # Basic check if the light_curve file is malformed.
         except (OSError, TypeError):
-            print(f'{lightcurve_path} seems to be malformed. Re-downloading and replacing.')
-            sector = self.get_sector_from_single_sector_obs_id(str(lightcurve_path.stem))
-            tic_id = self.get_tic_id_from_single_sector_obs_id(str(lightcurve_path.stem))
-            self.download_two_minute_cadence_lightcurve(tic_id, sector, save_directory=lightcurve_path.parent)
+            print(f'{light_curve_path} seems to be malformed. Re-downloading and replacing.')
+            sector = self.get_sector_from_single_sector_obs_id(str(light_curve_path.stem))
+            tic_id = self.get_tic_id_from_single_sector_obs_id(str(light_curve_path.stem))
+            self.download_two_minute_cadence_light_curve(tic_id, sector, save_directory=light_curve_path.parent)
 
     @staticmethod
     def get_tic_id_and_sector_from_file_path(file_path: Union[Path, str]):
@@ -580,5 +581,5 @@ if __name__ == '__main__':
         limit_ = int(sys.argv[1])
     else:
         limit_ = None
-    tess_data_interface.download_two_minute_cadence_lightcurves(Path('data/tess_two_minute_cadence_lightcurves'),
-                                                                limit=limit_)
+    tess_data_interface.download_two_minute_cadence_light_curves(Path('data/tess_two_minute_cadence_light_curves'),
+                                                                 limit=limit_)

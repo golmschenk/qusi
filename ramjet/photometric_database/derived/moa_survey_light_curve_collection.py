@@ -11,10 +11,10 @@ import scipy.stats
 from filelock import FileLock
 
 from ramjet.data_interface.moa_data_interface import MoaDataInterface
-from ramjet.photometric_database.lightcurve_collection import LightcurveCollection
+from ramjet.photometric_database.light_curve_collection import LightCurveCollection
 
 
-class MoaSurveyLightCurveCollection(LightcurveCollection):
+class MoaSurveyLightCurveCollection(LightCurveCollection):
     """
     A collection of light curves based on the MOA 9-year survey.
     """
@@ -29,9 +29,9 @@ class MoaSurveyLightCurveCollection(LightcurveCollection):
 
     def get_paths(self) -> Iterable[Path]:
         """
-        Gets the paths for the lightcurves in the collection.
+        Gets the paths for the light curves in the collection.
 
-        :return: An iterable of the lightcurve paths.
+        :return: An iterable of the light curve paths.
         """
         paths: List[Path] = []
         for tag in self.survey_tags:
@@ -62,23 +62,23 @@ class MoaSurveyLightCurveCollection(LightcurveCollection):
 
     def load_times_and_fluxes_from_path(self, path: Path) -> (np.ndarray, np.ndarray):
         """
-        Loads the times and fluxes from a given lightcurve path.
+        Loads the times and fluxes from a given light curve path.
 
-        :param path: The path to the lightcurve file.
-        :return: The times and the fluxes of the lightcurve.
+        :param path: The path to the light curve file.
+        :return: The times and the fluxes of the light curve.
         """
         path = self.move_path_to_nvme(path)
-        lightcurve_dataframe = pd.read_feather(path)
-        times = lightcurve_dataframe['HJD'].values
-        fluxes = lightcurve_dataframe['flux'].values
+        light_curve_dataframe = pd.read_feather(path)
+        times = light_curve_dataframe['HJD'].values
+        fluxes = light_curve_dataframe['flux'].values
         return times, fluxes
 
     def load_times_and_magnifications_from_path(self, path: Path) -> (np.ndarray, np.ndarray):
         """
         Loads the times and magnifications from a given path as an injectable signal.
 
-        :param path: The path to the lightcurve/signal file.
-        :return: The times and the magnifications of the lightcurve/signal.
+        :param path: The path to the light curve/signal file.
+        :return: The times and the magnifications of the light curve/signal.
         """
         path = self.move_path_to_nvme(path)
         times, fluxes = self.load_times_and_fluxes_from_path(path)
@@ -88,10 +88,10 @@ class MoaSurveyLightCurveCollection(LightcurveCollection):
     @staticmethod
     def generate_synthetic_signal_from_real_data(fluxes: np.ndarray, times: np.ndarray) -> (np.ndarray, np.ndarray):
         """
-        Takes real lightcurve data and converts it to a form that can be used for synthetic lightcurve injection.
+        Takes real light curve data and converts it to a form that can be used for synthetic light curve injection.
 
-        :param fluxes: The real lightcurve fluxes.
-        :param times: The real lightcurve times.
+        :param fluxes: The real light curve fluxes.
+        :param times: The real light curve times.
         :return: Fake synthetic magnifications and times.
         """
         flux_median_absolute_deviation = scipy.stats.median_abs_deviation(fluxes)

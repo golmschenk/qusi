@@ -1,17 +1,17 @@
 """
-Code representing the collection of TESS two minute cadence lightcurves containing transits.
+Code representing the collection of TESS two minute cadence light curves containing transits.
 """
 from typing import List, Union
 from peewee import Select
 
-from ramjet.data_interface.tess_ffi_lightcurve_metadata_manager import TessFfiLightcurveMetadata
+from ramjet.data_interface.tess_ffi_light_curve_metadata_manager import TessFfiLightCurveMetadata
 from ramjet.data_interface.tess_transit_metadata_manager import TessTransitMetadata, Disposition
-from ramjet.photometric_database.derived.tess_ffi_lightcurve_collection import TessFfiLightcurveCollection
+from ramjet.photometric_database.derived.tess_ffi_light_curve_collection import TessFfiLightCurveCollection
 
 
-class TessFfiConfirmedTransitLightcurveCollection(TessFfiLightcurveCollection):
+class TessFfiConfirmedTransitLightCurveCollection(TessFfiLightCurveCollection):
     """
-    A class representing the collection of TESS two minute cadence lightcurves containing transits.
+    A class representing the collection of TESS two minute cadence light curves containing transits.
     """
     def __init__(self, dataset_splits: Union[List[int], None] = None,
                  magnitude_range: (Union[float, None], Union[float, None]) = (None, None)):
@@ -20,20 +20,20 @@ class TessFfiConfirmedTransitLightcurveCollection(TessFfiLightcurveCollection):
 
     def get_sql_query(self) -> Select:
         """
-        Gets the SQL query for the database models for the lightcurve collection.
+        Gets the SQL query for the database models for the light curve collection.
 
         :return: The SQL query.
         """
         query = super().get_sql_query()
         transit_tic_id_query = TessTransitMetadata.select(TessTransitMetadata.tic_id).where(
             TessTransitMetadata.disposition == Disposition.CONFIRMED.value)
-        query = query.where(TessFfiLightcurveMetadata.tic_id.in_(transit_tic_id_query))
+        query = query.where(TessFfiLightCurveMetadata.tic_id.in_(transit_tic_id_query))
         return query
 
 
-class TessFfiConfirmedAndCandidateTransitLightcurveCollection(TessFfiLightcurveCollection):
+class TessFfiConfirmedAndCandidateTransitLightCurveCollection(TessFfiLightCurveCollection):
     """
-    A class representing the collection of TESS two minute cadence lightcurves containing transits.
+    A class representing the collection of TESS two minute cadence light curves containing transits.
     """
 
     def __init__(self, dataset_splits: Union[List[int], None] = None,
@@ -43,7 +43,7 @@ class TessFfiConfirmedAndCandidateTransitLightcurveCollection(TessFfiLightcurveC
 
     def get_sql_query(self) -> Select:
         """
-        Gets the SQL query for the database models for the lightcurve collection.
+        Gets the SQL query for the database models for the light curve collection.
 
         :return: The SQL query.
         """
@@ -51,13 +51,13 @@ class TessFfiConfirmedAndCandidateTransitLightcurveCollection(TessFfiLightcurveC
         transit_tic_id_query = TessTransitMetadata.select(TessTransitMetadata.tic_id).where(
             (TessTransitMetadata.disposition == Disposition.CONFIRMED.value) |
             (TessTransitMetadata.disposition == Disposition.CANDIDATE.value))
-        query = query.where(TessFfiLightcurveMetadata.tic_id.in_(transit_tic_id_query))
+        query = query.where(TessFfiLightCurveMetadata.tic_id.in_(transit_tic_id_query))
         return query
 
 
-class TessFfiNonTransitLightcurveCollection(TessFfiLightcurveCollection):
+class TessFfiNonTransitLightCurveCollection(TessFfiLightCurveCollection):
     """
-    A class representing the collection of TESS two minute cadence lightcurves containing transits.
+    A class representing the collection of TESS two minute cadence light curves containing transits.
     """
 
     def __init__(self, dataset_splits: Union[List[int], None] = None,
@@ -67,7 +67,7 @@ class TessFfiNonTransitLightcurveCollection(TessFfiLightcurveCollection):
 
     def get_sql_query(self) -> Select:
         """
-        Gets the SQL query for the database models for the lightcurve collection.
+        Gets the SQL query for the database models for the light curve collection.
 
         :return: The SQL query.
         """
@@ -75,5 +75,5 @@ class TessFfiNonTransitLightcurveCollection(TessFfiLightcurveCollection):
         transit_candidate_tic_id_query = TessTransitMetadata.select(TessTransitMetadata.tic_id).where(
             (TessTransitMetadata.disposition == Disposition.CONFIRMED.value) |
             (TessTransitMetadata.disposition == Disposition.CANDIDATE.value))
-        query = query.where(TessFfiLightcurveMetadata.tic_id.not_in(transit_candidate_tic_id_query))
+        query = query.where(TessFfiLightCurveMetadata.tic_id.not_in(transit_candidate_tic_id_query))
         return query

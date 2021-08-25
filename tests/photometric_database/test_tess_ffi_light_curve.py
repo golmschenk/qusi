@@ -65,7 +65,7 @@ class TestTessFfiDataInterface:
         assert tic_id0 == 290374453
         assert sector0 == 12
         tic_id1, sector1 = light_curve.get_tic_id_and_sector_from_file_path(
-            'data/ffi_microlensing_database/lightcurves/tesslcs_sector_1/tesslcs_tmag_12_13/tesslc_1234567.pkl')
+            'data/ffi_microlensing_database/light_curves/tesslcs_sector_1/tesslcs_tmag_12_13/tesslc_1234567.pkl')
         assert tic_id1 == 1234567
         assert sector1 == 1
         tic_id2, sector2 = light_curve.get_tic_id_and_sector_from_file_path('tesslc_12345678.pkl')
@@ -79,7 +79,7 @@ class TestTessFfiDataInterface:
         assert tic_id0 == 290374453
         assert sector0 == 12
         tic_id1, sector1 = light_curve.get_tic_id_and_sector_from_file_path(
-            'data/ffi_microlensing_database/lightcurves/tesslcs_sector_1_104/tesslcs_tmag_12_13/tesslc_1234567.pkl')
+            'data/ffi_microlensing_database/light_curves/tesslcs_sector_1_104/tesslcs_tmag_12_13/tesslc_1234567.pkl')
         assert tic_id1 == 1234567
         assert sector1 == 1
         tic_id2, sector2 = light_curve.get_tic_id_and_sector_from_file_path('tesslc_12345678.pkl')
@@ -92,7 +92,7 @@ class TestTessFfiDataInterface:
             'tesslcs_sector_12/tesslcs_tmag_2_3/tesslc_290374453')
         assert magnitude0 == 2
         magnitude1 = light_curve.get_floor_magnitude_from_file_path(
-            'data/ffi_microlensing_database/lightcurves/tesslcs_sector_1/tesslcs_tmag_14_15/tesslc_1234567.pkl')
+            'data/ffi_microlensing_database/light_curves/tesslcs_sector_1/tesslcs_tmag_14_15/tesslc_1234567.pkl')
         assert magnitude1 == 14
         with pytest.raises(ValueError):
             light_curve.get_floor_magnitude_from_file_path('tesslc_12345678.pkl')
@@ -103,7 +103,7 @@ class TestTessFfiDataInterface:
             'tesslcs_sector_12_104/tesslcs_tmag_2_3/tesslc_290374453')
         assert magnitude0 == 2
         magnitude1 = light_curve.get_floor_magnitude_from_file_path(
-            'data/ffi_microlensing_database/lightcurves/tesslcs_sector_1_104/tesslcs_tmag_14_15/tesslc_1234567.pkl')
+            'data/ffi_microlensing_database/light_curves/tesslcs_sector_1_104/tesslcs_tmag_14_15/tesslc_1234567.pkl')
         assert magnitude1 == 14
         with pytest.raises(ValueError):
             light_curve.get_floor_magnitude_from_file_path('tesslc_12345678.pkl')

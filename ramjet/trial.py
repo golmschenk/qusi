@@ -17,7 +17,7 @@ import wandb.keras
 from tensorflow.python.keras import callbacks
 
 from ramjet.logging.wandb_logger import WandbLogger
-from ramjet.photometric_database.standard_and_injected_lightcurve_database import StandardAndInjectedLightcurveDatabase
+from ramjet.photometric_database.standard_and_injected_light_curve_database import StandardAndInjectedLightCurveDatabase
 
 
 class LoggingToolName(StrEnum):
@@ -94,7 +94,7 @@ def create_logging_metrics() -> List[tf.metrics.Metric]:
     return metrics
 
 
-def create_logging_callbacks(logs_directory: Path, trial_name: str, database: StandardAndInjectedLightcurveDatabase,
+def create_logging_callbacks(logs_directory: Path, trial_name: str, database: StandardAndInjectedLightCurveDatabase,
                              logging_tool_name: LoggingToolName = LoggingToolName.WANDB,
                              wandb_entity: Optional[str] = None, wandb_project: Optional[str] = None,
                              light_curve_logging: bool = False) -> List[callbacks.Callback]:
