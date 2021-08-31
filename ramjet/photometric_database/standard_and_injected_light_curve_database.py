@@ -206,7 +206,7 @@ class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
             load_times_fluxes_and_flux_errors_from_path_function: Callable[
                 [Path], Tuple[np.ndarray, np.ndarray, Union[np.ndarray, None]]],
             load_label_from_path_function: Callable[[Path], Union[float, np.ndarray]], evaluation_mode: bool = False,
-            name: Optional[str] = None):
+            name: Optional[str] = None) -> tf.data.Dataset:
         """
         Generates a light curve and label dataset from a paths dataset using a passed function defining
         how to load the values from the light curve file and the label value to use.
