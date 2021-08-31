@@ -3,12 +3,10 @@ import tensorflow as tf
 from tensorflow.python.keras.losses import BinaryCrossentropy
 from pathlib import Path
 from ramjet.models.cura import Cura
-from ramjet.models.single_layer_model import SingleLayerModel
 from ramjet.photometric_database.derived.moa_survey_none_single_and_binary_database import \
     MoaSurveyNoneSingleAndBinaryDatabase
 from ramjet.photometric_database.derived.tess_two_minute_cadence_transit_databases import \
     TessTwoMinuteCadenceStandardAndInjectedTransitDatabase
-from ramjet.photometric_database.derived.toy_database import ToyDatabase
 from ramjet.trial import create_logging_metrics, create_logging_callbacks
 
 
@@ -16,8 +14,8 @@ def train():
     """Runs the training."""
     print('Starting training process...', flush=True)
     # Basic training settings.
-    database = ToyDatabase()
-    model = SingleLayerModel()
+    database = TessTwoMinuteCadenceStandardAndInjectedTransitDatabase()
+    model = Cura(database.number_of_label_types, database.number_of_input_channels)
     trial_name = f'{type(model).__name__}'  # Add any desired run name details to this string.
     # database.batch_size = 100  # Reducing the batch size may help if you are running out of memory.
     epochs_to_run = 1000
