@@ -6,6 +6,8 @@ from ramjet.photometric_database.standard_and_injected_light_curve_database impo
 class ToyDatabase(StandardAndInjectedLightCurveDatabase):
     def __init__(self):
         super().__init__()
+        self.batch_size = 10
+        self.number_of_parallel_processes_per_map = 1
         self.time_steps_per_example = 100
         self.training_standard_light_curve_collections = [
             ToyFlatLightCurveCollection(),

@@ -1,3 +1,4 @@
+import os
 import tempfile
 from pathlib import Path
 
@@ -14,6 +15,8 @@ from ramjet.trial import create_logging_callbacks, create_logging_metrics
 @pytest.mark.slow
 def test_train():
     """Tests a complete training setup with a toy database and model."""
+    os.environ['WANDB_API_KEY'] = 'fake_key'
+    os.environ['WANDB_MODE'] = 'offline'
     database = ToyDatabase()
     model = SingleLayerModel()
     trial_name = f'{type(model).__name__}'

@@ -97,6 +97,7 @@ def create_logging_metrics() -> List[tf.metrics.Metric]:
 def create_logging_callbacks(logs_directory: Path, trial_name: str, database: StandardAndInjectedLightCurveDatabase,
                              logging_tool_name: LoggingToolName = LoggingToolName.WANDB,
                              wandb_entity: Optional[str] = None, wandb_project: Optional[str] = None,
+                             wandb_online: bool = True,
                              light_curve_logging: bool = False) -> List[callbacks.Callback]:
     """
     Creates the callbacks to perform the logging.
