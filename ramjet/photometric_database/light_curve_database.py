@@ -201,15 +201,18 @@ class LightCurveDatabase(ABC):
         :param window_shift: The shift of the moving window between batches.
         :return: The flattened window dataset.
         """
-        examples_dataset = dataset.map(lambda element, _: element)
-        labels_dataset = dataset.map(lambda _, element: element)
-        examples_window_dataset = examples_dataset.window(batch_size, shift=window_shift)
-        labels_window_dataset = labels_dataset.window(batch_size, shift=window_shift)
-        examples_unbatched_window_dataset = examples_window_dataset.flat_map(lambda element: element)
-        labels_unbatched_window_dataset = labels_window_dataset.flat_map(lambda element: element)
-        unbatched_window_dataset = tf.data.Dataset.zip((examples_unbatched_window_dataset,
-                                                        labels_unbatched_window_dataset))
-        return unbatched_window_dataset
+        if window_shift != 0:
+            examples_dataset = dataset.map(lambda element, _: element)
+            labels_dataset = dataset.map(lambda _, element: element)
+            examples_window_dataset = examples_dataset.window(batch_size, shift=window_shift)
+            labels_window_dataset = labels_dataset.window(batch_size, shift=window_shift)
+            examples_unbatched_window_dataset = examples_window_dataset.flat_map(lambda element: element)
+            labels_unbatched_window_dataset = labels_window_dataset.flat_map(lambda element: element)
+            unbatched_window_dataset = tf.data.Dataset.zip((examples_unbatched_window_dataset,
+                                                            labels_unbatched_window_dataset))
+            return unbatched_window_dataset
+        else:
+            return dataset
 
     def padded_window_dataset_for_zipped_example_and_label_dataset(self, dataset: tf.data.Dataset, batch_size: int,
                                                                    window_shift: int,
