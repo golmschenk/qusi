@@ -55,6 +55,7 @@ class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
         self.inference_light_curve_collections: List[LightCurveCollection] = []
         self.shuffle_buffer_size = 10000
         self.number_of_label_types = 1
+        self.number_of_auxiliary_values: int = 0
         self.out_of_bounds_injection_handling: OutOfBoundsInjectionHandlingMethod = \
             OutOfBoundsInjectionHandlingMethod.ERROR
         self.baseline_flux_estimation_method = BaselineFluxEstimationMethod.MEDIAN
@@ -93,6 +94,7 @@ class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
                 zip(training_standard_paths_datasets, self.training_standard_light_curve_collections)):
             light_curve_and_label_dataset = self.generate_standard_light_curve_and_label_dataset(paths_dataset,
                                                                                                  light_curve_collection.load_times_fluxes_and_flux_errors_from_path,
+                                                                                                 light_curve_collection.load_auxiliary_information_for_path,
                                                                                                  light_curve_collection.load_label_from_path,
                                                                                                  name=f"{type(light_curve_collection).__name__}_standard_train_{index}")
             training_light_curve_and_label_datasets.append(light_curve_and_label_dataset)
@@ -107,6 +109,8 @@ class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
                 name=f"{type(injectable_light_curve_collection).__name__}_injected_train_{index}")
             training_light_curve_and_label_datasets.append(light_curve_and_label_dataset)
         training_dataset = self.intersperse_datasets(training_light_curve_and_label_datasets)
+        if self.number_of_auxiliary_values > 0:
+            training_dataset = self.from_light_curve_auxiliary_and_label_to_observation_and_label(training_dataset)
         training_dataset = self.window_dataset_for_zipped_example_and_label_dataset(training_dataset, self.batch_size,
                                                                                     self.window_shift)
         validation_light_curve_and_label_datasets = []
@@ -114,6 +118,7 @@ class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
                 zip(validation_standard_paths_datasets, self.validation_standard_light_curve_collections)):
             light_curve_and_label_dataset = self.generate_standard_light_curve_and_label_dataset(paths_dataset,
                                                                                                  light_curve_collection.load_times_fluxes_and_flux_errors_from_path,
+                                                                                                 light_curve_collection.load_auxiliary_information_for_path,
                                                                                                  light_curve_collection.load_label_from_path,
                                                                                                  evaluation_mode=True,
                                                                                                  name=f"{type(light_curve_collection).__name__}_standard_validation_{index}")
@@ -129,6 +134,8 @@ class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
                 name=f"{type(injectable_light_curve_collection).__name__}_injected_validation_{index}")
             validation_light_curve_and_label_datasets.append(light_curve_and_label_dataset)
         validation_dataset = self.intersperse_datasets(validation_light_curve_and_label_datasets)
+        if self.number_of_auxiliary_values > 0:
+            validation_dataset = self.from_light_curve_auxiliary_and_label_to_observation_and_label(validation_dataset)
         validation_dataset = validation_dataset.batch(self.batch_size)
         return training_dataset, validation_dataset
 
@@ -171,8 +178,8 @@ class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
         return standard_paths_datasets, injectee_path_dataset, injectable_paths_datasets
 
     def generate_paths_dataset_from_light_curve_collection(self, light_curve_collection: LightCurveCollection,
-                                                          repeat: bool = True, shuffle: bool = True
-                                                          ) -> tf.data.Dataset:
+                                                           repeat: bool = True, shuffle: bool = True
+                                                           ) -> tf.data.Dataset:
         """
         Generates a paths dataset for a light curve collection.
 
@@ -205,6 +212,7 @@ class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
             self, paths_dataset: tf.data.Dataset,
             load_times_fluxes_and_flux_errors_from_path_function: Callable[
                 [Path], Tuple[np.ndarray, np.ndarray, Union[np.ndarray, None]]],
+            load_auxiliary_information_for_path_function: Callable[[Path], np.ndarray],
             load_label_from_path_function: Callable[[Path], Union[float, np.ndarray]], evaluation_mode: bool = False,
             name: Optional[str] = None) -> tf.data.Dataset:
         """
@@ -221,11 +229,19 @@ class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
         """
         preprocess_map_function = partial(self.preprocess_standard_light_curve,
                                           load_times_fluxes_and_flux_errors_from_path_function,
+                                          load_auxiliary_information_for_path_function,
                                           load_label_from_path_function,
                                           evaluation_mode=evaluation_mode)
         preprocess_map_function = self.add_logging_queues_to_map_function(preprocess_map_function, name)
-        output_types = (tf.float32, tf.float32)
-        output_shapes = [(self.time_steps_per_example, self.number_of_input_channels), (self.number_of_label_types,)]
+        if self.number_of_auxiliary_values == 0:
+            output_types = (tf.float32, tf.float32)
+            output_shapes = [(self.time_steps_per_example, self.number_of_input_channels),
+                             (self.number_of_label_types,)]
+        else:
+            output_types = (tf.float32, tf.float32, tf.float32)
+            output_shapes = [
+                (self.time_steps_per_example, self.number_of_input_channels), (self.number_of_auxiliary_values,),
+                (self.number_of_label_types,)]
         example_and_label_dataset = map_py_function_to_dataset(paths_dataset,
                                                                preprocess_map_function,
                                                                self.number_of_parallel_processes_per_map,
@@ -251,6 +267,7 @@ class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
             self,
             load_times_fluxes_and_flux_errors_from_path_function: Callable[
                 [Path], Tuple[np.ndarray, np.ndarray, Union[np.ndarray, None]]],
+            load_auxiliary_information_for_path_function: Callable[[Path], np.ndarray],
             load_label_from_path_function: Callable[[Path], Union[float, np.ndarray]],
             light_curve_path_tensor: tf.Tensor, evaluation_mode: bool = False,
             request_queue: Optional[Queue] = None,
@@ -281,7 +298,11 @@ class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
         example = self.preprocess_light_curve(light_curve, evaluation_mode=evaluation_mode)
         label = load_label_from_path_function(light_curve_path)
         label = self.expand_label_to_training_dimensions(label)
-        return example, label
+        if self.number_of_auxiliary_values > 0:
+            auxiliary_information = load_auxiliary_information_for_path_function(light_curve_path)
+            return example, auxiliary_information, label
+        else:
+            return example, label
 
     @staticmethod
     def expand_label_to_training_dimensions(label: Union[int, List[int], Tuple[int], np.ndarray]) -> np.ndarray:
@@ -443,8 +464,8 @@ class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
         return example, label
 
     def inject_signal_into_light_curve(self, light_curve_fluxes: np.ndarray, light_curve_times: np.ndarray,
-                                      signal_magnifications: np.ndarray, signal_times: np.ndarray,
-                                      wandb_loggable_injection: Optional[WandbLoggableInjection] = None) -> np.ndarray:
+                                       signal_magnifications: np.ndarray, signal_times: np.ndarray,
+                                       wandb_loggable_injection: Optional[WandbLoggableInjection] = None) -> np.ndarray:
         """
         Injects a synthetic magnification signal into real light curve fluxes.
 
@@ -535,6 +556,9 @@ class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
                                                                                             repeat=False, shuffle=False)
             examples_dataset = self.generate_infer_path_and_light_curve_dataset(
                 example_paths_dataset, light_curve_collection.load_times_fluxes_and_flux_errors_from_path)
+            if self.number_of_auxiliary_values > 0:
+                examples_dataset = self.from_light_curve_auxiliary_and_label_to_observation_and_label(
+                    examples_dataset)
             collection_batch_dataset = examples_dataset.batch(self.batch_size)
             if batch_dataset is None:
                 batch_dataset = collection_batch_dataset
@@ -542,6 +566,13 @@ class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
                 batch_dataset = batch_dataset.concatenate(collection_batch_dataset)
         batch_dataset = batch_dataset.prefetch(5)
         return batch_dataset
+
+    @staticmethod
+    def from_light_curve_auxiliary_and_label_to_observation_and_label(
+            light_curve_auxiliary_and_label_dataset: tf.data.Dataset) -> tf.data.Dataset:
+        observation_and_label_dataset = light_curve_auxiliary_and_label_dataset.map(
+            lambda light_curve, auxiliary, label: ((light_curve, auxiliary), label))
+        return observation_and_label_dataset
 
 
 def repeat_each_element(element: tf.Tensor, number_of_repeats: int) -> tf.data.Dataset:

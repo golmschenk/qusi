@@ -26,17 +26,17 @@ class TestStandardAndInjectedLightCurveDatabase:
         standard_light_curve_collection0 = LightCurveCollection()
         standard_light_curve_collection0.get_paths = lambda: [Path('standard_path0.ext')]
         standard_light_curve_collection0.load_times_and_fluxes_from_path = lambda path: (np.array([10, 20, 30]),
-                                                                                        np.array([0, 1, 2]))
+                                                                                         np.array([0, 1, 2]))
         standard_light_curve_collection0.label = 0
         standard_light_curve_collection1 = LightCurveCollection()
         standard_light_curve_collection1.get_paths = lambda: [Path('standard_path1.ext')]
         standard_light_curve_collection1.load_times_and_fluxes_from_path = lambda path: (np.array([20, 30, 40]),
-                                                                                        np.array([1, 2, 3]))
+                                                                                         np.array([1, 2, 3]))
         standard_light_curve_collection1.label = 1
         injectee_light_curve_collection = LightCurveCollection()
         injectee_light_curve_collection.get_paths = lambda: [Path('injectee_path.ext')]
         injectee_light_curve_collection.load_times_and_fluxes_from_path = lambda path: (np.array([30, 40, 50]),
-                                                                                       np.array([2, 3, 4]))
+                                                                                        np.array([2, 3, 4]))
         injectee_light_curve_collection.label = 0
         injectable_light_curve_collection0 = LightCurveCollection()
         injectable_light_curve_collection0.get_paths = lambda: [Path('injectable_path0.ext')]
@@ -60,8 +60,10 @@ class TestStandardAndInjectedLightCurveDatabase:
         database.batch_size = 4
         database.time_steps_per_example = 3
         database.number_of_parallel_processes_per_map = 1
+
         def mock_window(dataset, batch_size, window_shift):
             return dataset.batch(batch_size)
+
         database.window_dataset_for_zipped_example_and_label_dataset = mock_window  # Disable windowing.
         database.normalize_on_percentiles = lambda fluxes: fluxes  # Don't normalize values to keep it simple.
         return database
@@ -115,13 +117,13 @@ class TestStandardAndInjectedLightCurveDatabase:
     @pytest.mark.slow
     @pytest.mark.functional
     def test_can_generate_standard_light_curve_and_label_dataset_from_paths_dataset_and_label(self,
-                                                                                             deterministic_database):
+                                                                                              deterministic_database):
         database = deterministic_database
         light_curve_collection = database.training_standard_light_curve_collections[0]
         paths_dataset = database.generate_paths_dataset_from_light_curve_collection(light_curve_collection)
         light_curve_and_label_dataset = database.generate_standard_light_curve_and_label_dataset(paths_dataset,
-                                                                                                light_curve_collection.load_times_fluxes_and_flux_errors_from_path,
-                                                                                                light_curve_collection.load_label_from_path)
+                                                                                                 light_curve_collection.load_times_fluxes_and_flux_errors_from_path,
+                                                                                                 light_curve_collection.load_label_from_path)
         light_curve_and_label = next(iter(light_curve_and_label_dataset))
         assert light_curve_and_label[0].numpy().shape == (3, 1)
         assert np.array_equal(light_curve_and_label[0].numpy(), [[0], [1], [2]])  # Standard light_curve 0.
@@ -136,8 +138,8 @@ class TestStandardAndInjectedLightCurveDatabase:
         expected_label = load_label_from_path_function(Path())
         load_from_path_function = light_curve_collection.load_times_fluxes_and_flux_errors_from_path
         light_curve, label = database.preprocess_standard_light_curve(load_from_path_function,
-                                                                     load_label_from_path_function,
-                                                                     tf.convert_to_tensor(str(light_curve_path)))
+                                                                      load_label_from_path_function,
+                                                                      tf.convert_to_tensor(str(light_curve_path)))
         assert light_curve.shape == (3, 1)
         assert np.array_equal(light_curve, [[0], [1], [2]])  # Standard light_curve 0.
         assert np.array_equal(label, [expected_label])  # Standard label 0.
@@ -181,8 +183,8 @@ class TestStandardAndInjectedLightCurveDatabase:
     @patch.object(database_module.np.random, 'random', return_value=0)
     @patch.object(ramjet.photometric_database.light_curve_database.np.random, 'randint', return_value=0)
     def test_can_generate_injected_light_curve_and_label_dataset_from_paths_dataset_and_label(self, mock_randint,
-                                                                                             mock_random,
-                                                                                             database_with_collections):
+                                                                                              mock_random,
+                                                                                              database_with_collections):
         injectee_light_curve_collection = database_with_collections.training_injectee_light_curve_collection
         injectable_light_curve_collection = database_with_collections.training_injectable_light_curve_collections[0]
         injectee_paths_dataset = database_with_collections.generate_paths_dataset_from_light_curve_collection(
@@ -213,12 +215,12 @@ class TestStandardAndInjectedLightCurveDatabase:
         injectable_load_from_path_function = \
             injectable_light_curve_collection.load_times_magnifications_and_magnification_errors_from_path
         light_curve, label = database.preprocess_injected_light_curve(injectee_load_from_path_function,
-                                                                     injectable_load_from_path_function,
-                                                                     load_label_from_path_function,
-                                                                     tf.convert_to_tensor(
-                                                                         str(injectee_light_curve_path)),
-                                                                     tf.convert_to_tensor(
-                                                                         str(injectable_light_curve_path)))
+                                                                      injectable_load_from_path_function,
+                                                                      load_label_from_path_function,
+                                                                      tf.convert_to_tensor(
+                                                                          str(injectee_light_curve_path)),
+                                                                      tf.convert_to_tensor(
+                                                                          str(injectable_light_curve_path)))
         assert light_curve.shape == (3, 1)
         assert np.array_equal(light_curve, [[0.5], [3], [5.5]])  # Injected light_curve 0.
         assert np.array_equal(label, [expected_label])  # Injected label 0.
@@ -413,8 +415,8 @@ class TestStandardAndInjectedLightCurveDatabase:
         expected_label = light_curve_collection.label
         load_from_path_function = light_curve_collection.load_times_fluxes_and_flux_errors_from_path
         path, light_curve = database_with_collections.preprocess_infer_light_curve(load_from_path_function,
-                                                                                  tf.convert_to_tensor(
-                                                                                      str(light_curve_path)))
+                                                                                   tf.convert_to_tensor(
+                                                                                       str(light_curve_path)))
         assert np.array_equal(path, 'standard_path0.ext')  # Standard path 0.
         assert light_curve.shape == (3, 1)
         assert np.array_equal(light_curve, [[0], [1], [2]])  # Standard light_curve 0.
@@ -461,3 +463,57 @@ class TestStandardAndInjectedLightCurveDatabase:
         label = database.expand_label_to_training_dimensions(original_label)
         assert type(label) is np.ndarray
         assert np.array_equal(label, expected_label)
+
+    def test_grouping_from_light_curve_auxiliary_and_label_to_observation_and_label(self):
+        light_curve_dataset = tf.data.Dataset.from_tensor_slices([[0, 0], [2, 2], [4, 4]])
+        auxiliary_dataset = tf.data.Dataset.from_tensor_slices([[0], [20], [40]])
+        label_dataset = tf.data.Dataset.from_tensor_slices([[0], [-2], [-4]])
+        light_curve_auxiliary_and_label_dataset = tf.data.Dataset.zip(
+            (light_curve_dataset, auxiliary_dataset, label_dataset))
+        observation_and_label_dataset = StandardAndInjectedLightCurveDatabase() \
+            .from_light_curve_auxiliary_and_label_to_observation_and_label(light_curve_auxiliary_and_label_dataset)
+        dataset_iterator = iter(observation_and_label_dataset)
+        observation_and_label0 = next(dataset_iterator)
+        assert np.array_equal(observation_and_label0[0][0], [0, 0])
+        assert np.array_equal(observation_and_label0[0][1], [0])
+        assert np.array_equal(observation_and_label0[1], [0])
+        observation_and_label1 = next(dataset_iterator)
+        assert np.array_equal(observation_and_label1[0][0], [2, 2])
+        assert np.array_equal(observation_and_label1[0][1], [20])
+        assert np.array_equal(observation_and_label1[1], [-2])
+
+    @pytest.mark.slow
+    @pytest.mark.integration
+    def test_database_can_generate_training_and_validation_datasets_with_auxiliary_input(self):
+        database = StandardAndInjectedLightCurveDatabase()
+        light_curve_collection0 = LightCurveCollection()
+        light_curve_collection0.get_paths = lambda: [Path('path0.ext')]
+        light_curve_collection0.load_times_and_fluxes_from_path = lambda path: (np.array([90, 100, 110]),
+                                                                                np.array([0, 1, 2]))
+        light_curve_collection0.label = 0
+        light_curve_collection0.load_auxiliary_information_for_path = lambda path: np.array([3, 4])
+        database.training_standard_light_curve_collections = [light_curve_collection0]
+        database.validation_standard_light_curve_collections = [light_curve_collection0]
+        database.remove_random_elements = lambda x: x  # Don't randomize values to keep it simple.
+        database.randomly_roll_elements = lambda x: x  # Don't randomize values to keep it simple.
+        database.normalize_on_percentiles = lambda fluxes: fluxes  # Don't normalize values to keep it simple.
+        database.batch_size = 4
+        database.time_steps_per_example = 3
+        database.number_of_parallel_processes_per_map = 1
+        database.number_of_auxiliary_values = 2
+        training_dataset, validation_dataset = database.generate_datasets()
+        training_batch = next(iter(training_dataset))
+        training_batch_observations = training_batch[0]
+        training_batch_labels = training_batch[1]
+        assert training_batch_observations[0].shape == (database.batch_size, 3, 1)
+        assert training_batch_observations[1].shape == (database.batch_size, 2)
+        assert training_batch_labels.shape == (database.batch_size, 1)
+        assert np.array_equal(training_batch_observations[0][0].numpy(), [[0], [1], [2]])  # Light curve
+        assert np.array_equal(training_batch_observations[1][0].numpy(), [3, 4])  # Auxiliary
+        assert np.array_equal(training_batch_labels[0].numpy(), [0])  # Label.
+        validation_batch = next(iter(validation_dataset))
+        validation_batch_observations = validation_batch[0]
+        validation_batch_labels = validation_batch[1]
+        assert np.array_equal(validation_batch_observations[0][0].numpy(), [[0], [1], [2]])  # Light curve
+        assert np.array_equal(validation_batch_observations[1][0].numpy(), [3, 4])  # Auxiliary
+        assert np.array_equal(validation_batch_labels[0].numpy(), [0])  # Label.

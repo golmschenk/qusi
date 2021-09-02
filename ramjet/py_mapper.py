@@ -71,6 +71,10 @@ class PyMapper:
             elif len(args) == 2:
                 args[0].set_shape(output_shapes[0])
                 args[1].set_shape(output_shapes[1])
+            elif len(args) == 3:
+                args[0].set_shape(output_shapes[0])
+                args[1].set_shape(output_shapes[1])
+                args[2].set_shape(output_shapes[2])
             elif len(args) == 4:
                 args[0].set_shape(output_shapes[0])
                 args[1].set_shape(output_shapes[1])

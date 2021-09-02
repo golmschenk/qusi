@@ -3,7 +3,7 @@ Code for representing a collection of light curves.
 """
 import numpy as np
 from pathlib import Path
-from typing import Iterable, Union, List
+from typing import Iterable, Union, List, Optional
 
 
 class LightCurveCollectionMethodNotImplementedError(RuntimeError):
@@ -125,3 +125,12 @@ class LightCurveCollection:
         times, fluxes = self.load_times_and_magnifications_from_path(path)
         flux_errors = None
         return times, fluxes, flux_errors
+
+    def load_auxiliary_information_for_path(self, path: Path) -> np.ndarray:
+        """
+        Loads auxiliary information information for the given path.
+
+        :param path: The path to the light curve file.
+        :return: The auxiliary information.
+        """
+        return np.array([], dtype=np.float32)
