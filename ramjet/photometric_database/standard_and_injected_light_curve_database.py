@@ -574,6 +574,67 @@ class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
             lambda light_curve, auxiliary, label: ((light_curve, auxiliary), label))
         return observation_and_label_dataset
 
+    def flat_window_zipped_example_and_label_dataset(self, dataset: tf.data.Dataset, batch_size: int, window_shift: int,
+                                                     ) -> tf.data.Dataset:
+        """
+        Takes a zipped example and label dataset and repeats examples in a windowed fashion of a given batch size.
+        It is expected that the resulting dataset will subsequently be batched in some fashion by the given batch size.
+
+        :param dataset: The zipped example and label dataset.
+        :param batch_size: The size of the batches to produce.
+        :param window_shift: The shift of the moving window between batches.
+        :return: The flattened window dataset.
+        """
+        if window_shift != 0:
+            examples_dataset = dataset.map(lambda element, _: element)
+            labels_dataset = dataset.map(lambda _, element: element)
+            examples_window_dataset = examples_dataset.window(batch_size, shift=window_shift)
+            labels_window_dataset = labels_dataset.window(batch_size, shift=window_shift)
+            if self.number_of_auxiliary_values > 0:
+                examples_unbatched_window_dataset = examples_window_dataset.flat_map(
+                    lambda light_curve, auxiliary_information: tf.data.Dataset.zip(
+                        (light_curve, auxiliary_information)))
+            else:
+                examples_unbatched_window_dataset = examples_window_dataset.flat_map(lambda element: element)
+            labels_unbatched_window_dataset = labels_window_dataset.flat_map(lambda element: element)
+            unbatched_window_dataset = tf.data.Dataset.zip((examples_unbatched_window_dataset,
+                                                            labels_unbatched_window_dataset))
+            return unbatched_window_dataset
+        else:
+            return dataset
+
+    def padded_window_dataset_for_zipped_example_and_label_dataset(self, dataset: tf.data.Dataset, batch_size: int,
+                                                                   window_shift: int,
+                                                                   padded_shapes: Tuple[List, List]) -> tf.data.Dataset:
+        """
+        Takes a zipped example and label dataset, and converts it to padded batches, where each batch uses overlapping
+        examples based on a sliding window.
+
+        :param dataset: The zipped example and label dataset.
+        :param batch_size: The size of the batches to produce.
+        :param window_shift: The shift of the moving window between batches.
+        :param padded_shapes: The output padded shape.
+        :return: The padded window dataset.
+        """
+        unbatched_window_dataset = self.flat_window_zipped_example_and_label_dataset(dataset, batch_size,
+                                                                                     window_shift)
+        return unbatched_window_dataset.padded_batch(batch_size, padded_shapes=padded_shapes)
+
+    def window_dataset_for_zipped_example_and_label_dataset(self, dataset: tf.data.Dataset, batch_size: int,
+                                                            window_shift: int) -> tf.data.Dataset:
+        """
+        Takes a zipped example and label dataset, and converts it to batches, where each batch uses overlapping
+        examples based on a sliding window.
+
+        :param dataset: The zipped example and label dataset.
+        :param batch_size: The size of the batches to produce.
+        :param window_shift: The shift of the moving window between batches.
+        :return: The window dataset.
+        """
+        unbatched_window_dataset = self.flat_window_zipped_example_and_label_dataset(dataset, batch_size,
+                                                                                     window_shift)
+        return unbatched_window_dataset.batch(batch_size)
+
 
 def repeat_each_element(element: tf.Tensor, number_of_repeats: int) -> tf.data.Dataset:
     """
