@@ -39,28 +39,6 @@ class TestLightCurveDatabase:
         assert np.array_equal(chunk, expected_chunk)
         assert np.array_equal(remainder, expected_remainder)
 
-    def test_creating_a_padded_window_dataset_for_a_zipped_example_and_label_dataset(self, database):
-        # noinspection PyMissingOrEmptyDocstring
-        def examples_generator():
-            for example in [[1, 1], [2, 2], [3, 3], [4, 4, 4], [5, 5, 5], [6, 6, 6]]:
-                yield example
-
-        # noinspection PyMissingOrEmptyDocstring
-        def labels_generator():
-            for label in [[-1, -1], [-2, -2], [-3, -3], [-4, -4, -4], [-5, -5, -5], [-6, -6, -6]]:
-                yield label
-
-        example_dataset = tf.data.Dataset.from_generator(examples_generator, output_types=tf.float32)
-        label_dataset = tf.data.Dataset.from_generator(labels_generator, output_types=tf.float32)
-        dataset = tf.data.Dataset.zip((example_dataset, label_dataset))
-        padded_window_dataset = database.padded_window_dataset_for_zipped_example_and_label_dataset(
-            dataset=dataset, batch_size=3, window_shift=2, padded_shapes=([None], [None]))
-        padded_window_iterator = iter(padded_window_dataset)
-        batch0 = next(padded_window_iterator)
-        assert np.array_equal(batch0[0].numpy(), [[1, 1], [2, 2], [3, 3]])
-        batch1 = next(padded_window_iterator)
-        assert np.array_equal(batch1[0].numpy(), [[3, 3, 0], [4, 4, 4], [5, 5, 5]])
-
     def test_splitting_of_training_and_validation_datasets_for_file_paths_with_list_input(self, database):
         paths = [Path('a'), Path('b'), Path('c'), Path('d'), Path('e'), Path('f')]
         database.validation_ratio = 1/3
@@ -180,21 +158,6 @@ class TestLightCurveDatabase:
         assert normalized_flux_errors[10] == 0
         assert normalized_flux_errors[90] == 0
 
-    def test_window_dataset_for_zipped_example_and_label_dataset_produces_windowed_batches(self, database):
-        example_dataset = tf.data.Dataset.from_tensor_slices([1, 2, 3, 4, 5])
-        label_dataset = tf.data.Dataset.from_tensor_slices([-1, -2, -3, -4, -5])
-        dataset = tf.data.Dataset.zip((example_dataset, label_dataset))
-        windowed_dataset = database.window_dataset_for_zipped_example_and_label_dataset(dataset,
-                                                                                        batch_size=3,
-                                                                                        window_shift=2)
-        windowed_dataset_iterator = iter(windowed_dataset)
-        batch0 = next(windowed_dataset_iterator)
-        assert np.array_equal(batch0[0], [1, 2, 3])
-        assert np.array_equal(batch0[1], [-1, -2, -3])
-        batch1 = next(windowed_dataset_iterator)
-        assert np.array_equal(batch1[0], [3, 4, 5])
-        assert np.array_equal(batch1[1], [-3, -4, -5])
-
     def test_make_uniform_length_does_not_change_input_that_is_already_the_correct_size(self, database):
         fluxes = np.array([0, 1, 2, 3, 4, 5])
         uniform_length_fluxes = database.make_uniform_length(fluxes, 6, randomize=False)
@@ -249,17 +212,6 @@ class TestLightCurveDatabase:
             mock_random_choice.return_value = [0, 2]
             updated_array = database.remove_random_elements(array)
         assert np.array_equal(updated_array, np.array([[1, -1], [3, -3]]))
-
-    def test_flat_window_zipped_produces_overlapping_window_repeats(self, database):
-        examples_dataset = tf.data.Dataset.from_tensor_slices(['a', 'b', 'c', 'd', 'e'])
-        labels_dataset = tf.data.Dataset.from_tensor_slices([0, 1, 2, 3, 4])
-        zipped_dataset = tf.data.Dataset.zip((examples_dataset, labels_dataset))
-
-        windowed_dataset = database.flat_window_zipped_example_and_label_dataset(zipped_dataset, batch_size=3,
-                                                                                 window_shift=2)
-
-        windowed_list = list(windowed_dataset.as_numpy_iterator())
-        assert windowed_list == [(b'a', 0), (b'b', 1), (b'c', 2), (b'c', 2), (b'd', 3), (b'e', 4), (b'e', 4)]
 
     def test_can_normalize_the_flux_channel_of_a_light_curve(self):
         database = LightCurveDatabase()

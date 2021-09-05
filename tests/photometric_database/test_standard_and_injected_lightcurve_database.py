@@ -123,6 +123,7 @@ class TestStandardAndInjectedLightCurveDatabase:
         paths_dataset = database.generate_paths_dataset_from_light_curve_collection(light_curve_collection)
         light_curve_and_label_dataset = database.generate_standard_light_curve_and_label_dataset(paths_dataset,
                                                                                                  light_curve_collection.load_times_fluxes_and_flux_errors_from_path,
+                                                                                                 light_curve_collection.load_auxiliary_information_for_path,
                                                                                                  light_curve_collection.load_label_from_path)
         light_curve_and_label = next(iter(light_curve_and_label_dataset))
         assert light_curve_and_label[0].numpy().shape == (3, 1)
@@ -138,6 +139,7 @@ class TestStandardAndInjectedLightCurveDatabase:
         expected_label = load_label_from_path_function(Path())
         load_from_path_function = light_curve_collection.load_times_fluxes_and_flux_errors_from_path
         light_curve, label = database.preprocess_standard_light_curve(load_from_path_function,
+                                                                      light_curve_collection.load_auxiliary_information_for_path,
                                                                       load_label_from_path_function,
                                                                       tf.convert_to_tensor(str(light_curve_path)))
         assert light_curve.shape == (3, 1)
@@ -155,6 +157,7 @@ class TestStandardAndInjectedLightCurveDatabase:
         # noinspection PyTypeChecker
         example, label = database.preprocess_standard_light_curve(
             load_times_fluxes_and_flux_errors_from_path_function=stub_load_times_fluxes_flux_errors_function,
+            load_auxiliary_information_for_path_function=lambda path: np.array([], dtype=np.float32),
             load_label_from_path_function=mock_load_label_function, light_curve_path_tensor=path_tensor)
 
         assert np.array_equal(example, [[0], [1], [2]])
@@ -429,6 +432,7 @@ class TestStandardAndInjectedLightCurveDatabase:
             light_curve_collection)
         light_curve_and_label_dataset = database_with_collections.generate_standard_light_curve_and_label_dataset(
             paths_dataset0, light_curve_collection.load_times_fluxes_and_flux_errors_from_path,
+            light_curve_collection.load_auxiliary_information_for_path,
             light_curve_collection.load_label_from_path, evaluation_mode=True)
         light_curve_and_label = next(iter(light_curve_and_label_dataset))
         paths_dataset1 = database_with_collections.generate_paths_dataset_from_light_curve_collection(
@@ -447,9 +451,11 @@ class TestStandardAndInjectedLightCurveDatabase:
         stub_load_times_fluxes_and_flux_errors = lambda path: (np.array([0, -1, -2]), np.array([0, 1, 2]), None)
         expected_label = np.array([0, 1])
         stub_load_label_function = lambda path: expected_label
+        stub_load_auxiliary_data_function = lambda path: np.array([], dtype=np.float32)
         paths_dataset = tf.data.Dataset.from_tensor_slices(['a.fits', 'b.fits'])
         dataset = database.generate_standard_light_curve_and_label_dataset(paths_dataset,
                                                                            stub_load_times_fluxes_and_flux_errors,
+                                                                           stub_load_auxiliary_data_function,
                                                                            stub_load_label_function)
         dataset_list = list(dataset)
         assert np.array_equal(dataset_list[0][1], expected_label)
@@ -517,3 +523,51 @@ class TestStandardAndInjectedLightCurveDatabase:
         assert np.array_equal(validation_batch_observations[0][0].numpy(), [[0], [1], [2]])  # Light curve
         assert np.array_equal(validation_batch_observations[1][0].numpy(), [3, 4])  # Auxiliary
         assert np.array_equal(validation_batch_labels[0].numpy(), [0])  # Label.
+
+    def test_creating_a_padded_window_dataset_for_a_zipped_example_and_label_dataset(self, database):
+        # noinspection PyMissingOrEmptyDocstring
+        def examples_generator():
+            for example in [[1, 1], [2, 2], [3, 3], [4, 4, 4], [5, 5, 5], [6, 6, 6]]:
+                yield example
+
+        # noinspection PyMissingOrEmptyDocstring
+        def labels_generator():
+            for label in [[-1, -1], [-2, -2], [-3, -3], [-4, -4, -4], [-5, -5, -5], [-6, -6, -6]]:
+                yield label
+
+        example_dataset = tf.data.Dataset.from_generator(examples_generator, output_types=tf.float32)
+        label_dataset = tf.data.Dataset.from_generator(labels_generator, output_types=tf.float32)
+        dataset = tf.data.Dataset.zip((example_dataset, label_dataset))
+        padded_window_dataset = database.padded_window_dataset_for_zipped_example_and_label_dataset(
+            dataset=dataset, batch_size=3, window_shift=2, padded_shapes=([None], [None]))
+        padded_window_iterator = iter(padded_window_dataset)
+        batch0 = next(padded_window_iterator)
+        assert np.array_equal(batch0[0].numpy(), [[1, 1], [2, 2], [3, 3]])
+        batch1 = next(padded_window_iterator)
+        assert np.array_equal(batch1[0].numpy(), [[3, 3, 0], [4, 4, 4], [5, 5, 5]])
+
+    def test_window_dataset_for_zipped_example_and_label_dataset_produces_windowed_batches(self, database):
+        example_dataset = tf.data.Dataset.from_tensor_slices([1, 2, 3, 4, 5])
+        label_dataset = tf.data.Dataset.from_tensor_slices([-1, -2, -3, -4, -5])
+        dataset = tf.data.Dataset.zip((example_dataset, label_dataset))
+        windowed_dataset = database.window_dataset_for_zipped_example_and_label_dataset(dataset,
+                                                                                        batch_size=3,
+                                                                                        window_shift=2)
+        windowed_dataset_iterator = iter(windowed_dataset)
+        batch0 = next(windowed_dataset_iterator)
+        assert np.array_equal(batch0[0], [1, 2, 3])
+        assert np.array_equal(batch0[1], [-1, -2, -3])
+        batch1 = next(windowed_dataset_iterator)
+        assert np.array_equal(batch1[0], [3, 4, 5])
+        assert np.array_equal(batch1[1], [-3, -4, -5])
+
+    def test_flat_window_zipped_produces_overlapping_window_repeats(self, database):
+        examples_dataset = tf.data.Dataset.from_tensor_slices(['a', 'b', 'c', 'd', 'e'])
+        labels_dataset = tf.data.Dataset.from_tensor_slices([0, 1, 2, 3, 4])
+        zipped_dataset = tf.data.Dataset.zip((examples_dataset, labels_dataset))
+
+        windowed_dataset = database.flat_window_zipped_example_and_label_dataset(zipped_dataset, batch_size=3,
+                                                                                 window_shift=2)
+
+        windowed_list = list(windowed_dataset.as_numpy_iterator())
+        assert windowed_list == [(b'a', 0), (b'b', 1), (b'c', 2), (b'c', 2), (b'd', 3), (b'e', 4), (b'e', 4)]
