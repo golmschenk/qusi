@@ -447,7 +447,7 @@ class TestStandardAndInjectedLightCurveDatabase:
         database = StandardAndInjectedLightCurveDatabase()
         database.number_of_parallel_processes_per_map = 1
         database.time_steps_per_example = 3
-        database.number_of_label_types = 2
+        database.number_of_label_values = 2
         stub_load_times_fluxes_and_flux_errors = lambda path: (np.array([0, -1, -2]), np.array([0, 1, 2]), None)
         expected_label = np.array([0, 1])
         stub_load_label_function = lambda path: expected_label

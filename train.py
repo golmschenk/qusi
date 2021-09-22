@@ -15,7 +15,7 @@ def train():
     print('Starting training process...', flush=True)
     # Basic training settings.
     database = TessTwoMinuteCadenceStandardAndInjectedTransitDatabase()
-    model = Cura(database.number_of_label_types, database.number_of_input_channels)
+    model = Cura(database.number_of_label_values, database.number_of_input_channels)
     trial_name = f'{type(model).__name__}'  # Add any desired run name details to this string.
     # database.batch_size = 100  # Reducing the batch size may help if you are running out of memory.
     epochs_to_run = 1000

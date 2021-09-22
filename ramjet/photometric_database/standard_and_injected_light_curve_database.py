@@ -54,7 +54,7 @@ class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
         self.validation_injectable_light_curve_collections: List[LightCurveCollection] = []
         self.inference_light_curve_collections: List[LightCurveCollection] = []
         self.shuffle_buffer_size = 10000
-        self.number_of_label_types = 1
+        self.number_of_label_values = 1
         self.number_of_auxiliary_values: int = 0
         self.out_of_bounds_injection_handling: OutOfBoundsInjectionHandlingMethod = \
             OutOfBoundsInjectionHandlingMethod.ERROR
@@ -236,12 +236,12 @@ class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
         if self.number_of_auxiliary_values == 0:
             output_types = (tf.float32, tf.float32)
             output_shapes = [(self.time_steps_per_example, self.number_of_input_channels),
-                             (self.number_of_label_types,)]
+                             (self.number_of_label_values,)]
         else:
             output_types = (tf.float32, tf.float32, tf.float32)
             output_shapes = [
                 (self.time_steps_per_example, self.number_of_input_channels), (self.number_of_auxiliary_values,),
-                (self.number_of_label_types,)]
+                (self.number_of_label_values,)]
         example_and_label_dataset = map_py_function_to_dataset(paths_dataset,
                                                                preprocess_map_function,
                                                                self.number_of_parallel_processes_per_map,
@@ -397,7 +397,7 @@ class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
             evaluation_mode=evaluation_mode)
         preprocess_map_function = self.add_logging_queues_to_map_function(preprocess_map_function, name)
         output_types = (tf.float32, tf.float32)
-        output_shapes = [(self.time_steps_per_example, self.number_of_input_channels), (self.number_of_label_types,)]
+        output_shapes = [(self.time_steps_per_example, self.number_of_input_channels), (self.number_of_label_values,)]
         zipped_paths_dataset = tf.data.Dataset.zip((injectee_paths_dataset, injectable_paths_dataset))
         example_and_label_dataset = map_py_function_to_dataset(zipped_paths_dataset,
                                                                preprocess_map_function,

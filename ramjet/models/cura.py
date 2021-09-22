@@ -17,7 +17,7 @@ class OldCura(Model):
     A general convolutional model for light curve data.
     """
 
-    def __init__(self, number_of_label_types=1, number_of_input_channels: int = 1):
+    def __init__(self, number_of_label_values=1, number_of_input_channels: int = 1):
         super().__init__()
         self.blocks = []
         output_channels = 8
@@ -31,8 +31,8 @@ class OldCura(Model):
                 self.blocks.append(BottleNeckResidualLightCurveNetworkBlock(output_channels=output_channels))
             input_channels = output_channels
         self.final_pooling = MaxPooling1D(pool_size=5)
-        self.prediction_layer = Convolution1D(number_of_label_types, kernel_size=1, activation=sigmoid)
-        self.reshape = Reshape([number_of_label_types])
+        self.prediction_layer = Convolution1D(number_of_label_values, kernel_size=1, activation=sigmoid)
+        self.reshape = Reshape([number_of_label_values])
 
     def call(self, inputs, training=False, mask=None):
         """
@@ -57,7 +57,7 @@ class CuraWider(Model):
     A general convolutional model for light curve data.
     """
 
-    def __init__(self, number_of_label_types=1, number_of_input_channels: int = 1):
+    def __init__(self, number_of_label_values=1, number_of_input_channels: int = 1):
         super().__init__()
         self.blocks = []
         output_channels = 8 * 4
@@ -72,8 +72,8 @@ class CuraWider(Model):
                 self.blocks.append(BottleNeckResidualLightCurveNetworkBlock(output_channels=output_channels))
             input_channels = output_channels
         self.final_pooling = MaxPooling1D(pool_size=5)
-        self.prediction_layer = Convolution1D(number_of_label_types, kernel_size=1, activation=sigmoid)
-        self.reshape = Reshape([number_of_label_types])
+        self.prediction_layer = Convolution1D(number_of_label_values, kernel_size=1, activation=sigmoid)
+        self.reshape = Reshape([number_of_label_values])
 
     def call(self, inputs, training=False, mask=None):
         """
@@ -98,7 +98,7 @@ class CuraNarrower(Model):
     A general convolutional model for light curve data.
     """
 
-    def __init__(self, number_of_label_types=1, number_of_input_channels: int = 1):
+    def __init__(self, number_of_label_values=1, number_of_input_channels: int = 1):
         super().__init__()
         self.blocks = []
         output_channels = 8
@@ -112,8 +112,8 @@ class CuraNarrower(Model):
                 self.blocks.append(BottleNeckResidualLightCurveNetworkBlock(output_channels=output_channels))
             input_channels = output_channels
         self.final_pooling = MaxPooling1D(pool_size=5)
-        self.prediction_layer = Convolution1D(number_of_label_types, kernel_size=1, activation=sigmoid)
-        self.reshape = Reshape([number_of_label_types])
+        self.prediction_layer = Convolution1D(number_of_label_values, kernel_size=1, activation=sigmoid)
+        self.reshape = Reshape([number_of_label_values])
 
     def call(self, inputs, training=False, mask=None):
         """
@@ -138,7 +138,7 @@ class CuraWithDropout(Model):
     A general convolutional model for light curve data.
     """
 
-    def __init__(self, number_of_label_types=1, number_of_input_channels: int = 1):
+    def __init__(self, number_of_label_values=1, number_of_input_channels: int = 1):
         super().__init__()
         self.blocks = []
         output_channels = 8
@@ -153,8 +153,8 @@ class CuraWithDropout(Model):
                 self.blocks.append(BottleNeckResidualLightCurveNetworkBlock(output_channels=output_channels, dropout_rate=0.5))
             input_channels = output_channels
         self.final_pooling = MaxPooling1D(pool_size=5)
-        self.prediction_layer = Convolution1D(number_of_label_types, kernel_size=1, activation=sigmoid)
-        self.reshape = Reshape([number_of_label_types])
+        self.prediction_layer = Convolution1D(number_of_label_values, kernel_size=1, activation=sigmoid)
+        self.reshape = Reshape([number_of_label_values])
 
     def call(self, inputs, training=False, mask=None):
         """
@@ -178,7 +178,7 @@ class Cura(Model):
     A general convolutional model for light curve data.
     """
 
-    def __init__(self, number_of_label_types=1, number_of_input_channels: int = 1):
+    def __init__(self, number_of_label_values=1, number_of_input_channels: int = 1):
         super().__init__()
         self.blocks = []
         output_channels = 8
@@ -193,8 +193,8 @@ class Cura(Model):
                 self.blocks.append(BottleNeckResidualLightCurveNetworkBlock(output_channels=output_channels, dropout_rate=0.5))
             input_channels = output_channels
         self.final_pooling = AveragePooling1D(pool_size=4)
-        self.prediction_layer = Convolution1D(number_of_label_types, kernel_size=1, activation=sigmoid)
-        self.reshape = Reshape([number_of_label_types])
+        self.prediction_layer = Convolution1D(number_of_label_values, kernel_size=1, activation=sigmoid)
+        self.reshape = Reshape([number_of_label_values])
 
     def call(self, inputs, training=False, mask=None):
         """
@@ -219,7 +219,7 @@ class CuraWithLateAuxiliary(Model):
     A general convolutional model for light curve data.
     """
 
-    def __init__(self, number_of_label_types=1, number_of_input_channels: int = 1, number_of_auxiliary_values: int = 1):
+    def __init__(self, number_of_label_values=1, number_of_input_channels: int = 1, number_of_auxiliary_values: int = 1):
         super().__init__()
         self.blocks0 = []
         self.number_of_auxiliary_values = number_of_auxiliary_values
@@ -245,8 +245,8 @@ class CuraWithLateAuxiliary(Model):
                 self.blocks1.append(BottleNeckResidualLightCurveNetworkBlock(output_channels=output_channels, dropout_rate=0.5))
             input_channels = output_channels
         self.final_pooling = AveragePooling1D(pool_size=4)
-        self.prediction_layer = Convolution1D(number_of_label_types, kernel_size=1, activation=sigmoid)
-        self.reshape = Reshape([number_of_label_types])
+        self.prediction_layer = Convolution1D(number_of_label_values, kernel_size=1, activation=sigmoid)
+        self.reshape = Reshape([number_of_label_values])
 
     def call(self, inputs, training=False, mask=None):
         """
@@ -272,7 +272,7 @@ class CuraWithLateAuxiliary(Model):
 
 
 class Cursa(Model):
-    def __init__(self, number_of_label_types=1, number_of_input_channels: int = 1):
+    def __init__(self, number_of_label_values=1, number_of_input_channels: int = 1):
         super().__init__()
         self.blocks = []
         output_channels = 8
@@ -287,8 +287,8 @@ class Cursa(Model):
                 self.blocks.append(SeluResidualLightCurveNetworkBlock(output_channels=output_channels, dropout_rate=0.5))
             input_channels = output_channels
         self.final_pooling = AveragePooling1D(pool_size=5)
-        self.prediction_layer = Convolution1D(number_of_label_types, kernel_size=1, activation=sigmoid)
-        self.reshape = Reshape([number_of_label_types])
+        self.prediction_layer = Convolution1D(number_of_label_values, kernel_size=1, activation=sigmoid)
+        self.reshape = Reshape([number_of_label_values])
 
     def call(self, inputs, training=False, mask=None):
         """
@@ -313,7 +313,7 @@ class CuraFinalAveragePoolNarrower(Model):
     A general convolutional model for light curve data.
     """
 
-    def __init__(self, number_of_label_types=1, number_of_input_channels: int = 1):
+    def __init__(self, number_of_label_values=1, number_of_input_channels: int = 1):
         super().__init__()
         self.blocks = []
         output_channels = 8
@@ -328,8 +328,8 @@ class CuraFinalAveragePoolNarrower(Model):
                 self.blocks.append(BottleNeckResidualLightCurveNetworkBlock(output_channels=output_channels, dropout_rate=0.5))
             input_channels = output_channels
         self.final_pooling = AveragePooling1D(pool_size=5)
-        self.prediction_layer = Convolution1D(number_of_label_types, kernel_size=1, activation=sigmoid)
-        self.reshape = Reshape([number_of_label_types])
+        self.prediction_layer = Convolution1D(number_of_label_values, kernel_size=1, activation=sigmoid)
+        self.reshape = Reshape([number_of_label_values])
 
     def call(self, inputs, training=False, mask=None):
         """
@@ -353,7 +353,7 @@ class CuraFinalAveragePoolNarrowerInitialBatchNorm(Model):
     A general convolutional model for light curve data.
     """
 
-    def __init__(self, number_of_label_types=1, number_of_input_channels: int = 1):
+    def __init__(self, number_of_label_values=1, number_of_input_channels: int = 1):
         super().__init__()
         self.blocks = []
         output_channels = 8
@@ -368,8 +368,8 @@ class CuraFinalAveragePoolNarrowerInitialBatchNorm(Model):
                 self.blocks.append(BottleNeckResidualLightCurveNetworkBlock(output_channels=output_channels, dropout_rate=0.5))
             input_channels = output_channels
         self.final_pooling = AveragePooling1D(pool_size=5)
-        self.prediction_layer = Convolution1D(number_of_label_types, kernel_size=1, activation=sigmoid)
-        self.reshape = Reshape([number_of_label_types])
+        self.prediction_layer = Convolution1D(number_of_label_values, kernel_size=1, activation=sigmoid)
+        self.reshape = Reshape([number_of_label_values])
 
     def call(self, inputs, training=False, mask=None):
         """
@@ -393,7 +393,7 @@ class CuraFinalAveragePoolNarrowerInitialBatchNormNoDo(Model):
     A general convolutional model for light curve data.
     """
 
-    def __init__(self, number_of_label_types=1, number_of_input_channels: int = 1):
+    def __init__(self, number_of_label_values=1, number_of_input_channels: int = 1):
         super().__init__()
         self.blocks = []
         output_channels = 8
@@ -408,8 +408,8 @@ class CuraFinalAveragePoolNarrowerInitialBatchNormNoDo(Model):
                 self.blocks.append(BottleNeckResidualLightCurveNetworkBlock(output_channels=output_channels, dropout_rate=0.0))
             input_channels = output_channels
         self.final_pooling = AveragePooling1D(pool_size=5)
-        self.prediction_layer = Convolution1D(number_of_label_types, kernel_size=1, activation=sigmoid)
-        self.reshape = Reshape([number_of_label_types])
+        self.prediction_layer = Convolution1D(number_of_label_values, kernel_size=1, activation=sigmoid)
+        self.reshape = Reshape([number_of_label_values])
 
     def call(self, inputs, training=False, mask=None):
         """
@@ -433,7 +433,7 @@ class CuraFinalAveragePoolWithL2(Model):
     A general convolutional model for light curve data.
     """
 
-    def __init__(self, number_of_label_types=1, number_of_input_channels: int = 1):
+    def __init__(self, number_of_label_values=1, number_of_input_channels: int = 1):
         super().__init__()
         self.blocks = []
         output_channels = 8
@@ -448,8 +448,8 @@ class CuraFinalAveragePoolWithL2(Model):
                 self.blocks.append(BottleNeckResidualLightCurveNetworkBlock(output_channels=output_channels, dropout_rate=0.5, l2_regularization=0.001))
             input_channels = output_channels
         self.final_pooling = AveragePooling1D(pool_size=5)
-        self.prediction_layer = Convolution1D(number_of_label_types, kernel_size=1, activation=sigmoid)
-        self.reshape = Reshape([number_of_label_types])
+        self.prediction_layer = Convolution1D(number_of_label_values, kernel_size=1, activation=sigmoid)
+        self.reshape = Reshape([number_of_label_values])
 
     def call(self, inputs, training=False, mask=None):
         """
@@ -473,7 +473,7 @@ class CuraFinalAveragePoolNarrowerer(Model):
     A general convolutional model for light curve data.
     """
 
-    def __init__(self, number_of_label_types=1, number_of_input_channels: int = 1):
+    def __init__(self, number_of_label_values=1, number_of_input_channels: int = 1):
         super().__init__()
         self.blocks = []
         output_channels = 8
@@ -488,8 +488,8 @@ class CuraFinalAveragePoolNarrowerer(Model):
                 self.blocks.append(BottleNeckResidualLightCurveNetworkBlock(output_channels=output_channels, dropout_rate=0.5))
             input_channels = output_channels
         self.final_pooling = AveragePooling1D(pool_size=5)
-        self.prediction_layer = Convolution1D(number_of_label_types, kernel_size=1, activation=sigmoid)
-        self.reshape = Reshape([number_of_label_types])
+        self.prediction_layer = Convolution1D(number_of_label_values, kernel_size=1, activation=sigmoid)
+        self.reshape = Reshape([number_of_label_values])
 
     def call(self, inputs, training=False, mask=None):
         """
@@ -513,7 +513,7 @@ class CuraFinalAveragePoolSuperNarrowNoDo(Model):
     A general convolutional model for light curve data.
     """
 
-    def __init__(self, number_of_label_types=1, number_of_input_channels: int = 1):
+    def __init__(self, number_of_label_values=1, number_of_input_channels: int = 1):
         super().__init__()
         self.blocks = []
         output_channels = 8
@@ -527,8 +527,8 @@ class CuraFinalAveragePoolSuperNarrowNoDo(Model):
                 self.blocks.append(BottleNeckResidualLightCurveNetworkBlock(output_channels=output_channels))
             input_channels = output_channels
         self.final_pooling = AveragePooling1D(pool_size=5)
-        self.prediction_layer = Convolution1D(number_of_label_types, kernel_size=1, activation=sigmoid)
-        self.reshape = Reshape([number_of_label_types])
+        self.prediction_layer = Convolution1D(number_of_label_values, kernel_size=1, activation=sigmoid)
+        self.reshape = Reshape([number_of_label_values])
 
     def call(self, inputs, training=False, mask=None):
         """
@@ -552,7 +552,7 @@ class CuraFinalAveragePoolSuperNarrowDo0d25(Model):
     A general convolutional model for light curve data.
     """
 
-    def __init__(self, number_of_label_types=1, number_of_input_channels: int = 1):
+    def __init__(self, number_of_label_values=1, number_of_input_channels: int = 1):
         super().__init__()
         self.blocks = []
         output_channels = 8
@@ -566,8 +566,8 @@ class CuraFinalAveragePoolSuperNarrowDo0d25(Model):
                 self.blocks.append(BottleNeckResidualLightCurveNetworkBlock(output_channels=output_channels, dropout_rate=0.25))
             input_channels = output_channels
         self.final_pooling = AveragePooling1D(pool_size=5)
-        self.prediction_layer = Convolution1D(number_of_label_types, kernel_size=1, activation=sigmoid)
-        self.reshape = Reshape([number_of_label_types])
+        self.prediction_layer = Convolution1D(number_of_label_values, kernel_size=1, activation=sigmoid)
+        self.reshape = Reshape([number_of_label_values])
 
     def call(self, inputs, training=False, mask=None):
         """
@@ -592,7 +592,7 @@ class CuraFinalAveragePoolMainLineDo0d25(Model):
     A general convolutional model for light curve data.
     """
 
-    def __init__(self, number_of_label_types=1, number_of_input_channels: int = 1):
+    def __init__(self, number_of_label_values=1, number_of_input_channels: int = 1):
         super().__init__()
         self.blocks = []
         output_channels = 8
@@ -607,8 +607,8 @@ class CuraFinalAveragePoolMainLineDo0d25(Model):
                 self.blocks.append(BottleNeckResidualLightCurveNetworkBlock(output_channels=output_channels, dropout_rate=0.25))
             input_channels = output_channels
         self.final_pooling = AveragePooling1D(pool_size=5)
-        self.prediction_layer = Convolution1D(number_of_label_types, kernel_size=1, activation=sigmoid)
-        self.reshape = Reshape([number_of_label_types])
+        self.prediction_layer = Convolution1D(number_of_label_values, kernel_size=1, activation=sigmoid)
+        self.reshape = Reshape([number_of_label_values])
 
     def call(self, inputs, training=False, mask=None):
         """
@@ -632,7 +632,7 @@ class CuraFinalAveragePoolNarrowerLessDeep(Model):
     A general convolutional model for light curve data.
     """
 
-    def __init__(self, number_of_label_types=1, number_of_input_channels: int = 1):
+    def __init__(self, number_of_label_values=1, number_of_input_channels: int = 1):
         super().__init__()
         self.blocks = []
         output_channels = 8
@@ -647,8 +647,8 @@ class CuraFinalAveragePoolNarrowerLessDeep(Model):
                 self.blocks.append(BottleNeckResidualLightCurveNetworkBlock(output_channels=output_channels, dropout_rate=0.5))
             input_channels = output_channels
         self.final_pooling = AveragePooling1D(pool_size=5)
-        self.prediction_layer = Convolution1D(number_of_label_types, kernel_size=1, activation=sigmoid)
-        self.reshape = Reshape([number_of_label_types])
+        self.prediction_layer = Convolution1D(number_of_label_values, kernel_size=1, activation=sigmoid)
+        self.reshape = Reshape([number_of_label_values])
 
     def call(self, inputs, training=False, mask=None):
         """
@@ -672,7 +672,7 @@ class CuraFinalAveragePoolNonBottleNeck(Model):
     A general convolutional model for light curve data.
     """
 
-    def __init__(self, number_of_label_types=1, number_of_input_channels: int = 1):
+    def __init__(self, number_of_label_values=1, number_of_input_channels: int = 1):
         super().__init__()
         self.blocks = []
         output_channels = 4
@@ -687,8 +687,8 @@ class CuraFinalAveragePoolNonBottleNeck(Model):
                 self.blocks.append(ResidualLightCurveNetworkBlock(output_channels=output_channels, dropout_rate=0.5))
             input_channels = output_channels
         self.final_pooling = AveragePooling1D(pool_size=5)
-        self.prediction_layer = Convolution1D(number_of_label_types, kernel_size=1, activation=sigmoid)
-        self.reshape = Reshape([number_of_label_types])
+        self.prediction_layer = Convolution1D(number_of_label_values, kernel_size=1, activation=sigmoid)
+        self.reshape = Reshape([number_of_label_values])
 
     def call(self, inputs, training=False, mask=None):
         """
@@ -713,7 +713,7 @@ class CuraFinalAveragePoolNonBottleNeckShallow(Model):
     A general convolutional model for light curve data.
     """
 
-    def __init__(self, number_of_label_types=1, number_of_input_channels: int = 1):
+    def __init__(self, number_of_label_values=1, number_of_input_channels: int = 1):
         super().__init__()
         self.blocks = []
         output_channels = 4
@@ -728,8 +728,8 @@ class CuraFinalAveragePoolNonBottleNeckShallow(Model):
             #     self.blocks.append(ResidualLightCurveNetworkBlock(output_channels=output_channels, dropout_rate=0.5))
             input_channels = output_channels
         self.final_pooling = AveragePooling1D(pool_size=5)
-        self.prediction_layer = Convolution1D(number_of_label_types, kernel_size=1, activation=sigmoid)
-        self.reshape = Reshape([number_of_label_types])
+        self.prediction_layer = Convolution1D(number_of_label_values, kernel_size=1, activation=sigmoid)
+        self.reshape = Reshape([number_of_label_values])
 
     def call(self, inputs, training=False, mask=None):
         """
@@ -753,7 +753,7 @@ class CuraFinalAveragePoolNonBottleNeckShallowVeryNarrow(Model):
     A general convolutional model for light curve data.
     """
 
-    def __init__(self, number_of_label_types=1, number_of_input_channels: int = 1):
+    def __init__(self, number_of_label_values=1, number_of_input_channels: int = 1):
         super().__init__()
         self.blocks = []
         output_channels = 2
@@ -768,8 +768,8 @@ class CuraFinalAveragePoolNonBottleNeckShallowVeryNarrow(Model):
             #     self.blocks.append(ResidualLightCurveNetworkBlock(output_channels=output_channels, dropout_rate=0.5))
             input_channels = output_channels
         self.final_pooling = AveragePooling1D(pool_size=5)
-        self.prediction_layer = Convolution1D(number_of_label_types, kernel_size=1, activation=sigmoid)
-        self.reshape = Reshape([number_of_label_types])
+        self.prediction_layer = Convolution1D(number_of_label_values, kernel_size=1, activation=sigmoid)
+        self.reshape = Reshape([number_of_label_values])
 
     def call(self, inputs, training=False, mask=None):
         """
@@ -793,7 +793,7 @@ class CuraFinalAveragePoolNonBottleNeckShallowVeryNarrowInitialBn(Model):
     A general convolutional model for light curve data.
     """
 
-    def __init__(self, number_of_label_types=1, number_of_input_channels: int = 1):
+    def __init__(self, number_of_label_values=1, number_of_input_channels: int = 1):
         super().__init__()
         self.blocks = []
         output_channels = 2
@@ -807,8 +807,8 @@ class CuraFinalAveragePoolNonBottleNeckShallowVeryNarrowInitialBn(Model):
             #     self.blocks.append(ResidualLightCurveNetworkBlock(output_channels=output_channels, dropout_rate=0.5))
             input_channels = output_channels
         self.final_pooling = AveragePooling1D(pool_size=5)
-        self.prediction_layer = Convolution1D(number_of_label_types, kernel_size=1, activation=sigmoid)
-        self.reshape = Reshape([number_of_label_types])
+        self.prediction_layer = Convolution1D(number_of_label_values, kernel_size=1, activation=sigmoid)
+        self.reshape = Reshape([number_of_label_values])
 
     def call(self, inputs, training=False, mask=None):
         """
@@ -832,7 +832,7 @@ class CuraFinalAveragePoolSuperNarrowNoDoMainPathRepeat(Model):
     A general convolutional model for light curve data.
     """
 
-    def __init__(self, number_of_label_types=1, number_of_input_channels: int = 1):
+    def __init__(self, number_of_label_values=1, number_of_input_channels: int = 1):
         super().__init__()
         self.blocks = []
         output_channels = 8
@@ -846,8 +846,8 @@ class CuraFinalAveragePoolSuperNarrowNoDoMainPathRepeat(Model):
                 self.blocks.append(BottleNeckResidualLightCurveNetworkBlockMainPathRepeat(output_channels=output_channels))
             input_channels = output_channels
         self.final_pooling = AveragePooling1D(pool_size=5)
-        self.prediction_layer = Convolution1D(number_of_label_types, kernel_size=1, activation=sigmoid)
-        self.reshape = Reshape([number_of_label_types])
+        self.prediction_layer = Convolution1D(number_of_label_values, kernel_size=1, activation=sigmoid)
+        self.reshape = Reshape([number_of_label_values])
 
     def call(self, inputs, training=False, mask=None):
         """
@@ -871,7 +871,7 @@ class CuraFinalAveragePoolNarrowerInitialBatchNormNoDoMainPathRepeat(Model):
     A general convolutional model for light curve data.
     """
 
-    def __init__(self, number_of_label_types=1, number_of_input_channels: int = 1):
+    def __init__(self, number_of_label_values=1, number_of_input_channels: int = 1):
         super().__init__()
         self.blocks = []
         output_channels = 8
@@ -886,8 +886,8 @@ class CuraFinalAveragePoolNarrowerInitialBatchNormNoDoMainPathRepeat(Model):
                 self.blocks.append(BottleNeckResidualLightCurveNetworkBlockMainPathRepeat(output_channels=output_channels, dropout_rate=0.0))
             input_channels = output_channels
         self.final_pooling = AveragePooling1D(pool_size=5)
-        self.prediction_layer = Convolution1D(number_of_label_types, kernel_size=1, activation=sigmoid)
-        self.reshape = Reshape([number_of_label_types])
+        self.prediction_layer = Convolution1D(number_of_label_values, kernel_size=1, activation=sigmoid)
+        self.reshape = Reshape([number_of_label_values])
 
     def call(self, inputs, training=False, mask=None):
         """
@@ -907,7 +907,7 @@ class CuraFinalAveragePoolNarrowerInitialBatchNormNoDoMainPathRepeat(Model):
         return outputs
 
 class CuraFinalAveragePoolNarrowerInitialBatchNormMainPathRepeatRareMainPathDropout(Model):
-    def __init__(self, number_of_label_types=1, number_of_input_channels: int = 1):
+    def __init__(self, number_of_label_values=1, number_of_input_channels: int = 1):
         super().__init__()
         self.blocks = []
         output_channels = 8
@@ -926,8 +926,8 @@ class CuraFinalAveragePoolNarrowerInitialBatchNormMainPathRepeatRareMainPathDrop
                 self.blocks.append(BottleNeckResidualLightCurveNetworkBlockMainPathRepeatMainPathDropout(output_channels=output_channels, dropout_rate=0.0))
             input_channels = output_channels
         self.final_pooling = AveragePooling1D(pool_size=5)
-        self.prediction_layer = Convolution1D(number_of_label_types, kernel_size=1, activation=sigmoid)
-        self.reshape = Reshape([number_of_label_types])
+        self.prediction_layer = Convolution1D(number_of_label_values, kernel_size=1, activation=sigmoid)
+        self.reshape = Reshape([number_of_label_values])
 
     def call(self, inputs, training=False, mask=None):
         """
@@ -951,7 +951,7 @@ class CuraFinalAveragePoolSuperNarrowDo0d25InitialBatchNorm(Model):
     A general convolutional model for light curve data.
     """
 
-    def __init__(self, number_of_label_types=1, number_of_input_channels: int = 1):
+    def __init__(self, number_of_label_values=1, number_of_input_channels: int = 1):
         super().__init__()
         self.blocks = []
         output_channels = 8
@@ -965,8 +965,8 @@ class CuraFinalAveragePoolSuperNarrowDo0d25InitialBatchNorm(Model):
                 self.blocks.append(BottleNeckResidualLightCurveNetworkBlock(output_channels=output_channels, dropout_rate=0.25))
             input_channels = output_channels
         self.final_pooling = AveragePooling1D(pool_size=5)
-        self.prediction_layer = Convolution1D(number_of_label_types, kernel_size=1, activation=sigmoid)
-        self.reshape = Reshape([number_of_label_types])
+        self.prediction_layer = Convolution1D(number_of_label_values, kernel_size=1, activation=sigmoid)
+        self.reshape = Reshape([number_of_label_values])
 
     def call(self, inputs, training=False, mask=None):
         """
@@ -991,7 +991,7 @@ class CuraFinalAveragePoolNarrowerInitialBatchNormEveryWeightBatchNorm(Model):
     A general convolutional model for light curve data.
     """
 
-    def __init__(self, number_of_label_types=1, number_of_input_channels: int = 1):
+    def __init__(self, number_of_label_values=1, number_of_input_channels: int = 1):
         super().__init__()
         self.blocks = []
         output_channels = 8
@@ -1006,8 +1006,8 @@ class CuraFinalAveragePoolNarrowerInitialBatchNormEveryWeightBatchNorm(Model):
                 self.blocks.append(BottleNeckResidualLightCurveNetworkBlockEveryWeightBatchNorm(output_channels=output_channels, dropout_rate=0.5))
             input_channels = output_channels
         self.final_pooling = AveragePooling1D(pool_size=5)
-        self.prediction_layer = Convolution1D(number_of_label_types, kernel_size=1, activation=sigmoid)
-        self.reshape = Reshape([number_of_label_types])
+        self.prediction_layer = Convolution1D(number_of_label_values, kernel_size=1, activation=sigmoid)
+        self.reshape = Reshape([number_of_label_values])
 
     def call(self, inputs, training=False, mask=None):
         """
@@ -1032,7 +1032,7 @@ class CuraFinalAveragePoolNarrowerInitialBatchNormEveryWeightBatchNormNoDo(Model
     A general convolutional model for light curve data.
     """
 
-    def __init__(self, number_of_label_types=1, number_of_input_channels: int = 1):
+    def __init__(self, number_of_label_values=1, number_of_input_channels: int = 1):
         super().__init__()
         self.blocks = []
         output_channels = 8
@@ -1047,8 +1047,8 @@ class CuraFinalAveragePoolNarrowerInitialBatchNormEveryWeightBatchNormNoDo(Model
                 self.blocks.append(BottleNeckResidualLightCurveNetworkBlockEveryWeightBatchNorm(output_channels=output_channels, dropout_rate=0))
             input_channels = output_channels
         self.final_pooling = AveragePooling1D(pool_size=5)
-        self.prediction_layer = Convolution1D(number_of_label_types, kernel_size=1, activation=sigmoid)
-        self.reshape = Reshape([number_of_label_types])
+        self.prediction_layer = Convolution1D(number_of_label_values, kernel_size=1, activation=sigmoid)
+        self.reshape = Reshape([number_of_label_values])
 
     def call(self, inputs, training=False, mask=None):
         """
@@ -1073,7 +1073,7 @@ class CuraFinalAveragePoolNarrowerInitialBatchNormEveryWeightBatchNormAfterActiv
     A general convolutional model for light curve data.
     """
 
-    def __init__(self, number_of_label_types=1, number_of_input_channels: int = 1):
+    def __init__(self, number_of_label_values=1, number_of_input_channels: int = 1):
         super().__init__()
         self.blocks = []
         output_channels = 8
@@ -1088,8 +1088,8 @@ class CuraFinalAveragePoolNarrowerInitialBatchNormEveryWeightBatchNormAfterActiv
                 self.blocks.append(BottleNeckResidualLightCurveNetworkBlockEveryWeightBatchNormBnAfterActivations(output_channels=output_channels, dropout_rate=0.5))
             input_channels = output_channels
         self.final_pooling = AveragePooling1D(pool_size=5)
-        self.prediction_layer = Convolution1D(number_of_label_types, kernel_size=1, activation=sigmoid)
-        self.reshape = Reshape([number_of_label_types])
+        self.prediction_layer = Convolution1D(number_of_label_values, kernel_size=1, activation=sigmoid)
+        self.reshape = Reshape([number_of_label_values])
 
     def call(self, inputs, training=False, mask=None):
         """
@@ -1113,7 +1113,7 @@ class CuraFinalAveragePoolNarrowerInitialBatchNormWithL2(Model):
     A general convolutional model for light curve data.
     """
 
-    def __init__(self, number_of_label_types=1, number_of_input_channels: int = 1):
+    def __init__(self, number_of_label_values=1, number_of_input_channels: int = 1):
         super().__init__()
         self.blocks = []
         output_channels = 8
@@ -1128,8 +1128,8 @@ class CuraFinalAveragePoolNarrowerInitialBatchNormWithL2(Model):
                 self.blocks.append(BottleNeckResidualLightCurveNetworkBlock(output_channels=output_channels, dropout_rate=0.5, l2_regularization=0.01))
             input_channels = output_channels
         self.final_pooling = AveragePooling1D(pool_size=5)
-        self.prediction_layer = Convolution1D(number_of_label_types, kernel_size=1, activation=sigmoid)
-        self.reshape = Reshape([number_of_label_types])
+        self.prediction_layer = Convolution1D(number_of_label_values, kernel_size=1, activation=sigmoid)
+        self.reshape = Reshape([number_of_label_values])
 
     def call(self, inputs, training=False, mask=None):
         """
@@ -1153,7 +1153,7 @@ class CuraFinalAveragePoolNarrowerInitialBatchNormWithL21en3(Model):
     A general convolutional model for light curve data.
     """
 
-    def __init__(self, number_of_label_types=1, number_of_input_channels: int = 1):
+    def __init__(self, number_of_label_values=1, number_of_input_channels: int = 1):
         super().__init__()
         self.blocks = []
         output_channels = 8
@@ -1168,8 +1168,8 @@ class CuraFinalAveragePoolNarrowerInitialBatchNormWithL21en3(Model):
                 self.blocks.append(BottleNeckResidualLightCurveNetworkBlock(output_channels=output_channels, dropout_rate=0.5, l2_regularization=0.001))
             input_channels = output_channels
         self.final_pooling = AveragePooling1D(pool_size=5)
-        self.prediction_layer = Convolution1D(number_of_label_types, kernel_size=1, activation=sigmoid)
-        self.reshape = Reshape([number_of_label_types])
+        self.prediction_layer = Convolution1D(number_of_label_values, kernel_size=1, activation=sigmoid)
+        self.reshape = Reshape([number_of_label_values])
 
     def call(self, inputs, training=False, mask=None):
         """
@@ -1193,7 +1193,7 @@ class CuraFinalAveragePoolNarrowerInitialBatchNormWithL21en4(Model):
     A general convolutional model for light curve data.
     """
 
-    def __init__(self, number_of_label_types=1, number_of_input_channels: int = 1):
+    def __init__(self, number_of_label_values=1, number_of_input_channels: int = 1):
         super().__init__()
         self.blocks = []
         output_channels = 8
@@ -1208,8 +1208,8 @@ class CuraFinalAveragePoolNarrowerInitialBatchNormWithL21en4(Model):
                 self.blocks.append(BottleNeckResidualLightCurveNetworkBlock(output_channels=output_channels, dropout_rate=0.5, l2_regularization=0.0001))
             input_channels = output_channels
         self.final_pooling = AveragePooling1D(pool_size=5)
-        self.prediction_layer = Convolution1D(number_of_label_types, kernel_size=1, activation=sigmoid)
-        self.reshape = Reshape([number_of_label_types])
+        self.prediction_layer = Convolution1D(number_of_label_values, kernel_size=1, activation=sigmoid)
+        self.reshape = Reshape([number_of_label_values])
 
     def call(self, inputs, training=False, mask=None):
         """

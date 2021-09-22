@@ -19,7 +19,7 @@ database = TessTwoMinuteCadenceStandardAndInjectedTransitDatabase()
 inference_dataset = database.generate_inference_dataset()
 
 print('Loading model...', flush=True)
-model = Hades(database.number_of_label_types)
+model = Hades(database.number_of_label_values)
 model.load_weights(str(saved_log_directory.joinpath('latest_model.ckpt'))).expect_partial()
 
 print('Inferring...', flush=True)

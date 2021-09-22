@@ -16,7 +16,7 @@ class MoaSurveyNoneSingleAndBinaryDatabase(StandardAndInjectedLightCurveDatabase
 
     def __init__(self):
         super().__init__()
-        self.number_of_label_types = 1
+        self.number_of_label_values = 1
         self.number_of_parallel_processes_per_map = 5
         self.time_steps_per_example = 18000
         self.out_of_bounds_injection_handling = OutOfBoundsInjectionHandlingMethod.RANDOM_INJECTION_LOCATION

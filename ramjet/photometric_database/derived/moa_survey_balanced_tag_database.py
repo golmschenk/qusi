@@ -13,7 +13,7 @@ class MoaSurveyBalancedTagDatabase(StandardAndInjectedLightCurveDatabase):
 
     def __init__(self):
         super().__init__()
-        self.number_of_label_types = 2
+        self.number_of_label_values = 2
         self.number_of_parallel_processes_per_map = 3
         self.time_steps_per_example = 18000
         self.training_standard_light_curve_collections = self.create_collection_for_each_tag(

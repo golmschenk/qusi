@@ -12,7 +12,7 @@ class GmlModel(Model):
     """
     A general convolutional model for light curve data.
     """
-    def __init__(self, number_of_label_types=1):
+    def __init__(self, number_of_label_values=1):
         super().__init__()
         l2_regularization = 0.01
         self.block0 = LightCurveNetworkBlock(filters=8, kernel_size=3, pooling_size=1, batch_normalization=False,
@@ -28,8 +28,8 @@ class GmlModel(Model):
         self.block9 = LightCurveNetworkBlock(filters=20, kernel_size=7, pooling_size=1, dropout_rate=0.5, l2_regularization=l2_regularization, spatial=False)
         self.block10 = LightCurveNetworkBlock(filters=20, kernel_size=1, pooling_size=1, batch_normalization=False,
                                               dropout_rate=0.5, l2_regularization=l2_regularization, spatial=False)
-        self.prediction_layer = Convolution1D(number_of_label_types, kernel_size=1, activation=sigmoid)
-        self.reshape = Reshape([number_of_label_types])
+        self.prediction_layer = Convolution1D(number_of_label_values, kernel_size=1, activation=sigmoid)
+        self.reshape = Reshape([number_of_label_values])
 
     def call(self, inputs, training=False, mask=None):
         """
@@ -61,7 +61,7 @@ class GmlModel1(Model):
     """
     A general convolutional model for light curve data.
     """
-    def __init__(self, number_of_label_types=1):
+    def __init__(self, number_of_label_values=1):
         super().__init__()
         l2_regularization = 0.01
         self.block0 = LightCurveNetworkBlock(filters=64, kernel_size=3, pooling_size=1, batch_normalization=False,
@@ -77,8 +77,8 @@ class GmlModel1(Model):
         self.block9 = LightCurveNetworkBlock(filters=20, kernel_size=7, pooling_size=1, dropout_rate=0.5, l2_regularization=l2_regularization)
         self.block10 = LightCurveNetworkBlock(filters=20, kernel_size=1, pooling_size=1, batch_normalization=False,
                                               dropout_rate=0, l2_regularization=l2_regularization)
-        self.prediction_layer = Convolution1D(number_of_label_types, kernel_size=1, activation=sigmoid)
-        self.reshape = Reshape([number_of_label_types])
+        self.prediction_layer = Convolution1D(number_of_label_values, kernel_size=1, activation=sigmoid)
+        self.reshape = Reshape([number_of_label_values])
 
     def call(self, inputs, training=False, mask=None):
         """
@@ -110,7 +110,7 @@ class GmlModel2(Model):
     """
     A general convolutional model for light curve data.
     """
-    def __init__(self, number_of_label_types=1):
+    def __init__(self, number_of_label_values=1):
         super().__init__()
         l2_regularization = 0.01
         self.block0 = LightCurveNetworkBlock(filters=16, kernel_size=3, pooling_size=1, batch_normalization=False,
@@ -126,8 +126,8 @@ class GmlModel2(Model):
         self.block9 = LightCurveNetworkBlock(filters=40, kernel_size=7, pooling_size=1, dropout_rate=0.5, l2_regularization=l2_regularization, spatial=False)
         self.block10 = LightCurveNetworkBlock(filters=40, kernel_size=1, pooling_size=1, batch_normalization=False,
                                               dropout_rate=0.5, l2_regularization=l2_regularization, spatial=False)
-        self.prediction_layer = Convolution1D(number_of_label_types, kernel_size=1, activation=sigmoid)
-        self.reshape = Reshape([number_of_label_types])
+        self.prediction_layer = Convolution1D(number_of_label_values, kernel_size=1, activation=sigmoid)
+        self.reshape = Reshape([number_of_label_values])
 
     def call(self, inputs, training=False, mask=None):
         """
@@ -159,7 +159,7 @@ class GmlModel2Wider(Model):
     """
     A general convolutional model for light curve data.
     """
-    def __init__(self, number_of_label_types=1):
+    def __init__(self, number_of_label_values=1):
         super().__init__()
         l2_regularization = 0.01
         self.block0 = LightCurveNetworkBlock(filters=16*2, kernel_size=3, pooling_size=1, batch_normalization=False,
@@ -175,8 +175,8 @@ class GmlModel2Wider(Model):
         self.block9 = LightCurveNetworkBlock(filters=40*2, kernel_size=7, pooling_size=1, dropout_rate=0.5, l2_regularization=l2_regularization, spatial=False)
         self.block10 = LightCurveNetworkBlock(filters=40*2, kernel_size=1, pooling_size=1, batch_normalization=False,
                                               dropout_rate=0.5, l2_regularization=l2_regularization, spatial=False)
-        self.prediction_layer = Convolution1D(number_of_label_types, kernel_size=1, activation=sigmoid)
-        self.reshape = Reshape([number_of_label_types])
+        self.prediction_layer = Convolution1D(number_of_label_values, kernel_size=1, activation=sigmoid)
+        self.reshape = Reshape([number_of_label_values])
 
     def call(self, inputs, training=False, mask=None):
         """
@@ -207,7 +207,7 @@ class GmlModel2LessBatchNorm(Model):
     """
     A general convolutional model for light curve data.
     """
-    def __init__(self, number_of_label_types=1):
+    def __init__(self, number_of_label_values=1):
         super().__init__()
         l2_regularization = 0.01
         self.block0 = LightCurveNetworkBlock(filters=16, kernel_size=3, pooling_size=1, batch_normalization=False,
@@ -223,8 +223,8 @@ class GmlModel2LessBatchNorm(Model):
         self.block9 = LightCurveNetworkBlock(filters=40, kernel_size=7, pooling_size=1, dropout_rate=0.5, l2_regularization=l2_regularization, spatial=False, batch_normalization=False)
         self.block10 = LightCurveNetworkBlock(filters=40, kernel_size=1, pooling_size=1, batch_normalization=False,
                                               dropout_rate=0.5, l2_regularization=l2_regularization, spatial=False)
-        self.prediction_layer = Convolution1D(number_of_label_types, kernel_size=1, activation=sigmoid)
-        self.reshape = Reshape([number_of_label_types])
+        self.prediction_layer = Convolution1D(number_of_label_values, kernel_size=1, activation=sigmoid)
+        self.reshape = Reshape([number_of_label_values])
 
     def call(self, inputs, training=False, mask=None):
         """
@@ -255,7 +255,7 @@ class GmlModel2NoL2(Model):
     """
     A general convolutional model for light curve data.
     """
-    def __init__(self, number_of_label_types=1):
+    def __init__(self, number_of_label_values=1):
         super().__init__()
         l2_regularization = 0.0
         self.block0 = LightCurveNetworkBlock(filters=16, kernel_size=3, pooling_size=1, batch_normalization=False,
@@ -271,8 +271,8 @@ class GmlModel2NoL2(Model):
         self.block9 = LightCurveNetworkBlock(filters=40, kernel_size=7, pooling_size=1, dropout_rate=0.5, l2_regularization=l2_regularization, spatial=False)
         self.block10 = LightCurveNetworkBlock(filters=40, kernel_size=1, pooling_size=1, batch_normalization=False,
                                               dropout_rate=0.5, l2_regularization=l2_regularization, spatial=False)
-        self.prediction_layer = Convolution1D(number_of_label_types, kernel_size=1, activation=sigmoid)
-        self.reshape = Reshape([number_of_label_types])
+        self.prediction_layer = Convolution1D(number_of_label_values, kernel_size=1, activation=sigmoid)
+        self.reshape = Reshape([number_of_label_values])
 
     def call(self, inputs, training=False, mask=None):
         """
@@ -304,7 +304,7 @@ class GmlModel2WiderNoL2(Model):
     """
     A general convolutional model for light curve data.
     """
-    def __init__(self, number_of_label_types=1):
+    def __init__(self, number_of_label_values=1):
         super().__init__()
         l2_regularization = 0.0
         wider_factor = 2
@@ -321,8 +321,8 @@ class GmlModel2WiderNoL2(Model):
         self.block9 = LightCurveNetworkBlock(filters=40*wider_factor, kernel_size=7, pooling_size=1, dropout_rate=0.5, l2_regularization=l2_regularization, spatial=False)
         self.block10 = LightCurveNetworkBlock(filters=40*wider_factor, kernel_size=1, pooling_size=1, batch_normalization=False,
                                               dropout_rate=0.5, l2_regularization=l2_regularization, spatial=False)
-        self.prediction_layer = Convolution1D(number_of_label_types, kernel_size=1, activation=sigmoid)
-        self.reshape = Reshape([number_of_label_types])
+        self.prediction_layer = Convolution1D(number_of_label_values, kernel_size=1, activation=sigmoid)
+        self.reshape = Reshape([number_of_label_values])
 
     def call(self, inputs, training=False, mask=None):
         """
@@ -354,7 +354,7 @@ class GmlModel2Wider4NoL2(Model):
     """
     A general convolutional model for light curve data.
     """
-    def __init__(self, number_of_label_types=1):
+    def __init__(self, number_of_label_values=1):
         super().__init__()
         l2_regularization = 0.0
         wider_factor = 4
@@ -371,8 +371,8 @@ class GmlModel2Wider4NoL2(Model):
         self.block9 = LightCurveNetworkBlock(filters=40*wider_factor, kernel_size=7, pooling_size=1, dropout_rate=0.5, l2_regularization=l2_regularization, spatial=False)
         self.block10 = LightCurveNetworkBlock(filters=40*wider_factor, kernel_size=1, pooling_size=1, batch_normalization=False,
                                               dropout_rate=0.5, l2_regularization=l2_regularization, spatial=False)
-        self.prediction_layer = Convolution1D(number_of_label_types, kernel_size=1, activation=sigmoid)
-        self.reshape = Reshape([number_of_label_types])
+        self.prediction_layer = Convolution1D(number_of_label_values, kernel_size=1, activation=sigmoid)
+        self.reshape = Reshape([number_of_label_values])
 
     def call(self, inputs, training=False, mask=None):
         """
@@ -403,7 +403,7 @@ class GmlModel2Wider4NoL2NoDo(Model):
     """
     A general convolutional model for light curve data.
     """
-    def __init__(self, number_of_label_types=1):
+    def __init__(self, number_of_label_values=1):
         super().__init__()
         l2_regularization = 0.0
         wider_factor = 4
@@ -421,8 +421,8 @@ class GmlModel2Wider4NoL2NoDo(Model):
         self.block9 = LightCurveNetworkBlock(filters=40*wider_factor, kernel_size=7, pooling_size=1, dropout_rate=dropout_rate, l2_regularization=l2_regularization, spatial=False)
         self.block10 = LightCurveNetworkBlock(filters=40*wider_factor, kernel_size=1, pooling_size=1, batch_normalization=False,
                                               dropout_rate=dropout_rate, l2_regularization=l2_regularization, spatial=False)
-        self.prediction_layer = Convolution1D(number_of_label_types, kernel_size=1, activation=sigmoid)
-        self.reshape = Reshape([number_of_label_types])
+        self.prediction_layer = Convolution1D(number_of_label_values, kernel_size=1, activation=sigmoid)
+        self.reshape = Reshape([number_of_label_values])
 
     def call(self, inputs, training=False, mask=None):
         """
@@ -453,7 +453,7 @@ class GmlModel2Wider4(Model):
     """
     A general convolutional model for light curve data.
     """
-    def __init__(self, number_of_label_types=1):
+    def __init__(self, number_of_label_values=1):
         super().__init__()
         l2_regularization = 0.01
         wider_factor = 4
@@ -471,8 +471,8 @@ class GmlModel2Wider4(Model):
         self.block9 = LightCurveNetworkBlock(filters=40*wider_factor, kernel_size=7, pooling_size=1, dropout_rate=dropout_rate, l2_regularization=l2_regularization, spatial=False)
         self.block10 = LightCurveNetworkBlock(filters=40*wider_factor, kernel_size=1, pooling_size=1, batch_normalization=False,
                                               dropout_rate=dropout_rate, l2_regularization=l2_regularization, spatial=False)
-        self.prediction_layer = Convolution1D(number_of_label_types, kernel_size=1, activation=sigmoid)
-        self.reshape = Reshape([number_of_label_types])
+        self.prediction_layer = Convolution1D(number_of_label_values, kernel_size=1, activation=sigmoid)
+        self.reshape = Reshape([number_of_label_values])
 
     def call(self, inputs, training=False, mask=None):
         """
@@ -503,7 +503,7 @@ class GmlModel3(Model):
     """
     A general convolutional model for light curve data.
     """
-    def __init__(self, number_of_label_types=1):
+    def __init__(self, number_of_label_values=1):
         super().__init__()
         l2_regularization = 0.01
         wider_factor = 1
@@ -530,8 +530,8 @@ class GmlModel3(Model):
         self.block19 = LightCurveNetworkBlock(filters=40*wider_factor, kernel_size=1, pooling_size=1, dropout_rate=dropout_rate, l2_regularization=l2_regularization, spatial=False)
         self.block20 = LightCurveNetworkBlock(filters=40*wider_factor, kernel_size=1, pooling_size=1, batch_normalization=False, dropout_rate=dropout_rate, l2_regularization=l2_regularization, spatial=False)
         self.block21 = LightCurveNetworkBlock(filters=40*wider_factor, kernel_size=1, pooling_size=1, batch_normalization=False, dropout_rate=0, l2_regularization=l2_regularization, spatial=False)
-        self.prediction_layer = Convolution1D(number_of_label_types, kernel_size=1, activation=sigmoid)
-        self.reshape = Reshape([number_of_label_types])
+        self.prediction_layer = Convolution1D(number_of_label_values, kernel_size=1, activation=sigmoid)
+        self.reshape = Reshape([number_of_label_values])
 
     def call(self, inputs, training=False, mask=None):
         """
@@ -574,7 +574,7 @@ class GmlModel3Narrower(Model):
     """
     A general convolutional model for light curve data.
     """
-    def __init__(self, number_of_label_types=1):
+    def __init__(self, number_of_label_values=1):
         super().__init__()
         l2_regularization = 0.01
         wider_factor = 0.5
@@ -601,8 +601,8 @@ class GmlModel3Narrower(Model):
         self.block19 = LightCurveNetworkBlock(filters=int(40*wider_factor), kernel_size=1, pooling_size=1, dropout_rate=dropout_rate, l2_regularization=l2_regularization, spatial=False)
         self.block20 = LightCurveNetworkBlock(filters=int(40*wider_factor), kernel_size=1, pooling_size=1, batch_normalization=False, dropout_rate=dropout_rate, l2_regularization=l2_regularization, spatial=False)
         self.block21 = LightCurveNetworkBlock(filters=int(40*wider_factor), kernel_size=1, pooling_size=1, batch_normalization=False, dropout_rate=0, l2_regularization=l2_regularization, spatial=False)
-        self.prediction_layer = Convolution1D(number_of_label_types, kernel_size=1, activation=sigmoid)
-        self.reshape = Reshape([number_of_label_types])
+        self.prediction_layer = Convolution1D(number_of_label_values, kernel_size=1, activation=sigmoid)
+        self.reshape = Reshape([number_of_label_values])
 
     def call(self, inputs, training=False, mask=None):
         """
@@ -644,7 +644,7 @@ class GmlModel3NarrowerNoL2(Model):
     """
     A general convolutional model for light curve data.
     """
-    def __init__(self, number_of_label_types=1):
+    def __init__(self, number_of_label_values=1):
         super().__init__()
         l2_regularization = 0.0
         wider_factor = 0.5
@@ -671,8 +671,8 @@ class GmlModel3NarrowerNoL2(Model):
         self.block19 = LightCurveNetworkBlock(filters=int(40*wider_factor), kernel_size=1, pooling_size=1, dropout_rate=dropout_rate, l2_regularization=l2_regularization, spatial=False)
         self.block20 = LightCurveNetworkBlock(filters=int(40*wider_factor), kernel_size=1, pooling_size=1, batch_normalization=False, dropout_rate=dropout_rate, l2_regularization=l2_regularization, spatial=False)
         self.block21 = LightCurveNetworkBlock(filters=int(40*wider_factor), kernel_size=1, pooling_size=1, batch_normalization=False, dropout_rate=0, l2_regularization=l2_regularization, spatial=False)
-        self.prediction_layer = Convolution1D(number_of_label_types, kernel_size=1, activation=sigmoid)
-        self.reshape = Reshape([number_of_label_types])
+        self.prediction_layer = Convolution1D(number_of_label_values, kernel_size=1, activation=sigmoid)
+        self.reshape = Reshape([number_of_label_values])
 
     def call(self, inputs, training=False, mask=None):
         """
