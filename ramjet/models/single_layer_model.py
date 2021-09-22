@@ -26,11 +26,11 @@ class SingleLayerModel(Model):
 
 
 class SingleLayerModelWithAuxiliary(Model):
-    def __init__(self):
+    def __init__(self, number_of_label_values: int = 1):
         super().__init__()
         self.flatten_light_curve = Flatten()
         self.concatenate = Concatenate()
-        self.dense = Dense(1, activation=sigmoid)
+        self.dense = Dense(number_of_label_values, activation=sigmoid)
 
     def call(self, inputs, training=False, mask=None):
         """
