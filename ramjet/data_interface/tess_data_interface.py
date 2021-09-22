@@ -54,7 +54,9 @@ def is_common_mast_connection_error(exception: Exception) -> bool:
     :return: A boolean stating if the exception is a common MAST connection error.
     """
     return (isinstance(exception, AstroQueryTimeoutError) or
+            isinstance(exception, TimeoutError) or
             isinstance(exception, requests.exceptions.ReadTimeout) or
+            isinstance(exception, requests.exceptions.ChunkedEncodingError) or
             isinstance(exception, requests.exceptions.ConnectionError))
 
 
@@ -428,6 +430,7 @@ class TessDataInterface:
         return SkyCoord(ra, dec, unit='deg')
 
     @staticmethod
+    @retry(retry_on_exception=is_common_mast_connection_error)
     def get_tess_input_catalog_row(tic_id: int) -> pd.Series:
         """
         Get the TIC row for a TIC ID.
@@ -444,7 +447,7 @@ class TessDataInterface:
         Gets a data frame containing all known variables within a radius of the given coordinates.
 
         :param coordinates: The coordinates to search.
-        :param radius: The radius to search. TESS has a pixel size of 21 arcseconds across.
+        :param radius: The radius to search. TESS has a pixel size of 21 arcseconds across.denodfjaldsfjdsaklfdsjal;
         :return: The data frame of the variables. Returns an empty data frame if none exist.
         """
         variable_table_list = Vizier.query_region(coordinates, radius=radius, catalog='B/gcvs/gcvs_cat')
