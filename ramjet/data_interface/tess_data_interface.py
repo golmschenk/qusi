@@ -57,6 +57,7 @@ def is_common_mast_connection_error(exception: Exception) -> bool:
             isinstance(exception, TimeoutError) or
             isinstance(exception, requests.exceptions.ReadTimeout) or
             isinstance(exception, requests.exceptions.ChunkedEncodingError) or
+            isinstance(exception, requests.exceptions.HTTPError) or
             isinstance(exception, requests.exceptions.ConnectionError))
 
 
@@ -345,8 +346,8 @@ class TessDataInterface:
         if save_directory is not None:
             save_directory = Path(save_directory)
             save_directory.mkdir(parents=True, exist_ok=True)
-            new_light_curve_path = str(save_directory.joinpath(light_curve_path.name))
-            shutil.move(str(light_curve_path), new_light_curve_path)
+            new_light_curve_path = save_directory.joinpath(light_curve_path.name)
+            shutil.move(str(light_curve_path), str(new_light_curve_path))
             light_curve_path = new_light_curve_path
         return light_curve_path
 
