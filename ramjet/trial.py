@@ -124,6 +124,7 @@ def create_logging_callbacks(logs_directory: Path, trial_name: str, database: St
         if light_curve_logging:
             logger = WandbLogger.new(entity=wandb_entity, project=wandb_project)
             database.logger = logger
+            logging_callbacks.append(logger.create_callback())
         else:
             wandb.init(entity=wandb_entity, project=wandb_project, settings=wandb.Settings(start_method='fork'))
         wandb.run.notes = trial_name

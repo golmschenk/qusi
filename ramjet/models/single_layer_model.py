@@ -47,3 +47,27 @@ class SingleLayerModelWithAuxiliary(Model):
         x = self.dense(x, training=training)
         outputs = x
         return outputs
+
+
+class SingleLayerModelLinearWithAuxiliary(Model):
+    def __init__(self, number_of_label_values: int = 1):
+        super().__init__()
+        self.flatten_light_curve = Flatten()
+        self.concatenate = Concatenate()
+        self.dense = Dense(number_of_label_values)
+
+    def call(self, inputs, training=False, mask=None):
+        """
+        The forward pass of the layer.
+
+        :param inputs: The input tensor.
+        :param training: A boolean specifying if the layer should be in training mode.
+        :param mask: A mask for the input tensor.
+        :return: The output tensor of the laye1.
+        """
+        light_curve, auxiliary_information = inputs
+        x = self.flatten_light_curve(light_curve)
+        x = self.concatenate([x, auxiliary_information])
+        x = self.dense(x, training=training)
+        outputs = x
+        return outputs
