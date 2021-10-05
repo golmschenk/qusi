@@ -322,7 +322,8 @@ class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
     def generate_infer_path_and_light_curve_dataset(
             self, paths_dataset: tf.data.Dataset,
             load_times_fluxes_and_flux_errors_from_path_function: Callable[
-                [Path], Tuple[np.ndarray, np.ndarray, Union[np.ndarray, None]]]):
+                [Path], Tuple[np.ndarray, np.ndarray, Union[np.ndarray, None]]],
+            load_auxiliary_information_for_path_function: Callable[[Path], np.ndarray]):
         """
         Generates a path and light curve dataset from a paths dataset using a passed function defining
         how to load the values from the light curve file.
@@ -333,9 +334,15 @@ class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
         :return: The resulting light curve example and label dataset.
         """
         preprocess_map_function = partial(self.preprocess_infer_light_curve,
-                                          load_times_fluxes_and_flux_errors_from_path_function)
-        output_types = (tf.string, tf.float32)
-        output_shapes = [(), (self.time_steps_per_example, self.number_of_input_channels)]
+                                          load_times_fluxes_and_flux_errors_from_path_function,
+                                          load_auxiliary_information_for_path_function)
+        if self.number_of_auxiliary_values == 0:
+            output_types = (tf.string, tf.float32)
+            output_shapes = [(), (self.time_steps_per_example, self.number_of_input_channels)]
+        else:
+            output_types = (tf.string, tf.float32, tf.float32)
+            output_shapes = [(), (self.time_steps_per_example, self.number_of_input_channels),
+                             (self.number_of_auxiliary_values,)]
         example_and_label_dataset = map_py_function_to_dataset(paths_dataset,
                                                                preprocess_map_function,
                                                                self.number_of_parallel_processes_per_map,
@@ -346,6 +353,7 @@ class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
     def preprocess_infer_light_curve(
             self, load_times_fluxes_and_flux_errors_from_path_function: Callable[
                 [Path], Tuple[np.ndarray, np.ndarray, Union[np.ndarray, None]]],
+            load_auxiliary_information_for_path_function: Callable[[Path], np.ndarray],
             light_curve_path_tensor: tf.Tensor) -> (np.ndarray, np.ndarray):
         """
         Preprocesses a individual standard light curve from a light curve path tensor, using a passed function defining
@@ -363,7 +371,11 @@ class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
         times, fluxes, flux_errors = load_times_fluxes_and_flux_errors_from_path_function(light_curve_path)
         light_curve = self.build_light_curve_array(fluxes=fluxes, times=times, flux_errors=flux_errors)
         example = self.preprocess_light_curve(light_curve, evaluation_mode=True)
-        return light_curve_path_string, example
+        if self.number_of_auxiliary_values > 0:
+            auxiliary_information = load_auxiliary_information_for_path_function(light_curve_path)
+            return light_curve_path_string, example, auxiliary_information
+        else:
+            return light_curve_path_string, example
 
     def generate_injected_light_curve_and_label_dataset(
             self, injectee_paths_dataset: tf.data.Dataset,
@@ -554,11 +566,16 @@ class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
         for light_curve_collection in self.inference_light_curve_collections:
             example_paths_dataset = self.generate_paths_dataset_from_light_curve_collection(light_curve_collection,
                                                                                             repeat=False, shuffle=False)
-            examples_dataset = self.generate_infer_path_and_light_curve_dataset(
-                example_paths_dataset, light_curve_collection.load_times_fluxes_and_flux_errors_from_path)
             if self.number_of_auxiliary_values > 0:
-                examples_dataset = self.from_light_curve_auxiliary_and_label_to_observation_and_label(
+                examples_dataset = self.generate_infer_path_and_light_curve_dataset(
+                    example_paths_dataset, light_curve_collection.load_times_fluxes_and_flux_errors_from_path,
+                    light_curve_collection.load_auxiliary_information_for_path)
+                examples_dataset = self.from_path_light_curve_and_auxiliary_to_path_and_observation(
                     examples_dataset)
+            else:
+                examples_dataset = self.generate_infer_path_and_light_curve_dataset(
+                    example_paths_dataset, light_curve_collection.load_times_fluxes_and_flux_errors_from_path,
+                    light_curve_collection.load_auxiliary_information_for_path)
             collection_batch_dataset = examples_dataset.batch(self.batch_size)
             if batch_dataset is None:
                 batch_dataset = collection_batch_dataset
@@ -573,6 +590,13 @@ class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
         observation_and_label_dataset = light_curve_auxiliary_and_label_dataset.map(
             lambda light_curve, auxiliary, label: ((light_curve, auxiliary), label))
         return observation_and_label_dataset
+
+    @staticmethod
+    def from_path_light_curve_and_auxiliary_to_path_and_observation(
+            light_curve_auxiliary_and_label_dataset: tf.data.Dataset) -> tf.data.Dataset:
+        path_observation_dataset = light_curve_auxiliary_and_label_dataset.map(
+            lambda path, light_curve, auxiliary: (path, (light_curve, auxiliary)))
+        return path_observation_dataset
 
     def flat_window_zipped_example_and_label_dataset(self, dataset: tf.data.Dataset, batch_size: int, window_shift: int,
                                                      ) -> tf.data.Dataset:
