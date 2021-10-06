@@ -405,7 +405,8 @@ class TestStandardAndInjectedLightCurveDatabase:
         paths_dataset = database_with_collections.generate_paths_dataset_from_light_curve_collection(
             light_curve_collection)
         path_and_light_curve_dataset = database_with_collections.generate_infer_path_and_light_curve_dataset(
-            paths_dataset, light_curve_collection.load_times_fluxes_and_flux_errors_from_path)
+            paths_dataset, light_curve_collection.load_times_fluxes_and_flux_errors_from_path,
+            light_curve_collection.load_auxiliary_information_for_path)
         path_and_light_curve = next(iter(path_and_light_curve_dataset))
         assert np.array_equal(path_and_light_curve[0].numpy(), b'standard_path0.ext')  # Standard path 0.
         assert path_and_light_curve[1].numpy().shape == (3, 1)
@@ -417,9 +418,10 @@ class TestStandardAndInjectedLightCurveDatabase:
         light_curve_path = light_curve_collection.get_paths()[0]
         expected_label = light_curve_collection.label
         load_from_path_function = light_curve_collection.load_times_fluxes_and_flux_errors_from_path
-        path, light_curve = database_with_collections.preprocess_infer_light_curve(load_from_path_function,
-                                                                                   tf.convert_to_tensor(
-                                                                                       str(light_curve_path)))
+        path, light_curve = database_with_collections.preprocess_infer_light_curve(
+            load_from_path_function,
+            light_curve_collection.load_auxiliary_information_for_path,
+            tf.convert_to_tensor(str(light_curve_path)))
         assert np.array_equal(path, 'standard_path0.ext')  # Standard path 0.
         assert light_curve.shape == (3, 1)
         assert np.array_equal(light_curve, [[0], [1], [2]])  # Standard light_curve 0.
@@ -438,7 +440,8 @@ class TestStandardAndInjectedLightCurveDatabase:
         paths_dataset1 = database_with_collections.generate_paths_dataset_from_light_curve_collection(
             light_curve_collection)
         path_and_light_curve_dataset = database_with_collections.generate_infer_path_and_light_curve_dataset(
-            paths_dataset1, light_curve_collection.load_times_fluxes_and_flux_errors_from_path)
+            paths_dataset1, light_curve_collection.load_times_fluxes_and_flux_errors_from_path,
+            light_curve_collection.load_auxiliary_information_for_path)
         path_and_light_curve = next(iter(path_and_light_curve_dataset))
         assert np.array_equal(light_curve_and_label[0].numpy(), path_and_light_curve[1].numpy())
 
