@@ -7,6 +7,7 @@ from pathlib import Path
 
 import ramjet.photometric_database.light_curve_database
 import ramjet.photometric_database.standard_and_injected_light_curve_database as database_module
+from ramjet.photometric_database.derived.toy_database import ToyDatabaseWithAuxiliary, ToyDatabaseWithFlatValueAsLabel
 from ramjet.photometric_database.light_curve_collection import LightCurveCollection
 from ramjet.photometric_database.standard_and_injected_light_curve_database import \
     StandardAndInjectedLightCurveDatabase, OutOfBoundsInjectionHandlingMethod
@@ -574,3 +575,41 @@ class TestStandardAndInjectedLightCurveDatabase:
 
         windowed_list = list(windowed_dataset.as_numpy_iterator())
         assert windowed_list == [(b'a', 0), (b'b', 1), (b'c', 2), (b'c', 2), (b'd', 3), (b'e', 4), (b'e', 4)]
+
+    def test_flat_window_zipped_with_shuffle_keeps_correct_pairings(self, database):
+        examples_dataset = tf.data.Dataset.from_tensor_slices(['a', 'b', 'c', 'd', 'e'])
+        labels_dataset = tf.data.Dataset.from_tensor_slices([0, 1, 2, 3, 4])
+        zipped_dataset = tf.data.Dataset.zip((examples_dataset, labels_dataset))
+        shuffled_zipped_dataset = zipped_dataset.shuffle(buffer_size=5)
+
+        windowed_dataset = database.flat_window_zipped_example_and_label_dataset(shuffled_zipped_dataset, batch_size=3,
+                                                                                 window_shift=2)
+
+        windowed_list = list(windowed_dataset.as_numpy_iterator())
+        correct_pairings = {b'a': 0, b'b': 1, b'c': 2, b'd': 3, b'e': 4}
+        for string, number in windowed_list:
+            correct_number = correct_pairings[string]
+            assert number == correct_number
+
+    @pytest.mark.integration
+    def test_labels_match_observation(self):
+        database = ToyDatabaseWithAuxiliary()
+        train_dataset, validation_dataset = database.generate_datasets()
+        train_batch = next(iter(train_dataset))
+        for light_curve_tensor, auxiliary_value_tensor, label_tensor in zip(
+                train_batch[0][0], train_batch[0][1], train_batch[1]):
+            light_curve_array = light_curve_tensor.numpy()
+            if light_curve_array.min() == light_curve_array.max():
+                assert label_tensor.numpy() == 0  # Flat signals should be label 0.
+            else:
+                assert label_tensor.numpy() == 1  # Sine wave signals should be label 1.
+
+    @pytest.mark.integration
+    def test_labels_match_observation_when_single_collection_has_multiple_labels(self):
+        database = ToyDatabaseWithFlatValueAsLabel()
+        train_dataset, validation_dataset = database.generate_datasets()
+        train_batch = next(iter(train_dataset))
+        for light_curve_tensor, label_tensor in zip(train_batch[0], train_batch[1]):
+            assert label_tensor.numpy() == light_curve_tensor.numpy()[0]
+
+

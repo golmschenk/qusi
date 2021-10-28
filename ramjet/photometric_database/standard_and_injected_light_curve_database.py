@@ -610,19 +610,9 @@ class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
         :return: The flattened window dataset.
         """
         if window_shift != 0:
-            examples_dataset = dataset.map(lambda element, _: element)
-            labels_dataset = dataset.map(lambda _, element: element)
-            examples_window_dataset = examples_dataset.window(batch_size, shift=window_shift)
-            labels_window_dataset = labels_dataset.window(batch_size, shift=window_shift)
-            if self.number_of_auxiliary_values > 0:
-                examples_unbatched_window_dataset = examples_window_dataset.flat_map(
-                    lambda light_curve, auxiliary_information: tf.data.Dataset.zip(
-                        (light_curve, auxiliary_information)))
-            else:
-                examples_unbatched_window_dataset = examples_window_dataset.flat_map(lambda element: element)
-            labels_unbatched_window_dataset = labels_window_dataset.flat_map(lambda element: element)
-            unbatched_window_dataset = tf.data.Dataset.zip((examples_unbatched_window_dataset,
-                                                            labels_unbatched_window_dataset))
+            windowed_dataset = dataset.window(batch_size, shift=window_shift)
+            unbatched_window_dataset = windowed_dataset.flat_map(
+                lambda *sample: tf.data.Dataset.zip(tuple(element for element in sample)))
             return unbatched_window_dataset
         else:
             return dataset

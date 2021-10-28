@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Iterable
+from typing import Iterable, Union
 
 import numpy as np
 
@@ -30,6 +30,23 @@ class ToyFlatLightCurveCollection(ToyLightCurveCollection):
         return light_curve.times, light_curve.fluxes
 
 
+class ToyFlatAtValueLightCurveCollection(ToyLightCurveCollection):
+    def __init__(self):
+        super().__init__()
+
+    def get_paths(self) -> Iterable[Path]:
+        paths = [Path(f'{index}') for index in range(10)]
+        return paths
+
+    def load_times_and_fluxes_from_path(self, path: Path) -> (np.ndarray, np.ndarray):
+        light_curve = ToyLightCurve.flat(float(path.name))
+        return light_curve.times, light_curve.fluxes
+
+    def load_label_from_path(self, path: Path) -> Union[float, np.ndarray]:
+        label = float(path.name)
+        return label
+
+
 class ToySineWaveLightCurveCollection(ToyLightCurveCollection):
     def __init__(self):
         super().__init__()
@@ -46,12 +63,12 @@ class ToyLightCurve:
     """
 
     @classmethod
-    def flat(cls) -> LightCurve:
+    def flat(cls, value: float = 1) -> LightCurve:
         """
         Creates a flat light curve.
         """
         length = 100
-        fluxes = np.full(shape=[length], fill_value=1, dtype=np.float32)
+        fluxes = np.full(shape=[length], fill_value=value, dtype=np.float32)
         times = np.arange(length, dtype=np.float32)
         return LightCurve.from_times_and_fluxes(times=times, fluxes=fluxes)
 
