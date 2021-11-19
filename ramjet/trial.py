@@ -113,7 +113,7 @@ def create_logging_callbacks(logs_directory: Path, trial_name: str, database: St
     latest_checkpoint_callback = callbacks.ModelCheckpoint(latest_model_save_path, save_weights_only=True)
     best_validation_model_save_path = trial_directory.joinpath('best_validation_model.ckpt')
     best_validation_checkpoint_callback = callbacks.ModelCheckpoint(
-        best_validation_model_save_path, monitor='area_under_roc_curve', mode='max', save_best_only=True,
+        best_validation_model_save_path, monitor='val_area_under_roc_curve', mode='max', save_best_only=True,
         save_weights_only=True)
     logging_callbacks = [latest_checkpoint_callback, best_validation_checkpoint_callback]
     if logging_tool_name == 'tensorboard':
