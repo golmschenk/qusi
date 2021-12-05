@@ -14,7 +14,7 @@ except ImportError:
     from backports.strenum import StrEnum
 
 import wandb.keras
-from tensorflow.python.keras import callbacks
+from tensorflow.keras import callbacks
 
 from ramjet.logging.wandb_logger import WandbLogger
 from ramjet.photometric_database.standard_and_injected_light_curve_database import StandardAndInjectedLightCurveDatabase

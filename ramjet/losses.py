@@ -4,7 +4,7 @@ Code for custom losses for the ramjet package.
 import tensorflow as tf
 from tensorflow.python.keras.losses import LossFunctionWrapper
 from tensorflow.python.framework import ops
-from tensorflow.python.keras import backend
+from tensorflow.keras import backend
 from tensorflow.python.ops import math_ops
 
 

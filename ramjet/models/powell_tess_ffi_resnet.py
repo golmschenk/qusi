@@ -1,8 +1,8 @@
 """
 Code for Brian Powell's ResNet.
 """
-from tensorflow.python.keras import Input
-from tensorflow.python.keras.layers import Conv1D, BatchNormalization, LeakyReLU, Reshape, Dense, Dropout, Flatten, \
+from tensorflow.keras import Input
+from tensorflow.keras.layers import Conv1D, BatchNormalization, LeakyReLU, Reshape, Dense, Dropout, Flatten, \
     Multiply, Add
 
 lcsize = 1400

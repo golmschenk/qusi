@@ -1,6 +1,6 @@
 """Code for running training."""
 import tensorflow as tf
-from tensorflow.python.keras.losses import BinaryCrossentropy
+from tensorflow.keras.losses import BinaryCrossentropy
 from pathlib import Path
 from ramjet.models.cura import Cura
 from ramjet.photometric_database.derived.moa_survey_none_single_and_binary_database import \
