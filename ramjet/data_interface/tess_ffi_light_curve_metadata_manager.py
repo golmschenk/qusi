@@ -1,6 +1,7 @@
 """
 Code for managing the TESS FFI metadata SQL table.
 """
+import itertools
 from pathlib import Path
 from typing import List
 from peewee import IntegerField, CharField, FloatField, SchemaManager
@@ -63,8 +64,13 @@ class TessFfiLightCurveMetadataManager:
         """
         Populates the SQL database based on the light curve files.
         """
-        print('Populating the TESS FFI light curve meta data table...')
-        path_glob = self.light_curve_root_directory_path.glob('tesslcs_sector_*_104/tesslcs_tmag_*_*/tesslc_*.pkl')
+        print('Populating the TESS FFI light curve meta data table...', flush=True)
+        single_sector_path_globs = []
+        for sector in range(1, 27):
+            single_sector_path_glob = self.light_curve_root_directory_path.glob(
+                f'tesslcs_sector_{sector}_104/tesslcs_tmag_*_*/tesslc_*.pkl')
+            single_sector_path_globs.append(single_sector_path_glob)
+        path_glob = itertools.chain(*single_sector_path_globs)
         row_count = 0
         batch_paths = []
         with metadatabase.atomic():
@@ -74,10 +80,10 @@ class TessFfiLightCurveMetadataManager:
                 if index % 1000 == 0 and index != 0:
                     self.insert_multiple_rows_from_paths_into_database(batch_paths)
                     batch_paths = []
-                    print(f'{index} rows inserted...', end='\r')
+                    print(f'{index} rows inserted...', end='\r', flush=True)
             if len(batch_paths) > 0:
                 self.insert_multiple_rows_from_paths_into_database(batch_paths)
-        print(f'TESS FFI light curve meta data table populated. {row_count} rows added.')
+        print(f'TESS FFI light curve meta data table populated. {row_count} rows added.', flush=True)
 
     def build_table(self):
         """
