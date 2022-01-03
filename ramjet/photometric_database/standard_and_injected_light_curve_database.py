@@ -103,6 +103,7 @@ class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
             light_curve_and_label_dataset = self.generate_injected_light_curve_and_label_dataset(
                 training_injectee_path_dataset,
                 self.training_injectee_light_curve_collection.load_times_fluxes_and_flux_errors_from_path,
+                self.training_injectee_light_curve_collection.load_auxiliary_information_for_path,
                 paths_dataset,
                 injectable_light_curve_collection.load_times_magnifications_and_magnification_errors_from_path,
                 injectable_light_curve_collection.load_label_from_path,
@@ -113,6 +114,7 @@ class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
             training_dataset = self.from_light_curve_auxiliary_and_label_to_observation_and_label(training_dataset)
         training_dataset = self.window_dataset_for_zipped_example_and_label_dataset(training_dataset, self.batch_size,
                                                                                     self.window_shift)
+        # training_dataset = training_dataset.batch(self.batch_size)
         validation_light_curve_and_label_datasets = []
         for index, (paths_dataset, light_curve_collection) in enumerate(
                 zip(validation_standard_paths_datasets, self.validation_standard_light_curve_collections)):
@@ -128,6 +130,7 @@ class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
             light_curve_and_label_dataset = self.generate_injected_light_curve_and_label_dataset(
                 validation_injectee_path_dataset,
                 self.validation_injectee_light_curve_collection.load_times_fluxes_and_flux_errors_from_path,
+                self.validation_injectee_light_curve_collection.load_auxiliary_information_for_path,
                 paths_dataset,
                 injectable_light_curve_collection.load_times_magnifications_and_magnification_errors_from_path,
                 injectable_light_curve_collection.load_label_from_path, evaluation_mode=True,
@@ -381,6 +384,7 @@ class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
             self, injectee_paths_dataset: tf.data.Dataset,
             injectee_load_times_fluxes_and_flux_errors_from_path_function: Callable[
                 [Path], Tuple[np.ndarray, np.ndarray, Union[np.ndarray, None]]],
+            load_auxiliary_information_for_path_function: Callable[[Path], np.ndarray],
             injectable_paths_dataset: tf.data.Dataset,
             injectable_load_times_magnifications_and_magnification_errors_from_path_function: Callable[
                 [Path], Tuple[np.ndarray, np.ndarray, Union[np.ndarray, None]]],
@@ -404,12 +408,20 @@ class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
         preprocess_map_function = partial(
             self.preprocess_injected_light_curve,
             injectee_load_times_fluxes_and_flux_errors_from_path_function,
+            load_auxiliary_information_for_path_function,
             injectable_load_times_magnifications_and_magnification_errors_from_path_function,
             load_label_from_path_function,
             evaluation_mode=evaluation_mode)
         preprocess_map_function = self.add_logging_queues_to_map_function(preprocess_map_function, name)
-        output_types = (tf.float32, tf.float32)
-        output_shapes = [(self.time_steps_per_example, self.number_of_input_channels), (self.number_of_label_values,)]
+        if self.number_of_auxiliary_values == 0:
+            output_types = (tf.float32, tf.float32)
+            output_shapes = [(self.time_steps_per_example, self.number_of_input_channels),
+                             (self.number_of_label_values,)]
+        else:
+            output_types = (tf.float32, tf.float32, tf.float32)
+            output_shapes = [
+                (self.time_steps_per_example, self.number_of_input_channels), (self.number_of_auxiliary_values,),
+                (self.number_of_label_values,)]
         zipped_paths_dataset = tf.data.Dataset.zip((injectee_paths_dataset, injectable_paths_dataset))
         example_and_label_dataset = map_py_function_to_dataset(zipped_paths_dataset,
                                                                preprocess_map_function,
@@ -422,6 +434,7 @@ class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
             self,
             injectee_load_times_fluxes_and_flux_errors_from_path_function: Callable[
                 [Path], Tuple[np.ndarray, np.ndarray, Union[np.ndarray, None]]],
+            load_auxiliary_information_for_path_function: Callable[[Path], np.ndarray],
             injectable_load_times_magnifications_and_magnification_errors_from_path_function: Callable[
                 [Path], Tuple[np.ndarray, np.ndarray, Union[np.ndarray, None]]],
             load_label_from_path_function: Callable[[Path], Union[float, np.ndarray]],
@@ -473,7 +486,11 @@ class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
         example = self.preprocess_light_curve(light_curve, evaluation_mode=evaluation_mode)
         label = load_label_from_path_function(injectable_light_curve_path)
         label = self.expand_label_to_training_dimensions(label)
-        return example, label
+        if self.number_of_auxiliary_values > 0:
+            auxiliary_information = load_auxiliary_information_for_path_function(injectee_light_curve_path)
+            return example, auxiliary_information, label
+        else:
+            return example, label
 
     def inject_signal_into_light_curve(self, light_curve_fluxes: np.ndarray, light_curve_times: np.ndarray,
                                        signal_magnifications: np.ndarray, signal_times: np.ndarray,

@@ -448,7 +448,7 @@ class TessDataInterface:
         Gets a data frame containing all known variables within a radius of the given coordinates.
 
         :param coordinates: The coordinates to search.
-        :param radius: The radius to search. TESS has a pixel size of 21 arcseconds across.denodfjaldsfjdsaklfdsjal;
+        :param radius: The radius to search. TESS has a pixel size of 21 arcseconds across.
         :return: The data frame of the variables. Returns an empty data frame if none exist.
         """
         variable_table_list = Vizier.query_region(coordinates, radius=radius, catalog='B/gcvs/gcvs_cat')
