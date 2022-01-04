@@ -121,18 +121,36 @@ def create_dual_light_curve_figure(fluxes0, times0, name0, fluxes1, times1, name
     :return: The resulting figure.
     """
     figure = Figure(title=title, x_axis_label=x_axis_label, y_axis_label=y_axis_label, active_drag='box_zoom')
-
-    def add_light_curve(times, fluxes, legend_label, color):
-        """Adds a light curve to the figure."""
-        fluxes -= np.minimum(np.nanmin(fluxes), 0)
-        flux_median = np.median(fluxes)
-        figure.line(times, fluxes / flux_median, line_color=color, line_alpha=0.1)
-        figure.circle(times, fluxes / flux_median, legend_label=legend_label, line_color=color, line_alpha=0.4,
-                      fill_color=color, fill_alpha=0.1)
-
-    add_light_curve(times0, fluxes0, name0, 'firebrick')
-    add_light_curve(times1, fluxes1, name1, 'mediumblue')
+    add_light_curve(figure, times0, fluxes0, name0, 'firebrick')
+    add_light_curve(figure, times1, fluxes1, name1, 'mediumblue')
     return figure
+
+
+def create_light_curve_figure(fluxes, times, name, title='', x_axis_label='Time (days)',
+                                  y_axis_label='Relative flux') -> Figure:
+    """
+    Plots two light curves together. Mostly for comparing a light curve cleaned by two different methods.
+
+    :param fluxes: The fluxes of the plot.
+    :param times: The times of the plot.
+    :param name: The name of the plot.
+    :param title: The title of the figure.
+    :param x_axis_label: The label of the x axis.
+    :param y_axis_label: The label of the y axis.
+    :return: The resulting figure.
+    """
+    figure = Figure(title=title, x_axis_label=x_axis_label, y_axis_label=y_axis_label, active_drag='box_zoom')
+    add_light_curve(figure, times, fluxes, name, 'mediumblue')
+    return figure
+
+
+def add_light_curve(figure, times, fluxes, legend_label, color):
+    """Adds a light curve to the figure."""
+    fluxes -= np.minimum(np.nanmin(fluxes), 0)
+    flux_median = np.median(fluxes)
+    figure.line(times, fluxes / flux_median, line_color=color, line_alpha=0.1)
+    figure.circle(times, fluxes / flux_median, legend_label=legend_label, line_color=color, line_alpha=0.4,
+                  fill_color=color, fill_alpha=0.1)
 
 
 async def calculate_inlier_range(points: np.ndarray) -> (float, float):
