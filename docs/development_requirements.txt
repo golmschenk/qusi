@@ -24,3 +24,4 @@ peewee
 backports.strenum
 plotly
 wandb
+lightkurve
