@@ -12,11 +12,17 @@ import lightkurve
 import numpy as np
 from enum import Enum
 from pathlib import Path
-from typing import Union, List
+from typing import Union, List, Optional
 
+import pandas as pd
 from astropy import units
 from astropy.coordinates import SkyCoord, Angle
 from astroquery.mast import Catalogs
+from astroquery.vizier import Vizier
+try:
+    from enum import StrEnum
+except ImportError:
+    from backports.strenum import StrEnum
 from lightkurve.targetpixelfile import TargetPixelFile
 
 from ramjet.data_interface.tess_data_interface import TessDataInterface
@@ -212,6 +218,8 @@ class TessFfiLightCurve(TessLightCurve):
         fold_period, fold_epoch, time_bin_size, minimum_bin_phase, maximum_bin_phase = \
             self.get_variability_phase_folding_parameters()
         target_pixel_file = self.get_ffi_time_series_from_tess_cut()
+        if target_pixel_file is None:
+            raise CentroidAlgorithmFailedError
         phases = ((target_pixel_file.time.value - fold_epoch) % fold_period)
         minimum_bin_indexes = np.where((phases > (minimum_bin_phase - time_bin_size)) &
                                        (phases < (minimum_bin_phase + time_bin_size)))
@@ -255,3 +263,62 @@ class TessFfiLightCurve(TessLightCurve):
             return centroid_sky_coord
         except ZeroDivisionError as error:
             raise CentroidAlgorithmFailedError from error
+
+    def get_angular_distance_to_variability_photometric_centroid(self) -> Angle:
+        centroid_sky_coord = self.get_photometric_centroid_of_variability()
+        return self.sky_coord.separation(centroid_sky_coord)
+
+
+class GcvsColumnName(StrEnum):
+    VARIABLE_TYPE_STRING = 'VarType'
+    RA = 'RAJ2000'
+    DEC = 'DEJ2000'
+
+
+def has_gcvs_type(var_type_string: str, labels: List[str]) -> bool:
+    var_type_string_without_uncertainty_flags = var_type_string.replace(':', '')
+    variable_type_flags = var_type_string_without_uncertainty_flags.split('+')
+    for variable_type_flag in variable_type_flags:
+        if variable_type_flag in labels:
+            return True
+    return False
+
+
+
+def get_gcvs_catalog_entries_for_labels(labels: List[str]) -> pd.DataFrame:
+    # TODO: Not keeping this function, just copying stuff from it.
+    gcvs_catalog_astropy_table = Vizier(columns=['**'], catalog='B/gcvs/gcvs_cat', row_limit=-1).query_constraints()[0]
+    gcvs_catalog_data_frame = gcvs_catalog_astropy_table.to_pandas()
+
+    def filter_function(var_type_string):
+        return has_gcvs_type(var_type_string, labels)
+
+    label_mask = gcvs_catalog_data_frame[GcvsColumnName.VARIABLE_TYPE_STRING].apply(filter_function)
+    data_frame_of_classes = gcvs_catalog_data_frame[label_mask]
+    return data_frame_of_classes
+
+
+def separation_to_nearest_gcvs_rr_lyrae_within_separation(sky_coord: SkyCoord,
+                                                          maximum_separation: Angle(21, unit=units.arcsecond)
+                                                          ) -> Optional[Angle]:
+    gcvs_region_table_list = Vizier(columns=['**'], catalog='B/gcvs/gcvs_cat', row_limit=-1
+                                    ).query_region(sky_coord, radius=maximum_separation)
+    if len(gcvs_region_table_list) == 0:
+        return None
+    gcvs_region_data_frame = gcvs_region_table_list[0].to_pandas()
+    rr_lyrae_labels = ['RR', 'RR(B)', 'RRAB', 'RRC']
+    def filter_function(var_type_string):
+        return has_gcvs_type(var_type_string, rr_lyrae_labels)
+
+    label_mask = gcvs_region_data_frame[GcvsColumnName.VARIABLE_TYPE_STRING].apply(filter_function)
+    rr_lyrae_region_data_frame = gcvs_region_data_frame[label_mask]
+    try:
+        closet_rr_lyrae_row = rr_lyrae_region_data_frame.iloc[0]
+        closet_rr_lyrae_coordinates = SkyCoord(ra=closet_rr_lyrae_row['RAJ2000'], dec=closet_rr_lyrae_row['DEJ2000'],
+                                               unit=(units.hourangle, units.deg), equinox='J2000')
+        return sky_coord.separation(closet_rr_lyrae_coordinates)
+    except IndexError:
+        return None
+
+
+tess_pixel_angular_size = Angle(21, unit=units.arcsecond)
