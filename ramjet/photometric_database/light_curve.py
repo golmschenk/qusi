@@ -4,7 +4,7 @@ Code for a class to represent a light curve. See the contained class docstring f
 from __future__ import annotations
 
 from abc import ABC
-from typing import Union, List
+from typing import Union, List, Optional
 
 import lightkurve.lightcurve
 import numpy as np
@@ -22,6 +22,8 @@ class LightCurve(ABC):
         self.data_frame: pd.DataFrame = pd.DataFrame()
         self.flux_column_names: List[str] = []
         self.time_column_name: Union[str, None] = None
+        self._variability_period: Optional[float] = None
+        self._variability_period_epoch: Optional[float] = None
 
     @property
     def fluxes(self) -> np.ndarray:
@@ -53,6 +55,18 @@ class LightCurve(ABC):
         if self.time_column_name is None:
             self.time_column_name = 'time'
         self.data_frame[self.time_column_name] = value
+
+    @property
+    def variability_period(self) -> float:
+        if self._variability_period is None:
+            self.get_variability_phase_folding_parameters()
+        return self._variability_period
+
+    @property
+    def variability_period_epoch(self) -> float:
+        if self._variability_period_epoch is None:
+            self.get_variability_phase_folding_parameters()
+        return self._variability_period_epoch
 
     def convert_column_to_relative_scale(self, column_name: str):
         """
@@ -109,4 +123,6 @@ class LightCurve(ABC):
         maximum_bin_phase = binned_folded_lightkurve_light_curve.phase.value[maximum_bin_index]
         fold_period = folded_lightkurve_light_curve.period.value
         fold_epoch = inlier_lightkurve_light_curve.time.value[0]
+        self._variability_period = fold_period
+        self._variability_period_epoch = fold_epoch
         return fold_period, fold_epoch, time_bin_size, minimum_bin_phase, maximum_bin_phase
