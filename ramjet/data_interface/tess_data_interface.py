@@ -1,6 +1,8 @@
 """
 Code for a class for common interfacing with TESS data, such as downloading, sorting, and manipulating.
 """
+import lightkurve
+
 try:
     from enum import StrEnum
 except ImportError:
@@ -53,12 +55,15 @@ def is_common_mast_connection_error(exception: Exception) -> bool:
     :param exception: The exception to check.
     :return: A boolean stating if the exception is a common MAST connection error.
     """
+    # TODO: Rename function, as it includes more than just MAST now.
     return (isinstance(exception, AstroQueryTimeoutError) or
             isinstance(exception, TimeoutError) or
             isinstance(exception, requests.exceptions.ReadTimeout) or
             isinstance(exception, requests.exceptions.ChunkedEncodingError) or
             isinstance(exception, requests.exceptions.HTTPError) or
-            isinstance(exception, requests.exceptions.ConnectionError))
+            isinstance(exception, requests.exceptions.ConnectionError) or
+            isinstance(exception, ConnectionResetError) or
+            isinstance(exception, lightkurve.search.SearchError))
 
 
 class NoDataProductsFoundException(Exception):
