@@ -7,7 +7,7 @@ import re
 import numpy as np
 from enum import Enum
 from pathlib import Path
-from typing import List, Union, Any
+from typing import List, Union, Any, Optional
 from astropy.io import fits
 
 from ramjet.data_interface.tess_data_interface import TessDataInterface
@@ -71,7 +71,7 @@ class TessTwoMinuteCadenceLightCurve(TessLightCurve):
         return light_curve
 
     @classmethod
-    def from_mast(cls, tic_id: int, sector: int,
+    def from_mast(cls, tic_id: int, sector: Optional[int] = None,
                   fits_indexes_to_load: Union[List[TessTwoMinuteCadenceMastFitsIndex], None] = None
                   ) -> TessTwoMinuteCadenceLightCurve:
         """
