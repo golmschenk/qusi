@@ -56,16 +56,25 @@ def create_pdf_of_light_curve_variability(light_curve_path: Path, output_pdf_pat
 
 def create_pdf_of_variability_of_filtered_light_curves_csv(csv_path: Path, output_directory_path: Path):
     filtered_data_frame = pd.read_csv(csv_path)
-    filtered_data_frame = filtered_data_frame.head(510).tail(10)
+    # filtered_data_frame = filtered_data_frame.tail(10)
     output_directory_path.mkdir(exist_ok=True, parents=True)
+    skipped = []
     for index, row in filtered_data_frame.iterrows():
         light_curve_path = Path(row['light_curve_path'])
         tic_id, sector = row['tic_id'], row['sector']
-        pdf_path = output_directory_path.joinpath(f'tic_id_{tic_id}_sector_{sector}')
-        create_pdf_of_light_curve_variability(light_curve_path, pdf_path)
+        pdf_path = output_directory_path.joinpath(f'{index}_tic_id_{tic_id}_sector_{sector}')
+        print('=' * 50)
+        print(pdf_path)
+        try:
+            create_pdf_of_light_curve_variability(light_curve_path, pdf_path)
+        except:
+            skipped.append(index)
+        print('=' * 50)
+    print(f'Skipped: {len(skipped)}')
+    print(f'{skipped}')
 
 
 if __name__ == '__main__':
-    filtered_csv_path_ = Path('/att/gpfsfs/briskfs01/ppl/golmsche/generalized-photometric-neural-network-experiments/logs/FfiHades_corrected_non_rrl_label_2021_12_31_14_37_00/filtered_infer_results_2022-01-01-18-53-15.csv')
+    filtered_csv_path_ = Path('/att/gpfsfs/briskfs01/ppl/golmsche/generalized-photometric-neural-network-experiments/logs/FfiHades_corrected_non_rrl_label_no_bn_2022_02_03_23_52_12/filtered_infer_results_2022-02-06-13-21-41.csv')
     output_directory_path_ = filtered_csv_path_.parent.joinpath('variability_pdfs')
     create_pdf_of_variability_of_filtered_light_curves_csv(filtered_csv_path_, output_directory_path_)
