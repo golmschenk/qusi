@@ -43,7 +43,7 @@ class TessFfiColumnName(Enum):
 
 class TessFfiPickleIndex(Enum):
     """
-    An enum for accessing Brian Powell's FFI pickle data with understandable indexes.
+    An enum for accessing Brian Powell's FFI pickle data with understandable index names.
     """
     TIC_ID = 0
     RA = 1
@@ -56,7 +56,7 @@ class TessFfiPickleIndex(Enum):
     CORRECTED_FLUX = 8
     PCA_FLUX = 9
     FLUX_ERROR = 10
-    QUALITY = 11
+    QUALITY_FLAG = 11
 
 
 class CentroidAlgorithmFailedError(Exception):
@@ -153,8 +153,9 @@ class TessFfiLightCurve(TessLightCurve):
 
     @classmethod
     def load_fluxes_and_times_from_pickle_file(
-            cls, file_path: Union[Path, str], flux_column_name: TessFfiColumnName = TessFfiColumnName.CORRECTED_FLUX
-        ) -> (np.ndarray, np.ndarray):
+            cls, file_path: Union[Path, str], flux_column_name: TessFfiColumnName = TessFfiColumnName.CORRECTED_FLUX,
+            remove_bad_quality_data: bool = True
+    ) -> (np.ndarray, np.ndarray):
         """
         Loads the fluxes and times from one of Brian Powell's FFI pickle files.
 
@@ -164,10 +165,16 @@ class TessFfiLightCurve(TessLightCurve):
         """
         if not isinstance(file_path, Path):
             file_path = Path(file_path)
-        light_curve = cls.from_path(file_path, column_names_to_load=[TessFfiColumnName.TIME__BTJD,
-                                                                     flux_column_name])
+        columns_to_load = [TessFfiColumnName.TIME__BTJD,
+                           flux_column_name]
+        if remove_bad_quality_data:
+            columns_to_load.append(TessFfiColumnName.QUALITY_FLAG)
+        light_curve = cls.from_path(file_path, column_names_to_load=columns_to_load)
         fluxes = light_curve.data_frame[flux_column_name.value]
         times = light_curve.data_frame[TessFfiColumnName.TIME__BTJD.value]
+        if remove_bad_quality_data:
+            fluxes = fluxes[light_curve.data_frame[TessFfiColumnName.QUALITY_FLAG.value] == 0]
+            times = times[light_curve.data_frame[TessFfiColumnName.QUALITY_FLAG.value] == 0]
         assert times.shape == fluxes.shape
         return fluxes, times
 

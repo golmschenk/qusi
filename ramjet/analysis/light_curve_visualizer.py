@@ -105,7 +105,7 @@ def is_outlier(points: np.ndarray, threshold: float = 5):
 
 
 def create_dual_light_curve_figure(fluxes0, times0, name0, fluxes1, times1, name1, title, x_axis_label='Time (days)',
-                                  y_axis_label='Relative flux') -> Figure:
+                                   y_axis_label='Relative flux') -> Figure:
     """
     Plots two light curves together. Mostly for comparing a light curve cleaned by two different methods.
 
