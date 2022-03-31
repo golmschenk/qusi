@@ -39,6 +39,7 @@ class TessFfiColumnName(Enum):
     CORRECTED_FLUX = 'corrected_flux'
     RAW_FLUX = 'raw_flux'
     FLUX_ERROR = 'flux_error'
+    QUALITY_FLAG = 'quality_flag'
 
 
 class TessFfiPickleIndex(Enum):
@@ -75,8 +76,8 @@ class TessFfiLightCurve(TessLightCurve):
                                   TessFfiColumnName.RAW_FLUX.value]
 
     @classmethod
-    def from_path(cls, path: Path, column_names_to_load: Union[List[TessFfiColumnName], None] = None
-                  ) -> TessFfiLightCurve:
+    def from_path(cls, path: Path, column_names_to_load: Union[List[TessFfiColumnName], None] = None,
+                  remove_bad_quality_data: bool = True) -> TessFfiLightCurve:
         """
         Creates an FFI TESS light curve from a path to one of Brian Powell's pickle files.
 
@@ -84,6 +85,7 @@ class TessFfiLightCurve(TessLightCurve):
         :param column_names_to_load: The FFI light curve columns to load from the pickle file. By default, all will be
                                      loaded. Selecting specific ones may speed the process when loading many light
                                      curves.
+        :param remove_bad_quality_data: Removes data with quality problem flags (e.g., non-zero quality flags).
         :return: The light curve.
         """
         light_curve = cls()
@@ -92,9 +94,14 @@ class TessFfiLightCurve(TessLightCurve):
             column_names_to_load = list(TessFfiColumnName)
         with path.open('rb') as pickle_file:
             light_curve_data_dictionary = pickle.load(pickle_file)
+            if remove_bad_quality_data:
+                quality_flag_values = light_curve_data_dictionary[TessFfiPickleIndex.QUALITY_FLAG.value]
             for column_name in column_names_to_load:
                 pickle_index = TessFfiPickleIndex[column_name.name]
-                light_curve.data_frame[column_name.value] = light_curve_data_dictionary[pickle_index.value]
+                column_values = light_curve_data_dictionary[pickle_index.value]
+                if remove_bad_quality_data:
+                    column_values = column_values[quality_flag_values == 0]
+                light_curve.data_frame[column_name.value] = column_values
         light_curve.tic_id, light_curve.sector = light_curve.get_tic_id_and_sector_from_file_path(path)
         return light_curve
 
@@ -161,20 +168,17 @@ class TessFfiLightCurve(TessLightCurve):
 
         :param file_path: The path to the pickle file to load.
         :param flux_column_name: The flux type to load.
+        :param remove_bad_quality_data: Removes data with quality problem flags (e.g., non-zero quality flags).
         :return: The fluxes and the times.
         """
         if not isinstance(file_path, Path):
             file_path = Path(file_path)
         columns_to_load = [TessFfiColumnName.TIME__BTJD,
                            flux_column_name]
-        if remove_bad_quality_data:
-            columns_to_load.append(TessFfiColumnName.QUALITY_FLAG)
-        light_curve = cls.from_path(file_path, column_names_to_load=columns_to_load)
+        light_curve = cls.from_path(file_path, column_names_to_load=columns_to_load,
+                                    remove_bad_quality_data=remove_bad_quality_data)
         fluxes = light_curve.data_frame[flux_column_name.value]
         times = light_curve.data_frame[TessFfiColumnName.TIME__BTJD.value]
-        if remove_bad_quality_data:
-            fluxes = fluxes[light_curve.data_frame[TessFfiColumnName.QUALITY_FLAG.value] == 0]
-            times = times[light_curve.data_frame[TessFfiColumnName.QUALITY_FLAG.value] == 0]
         assert times.shape == fluxes.shape
         return fluxes, times
 
