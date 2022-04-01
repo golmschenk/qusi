@@ -101,21 +101,26 @@ class LightCurve(ABC):
     def to_lightkurve(self) -> lightkurve.lightcurve.LightCurve:
         return lightkurve.lightcurve.LightCurve(time=self.times, flux=self.fluxes)
 
-    def get_variability_phase_folding_parameters(self) -> (float, float, float, float, float):
-
-        fold_period, fold_epoch, time_bin_size, minimum_bin_phase, maximum_bin_phase, inlier_lightkurve_light_curve, periodogram, folded_lightkurve_light_curve = self.get_variability_phase_folding_parameters_and_folding_lightkurve_light_curves()
+    def get_variability_phase_folding_parameters(
+            self, minimum_period: Optional[float] = None, maximum_period: Optional[float] = None
+    ) -> (float, float, float, float, float):
+        fold_period, fold_epoch, time_bin_size, minimum_bin_phase, maximum_bin_phase, inlier_lightkurve_light_curve, periodogram, folded_lightkurve_light_curve = self.get_variability_phase_folding_parameters_and_folding_lightkurve_light_curves(minimum_period=minimum_period, maximum_period=maximum_period)
         self._variability_period = fold_period
         self._variability_period_epoch = fold_epoch
         return fold_period, fold_epoch, time_bin_size, minimum_bin_phase, maximum_bin_phase
 
-    def get_variability_phase_folding_parameters_and_folding_lightkurve_light_curves(self):
+    def get_variability_phase_folding_parameters_and_folding_lightkurve_light_curves(
+            self, minimum_period: Optional[float] = None, maximum_period: Optional[float] = None):
         median_time_step = np.median(np.diff(self.times[~np.isnan(self.times)]))
         time_bin_size = median_time_step
         lightkurve_light_curve = self.to_lightkurve()
         inlier_lightkurve_light_curve = lightkurve_light_curve.remove_outliers(sigma=3)
-        periodogram = LombScarglePeriodogram.from_lightcurve(inlier_lightkurve_light_curve, oversample_factor=100)
+        periodogram = LombScarglePeriodogram.from_lightcurve(inlier_lightkurve_light_curve, oversample_factor=100,
+                                                             )
         folded_lightkurve_light_curve = inlier_lightkurve_light_curve.fold(period=periodogram.period_at_max_power,
-                                                                           wrap_phase=periodogram.period_at_max_power)
+                                                                           wrap_phase=periodogram.period_at_max_power,
+                                                                           minimum_period=minimum_period,
+                                                                           maximum_period=maximum_period)
         binned_folded_lightkurve_light_curve = folded_lightkurve_light_curve.bin(time_bin_size=time_bin_size,
                                                                                  aggregate_func=np.nanmedian)
         minimum_bin_index = np.nanargmin(binned_folded_lightkurve_light_curve.flux.value)
