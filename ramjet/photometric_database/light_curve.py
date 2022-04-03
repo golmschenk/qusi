@@ -116,11 +116,10 @@ class LightCurve(ABC):
         lightkurve_light_curve = self.to_lightkurve()
         inlier_lightkurve_light_curve = lightkurve_light_curve.remove_outliers(sigma=3)
         periodogram = LombScarglePeriodogram.from_lightcurve(inlier_lightkurve_light_curve, oversample_factor=100,
-                                                             )
+                                                             minimum_period=minimum_period,
+                                                             maximum_period=maximum_period)
         folded_lightkurve_light_curve = inlier_lightkurve_light_curve.fold(period=periodogram.period_at_max_power,
-                                                                           wrap_phase=periodogram.period_at_max_power,
-                                                                           minimum_period=minimum_period,
-                                                                           maximum_period=maximum_period)
+                                                                           wrap_phase=periodogram.period_at_max_power)
         binned_folded_lightkurve_light_curve = folded_lightkurve_light_curve.bin(time_bin_size=time_bin_size,
                                                                                  aggregate_func=np.nanmedian)
         minimum_bin_index = np.nanargmin(binned_folded_lightkurve_light_curve.flux.value)
