@@ -7,7 +7,6 @@ import copy
 import pickle
 import re
 
-import astropy
 import lightkurve
 import numpy as np
 from enum import Enum
@@ -17,7 +16,6 @@ from typing import Union, List, Optional
 import pandas as pd
 from astropy import units
 from astropy.coordinates import SkyCoord, Angle
-from astroquery.mast import Catalogs
 from astroquery.vizier import Vizier
 from retrying import retry
 
@@ -117,7 +115,7 @@ class TessFfiLightCurve(TessLightCurve):
             path = str(path)
         # Search for Brian Powell's FFI path convention with directory structure sector, magnitude, target.
         # E.g., "tesslcs_sector_12/tesslcs_tmag_1_2/tesslc_290374453"
-        match = re.search(r'tesslcs_sector_(\d+)(?:_104)?/tesslcs_tmag_\d+_\d+/tesslc_(\d+)', path)
+        match = re.search(r'tesslcs_sector_(\d+)(?:_104)?/(?:2_min_cadence_targets|tesslcs_tmag_\d+_\d+)/tesslc_(\d+)', path)
         if match:
             return int(match.group(2)), int(match.group(1))
         # Search for Brian Powell's FFI path convention with only the file name containing the target.
@@ -125,6 +123,10 @@ class TessFfiLightCurve(TessLightCurve):
         match = re.search(r'tesslc_(\d+)', path)
         if match:
             return int(match.group(1)), None
+        # Search for project specific rename of Brian Powell's FFI path convention for flat directory.
+        match = re.search(r'tic_id_(\d+)_sector_(\d+)_ffi_light_curve.pkl', path)
+        if match:
+            return int(match.group(1)), int(match.group(2))
         # Raise an error if none of the patterns matched.
         raise ValueError(f'{path} does not match a known pattern to extract TIC ID and sector from.')
 

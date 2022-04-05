@@ -86,6 +86,31 @@ class TestTessFfiDataInterface:
         assert tic_id2 == 12345678
         assert sector2 is None
 
+    def test_can_get_tic_id_and_sector_from_ffi_two_minute_portion_style_file_path(self):
+        light_curve = TessFfiLightCurve()
+        tic_id0, sector0 = light_curve.get_tic_id_and_sector_from_file_path(
+            'tesslcs_sector_12_104/2_min_cadence_targets/tesslc_290374453')
+        assert tic_id0 == 290374453
+        assert sector0 == 12
+        tic_id1, sector1 = light_curve.get_tic_id_and_sector_from_file_path(
+            'data/ffi_microlensing_database/light_curves/tesslcs_sector_1_104/2_min_cadence_targets/tesslc_1234567.pkl')
+        assert tic_id1 == 1234567
+        assert sector1 == 1
+        tic_id2, sector2 = light_curve.get_tic_id_and_sector_from_file_path('tesslc_12345678.pkl')
+        assert tic_id2 == 12345678
+        assert sector2 is None
+
+    def test_can_get_tic_id_and_sector_from_ffi_project_flat_directory_style_file_path(self):
+        light_curve = TessFfiLightCurve()
+        tic_id0, sector0 = light_curve.get_tic_id_and_sector_from_file_path(
+            'tic_id_290374453_sector_12_ffi_light_curve.pkl')
+        assert tic_id0 == 290374453
+        assert sector0 == 12
+        tic_id1, sector1 = light_curve.get_tic_id_and_sector_from_file_path(
+            'data/ffi_microlensing_database/light_curves/tic_id_1234567_sector_1_ffi_light_curve.pkl')
+        assert tic_id1 == 1234567
+        assert sector1 == 1
+
     def test_can_get_floor_magnitude_from_ffi_style_file_path(self):
         light_curve = TessFfiLightCurve()
         magnitude0 = light_curve.get_floor_magnitude_from_file_path(
