@@ -68,9 +68,12 @@ class MoaDataInterface:
         :param path: The path to the events table file.
         :return: The data frame.
         """
-        column_names = ['field', 'clr', 'chip', 'subfield', 'id', 'tag', 'x', 'y', '2006_2007_tag',
-                        '2006_2007_separation', '2006_2007_id', '2006_2007_x', '2006_2007_y', 'alert_tag',
-                        'alert_separation', 'alert_name', 'alert_x', 'alert_y']
+        named_column_names = ['field', 'clr', 'chip', 'subfield', 'id', 'tag', 'x', 'y']
+        # The number of columns in the file are inconsistent, so here we add extra unnamed columns to match the
+        # largest number of columns in any row.
+        largest_column_count = 33
+        unnamed_column_names = [f'unnamed{index}' for index in range(largest_column_count - len(named_column_names))]
+        column_names = named_column_names + unnamed_column_names
         data_frame = pd.read_csv(path, comment='#', names=column_names, delim_whitespace=True, skipinitialspace=True,
                                  skiprows=23)
         data_frame = data_frame.set_index(['field', 'clr', 'chip', 'subfield', 'id'], drop=False)
