@@ -24,6 +24,7 @@ class LightCurve(ABC):
         self.time_column_name: Union[str, None] = None
         self._variability_period: Optional[float] = None
         self._variability_period_epoch: Optional[float] = None
+        self.folded_times_column_name = '_folded_times'
 
     @property
     def fluxes(self) -> np.ndarray:
@@ -55,6 +56,16 @@ class LightCurve(ABC):
         if self.time_column_name is None:
             self.time_column_name = 'time'
         self.data_frame[self.time_column_name] = value
+
+    @property
+    def folded_times(self):
+        if self.folded_times_column_name not in self.data_frame.columns:
+            raise MissingFoldedTimes('Light curve has not been folded.')
+        return self.data_frame[self.folded_times_column_name].values
+
+    @folded_times.setter
+    def folded_times(self, value: np.ndarray):
+        self.data_frame[self.folded_times_column_name] = value
 
     @property
     def variability_period(self) -> float:
@@ -129,3 +140,10 @@ class LightCurve(ABC):
         fold_period = folded_lightkurve_light_curve.period.value
         fold_epoch = inlier_lightkurve_light_curve.time.value[0]
         return fold_period, fold_epoch, time_bin_size, minimum_bin_phase, maximum_bin_phase, inlier_lightkurve_light_curve, periodogram, folded_lightkurve_light_curve
+
+    def fold(self, period: float, epoch: float) -> None:
+        self.folded_times = (self.times - epoch) % period
+
+
+class MissingFoldedTimes(Exception):
+    pass

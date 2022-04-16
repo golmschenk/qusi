@@ -8,6 +8,9 @@ from typing import Union
 import numpy
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
+from bokeh.models import LinearColorMapper
+from bokeh.palettes import Turbo256
 from bokeh.plotting import Figure
 from matplotlib.colors import LinearSegmentedColormap
 
@@ -151,6 +154,19 @@ def add_light_curve(figure, times, fluxes, legend_label, color):
     figure.line(times, fluxes / flux_median, line_color=color, line_alpha=0.1)
     figure.circle(times, fluxes / flux_median, legend_label=legend_label, line_color=color, line_alpha=0.4,
                   fill_color=color, fill_alpha=0.1)
+
+
+def add_folded_light_curve(figure, folded_times, fluxes, times):
+    """Adds a light curve to the figure."""
+    fluxes -= np.minimum(np.nanmin(fluxes), 0)
+    flux_median = np.median(fluxes)
+    relative_fluxes = fluxes / flux_median
+    mapper = LinearColorMapper(palette=Turbo256, low=min(times), high=max(times))
+    data_frame = pd.DataFrame({'folded_time': folded_times, 'flux': relative_fluxes, 'time': times})
+    color = {'field': 'time', 'transform': mapper}
+    figure.circle(source=data_frame, x='folded_time', y='flux', line_color=color, line_alpha=0.4,
+                  fill_color=color, fill_alpha=0.1)
+    return figure
 
 
 async def calculate_inlier_range(points: np.ndarray) -> (float, float):
