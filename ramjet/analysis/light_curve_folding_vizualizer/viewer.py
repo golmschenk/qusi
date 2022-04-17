@@ -36,7 +36,7 @@ class Viewer:
         minimum_time_step = min(time_differences)
         average_time_step = np.mean(time_differences)
         self.fold_period_spinner: Spinner = Spinner(value=maximum_time-minimum_time, low=minimum_time_step,
-                                                    high=maximum_time-minimum_time, step=average_time_step / 10)
+                                                    high=maximum_time-minimum_time, step=average_time_step / 30)
         self.fold_period_spinner.on_change('value', self.update_fold)
         self.light_curve.fluxes -= np.minimum(np.nanmin(self.light_curve.fluxes), 0)
         mapper = LinearColorMapper(palette=Turbo256, low=minimum_time, high=maximum_time)
@@ -47,8 +47,8 @@ class Viewer:
             ColumnName.FLUX: relative_fluxes,
         })
         self.folded_light_curve_figure.circle(source=self.viewer_column_data_source, x=ColumnName.FOLDED_TIME,
-                                              y=ColumnName.FLUX, line_color=color, line_alpha=0.4,
-                                              fill_color=color, fill_alpha=0.1)
+                                              y=ColumnName.FLUX, line_color=color, line_alpha=0.8,
+                                              fill_color=color, fill_alpha=0.2)
         self.bokeh_document.add_root(self.folded_light_curve_figure)
         self.bokeh_document.add_root(self.fold_period_spinner)
 
