@@ -24,6 +24,7 @@ class TessLightCurve(LightCurve):
     """
     A class to represent a TESS light curve.
     """
+
     def __init__(self):
         super().__init__()
         self.tic_id: Union[int, None] = None
@@ -54,20 +55,17 @@ class TessLightCurve(LightCurve):
         target_pixel_file = search_result.download(cutout_size=10)
         return target_pixel_file
 
-    def get_photometric_centroid_of_variability(self, minimum_period: Optional[float] = None,
-                                                maximum_period: Optional[float] = None) -> SkyCoord:
+    def estimate_photometric_centroid_of_variability_from_tess_ffi(self, minimum_period: Optional[float] = None,
+                                                                   maximum_period: Optional[float] = None) -> SkyCoord:
         fold_period, fold_epoch, time_bin_size, minimum_bin_phase, maximum_bin_phase = \
             self.get_variability_phase_folding_parameters(minimum_period=minimum_period, maximum_period=maximum_period)
         variability_centroid_and_frames = \
-            self.get_photometric_variability_centroid_and_frames_from_folding_parameters(fold_epoch,
-                                                                                         fold_period,
-                                                                                         maximum_bin_phase,
-                                                                                         minimum_bin_phase,
-                                                                                         time_bin_size)
+            self.estimate_photometric_variability_centroid_and_frames_from_ffi_based_on_folding_parameters(
+                fold_epoch, fold_period, maximum_bin_phase, minimum_bin_phase, time_bin_size)
         centroid_sky_coord = variability_centroid_and_frames[0]
         return centroid_sky_coord
 
-    def get_photometric_variability_centroid_and_frames_from_folding_parameters(
+    def estimate_photometric_variability_centroid_and_frames_from_ffi_based_on_folding_parameters(
             self, fold_epoch: float, fold_period: float, maximum_bin_phase: float, minimum_bin_phase: float,
             time_bin_size: float):
         target_pixel_file = self.get_ffi_time_series_from_tess_cut()
@@ -88,7 +86,8 @@ class TessLightCurve(LightCurve):
             target_pixel_file[maximum_bin_indexes].flux.value, axis=0, keepdims=True)
         # Hack to get a single frame target pixel file with the right coordinates, etc. by copying the first frame.
         difference_target_pixel_frame = copy.deepcopy(target_pixel_file[0])
-        difference_flux_frame = median_maximum_target_pixel_frame.flux.value - median_minimum_target_pixel_frame.flux.value
+        difference_flux_frame = (median_maximum_target_pixel_frame.flux.value -
+                                 median_minimum_target_pixel_frame.flux.value)
         difference_target_pixel_frame.hdu[1].data["FLUX"] = difference_flux_frame
         image_side_size = 10
         pixel_side_indexes = np.arange(image_side_size, dtype=np.float32)
@@ -103,12 +102,14 @@ class TessLightCurve(LightCurve):
                                                                       y_flux_difference_centroid)
         except ZeroDivisionError as error:
             raise CentroidAlgorithmFailedError from error
-        return centroid_sky_coord, target_pixel_file, difference_target_pixel_frame, median_maximum_target_pixel_frame, median_minimum_target_pixel_frame
+        return (centroid_sky_coord, target_pixel_file, difference_target_pixel_frame, median_maximum_target_pixel_frame,
+                median_minimum_target_pixel_frame)
 
-    def get_angular_distance_to_variability_photometric_centroid(self, minimum_period: Optional[float] = None,
-                                                                 maximum_period: Optional[float] = None) -> Angle:
-        centroid_sky_coord = self.get_photometric_centroid_of_variability(minimum_period=minimum_period,
-                                                                          maximum_period=maximum_period)
+    def estimate_angular_distance_to_variability_photometric_centroid_from_ffi(
+            self, minimum_period: Optional[float] = None, maximum_period: Optional[float] = None) -> Angle:
+        centroid_sky_coord = self.estimate_photometric_centroid_of_variability_from_tess_ffi(
+            minimum_period=minimum_period,
+            maximum_period=maximum_period)
         return self.sky_coord.separation(centroid_sky_coord)
 
 

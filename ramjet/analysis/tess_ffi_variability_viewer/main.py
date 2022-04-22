@@ -13,11 +13,11 @@ def create_pdf_of_light_curve_variability(light_curve_path: Path, output_pdf_pat
     light_curve = TessFfiLightCurve.from_path(light_curve_path)
     fold_period, fold_epoch, time_bin_size, minimum_bin_phase, maximum_bin_phase, inlier_lightkurve_light_curve, periodogram, folded_lightkurve_light_curve = light_curve.get_variability_phase_folding_parameters_and_folding_lightkurve_light_curves()
     variability_centroid_and_frames = \
-        light_curve.get_photometric_variability_centroid_and_frames_from_folding_parameters(fold_epoch,
-                                                                                            fold_period,
-                                                                                            maximum_bin_phase,
-                                                                                            minimum_bin_phase,
-                                                                                            time_bin_size)
+        light_curve.estimate_photometric_variability_centroid_and_frames_from_ffi_based_on_folding_parameters(fold_epoch,
+                                                                                                              fold_period,
+                                                                                                              maximum_bin_phase,
+                                                                                                              minimum_bin_phase,
+                                                                                                              time_bin_size)
     centroid_sky_coord = variability_centroid_and_frames[0]
     target_pixel_file = variability_centroid_and_frames[1]
     difference_target_pixel_frame = variability_centroid_and_frames[2]
