@@ -13,6 +13,7 @@ import pandas as pd
 from astropy import units
 from astropy.coordinates import SkyCoord, Angle
 from astroquery.mast import Catalogs
+from lightkurve import SearchResult
 from lightkurve.targetpixelfile import TargetPixelFile
 from retrying import retry
 
@@ -32,7 +33,7 @@ class TessLightCurve(LightCurve):
         self._tic_row: Optional[pd.Series] = None
 
     @property
-    @retry(retry_on_exception=is_common_mast_connection_error)
+    @retry(retry_on_exception=is_common_mast_connection_error, stop_max_attempt_number=10)
     def sky_coord(self) -> SkyCoord:
         tic_row = self.get_tic_row()
         sky_coord = SkyCoord(ra=tic_row['ra'], dec=tic_row['dec'], unit=units.deg)
@@ -44,14 +45,14 @@ class TessLightCurve(LightCurve):
         return self._tic_row
 
     @property
-    @retry(retry_on_exception=is_common_mast_connection_error)
+    @retry(retry_on_exception=is_common_mast_connection_error, stop_max_attempt_number=10)
     def tess_magnitude(self) -> float:
         tic_row = self.get_tic_row()
         return float(tic_row['Tmag'])
 
-    @retry(retry_on_exception=is_common_mast_connection_error)
+    @retry(retry_on_exception=is_common_mast_connection_error, stop_max_attempt_number=10)
     def get_ffi_time_series_from_tess_cut(self) -> TargetPixelFile:
-        search_result = lightkurve.search_tesscut(f'TIC{self.tic_id}', sector=self.sector)
+        search_result: SearchResult = lightkurve.search_tesscut(f'TIC{self.tic_id}', sector=self.sector)
         target_pixel_file = search_result.download(cutout_size=10)
         return target_pixel_file
 

@@ -110,7 +110,7 @@ class TessDataInterface:
         return observations
 
     @staticmethod
-    @retry(retry_on_exception=is_common_mast_connection_error)
+    @retry(retry_on_exception=is_common_mast_connection_error, stop_max_attempt_number=10)
     def get_all_tess_time_series_observations_chunk(tic_id: Union[int, List[int]] = None) -> pd.DataFrame:
         """
         Gets all TESS time-series observations, limited to science data product level. Repeats download attempt on
@@ -148,7 +148,7 @@ class TessDataInterface:
         return product_list
 
     @staticmethod
-    @retry(retry_on_exception=is_common_mast_connection_error)
+    @retry(retry_on_exception=is_common_mast_connection_error, stop_max_attempt_number=10)
     def get_product_list_chunk(observations: pd.DataFrame) -> pd.DataFrame:
         """
         A wrapper for MAST's `get_product_list`, allowing the use of Pandas DataFrames instead of AstroPy Tables.
@@ -161,7 +161,7 @@ class TessDataInterface:
         return data_products.to_pandas()
 
     @staticmethod
-    @retry(retry_on_exception=is_common_mast_connection_error)
+    @retry(retry_on_exception=is_common_mast_connection_error, stop_max_attempt_number=10)
     def download_products(data_products: pd.DataFrame, data_directory: Path) -> pd.DataFrame:
         """
          A wrapper for MAST's `download_products`, allowing the use of Pandas DataFrames instead of AstroPy Tables.
@@ -436,7 +436,7 @@ class TessDataInterface:
         return SkyCoord(ra, dec, unit='deg')
 
     @staticmethod
-    @retry(retry_on_exception=is_common_mast_connection_error)
+    @retry(retry_on_exception=is_common_mast_connection_error, stop_max_attempt_number=10)
     def get_tess_input_catalog_row(tic_id: int) -> pd.Series:
         """
         Get the TIC row for a TIC ID.
