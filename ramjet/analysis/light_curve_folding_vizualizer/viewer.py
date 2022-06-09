@@ -25,20 +25,25 @@ class ColumnName(StrEnum):
 class Viewer:
     def __init__(self, bokeh_document: Document, light_curve: LightCurve):
         self.bokeh_document: Document = bokeh_document
-        self.folded_light_curve_figure: Figure = Figure()
+        tool_tips = [
+            ("Time", f"@{ColumnName.TIME}{{0.0000000}}"),
+            ("Folded time", f"@{ColumnName.FOLDED_TIME}{{0.0000000}}"),
+            ("Flux", f"@{ColumnName.FLUX}{{0.0000000}}"),
+        ]
+        self.folded_light_curve_figure: Figure = Figure(tooltips=tool_tips)
         self.folded_light_curve_figure.sizing_mode = 'stretch_width'
         self.light_curve: LightCurve = light_curve
-        flux_median = np.median(self.light_curve.fluxes)
+        flux_median = np.nanmedian(self.light_curve.fluxes)
         relative_fluxes = self.light_curve.fluxes / flux_median
         minimum_time = min(self.light_curve.times)
         maximum_time = max(self.light_curve.times)
         time_differences = np.diff(self.light_curve.times)
         minimum_time_step = min(time_differences)
-        average_time_step = np.mean(time_differences)
+        average_time_step = np.nanmean(time_differences)
         self.fold_period_spinner: Spinner = Spinner(value=maximum_time-minimum_time, low=minimum_time_step,
                                                     high=maximum_time-minimum_time, step=average_time_step / 30)
         self.fold_period_spinner.on_change('value', self.update_fold)
-        self.light_curve.fluxes -= np.minimum(np.nanmin(self.light_curve.fluxes), 0)
+        self.light_curve.fluxes -= np.nanmin(np.nanmin(self.light_curve.fluxes), 0)
         mapper = LinearColorMapper(palette=Turbo256, low=minimum_time, high=maximum_time)
         color = {'field': ColumnName.TIME, 'transform': mapper}
         self.viewer_column_data_source: ColumnDataSource = ColumnDataSource(data={
