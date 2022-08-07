@@ -4,7 +4,7 @@ Code to represent a TESS light curve.
 from __future__ import annotations
 
 import copy
-from typing import Union, Optional
+from typing import Union, Optional, List
 
 import lightkurve
 import numpy as np
@@ -30,22 +30,21 @@ class TessLightCurve(LightCurve):
         super().__init__()
         self.tic_id: Union[int, None] = None
         self.sector: Union[int, None] = None
-        self._tic_row: Optional[pd.Series] = None
+        self._tic_row: Union[None, pd.Series, MissingTicRow] = None
 
-    @property
     @retry(retry_on_exception=is_common_mast_connection_error, stop_max_attempt_number=10)
-    def sky_coord(self) -> SkyCoord:
-        tic_row = self.get_tic_row()
-        sky_coord = SkyCoord(ra=tic_row['ra'], dec=tic_row['dec'], unit=units.deg)
-        return sky_coord
-
     def get_tic_row(self):
         if self._tic_row is None:
             self._tic_row = Catalogs.query_object(f'TIC{self.tic_id}', catalog='TIC').to_pandas().iloc[0]
         return self._tic_row
 
     @property
-    @retry(retry_on_exception=is_common_mast_connection_error, stop_max_attempt_number=10)
+    def sky_coord(self) -> SkyCoord:
+        tic_row = self.get_tic_row()
+        sky_coord = SkyCoord(ra=tic_row['ra'], dec=tic_row['dec'], unit=units.deg)
+        return sky_coord
+
+    @property
     def tess_magnitude(self) -> float:
         tic_row = self.get_tic_row()
         return float(tic_row['Tmag'])
@@ -112,6 +111,21 @@ class TessLightCurve(LightCurve):
             minimum_period=minimum_period,
             maximum_period=maximum_period)
         return self.sky_coord.separation(centroid_sky_coord)
+
+    @classmethod
+    def load_tic_rows_from_mast_for_list(cls, light_curves: List[TessLightCurve]) -> None:
+        light_curve_tic_ids: List[int] = [light_curve.tic_id for light_curve in light_curves]
+        tic_row_data_frame = Catalogs.query_criteria(ID=light_curve_tic_ids, catalog='TIC').to_pandas()
+        for light_curve in light_curves:
+            light_curve_tic_row_data_frame = tic_row_data_frame[tic_row_data_frame['ID'] == str(light_curve.tic_id)]
+            if light_curve_tic_row_data_frame.shape[0] == 0:
+                light_curve._tic_row = MissingTicRow
+            else:
+                light_curve._tic_row = light_curve_tic_row_data_frame.iloc[0]
+
+
+class MissingTicRow:
+    pass
 
 
 class CentroidAlgorithmFailedError(Exception):
