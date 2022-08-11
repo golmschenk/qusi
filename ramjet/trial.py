@@ -90,7 +90,11 @@ def create_logging_metrics() -> List[tf.metrics.Metric]:
                tf.metrics.SensitivityAtSpecificity(0.9, name='sensitivity_at_90_percent_specificity'),
                tf.metrics.BinaryAccuracy(name='accuracy'),
                tf.metrics.Precision(name='precision'),
-               tf.metrics.Recall(name='recall')]
+               tf.metrics.Recall(name='recall'),
+               tf.metrics.TrueNegatives (name='true_negatives'),
+               tf.metrics.TruePositives(name='true_positives'),
+               tf.metrics.FalseNegatives(name='false_negatives'),
+               tf.metrics.FalsePositives(name='false_positives')]
     return metrics
 
 

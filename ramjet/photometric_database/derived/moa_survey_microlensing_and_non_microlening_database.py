@@ -12,8 +12,12 @@ class MoaSurveyMicrolensingAndNonMicroleningDatabase(StandardAndInjectedLightCur
     """
     moa_data_interface = MoaDataInterface()
 
-    def __init__(self):
+    def __init__(self, test_split: int = 9):
         super().__init__()
+        validation_split = (test_split - 1) % 10
+        train_splits = list(range(10))
+        train_splits.remove(validation_split)
+        train_splits.remove(test_split)
         self.number_of_label_values = 1
         self.number_of_parallel_processes_per_map = 5
         self.time_steps_per_example = 18000
@@ -25,31 +29,32 @@ class MoaSurveyMicrolensingAndNonMicroleningDatabase(StandardAndInjectedLightCur
         negative_training = MoaSurveyLightCurveCollection(
             survey_tags=['v', 'n', 'nr', 'm', 'j', self.moa_data_interface.no_tag_string],
             label=0,
-            dataset_splits=list(range(8)))
+            dataset_splits=train_splits)
         positive_training = MoaSurveyLightCurveCollection(
             survey_tags=['c', 'cf', 'cp', 'cw', 'cs', 'cb'],
             label=1,
-            dataset_splits=list(range(8)))
+            dataset_splits=train_splits)
         self.training_standard_light_curve_collections = [negative_training, positive_training]
 
         # Creating the validation collection | split [8] = 10% of the data
         negative_validation = MoaSurveyLightCurveCollection(
             survey_tags=['v', 'n', 'nr', 'm', 'j', self.moa_data_interface.no_tag_string],
             label=0,
-            dataset_splits=[8])
+            dataset_splits=[validation_split])
         positive_validation = MoaSurveyLightCurveCollection(
             survey_tags=['c', 'cf', 'cp', 'cw', 'cs', 'cb'],
             label=1,
-            dataset_splits=[8])
+            dataset_splits=[validation_split])
         self.validation_standard_light_curve_collections = [negative_validation, positive_validation]
 
         # Creating the inference collection | split [9] = 10% of the data
         negative_inference = MoaSurveyLightCurveCollection(
             survey_tags=['v', 'n', 'nr', 'm', 'j', self.moa_data_interface.no_tag_string],
             label=0,
-            dataset_splits=[9])
+            dataset_splits=[test_split])
         positive_inference = MoaSurveyLightCurveCollection(
             survey_tags=['c', 'cf', 'cp', 'cw', 'cs', 'cb'],
             label=1,
-            dataset_splits=[9])
+            dataset_splits=[test_split])
         self.inference_light_curve_collections = [negative_inference, positive_inference]
+
