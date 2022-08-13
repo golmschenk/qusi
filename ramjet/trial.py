@@ -128,7 +128,7 @@ def create_logging_callbacks(logs_directory: Path, trial_name: str, database: St
         else:
             wandb.init(entity=wandb_entity, project=wandb_project, settings=wandb.Settings(start_method='fork'))
         wandb.run.notes = trial_name
-        logging_callbacks.append(wandb.keras.WandbCallback())
+        logging_callbacks.append(wandb.keras.WandbCallback(save_model=False))
     return logging_callbacks
 
 def infer_distribution(model: tf.keras.Model, dataset: tf.data.Dataset, infer_distrubtion_results_path: Path):
