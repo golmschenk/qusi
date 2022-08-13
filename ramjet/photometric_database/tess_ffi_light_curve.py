@@ -15,6 +15,7 @@ import pandas as pd
 from astropy import units
 from astropy.coordinates import SkyCoord, Angle
 from astroquery.vizier import Vizier
+from tenacity import retry, wait_random_exponential, stop_after_attempt, retry_if_exception_type
 
 try:
     from enum import StrEnum
@@ -54,6 +55,14 @@ class TessFfiPickleIndex(Enum):
     QUALITY_FLAG = 11
 
 
+class AdaptIntermittentException(Exception):
+    pass
+
+
+def adapt_intermittent_error(exception: Exception) -> bool:
+    return (isinstance(exception, OSError) or
+            isinstance(exception, pickle.UnpicklingError))
+
 class TessFfiLightCurve(TessLightCurve):
     """
     A class to for a class to represent a TESS FFI light curve.
@@ -66,6 +75,8 @@ class TessFfiLightCurve(TessLightCurve):
                                   TessFfiColumnName.RAW_FLUX.value]
 
     @classmethod
+    @retry(retry=retry_if_exception_type(AdaptIntermittentException),
+           wait=wait_random_exponential(multiplier=0.1, max=20), stop=stop_after_attempt(20), reraise=True)
     def from_path(cls, path: Path, column_names_to_load: Union[List[TessFfiColumnName], None] = None,
                   remove_bad_quality_data: bool = True) -> TessFfiLightCurve:
         """
@@ -78,22 +89,25 @@ class TessFfiLightCurve(TessLightCurve):
         :param remove_bad_quality_data: Removes data with quality problem flags (e.g., non-zero quality flags).
         :return: The light curve.
         """
-        light_curve = cls()
-        light_curve.time_column_name = TessFfiColumnName.TIME__BTJD.value
-        if column_names_to_load is None:
-            column_names_to_load = list(TessFfiColumnName)
-        with path.open('rb') as pickle_file:
-            light_curve_data_dictionary = pickle.load(pickle_file)
-            if remove_bad_quality_data:
-                quality_flag_values = light_curve_data_dictionary[TessFfiPickleIndex.QUALITY_FLAG.value]
-            for column_name in column_names_to_load:
-                pickle_index = TessFfiPickleIndex[column_name.name]
-                column_values = light_curve_data_dictionary[pickle_index.value]
+        try:
+            light_curve = cls()
+            light_curve.time_column_name = TessFfiColumnName.TIME__BTJD.value
+            if column_names_to_load is None:
+                column_names_to_load = list(TessFfiColumnName)
+            with path.open('rb') as pickle_file:
+                light_curve_data_dictionary = pickle.load(pickle_file)
                 if remove_bad_quality_data:
-                    column_values = column_values[quality_flag_values == 0]
-                light_curve.data_frame[column_name.value] = column_values
-        light_curve.tic_id, light_curve.sector = light_curve.get_tic_id_and_sector_from_file_path(path)
-        return light_curve
+                    quality_flag_values = light_curve_data_dictionary[TessFfiPickleIndex.QUALITY_FLAG.value]
+                for column_name in column_names_to_load:
+                    pickle_index = TessFfiPickleIndex[column_name.name]
+                    column_values = light_curve_data_dictionary[pickle_index.value]
+                    if remove_bad_quality_data:
+                        column_values = column_values[quality_flag_values == 0]
+                    light_curve.data_frame[column_name.value] = column_values
+            light_curve.tic_id, light_curve.sector = light_curve.get_tic_id_and_sector_from_file_path(path)
+            return light_curve
+        except (pickle.UnpicklingError, OSError, IsADirectoryError) as error:
+            raise AdaptIntermittentException(f'Errored on path {path}.') from error
 
     @staticmethod
     def get_tic_id_and_sector_from_file_path(path: Union[Path, str]) -> (int, Union[int, None]):
