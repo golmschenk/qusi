@@ -55,6 +55,7 @@ def is_common_mast_connection_error(exception: Exception) -> bool:
     :param exception: The exception to check.
     :return: A boolean stating if the exception is a common MAST connection error.
     """
+    print(f'Retrying on {exception}...', flush=True)
     # TODO: Rename function, as it includes more than just MAST now.
     return (isinstance(exception, AstroQueryTimeoutError) or
             isinstance(exception, TimeoutError) or
