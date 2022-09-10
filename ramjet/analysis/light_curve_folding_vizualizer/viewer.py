@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+from astropy import units
+from bokeh.events import Event, Tap
 from bokeh.palettes import Turbo256
+from lightkurve.periodogram import LombScarglePeriodogram, Periodogram
 
 try:
     from enum import StrEnum
@@ -10,52 +13,82 @@ except ImportError:
     from backports.strenum import StrEnum
 
 from bokeh.document import Document
-from bokeh.models import Spinner, ColumnDataSource, LinearColorMapper
+from bokeh.models import Spinner, ColumnDataSource, LinearColorMapper, TapTool, Span, BoxZoomTool
 from bokeh.plotting import Figure
 
 from ramjet.photometric_database.light_curve import LightCurve
 
 
-class ColumnName(StrEnum):
+class FoldedLightCurveColumnName(StrEnum):
     TIME = 'time'
     FOLDED_TIME = 'folded_time'
     FLUX = 'flux'
+
+
+class PeriodogramColumnName(StrEnum):
+    PERIOD = 'period'
+    POWER = 'power'
 
 
 class Viewer:
     def __init__(self, bokeh_document: Document, light_curve: LightCurve):
         self.bokeh_document: Document = bokeh_document
         tool_tips = [
-            ("Time", f"@{ColumnName.TIME}{{0.0000000}}"),
-            ("Folded time", f"@{ColumnName.FOLDED_TIME}{{0.0000000}}"),
-            ("Flux", f"@{ColumnName.FLUX}{{0.0000000}}"),
+            ("Time", f"@{FoldedLightCurveColumnName.TIME}{{0.0000000}}"),
+            ("Folded time", f"@{FoldedLightCurveColumnName.FOLDED_TIME}{{0.0000000}}"),
+            ("Flux", f"@{FoldedLightCurveColumnName.FLUX}{{0.0000000}}"),
         ]
         self.folded_light_curve_figure: Figure = Figure(tooltips=tool_tips)
         self.folded_light_curve_figure.sizing_mode = 'stretch_width'
         self.light_curve: LightCurve = light_curve
         flux_median = np.nanmedian(self.light_curve.fluxes)
         relative_fluxes = self.light_curve.fluxes / flux_median
-        minimum_time = min(self.light_curve.times)
-        maximum_time = max(self.light_curve.times)
+        minimum_time = np.nanmin(self.light_curve.times)
+        maximum_time = np.nanmax(self.light_curve.times)
         time_differences = np.diff(self.light_curve.times)
-        minimum_time_step = min(time_differences)
-        average_time_step = np.nanmean(time_differences)
-        self.fold_period_spinner: Spinner = Spinner(value=maximum_time-minimum_time, low=minimum_time_step,
-                                                    high=maximum_time-minimum_time, step=average_time_step / 30)
+        minimum_time_step = np.nanmin(time_differences)
+        median_time_step = np.nanmedian(time_differences)
+        full_duration = maximum_time - minimum_time
+        period_lower_limit = minimum_time_step / 2.1
+        self.fold_period_spinner: Spinner = Spinner(value=full_duration, low=period_lower_limit,
+                                                    high=full_duration, step=median_time_step / 30)
         self.fold_period_spinner.on_change('value', self.update_fold)
-        self.light_curve.fluxes -= np.nanmin(np.nanmin(self.light_curve.fluxes), 0)
         mapper = LinearColorMapper(palette=Turbo256, low=minimum_time, high=maximum_time)
-        color = {'field': ColumnName.TIME, 'transform': mapper}
-        self.viewer_column_data_source: ColumnDataSource = ColumnDataSource(data={
-            ColumnName.TIME: self.light_curve.times,
-            ColumnName.FOLDED_TIME: self.light_curve.times,
-            ColumnName.FLUX: relative_fluxes,
+        color = {'field': FoldedLightCurveColumnName.TIME, 'transform': mapper}
+        self.folded_light_curve_column_data_source: ColumnDataSource = ColumnDataSource(data={
+            FoldedLightCurveColumnName.TIME: self.light_curve.times,
+            FoldedLightCurveColumnName.FOLDED_TIME: self.light_curve.times,
+            FoldedLightCurveColumnName.FLUX: relative_fluxes,
         })
-        self.folded_light_curve_figure.circle(source=self.viewer_column_data_source, x=ColumnName.FOLDED_TIME,
-                                              y=ColumnName.FLUX, line_color=color, line_alpha=0.8,
+        self.folded_light_curve_figure.circle(source=self.folded_light_curve_column_data_source,
+                                              x=FoldedLightCurveColumnName.FOLDED_TIME,
+                                              y=FoldedLightCurveColumnName.FLUX, line_color=color, line_alpha=0.8,
                                               fill_color=color, fill_alpha=0.2)
+        self.periodogram_figure: Figure = Figure(active_drag='box_zoom')
+        self.current_fold_period_span = Span(location=self.fold_period_spinner.value, dimension='height',
+                                        line_color='firebrick')
+        self.periodogram_figure.add_layout(self.current_fold_period_span)
+        self.periodogram_figure.add_tools(TapTool())
+        self.periodogram_figure.on_event(Tap, self.periodogram_tap_callback)
+        lightkurve_light_curve = self.light_curve.to_lightkurve()
+        inlier_lightkurve_light_curve = lightkurve_light_curve.remove_outliers(sigma=3)
+        periodogram: Periodogram = LombScarglePeriodogram.from_lightcurve(inlier_lightkurve_light_curve,
+                                                                          oversample_factor=5,
+                                                                          minimum_period=period_lower_limit,
+                                                                          maximum_period=full_duration)
+        periods__days = periodogram.period.to(units.d).value
+        power = periodogram.power.value
+        self.periodogram_column_data_source: ColumnDataSource = ColumnDataSource(data={
+            PeriodogramColumnName.PERIOD: periods__days,
+            PeriodogramColumnName.POWER: power,
+        })
+        self.periodogram_figure.line(source=self.periodogram_column_data_source,
+                                     x=PeriodogramColumnName.PERIOD,
+                                     y=PeriodogramColumnName.POWER)
+        self.periodogram_figure.sizing_mode = 'stretch_width'
         self.bokeh_document.add_root(self.folded_light_curve_figure)
         self.bokeh_document.add_root(self.fold_period_spinner)
+        self.bokeh_document.add_root(self.periodogram_figure)
 
     def update_fold(self, attr, old, new):
         self.calculate_new_fold()
@@ -65,4 +98,11 @@ class Viewer:
         self.light_curve.fold(self.fold_period_spinner.value, epoch=0)
 
     def update_view_with_new_fold(self):
-        self.viewer_column_data_source.data[ColumnName.FOLDED_TIME] = self.light_curve.folded_times
+        self.current_fold_period_span.location = self.fold_period_spinner.value
+        self.folded_light_curve_column_data_source.data[
+            FoldedLightCurveColumnName.FOLDED_TIME] = self.light_curve.folded_times
+
+    def periodogram_tap_callback(self, event):
+        self.fold_period_spinner.value = event.x
+        self.update_view_with_new_fold()
+

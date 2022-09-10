@@ -21,4 +21,6 @@ def run_viewer(light_curve_path: Path, port: int = 5007):
 
 
 if __name__ == '__main__':
-    run_viewer(Path('logs/go/gathered/data/tess_ffi_light_curves/tesslcs_sector_6_104/tesslcs_tmag_12_13/tesslc_71970184.pkl'))
+    light_curve_paths = list(Path('/Users/golmschenk/tmp/gathered').glob('*.pkl'))
+    light_curve_path = light_curve_paths[800]
+    run_viewer(light_curve_path)
