@@ -48,10 +48,10 @@ class Viewer:
         time_differences = np.diff(self.light_curve.times)
         minimum_time_step = np.nanmin(time_differences)
         median_time_step = np.nanmedian(time_differences)
-        full_duration = maximum_time - minimum_time
+        period_upper_limit = maximum_time - minimum_time
         period_lower_limit = minimum_time_step / 2.1
-        self.fold_period_spinner: Spinner = Spinner(value=full_duration, low=period_lower_limit,
-                                                    high=full_duration, step=median_time_step / 30)
+        self.fold_period_spinner: Spinner = Spinner(value=period_upper_limit, low=period_lower_limit,
+                                                    high=period_upper_limit, step=median_time_step / 30)
         self.fold_period_spinner.on_change('value', self.update_fold)
         mapper = LinearColorMapper(palette=Turbo256, low=minimum_time, high=maximum_time)
         color = {'field': FoldedLightCurveColumnName.TIME, 'transform': mapper}
@@ -75,20 +75,33 @@ class Viewer:
         periodogram: Periodogram = LombScarglePeriodogram.from_lightcurve(inlier_lightkurve_light_curve,
                                                                           oversample_factor=5,
                                                                           minimum_period=period_lower_limit,
-                                                                          maximum_period=full_duration)
+                                                                          maximum_period=period_upper_limit)
         periods__days = periodogram.period.to(units.d).value
-        power = periodogram.power.value
+        powers = periodogram.power.value
+
         self.periodogram_column_data_source: ColumnDataSource = ColumnDataSource(data={
             PeriodogramColumnName.PERIOD: periods__days,
-            PeriodogramColumnName.POWER: power,
+            PeriodogramColumnName.POWER: powers,
         })
         self.periodogram_figure.line(source=self.periodogram_column_data_source,
                                      x=PeriodogramColumnName.PERIOD,
                                      y=PeriodogramColumnName.POWER)
         self.periodogram_figure.sizing_mode = 'stretch_width'
+
         self.bokeh_document.add_root(self.folded_light_curve_figure)
         self.bokeh_document.add_root(self.fold_period_spinner)
         self.bokeh_document.add_root(self.periodogram_figure)
+
+        # TODO: Remove spike.
+        # Spike to make the default fold and zoom be useful for the short period application.
+        longest_period_index_near_max_power = np.argwhere(powers > 0.9 * periodogram.max_power)[0, -1]
+        while powers[longest_period_index_near_max_power + 1] > powers[longest_period_index_near_max_power]:
+            longest_period_index_near_max_power += 1
+        longest_period_near_max_power = periods__days[longest_period_index_near_max_power]
+        self.fold_period_spinner.value = longest_period_near_max_power
+        self.periodogram_figure.x_range.start = period_lower_limit
+        self.periodogram_figure.x_range.end = longest_period_near_max_power * 2
+        self.update_view_with_new_fold()
 
     def update_fold(self, attr, old, new):
         self.calculate_new_fold()

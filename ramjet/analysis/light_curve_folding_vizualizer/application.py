@@ -22,5 +22,5 @@ def run_viewer(light_curve_path: Path, port: int = 5007):
 
 if __name__ == '__main__':
     light_curve_paths = list(Path('/Users/golmschenk/tmp/gathered').glob('*.pkl'))
-    light_curve_path = light_curve_paths[800]
+    light_curve_path = light_curve_paths[540]
     run_viewer(light_curve_path)
