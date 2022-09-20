@@ -70,7 +70,7 @@ class InferredNeuralNetwork:
         complete_label_and_raw_inference_matcher()
         :return: dataframe
         """
-        inference_df = pd.read_csv(self.inference_results_with_matching_tags_path)
+        inference_df = pd.read_csv(self.inference_results_with_matching_tags_path, index_col=0)
 
         inference_df[['upper_folder', 'up_folder', 'label_folder', 'full_name_event']] = inference_df[
             'light_curve_path']. \

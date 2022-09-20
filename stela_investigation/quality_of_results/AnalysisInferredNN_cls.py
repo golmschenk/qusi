@@ -1,6 +1,7 @@
 import os.path
 
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 from bokeh.palettes import Category20
 
@@ -40,10 +41,27 @@ class AnalysisInferredNN(InferredNeuralNetwork):
                                    (len(labeled_microlensing_organized['confidence']) - 1)
         labeled_not_microlensing_cdf = 1. * np.arange(len(labeled_not_microlensing_organized['confidence'])) / \
                                        (len(labeled_not_microlensing_organized['confidence']) - 1)
+        print()
+
+        # Adding 0 and 1 to start and ends
+        confidence_labeled_microlensing = labeled_microlensing_organized['confidence'].values
+        confidence_labeled_not_microlensing = labeled_not_microlensing_organized['confidence'].values
+
+        labeled_microlensing_cdf = np.insert(labeled_microlensing_cdf, 0, 0)
+        labeled_microlensing_cdf = np.insert(labeled_microlensing_cdf, len(labeled_microlensing_cdf), 1)
+        confidence_labeled_microlensing = np.insert(confidence_labeled_microlensing, 0, 0)
+        confidence_labeled_microlensing = np.insert(confidence_labeled_microlensing, len(confidence_labeled_microlensing), 1)
+
+        labeled_not_microlensing_cdf = np.insert(labeled_not_microlensing_cdf, 0, 0)
+        labeled_not_microlensing_cdf = np.insert(labeled_not_microlensing_cdf, len(labeled_not_microlensing_cdf), 1)
+        confidence_labeled_not_microlensing = np.insert(confidence_labeled_not_microlensing, 0, 0)
+        confidence_labeled_not_microlensing = np.insert(confidence_labeled_not_microlensing, len(confidence_labeled_not_microlensing), 1)
+
+
         fig, ax = plt.subplots()
-        ax.plot(labeled_microlensing_organized['confidence'], labeled_microlensing_cdf,
+        ax.step(confidence_labeled_microlensing, labeled_microlensing_cdf,
                 label='Microlensing')
-        ax.plot(labeled_not_microlensing_organized['confidence'], labeled_not_microlensing_cdf,
+        ax.step(confidence_labeled_not_microlensing, labeled_not_microlensing_cdf,
                 label='Not Microlensing', color='orange')
         ax.set(xlabel='Neural Network Confidence', ylabel='Probability',
                title=f'Cumulative Distribution {self.inference_folder_name}')
@@ -62,7 +80,15 @@ class AnalysisInferredNN(InferredNeuralNetwork):
             # calculate CDF values
             the_tag_only_cdf = 1. * np.arange(len(the_tag_only_df['confidence'])) \
                                / (len(the_tag_only_df['confidence']) - 1)
-            ax.plot(the_tag_only_df['confidence'], the_tag_only_cdf,
+
+            # Adding 0 and 1 to start and ends
+            confidence_tag_only = the_tag_only_df['confidence'].values
+            the_tag_only_cdf = np.insert(the_tag_only_cdf, 0, 0)
+            the_tag_only_cdf = np.insert(the_tag_only_cdf, len(the_tag_only_cdf), 1)
+            confidence_tag_only = np.insert(confidence_tag_only, 0, 0)
+            confidence_tag_only = np.insert(confidence_tag_only, len(confidence_tag_only), 1)
+
+            ax.step(confidence_tag_only, the_tag_only_cdf,
                     label=f'{tag} #{len(the_tag_only_cdf)}', color=Category20[20][color_index])
 
         ax.set(xlabel='Neural Network Confidence', ylabel='Probability',
@@ -143,3 +169,24 @@ class AnalysisInferredNN(InferredNeuralNetwork):
         true_negatives, false_positives, false_negatives, true_positives = confusion_matrix(actual_label_,
                                                                                             predicted_label_).ravel()
         return true_positives, false_positives, true_negatives, false_negatives
+
+
+def cross_validation_concatenater(log_names, new_path):
+
+    for log_name in log_names:
+        inference_object = AnalysisInferredNN(log_name)
+        new_df = inference_object.inference_with_matching_tags_dataframer()
+        if log_name.split('_')[3] == '0':
+            previous_df = new_df
+        else:
+            previous_df = pd.concat([previous_df, new_df], axis=0, ignore_index=True)
+
+    previous_df.to_csv(f'{new_path}infer_results_with_tag.csv')
+    # pd.concat([df1, df2, df3, df4], axis=1, ignore_index=True)
+
+
+if __name__ == '__main__':
+    test0 = AnalysisInferredNN('Hades_crossvalidation')
+    test0.inference_distribution_plotter()
+
+    print()
