@@ -8,7 +8,7 @@ from pathlib import Path
 from ramjet.models.cura import Cura
 from ramjet.models.hades import Hades, HadesWithoutBatchNormalization
 from ramjet.photometric_database.derived.moa_survey_microlensing_and_non_microlening_database import \
-    MoaSurveyMicrolensingAndNonMicroleningDatabase
+    MoaSurveyMicrolensingAndNonMicrolensingWithHardCasesDatabase
 from ramjet.trial import create_logging_metrics, create_logging_callbacks
 
 
@@ -16,18 +16,18 @@ def train(test_split):
     """Runs the training."""
     print('Starting training process...', flush=True)
     # Basic training settings.
-    database = MoaSurveyMicrolensingAndNonMicroleningDatabase(test_split=test_split)
+    database = MoaSurveyMicrolensingAndNonMicrolensingWithHardCasesDatabase(test_split=test_split)
     model = Hades(database.number_of_label_values)
     # model = Cura(database.number_of_label_values, database.number_of_input_channels)
     # database.batch_size = 50  # Reducing the batch size may help if you are running out of memory.
-    trial_name = f'{type(model).__name__}_test_split_{test_split}'  # Add any desired run name details to this string.
+    trial_name = f'{type(model).__name__}_hard_cases_test_split_{test_split}'  # Add any desired run name details to this string.
     epochs_to_run = 30
     logs_directory = Path('logs')
 
     # Setup training data, metrics, and logging.
     logging_callbacks = create_logging_callbacks(logs_directory, trial_name, database,
                                                  wandb_entity='ramjet',
-                                                 wandb_project='microlensing_non_microlensing_crossvalidation')
+                                                 wandb_project='microlensing_non_microlensing_hardcases')
     training_dataset, validation_dataset = database.generate_datasets()
     loss_metric = BinaryCrossentropy(name='Loss')
     metrics = create_logging_metrics()
@@ -43,4 +43,4 @@ def train(test_split):
 
 
 if __name__ == '__main__':
-    train(test_split=9)
+    train(test_split=0)

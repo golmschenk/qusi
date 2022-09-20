@@ -22,6 +22,7 @@ class MoaDataInterface:
     @property
     def survey_tag_to_path_list_dictionary(self) -> Dict[str, List[Path]]:
         """
+        # TODO use newest tag from candlist_2022Apr22.txt
         Property allowing the survey tag to path list dictionary to only be loaded once.
 
         :return: The survey tag to path list dictionary
