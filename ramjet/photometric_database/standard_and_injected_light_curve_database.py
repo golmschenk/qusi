@@ -181,7 +181,8 @@ class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
         return standard_paths_datasets, injectee_path_dataset, injectable_paths_datasets
 
     def generate_paths_dataset_from_light_curve_collection(self, light_curve_collection: LightCurveCollection,
-                                                           repeat: bool = True, shuffle: bool = True
+                                                           repeat: bool = True, shuffle: bool = True,
+                                                           use_cached: bool = False
                                                            ) -> tf.data.Dataset:
         """
         Generates a paths dataset for a light curve collection.
@@ -191,7 +192,7 @@ class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
         :param shuffle: Whether to shuffle the dataset or not.
         :return: The paths dataset.
         """
-        dataset = self.paths_dataset_from_list_or_generator_factory(light_curve_collection.get_paths)
+        dataset = self.paths_dataset_from_list_or_generator_factory(light_curve_collection.get_paths(use_cached))
         if repeat:
             dataset = dataset.repeat()
         if shuffle:
