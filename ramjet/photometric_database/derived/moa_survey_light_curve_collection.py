@@ -27,7 +27,7 @@ class MoaSurveyLightCurveCollection(LightCurveCollection):
         self.survey_tags: List[str] = survey_tags
         self.dataset_splits: Union[List[int], None] = dataset_splits
 
-    def get_paths(self, use_cached: bool = False) -> Iterable[Path]:
+    def get_paths(self) -> Iterable[Path]:
         """
         Gets the paths for the light curves in the collection.
 
@@ -35,7 +35,7 @@ class MoaSurveyLightCurveCollection(LightCurveCollection):
         """
         paths: List[Path] = []
         for tag in self.survey_tags:
-            tag_paths = self.moa_data_interface.survey_tag_to_path_list_dictionary(use_cached=use_cached)[tag]
+            tag_paths = self.moa_data_interface.survey_tag_to_path_list_dictionary[tag]
             if self.dataset_splits is not None:
                 # Split on each tag, so that the splitting remains across collections with different tag selections.
                 tag_paths = self.shuffle_and_split_paths(tag_paths, self.dataset_splits)

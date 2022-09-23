@@ -21,8 +21,11 @@ class MoaDataInterface:
     no_tag_string = 'no_tag'
     all_survey_tags = ['c', 'cf', 'cp', 'cw', 'cs', 'cb', 'v', 'n', 'nr', 'm', 'j', no_tag_string]
 
+    def __init__(self, use_cached: bool = False):
+        self.use_cached = use_cached
+
     @property
-    def survey_tag_to_path_list_dictionary(self, use_cached: bool) -> Dict[str, List[Path]]:
+    def survey_tag_to_path_list_dictionary(self) -> Dict[str, List[Path]]:
         """
         # TODO use newest tag from candlist_2022Apr22.txt
         Property allowing the survey tag to path list dictionary to only be loaded once.
@@ -31,23 +34,21 @@ class MoaDataInterface:
         """
         if self.survey_tag_to_path_list_dictionary_ is None:
             takahiro_sumi_nine_year_events_data_frame = self.read_corrected_nine_year_events_table_as_data_frame(
-                Path('data/moa_microlensing/moa9yr_events_oct2018.txt'), use_cached=use_cached)
+                Path('data/moa_microlensing/moa9yr_events_oct2018.txt'))
             self.survey_tag_to_path_list_dictionary_ = self.group_paths_by_tag_in_events_data_frame(
                 list(Path('data/moa_microlensing').glob('**/*.cor.feather')), takahiro_sumi_nine_year_events_data_frame)
         return self.survey_tag_to_path_list_dictionary_
 
-    @staticmethod
-    def read_corrected_nine_year_events_table_as_data_frame(path: Path, use_cached: bool) -> pd.DataFrame:
+    def read_corrected_nine_year_events_table_as_data_frame(self, path: Path) -> pd.DataFrame:
         """
         Reads Takahiro Sumi's 9-year events table as a Pandas data frame, correcting for updates that appear on Yuki
         Hirao's website of the events (http://iral2.ess.sci.osaka-u.ac.jp/~moa/anomaly/9year/).
 
-        :param use_cached:
         :param path: The path to the events table file.
         :return: The data frame.
         """
         data_frame = MoaDataInterface.read_takahiro_sumi_nine_year_events_table_as_data_frame(path)
-        yuki_hirao_data_frame = MoaDataInterface.get_yuki_hirao_events_data_frame(use_cached=use_cached)
+        yuki_hirao_data_frame = self.get_yuki_hirao_events_data_frame()
         yuki_hirao_tag_data_frame = yuki_hirao_data_frame.filter(['tag'])
         data_frame.update(yuki_hirao_tag_data_frame)
         yuki_hirao_class_data_frame = yuki_hirao_data_frame.filter(['class'])
@@ -84,8 +85,7 @@ class MoaDataInterface:
         data_frame = data_frame.sort_index()
         return data_frame
 
-    @staticmethod
-    def get_yuki_hirao_events_data_frame(use_cached: bool) -> pd.DataFrame:
+    def get_yuki_hirao_events_data_frame(self) -> pd.DataFrame:
         """
         Loads the events data from Yuki Hirao's website of events
         (http://iral2.ess.sci.osaka-u.ac.jp/~moa/anomaly/9year/).
@@ -93,8 +93,8 @@ class MoaDataInterface:
         :return: The data frame of the events.
         """
 
-        if use_cached:
-            directory_path = Path('data/moa_microlensing/')
+        if self.use_cached:
+            directory_path = Path('data/moa_microlensing')
             filename_type = r'yukihirao*.csv'
             latest_file = max(directory_path.glob(filename_type), key=lambda f: f.stat().st_ctime)
             events_data_frame = pd.read_csv(latest_file)
@@ -105,7 +105,8 @@ class MoaDataInterface:
             soup = BeautifulSoup(page.content, 'lxml')
             tbl = soup.find("table")
             events_data_frame = pd.read_html(str(tbl))[0]
-            events_data_frame[['field', 'clr', 'chip', 'subfield', 'id']] = events_data_frame['MOA INTERNAL ID'].str.split(
+            events_data_frame[['field', 'clr', 'chip', 'subfield', 'id']] = events_data_frame[
+                'MOA INTERNAL ID'].str.split(
                 '-', 4, expand=True)
             events_data_frame['chip'] = events_data_frame['chip'].astype(np.int64)
             events_data_frame['subfield'] = events_data_frame['subfield'].astype(np.int64)
