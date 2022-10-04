@@ -13,7 +13,7 @@ except ImportError:
     from backports.strenum import StrEnum
 
 from bokeh.document import Document
-from bokeh.models import Spinner, ColumnDataSource, LinearColorMapper, TapTool, Span, BoxZoomTool
+from bokeh.models import Spinner, ColumnDataSource, LinearColorMapper, TapTool, Span, Range1d, LinearAxis
 from bokeh.plotting import Figure
 
 from ramjet.photometric_database.light_curve import LightCurve
@@ -42,7 +42,8 @@ class Viewer:
         self.folded_light_curve_figure.sizing_mode = 'stretch_width'
         self.light_curve: LightCurve = light_curve
         flux_median = np.nanmedian(self.light_curve.fluxes)
-        relative_fluxes = self.light_curve.fluxes / flux_median
+        fluxes = self.light_curve.fluxes
+        relative_fluxes = fluxes / flux_median
         minimum_time = np.nanmin(self.light_curve.times)
         maximum_time = np.nanmax(self.light_curve.times)
         time_differences = np.diff(self.light_curve.times)
@@ -64,6 +65,22 @@ class Viewer:
                                               x=FoldedLightCurveColumnName.FOLDED_TIME,
                                               y=FoldedLightCurveColumnName.FLUX, line_color=color, line_alpha=0.8,
                                               fill_color=color, fill_alpha=0.2)
+
+        fluxes_minimum = fluxes.min()
+        fluxes_maximum = fluxes.max()
+        fluxes_margin = (fluxes_maximum - fluxes_minimum) * 0.05
+        fluxes_range = Range1d(fluxes_minimum - fluxes_margin, fluxes_maximum + fluxes_margin)
+
+        relative_fluxes_minimum = relative_fluxes.min()
+        relative_fluxes_maximum = relative_fluxes.max()
+        relative_fluxes_margin = (relative_fluxes_maximum - relative_fluxes_minimum) * 0.05
+        relative_fluxes_range = Range1d(relative_fluxes_minimum - relative_fluxes_margin,
+                                             relative_fluxes_maximum + relative_fluxes_margin)
+
+        self.folded_light_curve_figure.y_range = relative_fluxes_range
+        self.folded_light_curve_figure.extra_y_ranges = {'unnormalized_range': fluxes_range}
+        self.folded_light_curve_figure.add_layout(LinearAxis(y_range_name='unnormalized_range'), 'right')
+
         self.periodogram_figure: Figure = Figure(active_drag='box_zoom')
         self.current_fold_period_span = Span(location=self.fold_period_spinner.value, dimension='height',
                                         line_color='firebrick')
@@ -76,7 +93,7 @@ class Viewer:
                                                                           oversample_factor=5,
                                                                           minimum_period=period_lower_limit,
                                                                           maximum_period=period_upper_limit)
-        periods__days = periodogram.period.to(units.d).value
+        periods__days = periodogram.period.to(units.day).value
         powers = periodogram.power.value
 
         self.periodogram_column_data_source: ColumnDataSource = ColumnDataSource(data={
