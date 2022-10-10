@@ -38,7 +38,7 @@ class Viewer:
             ("Folded time", f"@{FoldedLightCurveColumnName.FOLDED_TIME}{{0.0000000}}"),
             ("Flux", f"@{FoldedLightCurveColumnName.FLUX}{{0.0000000}}"),
         ]
-        self.folded_light_curve_figure: Figure = Figure(tooltips=tool_tips, active_drag='box_zoom')
+        self.folded_light_curve_figure: Figure = Figure(tooltips=tool_tips)
         self.folded_light_curve_figure.sizing_mode = 'stretch_width'
         self.light_curve: LightCurve = light_curve
         flux_median = np.nanmedian(self.light_curve.fluxes)

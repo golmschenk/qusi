@@ -8,7 +8,6 @@ from typing import Union, List, Optional
 
 import lightkurve.lightcurve
 import numpy as np
-import numpy.typing as npt
 import pandas as pd
 from lightkurve.periodogram import LombScarglePeriodogram
 import scipy.signal
@@ -28,7 +27,7 @@ class LightCurve(ABC):
         self.folded_times_column_name = '_folded_times'
 
     @property
-    def fluxes(self) -> npt.NDArray[np.float32]:
+    def fluxes(self) -> np.ndarray:
         """
         The fluxes of the light curve.
 

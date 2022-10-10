@@ -52,7 +52,6 @@ class TessTwoMinuteCadenceStandardAndInjectedTransitDatabase(StandardAndInjected
     """
     def __init__(self):
         super().__init__()
-        self.include_time_as_channel = True
         self.out_of_bounds_injection_handling = OutOfBoundsInjectionHandlingMethod.REPEAT_SIGNAL
         self.training_standard_light_curve_collections = [
             TessTwoMinuteCadenceConfirmedTransitLightCurveCollection(dataset_splits=list(range(8))),
