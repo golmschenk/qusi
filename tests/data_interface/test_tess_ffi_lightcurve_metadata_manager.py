@@ -41,7 +41,16 @@ class TestTessFfiLightCurveMetadataManager:
     @patch.object(Path, 'glob')
     def test_can_populate_sql_dataset(self, mock_glob, metadata_manger):
         path_list = [metadata_manger.light_curve_root_directory_path.joinpath(f'{index}.fits') for index in range(20)]
-        mock_glob.return_value = path_list
+        x = False
+        def mock_glob_side_effect(path):
+            nonlocal x
+            if not x:
+                x = True
+                return (path for path in path_list)
+            else:
+                return (path for path in [])
+
+        mock_glob.side_effect = mock_glob_side_effect
         mock_insert = Mock()
         metadata_manger.insert_multiple_rows_from_paths_into_database = mock_insert
         metadata_manger.populate_sql_database()
