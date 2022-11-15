@@ -3,7 +3,7 @@ import pandas as pd
 from stela_investigation.quality_of_results.AnalysisInferredNN_cls import AnalysisInferredNN
 
 
-def table_performance_saver(inference_object, threshold_collection):
+def table_performance_saver(inference_object, threshold_collection, type_of_run):
     """
     Save as .csv files the performance
     :return:
@@ -43,7 +43,7 @@ def table_performance_saver(inference_object, threshold_collection):
 
     table_of_performance = pd.DataFrame(temp_dictionary)
     table_of_performance.set_index('thresholds', inplace=True)
-    table_of_performance.to_csv(f'stela_investigation/Crossvalidation_inference_tables/performance_{inference_object.inference_folder_name}.csv')
+    table_of_performance.to_csv(f'stela_investigation/{type_of_run}_inference_tables/performance_{inference_object.inference_folder_name}.csv')
 
 
 if __name__ == '__main__':

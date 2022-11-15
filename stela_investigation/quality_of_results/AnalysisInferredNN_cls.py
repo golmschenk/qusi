@@ -26,7 +26,7 @@ class AnalysisInferredNN(InferredNeuralNetwork):
         self.threshold_value = None
         print('Inference: ', self.inference_folder_name)
 
-    def inference_distribution_plotter(self, show_plot=False):
+    def inference_distribution_plotter(self, type_of_run, show_plot=False):
         # Separating originally labeled microlensing ('c', 'cf', 'cp', 'cw', 'cs', 'cb') from not microlensing
         #         ('v', 'n', 'nr', 'm', 'j', moa_data_interface.no_tag_string)
         labeled_microlensing_df = self.inference_with_matching_tags_df[
@@ -66,13 +66,13 @@ class AnalysisInferredNN(InferredNeuralNetwork):
         ax.set(xlabel='Neural Network Confidence', ylabel='Probability',
                title=f'Cumulative Distribution {self.inference_folder_name}')
         plt.legend()
-        plt.savefig(f'stela_investigation/Crossvalidation_inference_plots/'
+        plt.savefig(f'stela_investigation/{type_of_run}_inference_plots/'
                     f'confidence_distribution_{self.inference_folder_name}.png', dpi=300)
         if show_plot:
             plt.show()
         plt.close()
 
-    def inference_distribution_per_tag_plotter(self, show_plot=False):
+    def inference_distribution_per_tag_plotter(self, type_of_run, show_plot=False):
         fig, ax = plt.subplots()
         tags = ['v', 'n', 'nr', 'm', 'j', 'no_tag', 'c', 'cf', 'cp', 'cw', 'cs', 'cb']
         for tag, color_index in zip(tags, np.arange(0, len(tags))):
@@ -89,18 +89,18 @@ class AnalysisInferredNN(InferredNeuralNetwork):
             confidence_tag_only = np.insert(confidence_tag_only, len(confidence_tag_only), 1)
 
             ax.step(confidence_tag_only, the_tag_only_cdf,
-                    label=f'{tag} #{len(the_tag_only_cdf)}', color=Category20[20][color_index])
+                    label=f'{tag} #{len(the_tag_only_cdf) - 2 }', color=Category20[20][color_index])
 
         ax.set(xlabel='Neural Network Confidence', ylabel='Probability',
                title=f'Cumulative Distribution {self.inference_folder_name}')
         plt.legend()
-        plt.savefig(f'stela_investigation/Crossvalidation_inference_plots/'
+        plt.savefig(f'stela_investigation/{type_of_run}_inference_plots/'
                     f'confidence_distribution_per_tag_{self.inference_folder_name}.png', dpi=300)
         if show_plot:
             plt.show()
         plt.close()
 
-    def confusion_matrix_plotter(self, should_normalize_=None,
+    def confusion_matrix_plotter(self, type_of_run, should_normalize_=None,
                                  labels_=['Not \n Microlensing', 'Microlensing'],
                                  show_plot=False):
         disp = ConfusionMatrixDisplay.from_predictions(self.inference_with_matching_tags_df['is_microlensing'],
@@ -112,16 +112,16 @@ class AnalysisInferredNN(InferredNeuralNetwork):
         plt.title(f'Confusion Matrix - Threshold: {self.threshold_value} -{self.inference_folder_name}')
         plt.tight_layout()
         if should_normalize_ == 'true':
-            plt.savefig(f'stela_investigation/Crossvalidation_inference_plots/normalized_confusion_matrix_'
+            plt.savefig(f'stela_investigation/{type_of_run}_inference_plots/normalized_confusion_matrix_'
                         f'{self.threshold_value}_{self.inference_folder_name}.png', dpi=300)
         else:
-            plt.savefig(f'stela_investigation/Crossvalidation_inference_plots/confusion_matrix_'
+            plt.savefig(f'stela_investigation/{type_of_run}_inference_plots/confusion_matrix_'
                         f'{self.threshold_value}_{self.inference_folder_name}.png', dpi=300)
         if show_plot:
             plt.show()
         plt.close()
 
-    def ROC_plotter(self, show_plot=False):
+    def ROC_plotter(self, type_of_run, show_plot=False):
         """
         From this example https://scikit-learn.org/stable/auto_examples/
         model_selection/plot_roc.html#sphx-glr-auto-examples-model-selection-plot-roc-py
@@ -145,7 +145,7 @@ class AnalysisInferredNN(InferredNeuralNetwork):
         plt.ylabel("True Positive Rate")
         plt.title(f"Receiver Operating Characteristic - Microlensing Classification {self.inference_folder_name}")
         plt.legend(loc="lower right")
-        plt.savefig(f'stela_investigation/Crossvalidation_inference_plots/ROC_{self.inference_folder_name}.png', dpi=300)
+        plt.savefig(f'stela_investigation/{type_of_run}_inference_plots/ROC_{self.inference_folder_name}.png', dpi=300)
         if show_plot:
             plt.show()
         plt.close()
@@ -171,12 +171,15 @@ class AnalysisInferredNN(InferredNeuralNetwork):
         return true_positives, false_positives, true_negatives, false_negatives
 
 
-def cross_validation_concatenater(log_names, new_path):
+def cross_validation_concatenater(log_names, new_path, split_name_position=3):
+
+    # Change split piece for different name
 
     for log_name in log_names:
         inference_object = AnalysisInferredNN(log_name)
         new_df = inference_object.inference_with_matching_tags_dataframer()
-        if log_name.split('_')[3] == '0':
+        # if log_name.split('_')[3] == '0':
+        if log_name.split('_')[split_name_position] == '0':
             previous_df = new_df
         else:
             previous_df = pd.concat([previous_df, new_df], axis=0, ignore_index=True)
@@ -186,7 +189,33 @@ def cross_validation_concatenater(log_names, new_path):
 
 
 if __name__ == '__main__':
-    test0 = AnalysisInferredNN('Hades_crossvalidation')
-    test0.inference_distribution_plotter()
+    # # Get the tags for each
+    # run0 = AnalysisInferredNN('Hades_hard_cases_test_split_0_2022_09_21_10_09_07')
+    # run0.inference_distribution_plotter(type_of_run='Hard_Easy')
+    # run1 = AnalysisInferredNN('Hades_hard_cases_test_split_1_2022_09_23_15_23_34')
+    # run1.inference_distribution_plotter(type_of_run='Hard_Easy')
+    # run0 = AnalysisInferredNN('Hades_TIME_test_split_0_2022_10_17_09_50_31')
+    # run0.inference_distribution_plotter(type_of_run='TIME')
+    # run1 = AnalysisInferredNN('Hades_TIME_test_split_1_2022_10_12_14_40_41')
+    # run1.inference_distribution_plotter(type_of_run='TIME')
+
+
+    # # # Concatenate
+    # # cross_validation_concatenater(log_names, 'logs/Hades_crossvalidation/')
+    #
+    # log_names = ['Hades_hard_cases_test_split_0_2022_09_21_10_09_07',
+    #              'Hades_hard_cases_test_split_1_2022_09_23_15_23_34']
+    # cross_validation_concatenater(log_names, 'logs/Hades_hard_cases_0and1/', split_name_position=5)
+    #
+    # log_names = ['Hades_test_split_0_2022_06_09_17_18_13',
+    #              'Hades_test_split_1_2022_06_18_15_19_42']
+    # cross_validation_concatenater(log_names, 'logs/Hades_0and1/', split_name_position=3)
+
+    log_names = ['Hades_TIME_test_split_0_2022_10_17_09_50_31',
+                 'Hades_TIME_test_split_1_2022_10_12_14_40_41']
+    cross_validation_concatenater(log_names, 'logs/Hades_TIME_0and1/', split_name_position=4)
+
+    # test0 = AnalysisInferredNN('Hades_crossvalidation')
+    # test0.inference_distribution_plotter()
 
     print()
