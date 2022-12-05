@@ -11,7 +11,7 @@ from ramjet.photometric_database.tess_ffi_light_curve import TessFfiLightCurve, 
 class TestTessFfiDataInterface:
     @pytest.fixture
     def ffi_pickle_contents(self) -> Tuple[int, float, float, float, int, int, np.ndarray, np.ndarray, np.ndarray,
-                                           np.ndarray, np.ndarray, int]:
+                                           np.ndarray, np.ndarray, np.ndarray]:
         """
         Creates a mock content of one of Brian Powell's FFI data files.
 
@@ -29,7 +29,7 @@ class TestTessFfiDataInterface:
         corrected_flux = np.arange(10, 20)
         pca_flux = np.arange(20, 30)
         flux_error = np.arange(0, 1, 0.1)
-        quality = 0
+        quality = np.full(10, 0)
         return (tic_id, ra, dec, tess_magnitude, camera, chip, time, raw_flux, corrected_flux, pca_flux, flux_error,
                 quality)
 

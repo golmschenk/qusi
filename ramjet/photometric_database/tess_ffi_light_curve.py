@@ -106,7 +106,7 @@ class TessFfiLightCurve(TessLightCurve):
                     light_curve.data_frame[column_name.value] = column_values[0]
             light_curve.tic_id, light_curve.sector = light_curve.get_tic_id_and_sector_from_file_path(path)
             return light_curve
-        except () as error:
+        except (pickle.UnpicklingError, OSError, IsADirectoryError) as error:
             raise AdaptIntermittentException(f'Errored on path {path}.') from error
 
     @staticmethod
