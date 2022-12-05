@@ -103,7 +103,7 @@ class TessFfiLightCurve(TessLightCurve):
                     column_values = light_curve_data_dictionary[pickle_index.value]
                     if remove_bad_quality_data:
                         column_values = column_values[quality_flag_values == 0]
-                    light_curve.data_frame[column_name.value] = column_values[0]
+                    light_curve.data_frame[column_name.value] = column_values
             light_curve.tic_id, light_curve.sector = light_curve.get_tic_id_and_sector_from_file_path(path)
             return light_curve
         except (pickle.UnpicklingError, OSError, IsADirectoryError) as error:
