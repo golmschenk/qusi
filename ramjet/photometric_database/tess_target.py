@@ -60,7 +60,7 @@ class TessTarget:
         :return: The radius.
         """
         # noinspection SqlResolve
-        gaia_job = Gaia.launch_job(f'select * from gaiadr3.gaia_source where source_id={gaia_source_id}')
+        gaia_job = Gaia.launch_job(f'select * from gaiadr2.gaia_source where source_id={gaia_source_id}')
         query_results_data_frame = gaia_job.get_results().to_pandas()
         radius = query_results_data_frame['radius_val'].iloc[0]
         return radius
