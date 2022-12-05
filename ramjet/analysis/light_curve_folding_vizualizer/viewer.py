@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional
+
 import numpy as np
 import pandas as pd
 from astropy import units
@@ -13,7 +15,7 @@ except ImportError:
     from backports.strenum import StrEnum
 
 from bokeh.document import Document
-from bokeh.models import Spinner, ColumnDataSource, LinearColorMapper, TapTool, Span, Range1d, LinearAxis
+from bokeh.models import Spinner, ColumnDataSource, LinearColorMapper, TapTool, Span, Range1d, LinearAxis, Div
 from bokeh.plotting import Figure
 
 from ramjet.photometric_database.light_curve import LightCurve
@@ -31,7 +33,7 @@ class PeriodogramColumnName(StrEnum):
 
 
 class Viewer:
-    def __init__(self, bokeh_document: Document, light_curve: LightCurve):
+    def __init__(self, bokeh_document: Document, light_curve: LightCurve, title: Optional[str] = None):
         self.bokeh_document: Document = bokeh_document
         tool_tips = [
             ("Time", f"@{FoldedLightCurveColumnName.TIME}{{0.0000000}}"),
@@ -105,6 +107,9 @@ class Viewer:
                                      y=PeriodogramColumnName.POWER)
         self.periodogram_figure.sizing_mode = 'stretch_width'
 
+        if title is not None:
+            title_div = Div(text=f'<h1>{title}</h1>')
+            self.bokeh_document.add_root(title_div)
         self.bokeh_document.add_root(self.folded_light_curve_figure)
         self.bokeh_document.add_root(self.fold_period_spinner)
         self.bokeh_document.add_root(self.periodogram_figure)
