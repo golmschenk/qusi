@@ -31,7 +31,29 @@ class SelfLensingBinarySyntheticSignalsLightCurveCollection(LightCurveCollection
         urllib.request.urlretrieve('https://api.onedrive.com/v1.0/shares/s!AjiSFm1N8Bv7ghXushB7JOzABXdv/root/content',
                                    str(tar_file_path))
         with tarfile.open(tar_file_path) as csv_tar_file:
-            csv_tar_file.extractall(self.data_directory)
+            
+            import os
+            
+            def is_within_directory(directory, target):
+                
+                abs_directory = os.path.abspath(directory)
+                abs_target = os.path.abspath(target)
+            
+                prefix = os.path.commonprefix([abs_directory, abs_target])
+                
+                return prefix == abs_directory
+            
+            def safe_extract(tar, path=".", members=None, *, numeric_owner=False):
+            
+                for member in tar.getmembers():
+                    member_path = os.path.join(path, member.name)
+                    if not is_within_directory(path, member_path):
+                        raise Exception("Attempted Path Traversal in Tar File")
+            
+                tar.extractall(path, members, numeric_owner=numeric_owner) 
+                
+            
+            safe_extract(csv_tar_file, self.data_directory)
         tar_file_path.unlink()
         csv_uncompressed_directory = self.data_directory.joinpath('LearningSetedgeon_all_sum')
         for path in csv_uncompressed_directory.glob('*'):
