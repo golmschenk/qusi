@@ -22,7 +22,11 @@ setuptools
 dataset
 pathos
 peewee
-backports.strenum
-plotly
+pytest-asyncio
 wandb
+plotly
+tornado
+beautifulsoup4
+lxml
+backports.strenum
 lightkurve
