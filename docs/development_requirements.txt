@@ -30,3 +30,4 @@ beautifulsoup4
 lxml
 backports.strenum
 lightkurve
+uvloop
