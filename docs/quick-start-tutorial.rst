@@ -13,7 +13,7 @@ it work for another use case.
 
 Install
 -------
-First, you need Python 3.7 with :code:`pip` installed (most Python 3.6+ versions should work, but some required packages
+First, you need Python 3.9 with :code:`pip` installed (most Python 3.6+ versions should work, but some required packages
 may not be available on newer verisons yet). Ideally, this Python install is in its own Python virtual
 environment or Conda environment to make sure this project doesn't interfere with other projects and vice versa. The
 rest of this tutorial assumes the command :code:`python` will run your Python 3 install (on some systems this will
@@ -30,7 +30,7 @@ Then, you'll need to install all the required Python packages:
 
 .. code-block:: bash
 
-    pip install -r requirements.txt
+    pip install -r development_requirements.txt
 
 This installation assumes you already have your GPU properly setup and installed, and the GPU is compatible with
 TensorFlow (if you intend to use a GPU). Note that without a GPU, the training code will take significantly longer to

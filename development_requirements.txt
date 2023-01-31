@@ -14,7 +14,7 @@ sphinx-press-theme
 GitPython
 matplotlib
 pipreqs
-bokeh
+bokeh~=2.4.0
 pymc3
 exoplanet
 scipy
