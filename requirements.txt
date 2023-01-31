@@ -20,7 +20,7 @@ pytest-asyncio==0.14.0
 wandb==0.10.23
 plotly==4.14.3
 beautifulsoup4==4.9.3
-setuptools==54.2.0
+setuptools==65.5.1
 backports.strenum==1.1.1
 lightkurve==2.0.11
 Jinja2==3.1.1
