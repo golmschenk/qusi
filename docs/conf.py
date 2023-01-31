@@ -98,8 +98,8 @@ def linkcode_resolve(domain, info):
             matching_refs.append(ref)
     head_ref_names = [ref.name.split('/')[-1] for ref in matching_refs if isinstance(ref, Head)]
     tag_ref_names = [ref.name.split('/')[-1] for ref in matching_refs if isinstance(ref, Tag)]
-    if 'master' in head_ref_names:  # First check if the commit matches the master branch.
-        ref_name = 'master'
+    if 'main' in head_ref_names:  # First check if the commit matches the master branch.
+        ref_name = 'main'
     elif tag_ref_names:  # Second, check if the commit matches a tag.
         ref_name = tag_ref_names[0]
     elif head_ref_names:  # Third, check if the commit matches a branch.
