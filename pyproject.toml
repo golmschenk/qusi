@@ -1,9 +1,15 @@
 [tool.poetry]
-name = "ramjet"
-version = "0.7.0"
+name = "astroramjet"
+version = "0.7.1"
 description = ""
 authors = ["Greg Olmschenk <greg@olmschenk.com>"]
 readme = "README.md"
+packages = [
+    {include = "ramjet"}
+]
+
+[tool.poetry.scripts]
+ramjet_light_curve_folding_vizualizer = "ramjet.analysis.light_curve_folding_vizualizer.application:main"
 
 [tool.poetry.dependencies]
 python = ">=3.9,<3.12"

@@ -22,7 +22,7 @@ def run_viewer(light_curve_path: Path, port: int = 5007):
     server.io_loop.start()
 
 
-if __name__ == '__main__':
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('light_curve_path')
     args = parser.parse_args()
@@ -31,3 +31,7 @@ if __name__ == '__main__':
         print(f'File {light_curve_path} not found.')
         raise SystemExit(1)
     run_viewer(light_curve_path)
+
+
+if __name__ == '__main__':
+    main()
