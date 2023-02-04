@@ -1,6 +1,7 @@
 """
 Code for a class for common interfacing with TESS data, such as downloading, sorting, and manipulating.
 """
+import astroquery
 import lightkurve
 
 try:
@@ -64,7 +65,8 @@ def is_common_mast_connection_error(exception: Exception) -> bool:
             isinstance(exception, requests.exceptions.HTTPError) or
             isinstance(exception, requests.exceptions.ConnectionError) or
             isinstance(exception, ConnectionResetError) or
-            isinstance(exception, lightkurve.search.SearchError))
+            isinstance(exception, lightkurve.search.SearchError) or
+            isinstance(exception, astroquery.exceptions.RemoteServiceError))
 
 
 class NoDataProductsFoundException(Exception):

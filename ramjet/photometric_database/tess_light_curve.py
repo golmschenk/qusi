@@ -88,7 +88,10 @@ class TessLightCurve(LightCurve):
         difference_target_pixel_frame = copy.deepcopy(target_pixel_file[0])
         difference_flux_frame = (median_maximum_target_pixel_frame.flux.value -
                                  median_minimum_target_pixel_frame.flux.value)
-        difference_target_pixel_frame.hdu[1].data["FLUX"] = difference_flux_frame
+        try:
+            difference_target_pixel_frame.hdu[1].data["FLUX"] = difference_flux_frame
+        except ValueError as error:  # TODO: I don't know why this would happen here, but it is. Fix it.
+            raise CentroidAlgorithmFailedError from error
         image_side_size = 10
         pixel_side_indexes = np.arange(image_side_size, dtype=np.float32)
         flux_difference = difference_flux_frame[0]

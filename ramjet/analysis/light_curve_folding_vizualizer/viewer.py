@@ -3,9 +3,9 @@ from __future__ import annotations
 from typing import Optional
 
 import numpy as np
-import pandas as pd
 from astropy import units
-from bokeh.events import Event, Tap
+from bokeh.document import Document
+from bokeh.events import Tap
 from bokeh.palettes import Turbo256
 from lightkurve.periodogram import LombScarglePeriodogram, Periodogram
 
@@ -14,7 +14,6 @@ try:
 except ImportError:
     from backports.strenum import StrEnum
 
-from bokeh.document import Document
 from bokeh.models import Spinner, ColumnDataSource, LinearColorMapper, TapTool, Span, Range1d, LinearAxis, Div
 from bokeh.plotting import Figure
 
@@ -42,6 +41,8 @@ class Viewer:
         ]
         self.folded_light_curve_figure: Figure = Figure(tooltips=tool_tips)
         self.folded_light_curve_figure.sizing_mode = 'stretch_width'
+        self.unfolded_light_curve_figure: Figure = Figure(tooltips=tool_tips)
+        self.unfolded_light_curve_figure.sizing_mode = 'stretch_width'
         self.light_curve: LightCurve = light_curve
         flux_median = np.nanmedian(self.light_curve.fluxes)
         fluxes = self.light_curve.fluxes
@@ -54,10 +55,21 @@ class Viewer:
         period_upper_limit = maximum_time - minimum_time
         period_lower_limit = minimum_time_step / 2.1
         self.fold_period_spinner: Spinner = Spinner(value=period_upper_limit, low=period_lower_limit,
-                                                    high=period_upper_limit, step=median_time_step / 30)
+                                                    high=period_upper_limit, step=median_time_step / 1000)
         self.fold_period_spinner.on_change('value', self.update_fold)
         mapper = LinearColorMapper(palette=Turbo256, low=minimum_time, high=maximum_time)
         color = {'field': FoldedLightCurveColumnName.TIME, 'transform': mapper}
+
+        self.unfolded_light_curve_column_data_source: ColumnDataSource = ColumnDataSource(data={
+            FoldedLightCurveColumnName.TIME: self.light_curve.times,
+            FoldedLightCurveColumnName.FOLDED_TIME: self.light_curve.times,
+            FoldedLightCurveColumnName.FLUX: relative_fluxes,
+        })
+        self.unfolded_light_curve_figure.circle(source=self.unfolded_light_curve_column_data_source,
+                                              x=FoldedLightCurveColumnName.FOLDED_TIME,
+                                              y=FoldedLightCurveColumnName.FLUX, line_color=color, line_alpha=0.8,
+                                              fill_color=color, fill_alpha=0.2)
+
         self.folded_light_curve_column_data_source: ColumnDataSource = ColumnDataSource(data={
             FoldedLightCurveColumnName.TIME: self.light_curve.times,
             FoldedLightCurveColumnName.FOLDED_TIME: self.light_curve.times,
@@ -110,6 +122,7 @@ class Viewer:
         if title is not None:
             title_div = Div(text=f'<h1>{title}</h1>')
             self.bokeh_document.add_root(title_div)
+        self.bokeh_document.add_root(self.unfolded_light_curve_figure)
         self.bokeh_document.add_root(self.folded_light_curve_figure)
         self.bokeh_document.add_root(self.fold_period_spinner)
         self.bokeh_document.add_root(self.periodogram_figure)

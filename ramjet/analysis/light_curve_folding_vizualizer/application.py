@@ -1,10 +1,12 @@
 from pathlib import Path
-from typing import Union
+
+import pandas as pd
 import uvloop
 from bokeh import plotting
 from bokeh.application import Application
 from bokeh.application.handlers import DirectoryHandler
 from bokeh.server.server import Server
+import argparse
 
 plotting.output_notebook.__doc__ = ''
 
@@ -21,6 +23,11 @@ def run_viewer(light_curve_path: Path, port: int = 5007):
 
 
 if __name__ == '__main__':
-    light_curve_paths = list(Path('/Users/golmschenk/tmp/gathered').glob('*.pkl'))
-    light_curve_path = light_curve_paths[540]
+    parser = argparse.ArgumentParser()
+    parser.add_argument('light_curve_path')
+    args = parser.parse_args()
+    light_curve_path = Path(args.light_curve_path)
+    if not light_curve_path.exists():
+        print(f'File {light_curve_path} not found.')
+        raise SystemExit(1)
     run_viewer(light_curve_path)

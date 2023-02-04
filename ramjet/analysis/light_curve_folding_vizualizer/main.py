@@ -13,7 +13,7 @@ def main():
     document = curdoc()
     light_curve_path = Path(sys.argv[1])
     light_curve = TessFfiLightCurve.from_path(light_curve_path)
-    Viewer(document, light_curve)
+    Viewer(document, light_curve, title=light_curve_path.name)
 
 
 if __name__ == '__main__' or 'bokeh_app_' in __name__:
