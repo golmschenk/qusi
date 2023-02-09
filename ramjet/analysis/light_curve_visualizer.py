@@ -16,10 +16,10 @@ from matplotlib.colors import LinearSegmentedColormap
 
 
 def plot_light_curve(times: np.ndarray, fluxes: np.ndarray, labels: np.ndarray = None, predictions: np.ndarray = None,
-                    title: str = None, x_label: str = 'Days', y_label: str = 'Flux',
-                    x_limits: (float, float) = (None, None), y_limits: (float, float) = (None, None),
-                    save_path: Union[Path, str] = None, exclude_flux_outliers: bool = False,
-                    base_data_point_size: float = 3):
+                     title: str = None, x_label: str = 'Days', y_label: str = 'Flux',
+                     x_limits: (float, float) = (None, None), y_limits: (float, float) = (None, None),
+                     save_path: Union[Path, str] = None, exclude_flux_outliers: bool = False,
+                     base_data_point_size: float = 3):
     """
     Plots a light curve with a consistent styling. If true labels and/or predictions are included, these will
     additionally be plotted.
@@ -130,7 +130,7 @@ def create_dual_light_curve_figure(fluxes0, times0, name0, fluxes1, times1, name
 
 
 def create_light_curve_figure(fluxes, times, name, title='', x_axis_label='Time (days)',
-                                  y_axis_label='Relative flux') -> Figure:
+                              y_axis_label='Relative flux') -> Figure:
     """
     Plots two light curves together. Mostly for comparing a light curve cleaned by two different methods.
 
