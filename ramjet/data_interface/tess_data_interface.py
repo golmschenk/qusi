@@ -103,13 +103,11 @@ class TessDataInterface:
         if tic_id is None or np.isscalar(tic_id):
             observations = self.get_all_tess_time_series_observations_chunk(tic_id)
         else:
-            observations = None
+            observations_chunks = []
             for tic_id_list_chunk in np.array_split(tic_id, math.ceil(len(tic_id) / self.mast_input_query_chunk_size)):
                 observations_chunk = self.get_all_tess_time_series_observations_chunk(tic_id_list_chunk)
-                if observations is None:
-                    observations = observations_chunk
-                else:
-                    observations = observations.append(observations_chunk, ignore_index=True)
+                observations_chunks.append(observations_chunk)
+            observations = pd.concat(observations_chunks, ignore_index=True)
         return observations
 
     @staticmethod
@@ -138,14 +136,12 @@ class TessDataInterface:
         :return: The data frame of the product list. Will be converted from Table to DataFrame for use.
         """
         if observations.shape[0] > 1:
-            product_list = None
+            product_list_chunks = []
             for observations_chunk in np.array_split(observations,
                                                      math.ceil(observations.shape[0] / self.mast_input_query_chunk_size)):
                 product_list_chunk = self.get_product_list_chunk(observations_chunk)
-                if product_list is None:
-                    product_list = product_list_chunk
-                else:
-                    product_list = product_list.append(product_list_chunk, ignore_index=True)
+                product_list_chunks.append(product_list_chunk)
+            product_list = pd.concat(product_list_chunks, ignore_index=True)
         else:
             product_list = self.get_product_list_chunk(observations)
         return product_list
