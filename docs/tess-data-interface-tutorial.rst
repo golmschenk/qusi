@@ -37,6 +37,7 @@ run:
 
 .. code-block:: python
 
+    import numpy as np
     non_nan_flux_indexes = ~np.isnan(light_curve.fluxes)
     times = light_curve.times[non_nan_flux_indexes]
     fluxes = light_curve.fluxes[non_nan_flux_indexes]
@@ -49,7 +50,11 @@ Next we'll create and show the light curve figure:
                                    fluxes=fluxes,
                                    name='Relative flux',
                                    title=f'TIC {light_curve.tic_id} sector {light_curve.sector}')
+    figure.sizing_mode = 'stretch_width'
+    from bokeh.io import show
     show(figure)
+
+.. image:: tess-data-interface-tutorial/plot-from-mast-example.png
 
 Checking for known planets
 --------------------------
