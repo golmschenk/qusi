@@ -132,5 +132,19 @@ def create_logging_callbacks(logs_directory: Path, trial_name: str, database: St
         else:
             wandb.init(entity=wandb_entity, project=wandb_project, settings=wandb.Settings(start_method='fork'))
         wandb.run.notes = trial_name
-        logging_callbacks.append(wandb.keras.WandbCallback())
+        logging_callbacks.append(wandb.keras.WandbCallback(save_model=False))
     return logging_callbacks
+
+def infer_distribution(model: tf.keras.Model, dataset: tf.data.Dataset, infer_distrubtion_results_path: Path):
+    confidence_distribution_counts = np.zeros(shape=10000, dtype=int)
+    examples_count = 0
+    for batch_index, (paths, examples) in enumerate(dataset):
+        confidences = model(examples, training=False)
+        confidences = np.squeeze(confidences, axis=1)
+        confidence_indexes = np.floor(confidences * 10000).astype(int)
+        batch_confidence_distribution_counts = np.bincount(confidence_indexes)
+        batch_confidence_distribution_counts = np.pad(batch_confidence_distribution_counts, (0, 10000 - batch_confidence_distribution_counts.shape[0]))
+        confidence_distribution_counts += batch_confidence_distribution_counts
+        examples_count += confidences.shape[0]
+        print(f'{examples_count} examples inferred on.', flush=True)
+    np.save(str(infer_distrubtion_results_path), confidence_distribution_counts)

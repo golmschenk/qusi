@@ -45,6 +45,9 @@ class LightCurveDatabase(ABC):
     def normalize_on_percentiles(array: np.ndarray) -> np.ndarray:
         """
         Normalizes an array using percentiles. The 10th percentile is normalized to -1, the 90th to 1.
+
+        :param array: The array to be normalized.
+        :return: The normalized array.
         """
         percentile_10 = np.percentile(array, 10)
         percentile_90 = np.percentile(array, 90)

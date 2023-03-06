@@ -167,6 +167,7 @@ class TestStandardAndInjectedLightCurveDatabase:
     def test_can_preprocess_injected_light_curve_with_passed_functions(self):
         database = StandardAndInjectedLightCurveDatabase()
         stub_load_function = Mock(return_value=(np.array([0, -1, -2]), np.array([0, 1, 2]), None))
+        stub_auxiliary_information_function = Mock(return_value=np.array([], dtype=np.float32))
         mock_load_label_function = Mock(return_value=3)
         path_tensor = tf.constant('stub_path.fits')
         database.preprocess_light_curve = lambda identity, *args, **kwargs: identity
@@ -175,6 +176,7 @@ class TestStandardAndInjectedLightCurveDatabase:
         # noinspection PyTypeChecker
         example, label = database.preprocess_injected_light_curve(
             injectee_load_times_fluxes_and_flux_errors_from_path_function=stub_load_function,
+            load_auxiliary_information_for_path_function=stub_auxiliary_information_function,
             injectable_load_times_magnifications_and_magnification_errors_from_path_function=stub_load_function,
             load_label_from_path_function=mock_load_label_function, injectee_light_curve_path_tensor=path_tensor,
             injectable_light_curve_path_tensor=path_tensor)
@@ -197,6 +199,7 @@ class TestStandardAndInjectedLightCurveDatabase:
             injectable_light_curve_collection)
         light_curve_and_label_dataset = database_with_collections.generate_injected_light_curve_and_label_dataset(
             injectee_paths_dataset, injectee_light_curve_collection.load_times_fluxes_and_flux_errors_from_path,
+            injectee_light_curve_collection.load_auxiliary_information_for_path,
             injectable_paths_dataset,
             injectable_light_curve_collection.load_times_magnifications_and_magnification_errors_from_path,
             injectable_light_curve_collection.load_label_from_path)
@@ -218,13 +221,13 @@ class TestStandardAndInjectedLightCurveDatabase:
         expected_label = load_label_from_path_function(Path())
         injectable_load_from_path_function = \
             injectable_light_curve_collection.load_times_magnifications_and_magnification_errors_from_path
-        light_curve, label = database.preprocess_injected_light_curve(injectee_load_from_path_function,
-                                                                      injectable_load_from_path_function,
-                                                                      load_label_from_path_function,
-                                                                      tf.convert_to_tensor(
-                                                                          str(injectee_light_curve_path)),
-                                                                      tf.convert_to_tensor(
-                                                                          str(injectable_light_curve_path)))
+        light_curve, label = database.preprocess_injected_light_curve(
+            injectee_load_from_path_function,
+            injectee_light_curve_collection.load_auxiliary_information_for_path,
+            injectable_load_from_path_function,
+            load_label_from_path_function,
+            tf.convert_to_tensor(str(injectee_light_curve_path)),
+            tf.convert_to_tensor(str(injectable_light_curve_path)))
         assert light_curve.shape == (3, 1)
         assert np.array_equal(light_curve, [[0.5], [3], [5.5]])  # Injected light_curve 0.
         assert np.array_equal(label, [expected_label])  # Injected label 0.
@@ -611,5 +614,3 @@ class TestStandardAndInjectedLightCurveDatabase:
         train_batch = next(iter(train_dataset))
         for light_curve_tensor, label_tensor in zip(train_batch[0], train_batch[1]):
             assert label_tensor.numpy() == light_curve_tensor.numpy()[0]
-
-

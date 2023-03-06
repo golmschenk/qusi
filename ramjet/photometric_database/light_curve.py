@@ -4,7 +4,7 @@ Code for a class to represent a light curve. See the contained class docstring f
 from __future__ import annotations
 
 from abc import ABC
-from typing import Union, List
+from typing import Union, List, Optional
 
 import lightkurve.lightcurve
 import numpy as np
@@ -22,6 +22,9 @@ class LightCurve(ABC):
         self.data_frame: pd.DataFrame = pd.DataFrame()
         self.flux_column_names: List[str] = []
         self.time_column_name: Union[str, None] = None
+        self._variability_period: Optional[float] = None
+        self._variability_period_epoch: Optional[float] = None
+        self.folded_times_column_name = '_folded_times'
 
     @property
     def fluxes(self) -> np.ndarray:
@@ -53,6 +56,28 @@ class LightCurve(ABC):
         if self.time_column_name is None:
             self.time_column_name = 'time'
         self.data_frame[self.time_column_name] = value
+
+    @property
+    def folded_times(self):
+        if self.folded_times_column_name not in self.data_frame.columns:
+            raise MissingFoldedTimes('Light curve has not been folded.')
+        return self.data_frame[self.folded_times_column_name].values
+
+    @folded_times.setter
+    def folded_times(self, value: np.ndarray):
+        self.data_frame[self.folded_times_column_name] = value
+
+    @property
+    def variability_period(self) -> float:
+        if self._variability_period is None:
+            self.get_variability_phase_folding_parameters()
+        return self._variability_period
+
+    @property
+    def variability_period_epoch(self) -> float:
+        if self._variability_period_epoch is None:
+            self.get_variability_phase_folding_parameters()
+        return self._variability_period_epoch
 
     def convert_column_to_relative_scale(self, column_name: str):
         """
@@ -87,19 +112,38 @@ class LightCurve(ABC):
     def to_lightkurve(self) -> lightkurve.lightcurve.LightCurve:
         return lightkurve.lightcurve.LightCurve(time=self.times, flux=self.fluxes)
 
-    def get_phase_folding_parameters(self) -> (float, float, float, float, float):
+    def get_variability_phase_folding_parameters(
+            self, minimum_period: Optional[float] = None, maximum_period: Optional[float] = None
+    ) -> (float, float, float, float, float):
+        fold_period, fold_epoch, time_bin_size, minimum_bin_phase, maximum_bin_phase, inlier_lightkurve_light_curve, periodogram, folded_lightkurve_light_curve = self.get_variability_phase_folding_parameters_and_folding_lightkurve_light_curves(minimum_period=minimum_period, maximum_period=maximum_period)
+        self._variability_period = fold_period
+        self._variability_period_epoch = fold_epoch
+        return fold_period, fold_epoch, time_bin_size, minimum_bin_phase, maximum_bin_phase
+
+    def get_variability_phase_folding_parameters_and_folding_lightkurve_light_curves(
+            self, minimum_period: Optional[float] = None, maximum_period: Optional[float] = None):
         median_time_step = np.median(np.diff(self.times[~np.isnan(self.times)]))
-        time_bin_size = median_time_step
         lightkurve_light_curve = self.to_lightkurve()
-        inlier_lightkurve_light_curve = lightkurve_light_curve.remove_outliers()
-        periodogram = LombScarglePeriodogram.from_lightcurve(inlier_lightkurve_light_curve, oversample_factor=20)
-        folded_lightkurve_light_curve = inlier_lightkurve_light_curve.fold(period=periodogram.period_at_max_power)
+        inlier_lightkurve_light_curve = lightkurve_light_curve.remove_outliers(sigma=3)
+        periodogram = LombScarglePeriodogram.from_lightcurve(inlier_lightkurve_light_curve, oversample_factor=100,
+                                                             minimum_period=minimum_period,
+                                                             maximum_period=maximum_period)
+        folded_lightkurve_light_curve = inlier_lightkurve_light_curve.fold(period=periodogram.period_at_max_power,
+                                                                           wrap_phase=periodogram.period_at_max_power)
+        fold_period = folded_lightkurve_light_curve.period.value
+        time_bin_size = fold_period / 25
         binned_folded_lightkurve_light_curve = folded_lightkurve_light_curve.bin(time_bin_size=time_bin_size,
                                                                                  aggregate_func=np.nanmedian)
         minimum_bin_index = np.nanargmin(binned_folded_lightkurve_light_curve.flux.value)
         maximum_bin_index = np.nanargmax(binned_folded_lightkurve_light_curve.flux.value)
         minimum_bin_phase = binned_folded_lightkurve_light_curve.phase.value[minimum_bin_index]
         maximum_bin_phase = binned_folded_lightkurve_light_curve.phase.value[maximum_bin_index]
-        fold_period = folded_lightkurve_light_curve.period.value
         fold_epoch = inlier_lightkurve_light_curve.time.value[0]
-        return fold_period, fold_epoch, time_bin_size, minimum_bin_phase, maximum_bin_phase
+        return fold_period, fold_epoch, time_bin_size, minimum_bin_phase, maximum_bin_phase, inlier_lightkurve_light_curve, periodogram, folded_lightkurve_light_curve
+
+    def fold(self, period: float, epoch: float) -> None:
+        self.folded_times = (self.times - epoch) % period
+
+
+class MissingFoldedTimes(Exception):
+    pass

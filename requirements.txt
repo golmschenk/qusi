@@ -1,13 +1,14 @@
 pymc3==3.11.2
 retrying==1.3.3
-bokeh==2.3.0
+tenacity==8.0.1
+bokeh==2.3.3
 scipy==1.6.2
 astroquery==0.4.1
 astropy==4.2
 pandas==1.2.3
 tornado==6.1
 pathos==0.2.7
-tensorflow==2.4.1
+tensorflow==2.10.1
 exoplanet==0.4.5
 peewee==3.14.4
 requests==2.25.1
@@ -22,3 +23,4 @@ beautifulsoup4==4.9.3
 setuptools==54.2.0
 backports.strenum==1.1.1
 lightkurve==2.0.11
+Jinja2==3.1.1

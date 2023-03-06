@@ -47,7 +47,10 @@ class TessFfiLightCurveMetadataManager:
         table_name = convert_class_to_table_name(TessFfiLightCurveMetadata)
         for light_curve_path in light_curve_paths:
             tic_id, sector = TessFfiLightCurve.get_tic_id_and_sector_from_file_path(light_curve_path)
-            magnitude = TessFfiLightCurve.get_floor_magnitude_from_file_path(light_curve_path)
+            if '2_min_cadence_targets' in str(light_curve_path):
+                magnitude = TessFfiLightCurve.get_magnitude_from_file(light_curve_path)
+            else:
+                magnitude = TessFfiLightCurve.get_floor_magnitude_from_file_path(light_curve_path)
             relative_path = light_curve_path.relative_to(self.light_curve_root_directory_path)
             uuid_name = f'{table_name} TIC {tic_id} sector {sector}'
             uuid = metadatabase_uuid(uuid_name)
@@ -70,6 +73,9 @@ class TessFfiLightCurveMetadataManager:
             single_sector_path_glob = self.light_curve_root_directory_path.glob(
                 f'tesslcs_sector_{sector}_104/tesslcs_tmag_*_*/tesslc_*.pkl')
             single_sector_path_globs.append(single_sector_path_glob)
+            short_cadence_single_sector_path_glob = self.light_curve_root_directory_path.glob(
+                f'tesslcs_sector_{sector}_104/2_min_cadence_targets/tesslc_*.pkl')
+            single_sector_path_globs.append(short_cadence_single_sector_path_glob)
         path_glob = itertools.chain(*single_sector_path_globs)
         row_count = 0
         batch_paths = []

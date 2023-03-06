@@ -8,15 +8,18 @@ from typing import Union
 import numpy
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
+from bokeh.models import LinearColorMapper
+from bokeh.palettes import Turbo256
 from bokeh.plotting import Figure
 from matplotlib.colors import LinearSegmentedColormap
 
 
 def plot_light_curve(times: np.ndarray, fluxes: np.ndarray, labels: np.ndarray = None, predictions: np.ndarray = None,
-                    title: str = None, x_label: str = 'Days', y_label: str = 'Flux',
-                    x_limits: (float, float) = (None, None), y_limits: (float, float) = (None, None),
-                    save_path: Union[Path, str] = None, exclude_flux_outliers: bool = False,
-                    base_data_point_size: float = 3):
+                     title: str = None, x_label: str = 'Days', y_label: str = 'Flux',
+                     x_limits: (float, float) = (None, None), y_limits: (float, float) = (None, None),
+                     save_path: Union[Path, str] = None, exclude_flux_outliers: bool = False,
+                     base_data_point_size: float = 3):
     """
     Plots a light curve with a consistent styling. If true labels and/or predictions are included, these will
     additionally be plotted.
@@ -105,7 +108,7 @@ def is_outlier(points: np.ndarray, threshold: float = 5):
 
 
 def create_dual_light_curve_figure(fluxes0, times0, name0, fluxes1, times1, name1, title, x_axis_label='Time (days)',
-                                  y_axis_label='Relative flux') -> Figure:
+                                   y_axis_label='Relative flux') -> Figure:
     """
     Plots two light curves together. Mostly for comparing a light curve cleaned by two different methods.
 
@@ -127,7 +130,7 @@ def create_dual_light_curve_figure(fluxes0, times0, name0, fluxes1, times1, name
 
 
 def create_light_curve_figure(fluxes, times, name, title='', x_axis_label='Time (days)',
-                                  y_axis_label='Relative flux') -> Figure:
+                              y_axis_label='Relative flux') -> Figure:
     """
     Plots two light curves together. Mostly for comparing a light curve cleaned by two different methods.
 
@@ -151,6 +154,19 @@ def add_light_curve(figure, times, fluxes, legend_label, color):
     figure.line(times, fluxes / flux_median, line_color=color, line_alpha=0.1)
     figure.circle(times, fluxes / flux_median, legend_label=legend_label, line_color=color, line_alpha=0.4,
                   fill_color=color, fill_alpha=0.1)
+
+
+def add_folded_light_curve(figure, folded_times, fluxes, times):
+    """Adds a light curve to the figure."""
+    fluxes -= np.minimum(np.nanmin(fluxes), 0)
+    flux_median = np.median(fluxes)
+    relative_fluxes = fluxes / flux_median
+    mapper = LinearColorMapper(palette=Turbo256, low=min(times), high=max(times))
+    data_frame = pd.DataFrame({'folded_time': folded_times, 'flux': relative_fluxes, 'time': times})
+    color = {'field': 'time', 'transform': mapper}
+    figure.circle(source=data_frame, x='folded_time', y='flux', line_color=color, line_alpha=0.4,
+                  fill_color=color, fill_alpha=0.1)
+    return figure
 
 
 async def calculate_inlier_range(points: np.ndarray) -> (float, float):

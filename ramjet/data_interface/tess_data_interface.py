@@ -1,6 +1,9 @@
 """
 Code for a class for common interfacing with TESS data, such as downloading, sorting, and manipulating.
 """
+import astroquery
+import lightkurve
+
 try:
     from enum import StrEnum
 except ImportError:
@@ -53,12 +56,17 @@ def is_common_mast_connection_error(exception: Exception) -> bool:
     :param exception: The exception to check.
     :return: A boolean stating if the exception is a common MAST connection error.
     """
+    print(f'Retrying on {exception}...', flush=True)
+    # TODO: Rename function, as it includes more than just MAST now.
     return (isinstance(exception, AstroQueryTimeoutError) or
             isinstance(exception, TimeoutError) or
             isinstance(exception, requests.exceptions.ReadTimeout) or
             isinstance(exception, requests.exceptions.ChunkedEncodingError) or
             isinstance(exception, requests.exceptions.HTTPError) or
-            isinstance(exception, requests.exceptions.ConnectionError))
+            isinstance(exception, requests.exceptions.ConnectionError) or
+            isinstance(exception, ConnectionResetError) or
+            isinstance(exception, lightkurve.search.SearchError) or
+            isinstance(exception, astroquery.exceptions.RemoteServiceError))
 
 
 class NoDataProductsFoundException(Exception):
@@ -95,17 +103,15 @@ class TessDataInterface:
         if tic_id is None or np.isscalar(tic_id):
             observations = self.get_all_tess_time_series_observations_chunk(tic_id)
         else:
-            observations = None
+            observations_chunks = []
             for tic_id_list_chunk in np.array_split(tic_id, math.ceil(len(tic_id) / self.mast_input_query_chunk_size)):
                 observations_chunk = self.get_all_tess_time_series_observations_chunk(tic_id_list_chunk)
-                if observations is None:
-                    observations = observations_chunk
-                else:
-                    observations = observations.append(observations_chunk, ignore_index=True)
+                observations_chunks.append(observations_chunk)
+            observations = pd.concat(observations_chunks, ignore_index=True)
         return observations
 
     @staticmethod
-    @retry(retry_on_exception=is_common_mast_connection_error)
+    @retry(retry_on_exception=is_common_mast_connection_error, stop_max_attempt_number=10)
     def get_all_tess_time_series_observations_chunk(tic_id: Union[int, List[int]] = None) -> pd.DataFrame:
         """
         Gets all TESS time-series observations, limited to science data product level. Repeats download attempt on
@@ -130,20 +136,18 @@ class TessDataInterface:
         :return: The data frame of the product list. Will be converted from Table to DataFrame for use.
         """
         if observations.shape[0] > 1:
-            product_list = None
+            product_list_chunks = []
             for observations_chunk in np.array_split(observations,
                                                      math.ceil(observations.shape[0] / self.mast_input_query_chunk_size)):
                 product_list_chunk = self.get_product_list_chunk(observations_chunk)
-                if product_list is None:
-                    product_list = product_list_chunk
-                else:
-                    product_list = product_list.append(product_list_chunk, ignore_index=True)
+                product_list_chunks.append(product_list_chunk)
+            product_list = pd.concat(product_list_chunks, ignore_index=True)
         else:
             product_list = self.get_product_list_chunk(observations)
         return product_list
 
     @staticmethod
-    @retry(retry_on_exception=is_common_mast_connection_error)
+    @retry(retry_on_exception=is_common_mast_connection_error, stop_max_attempt_number=10)
     def get_product_list_chunk(observations: pd.DataFrame) -> pd.DataFrame:
         """
         A wrapper for MAST's `get_product_list`, allowing the use of Pandas DataFrames instead of AstroPy Tables.
@@ -156,7 +160,7 @@ class TessDataInterface:
         return data_products.to_pandas()
 
     @staticmethod
-    @retry(retry_on_exception=is_common_mast_connection_error)
+    @retry(retry_on_exception=is_common_mast_connection_error, stop_max_attempt_number=10)
     def download_products(data_products: pd.DataFrame, data_directory: Path) -> pd.DataFrame:
         """
          A wrapper for MAST's `download_products`, allowing the use of Pandas DataFrames instead of AstroPy Tables.
@@ -431,7 +435,7 @@ class TessDataInterface:
         return SkyCoord(ra, dec, unit='deg')
 
     @staticmethod
-    @retry(retry_on_exception=is_common_mast_connection_error)
+    @retry(retry_on_exception=is_common_mast_connection_error, stop_max_attempt_number=10)
     def get_tess_input_catalog_row(tic_id: int) -> pd.Series:
         """
         Get the TIC row for a TIC ID.

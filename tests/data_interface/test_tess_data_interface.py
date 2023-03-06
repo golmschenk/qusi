@@ -18,18 +18,14 @@ from ramjet.data_interface.tess_data_interface import TessDataInterface, TessFlu
 
 class TestTessDataInterface:
     @pytest.fixture
-    def tess_data_interface_module(self) -> Any:
-        import ramjet.data_interface.tess_data_interface as tess_data_interface_module
-        return tess_data_interface_module
-
-    @pytest.fixture
     def tess_data_interface(self) -> TessDataInterface:
         return TessDataInterface()
 
-    def test_can_request_time_series_observations_from_mast_as_pandas_data_frame(self, tess_data_interface,
-                                                                                 tess_data_interface_module):
+    @patch.object(ramjet.data_interface.tess_data_interface.Observations, 'query_criteria')
+    def test_can_request_time_series_observations_from_mast_as_pandas_data_frame(self, mock_query_criteria,
+                                                                                 tess_data_interface):
         mock_query_result = Table({'a': [1, 2], 'b': [3, 4]})
-        tess_data_interface_module.Observations.query_criteria = Mock(return_value=mock_query_result)
+        mock_query_criteria.return_value = mock_query_result
         query_result = tess_data_interface.get_all_tess_time_series_observations()
         assert isinstance(query_result, pd.DataFrame)
         assert np.array_equal(query_result['a'].values, [1, 2])
@@ -42,25 +38,25 @@ class TestTessDataInterface:
         assert Observations.TIMEOUT == 2000
         assert Observations.PAGESIZE == 3000
 
-    def test_can_request_data_products_from_mast_as_pandas_data_frame(self, tess_data_interface,
-                                                                      tess_data_interface_module):
+    @patch.object(ramjet.data_interface.tess_data_interface.Observations, 'get_product_list')
+    def test_can_request_data_products_from_mast_as_pandas_data_frame(self, mock_get_product_list, tess_data_interface):
         mock_query_result = Table({'a': [1, 2], 'b': [3, 4]})
-        tess_data_interface_module.Observations.get_product_list = Mock(return_value=mock_query_result)
+        mock_get_product_list.return_value = mock_query_result
         fake_observations_data_frame = pd.DataFrame()
         query_result = tess_data_interface.get_product_list(fake_observations_data_frame)
         assert isinstance(query_result, pd.DataFrame)
         assert np.array_equal(query_result['a'].values, [1, 2])
 
-    def test_can_request_to_download_products_from_mast(self, tess_data_interface,
-                                                        tess_data_interface_module):
+    @patch.object(ramjet.data_interface.tess_data_interface.Observations, 'download_products')
+    def test_can_request_to_download_products_from_mast(self, mock_download_products, tess_data_interface):
         mock_manifest = Table({'a': [1, 2], 'b': [3, 4]})
-        tess_data_interface_module.Observations.download_products = Mock(return_value=mock_manifest)
+        mock_download_products.return_value = mock_manifest
         fake_data_products_data_frame = pd.DataFrame()
         data_directory = Path('fake/data/directory')
         query_result = tess_data_interface.download_products(fake_data_products_data_frame,
                                                              data_directory=data_directory)
-        tess_data_interface_module.Observations.download_products.assert_called_with(ANY,
-                                                                                     download_dir=str(data_directory))
+        mock_download_products.assert_called_with(ANY,
+                                                  download_dir=str(data_directory))
         assert isinstance(query_result, pd.DataFrame)
         assert np.array_equal(query_result['a'].values, [1, 2])
 
@@ -216,36 +212,39 @@ class TestTessDataInterface:
         assert np.allclose(flux_errors, expected_flux_errors, equal_nan=True)
         assert np.allclose(times, expected_times, equal_nan=True)
 
-    def test_can_limit_an_observations_query_by_tic_id(self, tess_data_interface, tess_data_interface_module):
+    @patch.object(ramjet.data_interface.tess_data_interface.Observations, 'query_criteria')
+    def test_can_limit_an_observations_query_by_tic_id(self, mock_query_criteria, tess_data_interface):
         mock_query_result = Table({'a': [1, 2], 'b': [3, 4]})
-        tess_data_interface_module.Observations.query_criteria = Mock(return_value=mock_query_result)
+        mock_query_criteria.return_value = mock_query_result
         _ = tess_data_interface.get_all_tess_time_series_observations(tic_id=0)
-        assert tess_data_interface_module.Observations.query_criteria.call_args[1]['target_name'] == 0
+        assert mock_query_criteria.call_args[1]['target_name'] == 0
 
-    def test_can_get_the_coordinates_of_a_target_based_on_tic_id(self, tess_data_interface, tess_data_interface_module):
+    @patch.object(ramjet.data_interface.tess_data_interface.Catalogs, 'query_criteria')
+    def test_can_get_the_coordinates_of_a_target_based_on_tic_id(self, mock_query_criteria, tess_data_interface):
         mock_query_result = Table({'ra': [62.2, 62.2], 'dec': [-71.4, -71.4]})
-        tess_data_interface_module.Catalogs.query_criteria = Mock(return_value=mock_query_result)
+        mock_query_criteria.return_value = mock_query_result
         coordinates = tess_data_interface.get_target_coordinates(tic_id=0)
         assert coordinates.ra.deg == 62.2
         assert coordinates.dec.deg == -71.4
 
-    def test_can_get_variable_stars_by_coordinate(self, tess_data_interface, tess_data_interface_module):
+    @patch.object(ramjet.data_interface.tess_data_interface.Vizier, 'query_region')
+    def test_can_get_variable_stars_by_coordinate(self, mock_query_region, tess_data_interface):
         mock_query_result = TableList({0: Table({'VarType': [b'RR', b'SNI']})})
-        tess_data_interface_module.Vizier.query_region = Mock(return_value=mock_query_result)
+        mock_query_region.return_value = mock_query_result
         coordinates = SkyCoord(1, 1, unit="deg")
         variable_data_frame = tess_data_interface.get_variable_data_frame_for_coordinates(coordinates)
         assert variable_data_frame['VarType'].iloc[0] == b'RR'
         assert variable_data_frame['VarType'].iloc[1] == b'SNI'
 
-    def test_returns_empty_data_frame_when_no_variable_stars_exist(self, tess_data_interface,
-                                                                   tess_data_interface_module):
+    @patch.object(ramjet.data_interface.tess_data_interface.Vizier, 'query_region')
+    def test_returns_empty_data_frame_when_no_variable_stars_exist(self, mock_query_region, tess_data_interface):
         mock_query_result = TableList({})
-        tess_data_interface_module.Vizier.query_region = Mock(return_value=mock_query_result)
+        mock_query_region.return_value = mock_query_result
         coordinates = SkyCoord(1, 1, unit="deg")
         variable_data_frame = tess_data_interface.get_variable_data_frame_for_coordinates(coordinates)
         assert isinstance(variable_data_frame, pd.DataFrame)
 
-    def test_can_get_variable_stars_by_tic_id(self, tess_data_interface, tess_data_interface_module):
+    def test_can_get_variable_stars_by_tic_id(self, tess_data_interface):
         tic_id_coordinates_result = SkyCoord(62.2, -71.4, unit="deg")
         variables_for_coordinates_result = pd.DataFrame({'VarType': [b'RR', b'SNI']})
         tess_data_interface.get_target_coordinates = Mock(return_value=tic_id_coordinates_result)
@@ -290,9 +289,10 @@ class TestTessDataInterface:
         assert tic_id1 == 278956474
         assert sector1 == 5
 
-    def test_can_get_the_tic_row_of_a_target_based_on_tic_id(self, tess_data_interface, tess_data_interface_module):
+    @patch.object(ramjet.data_interface.tess_data_interface.Catalogs, 'query_criteria')
+    def test_can_get_the_tic_row_of_a_target_based_on_tic_id(self, mock_query_criteria, tess_data_interface):
         mock_query_result = Table({'ra': [62.2, 62.2], 'dec': [-71.4, -71.4]})
-        tess_data_interface_module.Catalogs.query_criteria = Mock(return_value=mock_query_result)
+        mock_query_criteria.return_value = mock_query_result
         tic_row = tess_data_interface.get_tess_input_catalog_row(tic_id=0)
         assert tic_row['ra'] == 62.2
         assert tic_row['dec'] == -71.4

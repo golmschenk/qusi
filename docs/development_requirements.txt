@@ -1,4 +1,5 @@
 retrying
+tenacity
 numpy
 pandas
 tensorflow
@@ -13,7 +14,7 @@ sphinx-press-theme
 GitPython
 matplotlib
 pipreqs
-bokeh
+bokeh~=2.4.0
 pymc3
 exoplanet
 scipy
@@ -21,7 +22,12 @@ setuptools
 dataset
 pathos
 peewee
-backports.strenum
-plotly
+pytest-asyncio
 wandb
+plotly
+tornado
+beautifulsoup4
+lxml
+backports.strenum
 lightkurve
+uvloop

@@ -108,9 +108,9 @@ class MoaDataInterface:
             events_data_frame[['field', 'clr', 'chip', 'subfield', 'id']] = events_data_frame[
                 'MOA INTERNAL ID'].str.split(
                 '-', 4, expand=True)
-            events_data_frame['chip'] = events_data_frame['chip'].astype(np.int64)
-            events_data_frame['subfield'] = events_data_frame['subfield'].astype(np.int64)
-            events_data_frame['id'] = events_data_frame['id'].astype(np.int64)
+            events_data_frame['chip'] = events_data_frame['chip'].astype(int)
+            events_data_frame['subfield'] = events_data_frame['subfield'].astype(int)
+            events_data_frame['id'] = events_data_frame['id'].astype(int)
             events_data_frame = events_data_frame.set_index(['field', 'clr', 'chip', 'subfield', 'id'], drop=False)
             events_data_frame = events_data_frame.sort_index()
             datetime_string = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")

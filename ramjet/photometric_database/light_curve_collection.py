@@ -128,7 +128,7 @@ class LightCurveCollection:
 
     def load_auxiliary_information_for_path(self, path: Path) -> np.ndarray:
         """
-        Loads auxiliary information information for the given path.
+        Loads auxiliary information for the given path.
 
         :param path: The path to the light curve file.
         :return: The auxiliary information.

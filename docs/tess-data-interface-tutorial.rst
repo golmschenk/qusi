@@ -4,9 +4,8 @@ Simple TESS data interface tutorial
 Tutorial Summary
 ----------------
 
-This tutorial shows how to use several convenience functions in the :code:`ramjet` package to quickly download,
-view, and find additional information about `TESS <https://tess.mit.edu>`_ lightcurves. For the time being, this is only
-for 2-minute cadence TESS lightcurves.
+This tutorial shows how to use some convenience functions in the :code:`ramjet` package to quickly download,
+view, and find additional information about `TESS <https://tess.mit.edu>`_ lightcurves.
 
 Setup
 -----
@@ -16,53 +15,46 @@ All that's needed for this tutorial is to install the :code:`ramjet` pip package
 
     pip install astroramjet
 
-All the functions below are methods of the :code:`TessDataInterface` class. So we need to create an instance of this
-class to use the rest of the commands. Either from a Python console, or in a Python script, create the instance object
-using:
-
-.. code-block:: python
-
-    from ramjet.data_interface.tess_data_interface import TessDataInterface
-    tess_data_interface = TessDataInterface()
-
-Download a TESS lightcurve
---------------------------
-To download a lightcurve, use a command like:
-
-.. code-block:: python
-
-    tess_data_interface.download_two_minute_cadence_lightcurve(tic_id=370101492, sector=12, save_directory='lightcurves')
-
-This will create a directory called "lightcurves" in the current working directory (if it doesn't exist), and download
-into it the lightcurve FITS file for TIC 370101492 in sector 12.
-
-Plot a lightcurve from MAST
+Downloading the light curve
 ---------------------------
-This provides a single line to plot a lightcurve from MAST for quick viewing (this also performs the download).
+
+To view a TESS light curve, we first need to get the light curve data from the Mikulski Archive for Space Telescopes
+(MAST). To do this, we use the :code:`TessTwoMinuteCadenceLightCurve` class in the following way:
 
 .. code-block:: python
 
-    tess_data_interface.plot_lightcurve_from_mast(tic_id=370101492, sector=12)
+    from ramjet.photometric_database.tess_two_minute_cadence_light_curve import TessTwoMinuteCadenceLightCurve
+    light_curve = TessTwoMinuteCadenceLightCurve.from_mast(tic_id=370101492, sector=12)
 
-This will generate an interactive Matplotlib window plotting the lightcurve.
+Any valid TIC ID and sector can be used in the above code.
+
+Viewing the light curve
+-----------------------
+
+Next, we'll get only the data points in the light curve where
+the flux value is not NaN, because NaN values mess up the plotting of the light curve. To get these non-NaN values, we
+run:
+
+.. code-block:: python
+
+    import numpy as np
+    non_nan_flux_indexes = ~np.isnan(light_curve.fluxes)
+    times = light_curve.times[non_nan_flux_indexes]
+    fluxes = light_curve.fluxes[non_nan_flux_indexes]
+
+Next we'll create and show the light curve figure:
+
+.. code-block:: python
+
+    figure = create_light_curve_figure(times=times,
+                                   fluxes=fluxes,
+                                   name='Relative flux',
+                                   title=f'TIC {light_curve.tic_id} sector {light_curve.sector}')
+    figure.sizing_mode = 'stretch_width'
+    from bokeh.io import show
+    show(figure)
 
 .. image:: tess-data-interface-tutorial/plot-from-mast-example.png
-
-The lightcurve is downloaded to a temporary directory, so you don't need to worry about cleanup. You can also pass
-:code:`base_data_point_size=10` to increase the point plotting size (10 can be swapped with any size). This helps when
-zooming into a view that will have much less data points.
-
-Checking for known variability
-------------------------------
-
-Running
-
-.. code-block:: python
-
-    tess_data_interface.print_variables_near_tess_target(tic_id=59661876)
-
-will print any known stellar variability source near the TIC target. This information is based on the
-`General Catalogue of Variable Stars <http://www.sai.msu.su/gcvs/gcvs/>`_.
 
 Checking for known planets
 --------------------------
@@ -73,7 +65,21 @@ Checking for known planets requires a separate data interface. Running
 
     from ramjet.data_interface.tess_toi_data_interface import TessToiDataInterface
     tess_toi_data_interface = TessToiDataInterface()
-    tess_toi_data_interface.print_exofop_planet_dispositions_for_tic_target(tic_id=425997655)
+    tess_toi_data_interface.print_exofop_toi_and_ctoi_planet_dispositions_for_tic_target(tic_id=425997655)
 
 will print any known `Exoplanet Follow-up Observing Program <https://exofop.ipac.caltech.edu/tess/>`_ planet
-dispositions for the passed TIC ID.
+dispositions for the passed TIC ID. Note, this is not the same TIC ID we used above.
+
+Checking for known variability
+------------------------------
+
+Running
+
+.. code-block:: python
+
+    tess_data_interface = TessDataInterface()
+    tess_data_interface.print_variables_near_tess_target(tic_id=59661876)
+
+will print any known stellar variability source near the TIC target. This information is based on the
+`General Catalogue of Variable Stars <http://www.sai.msu.su/gcvs/gcvs/>`_. Note, this is not the same TIC ID we used
+above.
