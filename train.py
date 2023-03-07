@@ -18,11 +18,12 @@ def train(test_split):
     """Runs the training."""
     print('Starting training process...', flush=True)
     # Basic training settings.
-    database = MoaSurveyMicrolensingAndNonMicrolensingWithTimeAndHardCasesDatabase(test_split=test_split)
+    database = MoaSurveyMicrolensingAndNonMicrolensingDatabase(test_split=test_split)
     model = Hades(database.number_of_label_values)
     # model = Cura(database.number_of_label_values, database.number_of_input_channels)
     # database.batch_size = 50  # Reducing the batch size may help if you are running out of memory.
-    trial_name = f'{type(model).__name__}_TIME_Hard_test_split_{test_split}'  # Add any desired run name details to this string.
+    # trial_name = f'{type(model).__name__}_TIME_Hard_test_split_{test_split}'  # Add any desired run name details to this string.
+    trial_name = f'{type(model).__name__}_test_split_{test_split}'  # Add any desired run name details to this string.
     epochs_to_run = 30
     logs_directory = Path('logs')
 
