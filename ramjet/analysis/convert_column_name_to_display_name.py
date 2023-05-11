@@ -7,7 +7,7 @@ import re
 
 def convert_column_name_to_display_name(column_name: str) -> str:
     """
-    Add method to convert from column style names to human readable display names. Column style names should be
+    Add method to convert from column style names to human-readable display names. Column style names should be
     snake_case with a double underscore before the units (if units are relevant). The display name will have the
     first letter capitalized, spaces between words, and the units in parentheses at the end.
     Example: `transit_duration__days` -> `Transit duration (days)`

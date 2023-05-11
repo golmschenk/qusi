@@ -28,7 +28,7 @@ from astroquery.exceptions import TimeoutError as AstroQueryTimeoutError
 from astroquery.vizier import Vizier
 from bokeh.io import show
 from retrying import retry
-from bokeh.plotting import Figure
+from bokeh.plotting import figure as Figure
 
 from ramjet.analysis.light_curve_visualizer import plot_light_curve, create_dual_light_curve_figure
 

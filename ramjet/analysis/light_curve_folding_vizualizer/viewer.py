@@ -15,7 +15,7 @@ except ImportError:
     from backports.strenum import StrEnum
 
 from bokeh.models import Spinner, ColumnDataSource, LinearColorMapper, TapTool, Span, Range1d, LinearAxis, Div
-from bokeh.plotting import Figure
+from bokeh.plotting import figure as Figure
 
 from ramjet.photometric_database.light_curve import LightCurve
 

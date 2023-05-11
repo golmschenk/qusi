@@ -7,7 +7,7 @@ from typing import Union, List
 
 from bokeh.colors import Color
 from bokeh.models import ColumnDataSource, GlyphRenderer, CustomJS
-from bokeh.plotting import Figure
+from bokeh.plotting import figure as Figure
 
 from ramjet.analysis.color_palette import light_curve_colors
 from ramjet.analysis.light_curve_visualizer import calculate_inlier_range

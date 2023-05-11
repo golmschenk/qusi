@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from bokeh.models import LinearColorMapper
 from bokeh.palettes import Turbo256
-from bokeh.plotting import Figure
+from bokeh.plotting import figure as Figure
 from matplotlib.colors import LinearSegmentedColormap
 
 
