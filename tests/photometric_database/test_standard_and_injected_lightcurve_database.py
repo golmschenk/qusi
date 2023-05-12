@@ -11,6 +11,7 @@ from ramjet.photometric_database.derived.toy_database import ToyDatabaseWithAuxi
 from ramjet.photometric_database.light_curve_collection import LightCurveCollection
 from ramjet.photometric_database.standard_and_injected_light_curve_database import \
     StandardAndInjectedLightCurveDatabase, OutOfBoundsInjectionHandlingMethod
+import ramjet.photometric_database.light_curve_database as light_curve_database_module
 
 
 class TestStandardAndInjectedLightCurveDatabase:
@@ -91,7 +92,16 @@ class TestStandardAndInjectedLightCurveDatabase:
     @patch.object(ramjet.photometric_database.light_curve_database.np.random, 'randint', return_value=0)
     def test_database_can_generate_training_and_validation_datasets(self, mock_randint, mock_random,
                                                                     database_with_collections):
-        training_dataset, validation_dataset = database_with_collections.generate_datasets()
+        with (
+            patch.object(light_curve_database_module, 'normalize_on_percentiles') as mock_normalize_on_percentiles,
+            patch.object(light_curve_database_module, 'randomly_roll_elements') as mock_randomly_roll_elements,
+            patch.object(light_curve_database_module, 'remove_random_elements') as mock_remove_random_elements
+        ):
+            # Remove other preprocessing to keep it simple.
+            mock_normalize_on_percentiles.side_effect = lambda fluxes: fluxes
+            mock_randomly_roll_elements.side_effect = lambda fluxes: fluxes
+            mock_remove_random_elements.side_effect = lambda fluxes: fluxes
+            training_dataset, validation_dataset = database_with_collections.generate_datasets()
         training_batch = next(iter(training_dataset))
         training_batch_examples = training_batch[0]
         training_batch_labels = training_batch[1]
@@ -122,10 +132,20 @@ class TestStandardAndInjectedLightCurveDatabase:
         database = deterministic_database
         light_curve_collection = database.training_standard_light_curve_collections[0]
         paths_dataset = database.generate_paths_dataset_from_light_curve_collection(light_curve_collection)
-        light_curve_and_label_dataset = database.generate_standard_light_curve_and_label_dataset(paths_dataset,
-                                                                                                 light_curve_collection.load_times_fluxes_and_flux_errors_from_path,
-                                                                                                 light_curve_collection.load_auxiliary_information_for_path,
-                                                                                                 light_curve_collection.load_label_from_path)
+        with (
+            patch.object(light_curve_database_module, 'normalize_on_percentiles') as mock_normalize_on_percentiles,
+            patch.object(light_curve_database_module, 'randomly_roll_elements') as mock_randomly_roll_elements,
+            patch.object(light_curve_database_module, 'remove_random_elements') as mock_remove_random_elements
+        ):
+            # Remove other preprocessing to keep it simple.
+            mock_normalize_on_percentiles.side_effect = lambda fluxes: fluxes
+            mock_randomly_roll_elements.side_effect = lambda fluxes: fluxes
+            mock_remove_random_elements.side_effect = lambda fluxes: fluxes
+            light_curve_and_label_dataset = database.generate_standard_light_curve_and_label_dataset(
+                paths_dataset,
+                light_curve_collection.load_times_fluxes_and_flux_errors_from_path,
+                light_curve_collection.load_auxiliary_information_for_path,
+                light_curve_collection.load_label_from_path)
         light_curve_and_label = next(iter(light_curve_and_label_dataset))
         assert light_curve_and_label[0].numpy().shape == (3, 1)
         assert np.array_equal(light_curve_and_label[0].numpy(), [[0], [1], [2]])  # Standard light_curve 0.
@@ -139,10 +159,19 @@ class TestStandardAndInjectedLightCurveDatabase:
         load_label_from_path_function = light_curve_collection.load_label_from_path
         expected_label = load_label_from_path_function(Path())
         load_from_path_function = light_curve_collection.load_times_fluxes_and_flux_errors_from_path
-        light_curve, label = database.preprocess_standard_light_curve(load_from_path_function,
-                                                                      light_curve_collection.load_auxiliary_information_for_path,
-                                                                      load_label_from_path_function,
-                                                                      tf.convert_to_tensor(str(light_curve_path)))
+        with (
+            patch.object(light_curve_database_module, 'normalize_on_percentiles') as mock_normalize_on_percentiles,
+            patch.object(light_curve_database_module, 'randomly_roll_elements') as mock_randomly_roll_elements,
+            patch.object(light_curve_database_module, 'remove_random_elements') as mock_remove_random_elements
+        ):
+            # Remove other preprocessing to keep it simple.
+            mock_normalize_on_percentiles.side_effect = lambda fluxes: fluxes
+            mock_randomly_roll_elements.side_effect = lambda fluxes: fluxes
+            mock_remove_random_elements.side_effect = lambda fluxes: fluxes
+            light_curve, label = database.preprocess_standard_light_curve(load_from_path_function,
+                                                                          light_curve_collection.load_auxiliary_information_for_path,
+                                                                          load_label_from_path_function,
+                                                                          tf.convert_to_tensor(str(light_curve_path)))
         assert light_curve.shape == (3, 1)
         assert np.array_equal(light_curve, [[0], [1], [2]])  # Standard light_curve 0.
         assert np.array_equal(label, [expected_label])  # Standard label 0.
@@ -197,12 +226,21 @@ class TestStandardAndInjectedLightCurveDatabase:
             injectee_light_curve_collection)
         injectable_paths_dataset = database_with_collections.generate_paths_dataset_from_light_curve_collection(
             injectable_light_curve_collection)
-        light_curve_and_label_dataset = database_with_collections.generate_injected_light_curve_and_label_dataset(
-            injectee_paths_dataset, injectee_light_curve_collection.load_times_fluxes_and_flux_errors_from_path,
-            injectee_light_curve_collection.load_auxiliary_information_for_path,
-            injectable_paths_dataset,
-            injectable_light_curve_collection.load_times_magnifications_and_magnification_errors_from_path,
-            injectable_light_curve_collection.load_label_from_path)
+        with (
+            patch.object(light_curve_database_module, 'normalize_on_percentiles') as mock_normalize_on_percentiles,
+            patch.object(light_curve_database_module, 'randomly_roll_elements') as mock_randomly_roll_elements,
+            patch.object(light_curve_database_module, 'remove_random_elements') as mock_remove_random_elements
+        ):
+            # Remove other preprocessing to keep it simple.
+            mock_normalize_on_percentiles.side_effect = lambda fluxes: fluxes
+            mock_randomly_roll_elements.side_effect = lambda fluxes: fluxes
+            mock_remove_random_elements.side_effect = lambda fluxes: fluxes
+            light_curve_and_label_dataset = database_with_collections.generate_injected_light_curve_and_label_dataset(
+                injectee_paths_dataset, injectee_light_curve_collection.load_times_fluxes_and_flux_errors_from_path,
+                injectee_light_curve_collection.load_auxiliary_information_for_path,
+                injectable_paths_dataset,
+                injectable_light_curve_collection.load_times_magnifications_and_magnification_errors_from_path,
+                injectable_light_curve_collection.load_label_from_path)
         light_curve_and_label = next(iter(light_curve_and_label_dataset))
         assert light_curve_and_label[0].numpy().shape == (3, 1)
         assert np.array_equal(light_curve_and_label[0].numpy(), [[0.5], [3], [5.5]])  # Injected light_curve 0
@@ -221,13 +259,22 @@ class TestStandardAndInjectedLightCurveDatabase:
         expected_label = load_label_from_path_function(Path())
         injectable_load_from_path_function = \
             injectable_light_curve_collection.load_times_magnifications_and_magnification_errors_from_path
-        light_curve, label = database.preprocess_injected_light_curve(
-            injectee_load_from_path_function,
-            injectee_light_curve_collection.load_auxiliary_information_for_path,
-            injectable_load_from_path_function,
-            load_label_from_path_function,
-            tf.convert_to_tensor(str(injectee_light_curve_path)),
-            tf.convert_to_tensor(str(injectable_light_curve_path)))
+        with (
+            patch.object(light_curve_database_module, 'normalize_on_percentiles') as mock_normalize_on_percentiles,
+            patch.object(light_curve_database_module, 'randomly_roll_elements') as mock_randomly_roll_elements,
+            patch.object(light_curve_database_module, 'remove_random_elements') as mock_remove_random_elements
+        ):
+            # Remove other preprocessing to keep it simple.
+            mock_normalize_on_percentiles.side_effect = lambda fluxes: fluxes
+            mock_randomly_roll_elements.side_effect = lambda fluxes: fluxes
+            mock_remove_random_elements.side_effect = lambda fluxes: fluxes
+            light_curve, label = database.preprocess_injected_light_curve(
+                injectee_load_from_path_function,
+                injectee_light_curve_collection.load_auxiliary_information_for_path,
+                injectable_load_from_path_function,
+                load_label_from_path_function,
+                tf.convert_to_tensor(str(injectee_light_curve_path)),
+                tf.convert_to_tensor(str(injectable_light_curve_path)))
         assert light_curve.shape == (3, 1)
         assert np.array_equal(light_curve, [[0.5], [3], [5.5]])  # Injected light_curve 0.
         assert np.array_equal(label, [expected_label])  # Injected label 0.
@@ -388,7 +435,16 @@ class TestStandardAndInjectedLightCurveDatabase:
         database_with_collections.training_injectable_light_curve_collections = []
         database_with_collections.validation_injectee_light_curve_collection = None
         database_with_collections.validation_injectable_light_curve_collections = []
-        training_dataset, validation_dataset = database_with_collections.generate_datasets()
+        with (
+            patch.object(light_curve_database_module, 'normalize_on_percentiles') as mock_normalize_on_percentiles,
+            patch.object(light_curve_database_module, 'randomly_roll_elements') as mock_randomly_roll_elements,
+            patch.object(light_curve_database_module, 'remove_random_elements') as mock_remove_random_elements
+        ):
+            # Remove other preprocessing to keep it simple.
+            mock_normalize_on_percentiles.side_effect = lambda fluxes: fluxes
+            mock_randomly_roll_elements.side_effect = lambda fluxes: fluxes
+            mock_remove_random_elements.side_effect = lambda fluxes: fluxes
+            training_dataset, validation_dataset = database_with_collections.generate_datasets()
         training_batch = next(iter(training_dataset))
         training_batch_examples = training_batch[0]
         training_batch_labels = training_batch[1]
@@ -408,7 +464,16 @@ class TestStandardAndInjectedLightCurveDatabase:
         light_curve_collection = database_with_collections.training_standard_light_curve_collections[0]
         paths_dataset = database_with_collections.generate_paths_dataset_from_light_curve_collection(
             light_curve_collection)
-        path_and_light_curve_dataset = database_with_collections.generate_infer_path_and_light_curve_dataset(
+        with (
+            patch.object(light_curve_database_module, 'normalize_on_percentiles') as mock_normalize_on_percentiles,
+            patch.object(light_curve_database_module, 'randomly_roll_elements') as mock_randomly_roll_elements,
+            patch.object(light_curve_database_module, 'remove_random_elements') as mock_remove_random_elements
+        ):
+            # Remove other preprocessing to keep it simple.
+            mock_normalize_on_percentiles.side_effect = lambda fluxes: fluxes
+            mock_randomly_roll_elements.side_effect = lambda fluxes: fluxes
+            mock_remove_random_elements.side_effect = lambda fluxes: fluxes
+            path_and_light_curve_dataset = database_with_collections.generate_infer_path_and_light_curve_dataset(
             paths_dataset, light_curve_collection.load_times_fluxes_and_flux_errors_from_path,
             light_curve_collection.load_auxiliary_information_for_path)
         path_and_light_curve = next(iter(path_and_light_curve_dataset))
@@ -422,7 +487,16 @@ class TestStandardAndInjectedLightCurveDatabase:
         light_curve_path = light_curve_collection.get_paths()[0]
         expected_label = light_curve_collection.label
         load_from_path_function = light_curve_collection.load_times_fluxes_and_flux_errors_from_path
-        path, light_curve = database_with_collections.preprocess_infer_light_curve(
+        with (
+            patch.object(light_curve_database_module, 'normalize_on_percentiles') as mock_normalize_on_percentiles,
+            patch.object(light_curve_database_module, 'randomly_roll_elements') as mock_randomly_roll_elements,
+            patch.object(light_curve_database_module, 'remove_random_elements') as mock_remove_random_elements
+        ):
+            # Remove other preprocessing to keep it simple.
+            mock_normalize_on_percentiles.side_effect = lambda fluxes: fluxes
+            mock_randomly_roll_elements.side_effect = lambda fluxes: fluxes
+            mock_remove_random_elements.side_effect = lambda fluxes: fluxes
+            path, light_curve = database_with_collections.preprocess_infer_light_curve(
             load_from_path_function,
             light_curve_collection.load_auxiliary_information_for_path,
             tf.convert_to_tensor(str(light_curve_path)))
@@ -514,7 +588,16 @@ class TestStandardAndInjectedLightCurveDatabase:
         database.time_steps_per_example = 3
         database.number_of_parallel_processes_per_map = 1
         database.number_of_auxiliary_values = 2
-        training_dataset, validation_dataset = database.generate_datasets()
+        with (
+            patch.object(light_curve_database_module, 'normalize_on_percentiles') as mock_normalize_on_percentiles,
+            patch.object(light_curve_database_module, 'randomly_roll_elements') as mock_randomly_roll_elements,
+            patch.object(light_curve_database_module, 'remove_random_elements') as mock_remove_random_elements
+        ):
+            # Remove other preprocessing to keep it simple.
+            mock_normalize_on_percentiles.side_effect = lambda fluxes: fluxes
+            mock_randomly_roll_elements.side_effect = lambda fluxes: fluxes
+            mock_remove_random_elements.side_effect = lambda fluxes: fluxes
+            training_dataset, validation_dataset = database.generate_datasets()
         training_batch = next(iter(training_dataset))
         training_batch_observations = training_batch[0]
         training_batch_labels = training_batch[1]

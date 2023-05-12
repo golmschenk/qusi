@@ -17,7 +17,8 @@ from ramjet.logging.wandb_logger import WandbLogger, WandbLoggableLightCurve, \
     WandbLoggableInjection
 from ramjet.photometric_database.light_curve import LightCurve
 from ramjet.photometric_database.light_curve_collection import LightCurveCollection
-from ramjet.photometric_database.light_curve_database import LightCurveDatabase
+from ramjet.photometric_database.light_curve_database import LightCurveDatabase, \
+    paths_dataset_from_list_or_generator_factory
 from ramjet.py_mapper import map_py_function_to_dataset
 
 
@@ -191,7 +192,7 @@ class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
         :param shuffle: Whether to shuffle the dataset or not.
         :return: The paths dataset.
         """
-        dataset = self.paths_dataset_from_list_or_generator_factory(light_curve_collection.get_paths)
+        dataset = paths_dataset_from_list_or_generator_factory(light_curve_collection.get_paths)
         if repeat:
             dataset = dataset.repeat()
         if shuffle:
