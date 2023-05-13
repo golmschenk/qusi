@@ -305,7 +305,118 @@ class TestStandardAndInjectedLightCurveDatabase:
         assert next(iter(standard_paths_datasets[0])).numpy() == b'standard_path0.ext'
         assert next(iter(standard_paths_datasets[1])).numpy() == b'standard_path1.ext'
 
-    def test_can_inject_signal_into_fluxes(self, database_with_collections):
+    def test_can_inject_signal_into_fluxes(self):
+        light_curve_fluxes = np.array([1, 2, 3, 4, 5])
+        light_curve_times = np.array([10, 20, 30, 40, 50])
+        signal_magnifications = np.array([1, 3, 1])
+        signal_times = np.array([0, 20, 40])
+        fluxes_with_injected_signal = database_module.inject_signal_into_light_curve(
+            light_curve_times,
+            light_curve_fluxes,
+            signal_times,
+            signal_magnifications)
+        assert np.array_equal(fluxes_with_injected_signal, np.array([1, 5, 9, 7, 5]))
+
+    def test_inject_signal_errors_on_out_of_bounds(self):
+        light_curve_fluxes = np.array([1, 2, 3, 4, 5, 3])
+        light_curve_times = np.array([10, 20, 30, 40, 50, 60])
+        signal_magnifications = np.array([1, 3, 1])
+        signal_times = np.array([0, 20, 40])
+        with pytest.raises(ValueError):
+            database_module.inject_signal_into_light_curve(
+                light_curve_times,
+                light_curve_fluxes,
+                signal_times,
+                signal_magnifications)
+
+    def test_inject_signal_can_be_told_to_allow_out_of_bounds(self):
+        light_curve_fluxes = np.array([1, 2, 3, 4, 5, 3])
+        light_curve_times = np.array([10, 20, 30, 40, 50, 60])
+        signal_magnifications = np.array([1, 3, 1])
+        signal_times = np.array([0, 20, 40])
+        with patch.object(database_module.np.random, 'random') as mock_random:
+            mock_random.return_value = 0
+            fluxes_with_injected_signal = database_module.inject_signal_into_light_curve(
+                light_curve_times,
+                light_curve_fluxes,
+                signal_times,
+                signal_magnifications,
+                out_of_bounds_injection_handling_method=OutOfBoundsInjectionHandlingMethod.RANDOM_INJECTION_LOCATION)
+        assert np.array_equal(fluxes_with_injected_signal, np.array([1, 5, 9, 7, 5, 3]))
+
+    def test_inject_signal_using_repeats_for_out_of_bounds(self):
+        light_curve_fluxes = np.array([1, 1, 1, 1, 1, 1, 1])
+        light_curve_times = np.array([10, 20, 30, 40, 50, 60, 70])
+        signal_magnifications = np.array([1, 2])
+        signal_times = np.array([0, 10])
+        with patch.object(database_module.np.random, 'random') as mock_random:
+            mock_random.return_value = 0.6  # Make signal offset end up as 40
+            fluxes_with_injected_signal0 = database_module.inject_signal_into_light_curve(
+                light_curve_times,
+                light_curve_fluxes,
+                signal_times,
+                signal_magnifications,
+                out_of_bounds_injection_handling_method=OutOfBoundsInjectionHandlingMethod.REPEAT_SIGNAL)
+        assert np.array_equal(fluxes_with_injected_signal0, np.array([2, 1, 2, 1, 2, 1, 2]))
+        with patch.object(database_module.np.random, 'random') as mock_random:
+            mock_random.return_value = 0.8  # Make signal offset end up as 50
+            fluxes_with_injected_signal1 = database_module.inject_signal_into_light_curve(
+                light_curve_times,
+                light_curve_fluxes,
+                signal_times,
+                signal_magnifications,
+                out_of_bounds_injection_handling_method=OutOfBoundsInjectionHandlingMethod.REPEAT_SIGNAL)
+        assert np.array_equal(fluxes_with_injected_signal1, np.array([1, 2, 1, 2, 1, 2, 1]))
+
+    def test_injected_signal_randomly_varies_injectable_portion_used_when_injectable_larger_than_injectee(
+            self):
+        injectee_fluxes = np.array([1, 2, 3])
+        injectee_times = np.array([10, 20, 30])
+        injectable_magnifications = np.array([1, 3, 1])
+        injectable_times = np.array([0, 20, 40])
+        with patch.object(database_module.np.random, 'random') as mock_random:
+            mock_random.return_value = 0
+            injected = database_module.inject_signal_into_light_curve(
+                injectee_times,
+                injectee_fluxes,
+                injectable_times,
+                injectable_magnifications)
+            assert np.array_equal(injected, np.array([1, 4, 7]))
+        with patch.object(database_module.np.random, 'random') as mock_random:
+            mock_random.return_value = 1
+            injected = database_module.inject_signal_into_light_curve(
+                injectee_times,
+                injectee_fluxes,
+                injectable_times,
+                injectable_magnifications)
+            assert np.array_equal(injected, np.array([5, 4, 3]))
+
+    def test_injected_signal_randomly_varies_injection_location_when_injectee_larger_than_injectable(
+            self):
+        injectee_fluxes = np.array([1, 2, 3, 4, 5])
+        injectee_times = np.array([10, 20, 30, 40, 50])
+        injectable_magnifications = np.array([1, 3, 1])
+        injectable_times = np.array([0, 10, 20])
+        with patch.object(database_module.np.random, 'random') as mock_random:
+            mock_random.return_value = 0
+            injected = database_module.inject_signal_into_light_curve(
+                injectee_times,
+                injectee_fluxes,
+                injectable_times,
+                injectable_magnifications,
+                out_of_bounds_injection_handling_method=OutOfBoundsInjectionHandlingMethod.RANDOM_INJECTION_LOCATION)
+            assert np.array_equal(injected, np.array([1, 8, 3, 4, 5]))
+        with patch.object(database_module.np.random, 'random') as mock_random:
+            mock_random.return_value = 1
+            injected = database_module.inject_signal_into_light_curve(
+                injectee_times,
+                injectee_fluxes,
+                injectable_times,
+                injectable_magnifications,
+                out_of_bounds_injection_handling_method=OutOfBoundsInjectionHandlingMethod.RANDOM_INJECTION_LOCATION)
+            assert np.array_equal(injected, np.array([1, 2, 3, 10, 5]))
+
+    def test_database_can_inject_signal_into_fluxes(self, database_with_collections):
         light_curve_fluxes = np.array([1, 2, 3, 4, 5])
         light_curve_times = np.array([10, 20, 30, 40, 50])
         signal_magnifications = np.array([1, 3, 1])
@@ -316,7 +427,7 @@ class TestStandardAndInjectedLightCurveDatabase:
                                                                                                signal_times)
         assert np.array_equal(fluxes_with_injected_signal, np.array([1, 5, 9, 7, 5]))
 
-    def test_inject_signal_errors_on_out_of_bounds(self, database_with_collections):
+    def test_database_inject_signal_errors_on_out_of_bounds(self, database_with_collections):
         light_curve_fluxes = np.array([1, 2, 3, 4, 5, 3])
         light_curve_times = np.array([10, 20, 30, 40, 50, 60])
         signal_magnifications = np.array([1, 3, 1])
@@ -325,7 +436,7 @@ class TestStandardAndInjectedLightCurveDatabase:
             database_with_collections.inject_signal_into_light_curve(light_curve_fluxes, light_curve_times,
                                                                      signal_magnifications, signal_times)
 
-    def test_inject_signal_can_be_told_to_allow_out_of_bounds(self, database_with_collections):
+    def test_database_inject_signal_can_be_told_to_allow_out_of_bounds(self, database_with_collections):
         light_curve_fluxes = np.array([1, 2, 3, 4, 5, 3])
         light_curve_times = np.array([10, 20, 30, 40, 50, 60])
         signal_magnifications = np.array([1, 3, 1])
@@ -340,7 +451,7 @@ class TestStandardAndInjectedLightCurveDatabase:
                                                                                                    signal_times)
         assert np.array_equal(fluxes_with_injected_signal, np.array([1, 5, 9, 7, 5, 3]))
 
-    def test_inject_signal_using_repeats_for_out_of_bounds(self, database_with_collections):
+    def test_database_inject_signal_using_repeats_for_out_of_bounds(self, database_with_collections):
         light_curve_fluxes = np.array([1, 1, 1, 1, 1, 1, 1])
         light_curve_times = np.array([10, 20, 30, 40, 50, 60, 70])
         signal_magnifications = np.array([1, 2])
@@ -361,7 +472,7 @@ class TestStandardAndInjectedLightCurveDatabase:
                                                                                                     signal_times)
         assert np.array_equal(fluxes_with_injected_signal1, np.array([1, 2, 1, 2, 1, 2, 1]))
 
-    def test_injected_signal_randomly_varies_injectable_portion_used_when_injectable_larger_than_injectee(
+    def test_database_injected_signal_randomly_varies_injectable_portion_used_when_injectable_larger_than_injectee(
             self, database_with_collections):
         injectee_fluxes = np.array([1, 2, 3])
         injectee_times = np.array([10, 20, 30])
@@ -380,7 +491,7 @@ class TestStandardAndInjectedLightCurveDatabase:
                                                                                 injectable_times)
             assert np.array_equal(injected, np.array([5, 4, 3]))
 
-    def test_injected_signal_randomly_varies_injection_location_when_injectee_larger_than_injectable(
+    def test_database_injected_signal_randomly_varies_injection_location_when_injectee_larger_than_injectable(
             self, database_with_collections):
         injectee_fluxes = np.array([1, 2, 3, 4, 5])
         injectee_times = np.array([10, 20, 30, 40, 50])
@@ -474,8 +585,8 @@ class TestStandardAndInjectedLightCurveDatabase:
             mock_randomly_roll_elements.side_effect = lambda fluxes: fluxes
             mock_remove_random_elements.side_effect = lambda fluxes: fluxes
             path_and_light_curve_dataset = database_with_collections.generate_infer_path_and_light_curve_dataset(
-            paths_dataset, light_curve_collection.load_times_fluxes_and_flux_errors_from_path,
-            light_curve_collection.load_auxiliary_information_for_path)
+                paths_dataset, light_curve_collection.load_times_fluxes_and_flux_errors_from_path,
+                light_curve_collection.load_auxiliary_information_for_path)
         path_and_light_curve = next(iter(path_and_light_curve_dataset))
         assert np.array_equal(path_and_light_curve[0].numpy(), b'standard_path0.ext')  # Standard path 0.
         assert path_and_light_curve[1].numpy().shape == (3, 1)
@@ -497,9 +608,9 @@ class TestStandardAndInjectedLightCurveDatabase:
             mock_randomly_roll_elements.side_effect = lambda fluxes: fluxes
             mock_remove_random_elements.side_effect = lambda fluxes: fluxes
             path, light_curve = database_with_collections.preprocess_infer_light_curve(
-            load_from_path_function,
-            light_curve_collection.load_auxiliary_information_for_path,
-            tf.convert_to_tensor(str(light_curve_path)))
+                load_from_path_function,
+                light_curve_collection.load_auxiliary_information_for_path,
+                tf.convert_to_tensor(str(light_curve_path)))
         assert np.array_equal(path, 'standard_path0.ext')  # Standard path 0.
         assert light_curve.shape == (3, 1)
         assert np.array_equal(light_curve, [[0], [1], [2]])  # Standard light_curve 0.
@@ -558,8 +669,8 @@ class TestStandardAndInjectedLightCurveDatabase:
         light_curve_auxiliary_and_label_dataset = tf.data.Dataset.zip(
             (light_curve_dataset, auxiliary_dataset, label_dataset))
         observation_and_label_dataset = \
-        database_module.from_light_curve_auxiliary_and_label_to_observation_and_label(
-            light_curve_auxiliary_and_label_dataset)
+            database_module.from_light_curve_auxiliary_and_label_to_observation_and_label(
+                light_curve_auxiliary_and_label_dataset)
         dataset_iterator = iter(observation_and_label_dataset)
         observation_and_label0 = next(dataset_iterator)
         assert np.array_equal(observation_and_label0[0][0], [0, 0])
