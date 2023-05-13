@@ -404,7 +404,7 @@ class TestStandardAndInjectedLightCurveDatabase:
     def test_can_intersperse_datasets(self, database_with_collections):
         dataset0 = tf.data.Dataset.from_tensor_slices([[0], [2], [4]])
         dataset1 = tf.data.Dataset.from_tensor_slices([[1], [3], [5]])
-        interspersed_dataset = database_with_collections.intersperse_datasets([dataset0, dataset1])
+        interspersed_dataset = database_module.intersperse_datasets([dataset0, dataset1])
         assert list(interspersed_dataset) == [[0], [1], [2], [3], [4], [5]]
 
     def test_can_intersperse_zipped_example_label_datasets(self, database_with_collections):
@@ -414,7 +414,7 @@ class TestStandardAndInjectedLightCurveDatabase:
         examples_dataset1 = tf.data.Dataset.from_tensor_slices([[1, 1], [3, 3], [5, 5]])
         labels_dataset1 = tf.data.Dataset.from_tensor_slices([[-1], [-3], [-5]])
         dataset1 = tf.data.Dataset.zip((examples_dataset1, labels_dataset1))
-        interspersed_dataset = database_with_collections.intersperse_datasets([dataset0, dataset1])
+        interspersed_dataset = database_module.intersperse_datasets([dataset0, dataset1])
         interspersed_dataset_iterator = iter(interspersed_dataset)
         examples_and_labels0 = next(interspersed_dataset_iterator)
         assert np.array_equal(examples_and_labels0[0], [0, 0])
@@ -547,7 +547,7 @@ class TestStandardAndInjectedLightCurveDatabase:
                                                                 ([0, 0], np.array([0, 0]))])
     def test_expand_label_to_training_dimensions(self, original_label, expected_label):
         database = StandardAndInjectedLightCurveDatabase()
-        label = database.expand_label_to_training_dimensions(original_label)
+        label = database_module.expand_label_to_training_dimensions(original_label)
         assert type(label) is np.ndarray
         assert np.array_equal(label, expected_label)
 
@@ -557,8 +557,9 @@ class TestStandardAndInjectedLightCurveDatabase:
         label_dataset = tf.data.Dataset.from_tensor_slices([[0], [-2], [-4]])
         light_curve_auxiliary_and_label_dataset = tf.data.Dataset.zip(
             (light_curve_dataset, auxiliary_dataset, label_dataset))
-        observation_and_label_dataset = StandardAndInjectedLightCurveDatabase() \
-            .from_light_curve_auxiliary_and_label_to_observation_and_label(light_curve_auxiliary_and_label_dataset)
+        observation_and_label_dataset = \
+        database_module.from_light_curve_auxiliary_and_label_to_observation_and_label(
+            light_curve_auxiliary_and_label_dataset)
         dataset_iterator = iter(observation_and_label_dataset)
         observation_and_label0 = next(dataset_iterator)
         assert np.array_equal(observation_and_label0[0][0], [0, 0])
@@ -628,7 +629,7 @@ class TestStandardAndInjectedLightCurveDatabase:
         example_dataset = tf.data.Dataset.from_generator(examples_generator, output_types=tf.float32)
         label_dataset = tf.data.Dataset.from_generator(labels_generator, output_types=tf.float32)
         dataset = tf.data.Dataset.zip((example_dataset, label_dataset))
-        padded_window_dataset = database.padded_window_dataset_for_zipped_example_and_label_dataset(
+        padded_window_dataset = database_module.padded_window_dataset_for_zipped_example_and_label_dataset(
             dataset=dataset, batch_size=3, window_shift=2, padded_shapes=([None], [None]))
         padded_window_iterator = iter(padded_window_dataset)
         batch0 = next(padded_window_iterator)
@@ -640,9 +641,9 @@ class TestStandardAndInjectedLightCurveDatabase:
         example_dataset = tf.data.Dataset.from_tensor_slices([1, 2, 3, 4, 5])
         label_dataset = tf.data.Dataset.from_tensor_slices([-1, -2, -3, -4, -5])
         dataset = tf.data.Dataset.zip((example_dataset, label_dataset))
-        windowed_dataset = database.window_dataset_for_zipped_example_and_label_dataset(dataset,
-                                                                                        batch_size=3,
-                                                                                        window_shift=2)
+        windowed_dataset = database_module.window_dataset_for_zipped_example_and_label_dataset(dataset,
+                                                                                               batch_size=3,
+                                                                                               window_shift=2)
         windowed_dataset_iterator = iter(windowed_dataset)
         batch0 = next(windowed_dataset_iterator)
         assert np.array_equal(batch0[0], [1, 2, 3])
@@ -656,8 +657,8 @@ class TestStandardAndInjectedLightCurveDatabase:
         labels_dataset = tf.data.Dataset.from_tensor_slices([0, 1, 2, 3, 4])
         zipped_dataset = tf.data.Dataset.zip((examples_dataset, labels_dataset))
 
-        windowed_dataset = database.flat_window_zipped_example_and_label_dataset(zipped_dataset, batch_size=3,
-                                                                                 window_shift=2)
+        windowed_dataset = database_module.flat_window_zipped_example_and_label_dataset(zipped_dataset, batch_size=3,
+                                                                                        window_shift=2)
 
         windowed_list = list(windowed_dataset.as_numpy_iterator())
         assert windowed_list == [(b'a', 0), (b'b', 1), (b'c', 2), (b'c', 2), (b'd', 3), (b'e', 4), (b'e', 4)]
@@ -668,8 +669,9 @@ class TestStandardAndInjectedLightCurveDatabase:
         zipped_dataset = tf.data.Dataset.zip((examples_dataset, labels_dataset))
         shuffled_zipped_dataset = zipped_dataset.shuffle(buffer_size=5)
 
-        windowed_dataset = database.flat_window_zipped_example_and_label_dataset(shuffled_zipped_dataset, batch_size=3,
-                                                                                 window_shift=2)
+        windowed_dataset = database_module.flat_window_zipped_example_and_label_dataset(shuffled_zipped_dataset,
+                                                                                        batch_size=3,
+                                                                                        window_shift=2)
 
         windowed_list = list(windowed_dataset.as_numpy_iterator())
         correct_pairings = {b'a': 0, b'b': 1, b'c': 2, b'd': 3, b'e': 4}

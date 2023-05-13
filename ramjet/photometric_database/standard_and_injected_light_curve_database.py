@@ -39,6 +39,60 @@ class BaselineFluxEstimationMethod(Enum):
     MEDIAN_ABSOLUTE_DEVIATION = 'median_absolute_deviation'
 
 
+def flat_window_zipped_example_and_label_dataset(dataset: tf.data.Dataset, batch_size: int, window_shift: int,
+                                                 ) -> tf.data.Dataset:
+    """
+    Takes a zipped example and label dataset and repeats examples in a windowed fashion of a given batch size.
+    It is expected that the resulting dataset will subsequently be batched in some fashion by the given batch size.
+
+    :param dataset: The zipped example and label dataset.
+    :param batch_size: The size of the batches to produce.
+    :param window_shift: The shift of the moving window between batches.
+    :return: The flattened window dataset.
+    """
+    if window_shift != 0:
+        windowed_dataset = dataset.window(batch_size, shift=window_shift)
+        unbatched_window_dataset = windowed_dataset.flat_map(
+            lambda *sample: tf.data.Dataset.zip(tuple(element for element in sample)))
+        return unbatched_window_dataset
+    else:
+        return dataset
+
+
+def padded_window_dataset_for_zipped_example_and_label_dataset(dataset: tf.data.Dataset, batch_size: int,
+                                                               window_shift: int,
+                                                               padded_shapes: Tuple[List, List]) -> tf.data.Dataset:
+    """
+    Takes a zipped example and label dataset, and converts it to padded batches, where each batch uses overlapping
+    examples based on a sliding window.
+
+    :param dataset: The zipped example and label dataset.
+    :param batch_size: The size of the batches to produce.
+    :param window_shift: The shift of the moving window between batches.
+    :param padded_shapes: The output padded shape.
+    :return: The padded window dataset.
+    """
+    unbatched_window_dataset = flat_window_zipped_example_and_label_dataset(dataset, batch_size,
+                                                                                 window_shift)
+    return unbatched_window_dataset.padded_batch(batch_size, padded_shapes=padded_shapes)
+
+
+def window_dataset_for_zipped_example_and_label_dataset(dataset: tf.data.Dataset, batch_size: int,
+                                                        window_shift: int) -> tf.data.Dataset:
+    """
+    Takes a zipped example and label dataset, and converts it to batches, where each batch uses overlapping
+    examples based on a sliding window.
+
+    :param dataset: The zipped example and label dataset.
+    :param batch_size: The size of the batches to produce.
+    :param window_shift: The shift of the moving window between batches.
+    :return: The window dataset.
+    """
+    unbatched_window_dataset = flat_window_zipped_example_and_label_dataset(dataset, batch_size,
+                                                                                 window_shift)
+    return unbatched_window_dataset.batch(batch_size)
+
+
 class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
     """
     An abstract class allowing for any number and combination of standard and injectable/injectee light curve collections
@@ -110,10 +164,10 @@ class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
                 injectable_light_curve_collection.load_label_from_path,
                 name=f"{type(injectable_light_curve_collection).__name__}_injected_train_{index}")
             training_light_curve_and_label_datasets.append(light_curve_and_label_dataset)
-        training_dataset = self.intersperse_datasets(training_light_curve_and_label_datasets)
+        training_dataset = intersperse_datasets(training_light_curve_and_label_datasets)
         if self.number_of_auxiliary_values > 0:
-            training_dataset = self.from_light_curve_auxiliary_and_label_to_observation_and_label(training_dataset)
-        training_dataset = self.window_dataset_for_zipped_example_and_label_dataset(training_dataset, self.batch_size,
+            training_dataset = from_light_curve_auxiliary_and_label_to_observation_and_label(training_dataset)
+        training_dataset = window_dataset_for_zipped_example_and_label_dataset(training_dataset, self.batch_size,
                                                                                     self.window_shift)
         # training_dataset = training_dataset.batch(self.batch_size)
         validation_light_curve_and_label_datasets = []
@@ -137,9 +191,9 @@ class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
                 injectable_light_curve_collection.load_label_from_path, evaluation_mode=True,
                 name=f"{type(injectable_light_curve_collection).__name__}_injected_validation_{index}")
             validation_light_curve_and_label_datasets.append(light_curve_and_label_dataset)
-        validation_dataset = self.intersperse_datasets(validation_light_curve_and_label_datasets)
+        validation_dataset = intersperse_datasets(validation_light_curve_and_label_datasets)
         if self.number_of_auxiliary_values > 0:
-            validation_dataset = self.from_light_curve_auxiliary_and_label_to_observation_and_label(validation_dataset)
+            validation_dataset = from_light_curve_auxiliary_and_label_to_observation_and_label(validation_dataset)
         validation_dataset = validation_dataset.batch(self.batch_size)
         return training_dataset, validation_dataset
 
@@ -301,27 +355,12 @@ class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
         light_curve = self.build_light_curve_array(fluxes=fluxes, times=times, flux_errors=flux_errors)
         example = self.preprocess_light_curve(light_curve, evaluation_mode=evaluation_mode)
         label = load_label_from_path_function(light_curve_path)
-        label = self.expand_label_to_training_dimensions(label)
+        label = expand_label_to_training_dimensions(label)
         if self.number_of_auxiliary_values > 0:
             auxiliary_information = load_auxiliary_information_for_path_function(light_curve_path)
             return example, auxiliary_information, label
         else:
             return example, label
-
-    @staticmethod
-    def expand_label_to_training_dimensions(label: Union[int, List[int], Tuple[int], np.ndarray]) -> np.ndarray:
-        """
-        Expand the label to the appropriate dimensions for training.
-
-        :param label: The label to convert.
-        :return: The label with the correct dimensions.
-        """
-        if type(label) is not np.ndarray:
-            if type(label) in [list, tuple]:
-                label = np.array(label)
-            else:
-                label = np.array([label])
-        return label
 
     def generate_infer_path_and_light_curve_dataset(
             self, paths_dataset: tf.data.Dataset,
@@ -402,7 +441,7 @@ class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
         :param injectable_load_times_magnifications_and_magnification_errors_from_path_function: The function defining
             how to load the times and magnifications of an injectable signal from a path.
         :param load_label_from_path_function: The function to load the label to use for the light curves in this dataset.
-        :param evaluation_mode: Whether or not the preprocessing should occur in evaluation mode (for repeatability).
+        :param evaluation_mode: Whether the preprocessing should occur in evaluation mode (for repeatability).
         :param name: The name of the dataset.
         :return: The resulting light curve example and label dataset.
         """
@@ -486,7 +525,7 @@ class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
         light_curve = self.build_light_curve_array(fluxes=fluxes, times=injectee_times)
         example = self.preprocess_light_curve(light_curve, evaluation_mode=evaluation_mode)
         label = load_label_from_path_function(injectable_light_curve_path)
-        label = self.expand_label_to_training_dimensions(label)
+        label = expand_label_to_training_dimensions(label)
         if self.number_of_auxiliary_values > 0:
             auxiliary_information = load_auxiliary_information_for_path_function(injectee_light_curve_path)
             return example, auxiliary_information, label
@@ -553,27 +592,6 @@ class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
                 light_curve_times, fluxes_with_injected_signal)
         return fluxes_with_injected_signal
 
-    @staticmethod
-    def intersperse_datasets(dataset_list: List[tf.data.Dataset]) -> tf.data.Dataset:
-        """
-        Intersperses a list of datasets into one joint dataset. (e.g., [0, 2, 4] and [1, 3, 5] to [0, 1, 2, 3, 4, 5]).
-
-        :param dataset_list: The datasets to intersperse.
-        :return: The interspersed dataset.
-        """
-        dataset_tuple = tuple(dataset_list)
-        zipped_dataset = tf.data.Dataset.zip(dataset_tuple)
-
-        def flat_map_interspersing_function(*elements):
-            """Intersperses an individual element from each dataset. To be used by flat_map."""
-            concatenated_element = tf.data.Dataset.from_tensors(elements[0])
-            for element in elements[1:]:
-                concatenated_element = concatenated_element.concatenate(tf.data.Dataset.from_tensors(element))
-            return concatenated_element
-
-        flat_mapped_dataset = zipped_dataset.flat_map(flat_map_interspersing_function)
-        return flat_mapped_dataset
-
     def generate_inference_dataset(self):
         """
         Generates the dataset to infer over.
@@ -588,7 +606,7 @@ class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
                 examples_dataset = self.generate_infer_path_and_light_curve_dataset(
                     example_paths_dataset, light_curve_collection.load_times_fluxes_and_flux_errors_from_path,
                     light_curve_collection.load_auxiliary_information_for_path)
-                examples_dataset = self.from_path_light_curve_and_auxiliary_to_path_and_observation(
+                examples_dataset = from_path_light_curve_and_auxiliary_to_path_and_observation(
                     examples_dataset)
             else:
                 examples_dataset = self.generate_infer_path_and_light_curve_dataset(
@@ -602,77 +620,62 @@ class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
         batch_dataset = batch_dataset.prefetch(5)
         return batch_dataset
 
-    @staticmethod
-    def from_light_curve_auxiliary_and_label_to_observation_and_label(
-            light_curve_auxiliary_and_label_dataset: tf.data.Dataset) -> tf.data.Dataset:
-        observation_and_label_dataset = light_curve_auxiliary_and_label_dataset.map(
-            lambda light_curve, auxiliary, label: ((light_curve, auxiliary), label))
-        return observation_and_label_dataset
 
-    @staticmethod
-    def from_path_light_curve_and_auxiliary_to_path_and_observation(
-            light_curve_auxiliary_and_label_dataset: tf.data.Dataset) -> tf.data.Dataset:
-        path_observation_dataset = light_curve_auxiliary_and_label_dataset.map(
-            lambda path, light_curve, auxiliary: (path, (light_curve, auxiliary)))
-        return path_observation_dataset
+def from_path_light_curve_and_auxiliary_to_path_and_observation(
+        light_curve_auxiliary_and_label_dataset: tf.data.Dataset) -> tf.data.Dataset:
+    path_observation_dataset = light_curve_auxiliary_and_label_dataset.map(
+        lambda path, light_curve, auxiliary: (path, (light_curve, auxiliary)))
+    return path_observation_dataset
 
-    def flat_window_zipped_example_and_label_dataset(self, dataset: tf.data.Dataset, batch_size: int, window_shift: int,
-                                                     ) -> tf.data.Dataset:
-        """
-        Takes a zipped example and label dataset and repeats examples in a windowed fashion of a given batch size.
-        It is expected that the resulting dataset will subsequently be batched in some fashion by the given batch size.
 
-        :param dataset: The zipped example and label dataset.
-        :param batch_size: The size of the batches to produce.
-        :param window_shift: The shift of the moving window between batches.
-        :return: The flattened window dataset.
-        """
-        if window_shift != 0:
-            windowed_dataset = dataset.window(batch_size, shift=window_shift)
-            unbatched_window_dataset = windowed_dataset.flat_map(
-                lambda *sample: tf.data.Dataset.zip(tuple(element for element in sample)))
-            return unbatched_window_dataset
+def from_light_curve_auxiliary_and_label_to_observation_and_label(
+        light_curve_auxiliary_and_label_dataset: tf.data.Dataset) -> tf.data.Dataset:
+    observation_and_label_dataset = light_curve_auxiliary_and_label_dataset.map(
+        lambda light_curve, auxiliary, label: ((light_curve, auxiliary), label))
+    return observation_and_label_dataset
+
+
+def intersperse_datasets(dataset_list: List[tf.data.Dataset]) -> tf.data.Dataset:
+    """
+    Intersperses a list of datasets into one joint dataset. (e.g., [0, 2, 4] and [1, 3, 5] to [0, 1, 2, 3, 4, 5]).
+
+    :param dataset_list: The datasets to intersperse.
+    :return: The interspersed dataset.
+    """
+    dataset_tuple = tuple(dataset_list)
+    zipped_dataset = tf.data.Dataset.zip(dataset_tuple)
+
+    def flat_map_interspersing_function(*elements):
+        """Intersperses an individual element from each dataset. To be used by flat_map."""
+        concatenated_element = tf.data.Dataset.from_tensors(elements[0])
+        for element in elements[1:]:
+            concatenated_element = concatenated_element.concatenate(tf.data.Dataset.from_tensors(element))
+        return concatenated_element
+
+    flat_mapped_dataset = zipped_dataset.flat_map(flat_map_interspersing_function)
+    return flat_mapped_dataset
+
+
+def expand_label_to_training_dimensions(label: Union[int, List[int], Tuple[int], np.ndarray]) -> np.ndarray:
+    """
+    Expand the label to the appropriate dimensions for training.
+
+    :param label: The label to convert.
+    :return: The label with the correct dimensions.
+    """
+    if type(label) is not np.ndarray:
+        if type(label) in [list, tuple]:
+            label = np.array(label)
         else:
-            return dataset
-
-    def padded_window_dataset_for_zipped_example_and_label_dataset(self, dataset: tf.data.Dataset, batch_size: int,
-                                                                   window_shift: int,
-                                                                   padded_shapes: Tuple[List, List]) -> tf.data.Dataset:
-        """
-        Takes a zipped example and label dataset, and converts it to padded batches, where each batch uses overlapping
-        examples based on a sliding window.
-
-        :param dataset: The zipped example and label dataset.
-        :param batch_size: The size of the batches to produce.
-        :param window_shift: The shift of the moving window between batches.
-        :param padded_shapes: The output padded shape.
-        :return: The padded window dataset.
-        """
-        unbatched_window_dataset = self.flat_window_zipped_example_and_label_dataset(dataset, batch_size,
-                                                                                     window_shift)
-        return unbatched_window_dataset.padded_batch(batch_size, padded_shapes=padded_shapes)
-
-    def window_dataset_for_zipped_example_and_label_dataset(self, dataset: tf.data.Dataset, batch_size: int,
-                                                            window_shift: int) -> tf.data.Dataset:
-        """
-        Takes a zipped example and label dataset, and converts it to batches, where each batch uses overlapping
-        examples based on a sliding window.
-
-        :param dataset: The zipped example and label dataset.
-        :param batch_size: The size of the batches to produce.
-        :param window_shift: The shift of the moving window between batches.
-        :return: The window dataset.
-        """
-        unbatched_window_dataset = self.flat_window_zipped_example_and_label_dataset(dataset, batch_size,
-                                                                                     window_shift)
-        return unbatched_window_dataset.batch(batch_size)
+            label = np.array([label])
+    return label
 
 
 def repeat_each_element(element: tf.Tensor, number_of_repeats: int) -> tf.data.Dataset:
     """
     A dataset mappable function which repeats the elements a given number of times.
 
-    :param element: The element to map to to repeat.
+    :param element: The element to map to repeat.
     :param number_of_repeats: The number of times to repeat the element.
     :return: The dataset with repeated elements.
     """
