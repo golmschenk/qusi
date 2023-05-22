@@ -5,7 +5,7 @@ from ramjet.photometric_database.derived.toy_light_curve_collection import ToyFl
 from ramjet.photometric_database.standard_and_injected_light_curve_database import StandardAndInjectedLightCurveDatabase
 
 
-class ToyDatabase(StandardAndInjectedLightCurveDatabase):
+class ToyRamjetDatabase(StandardAndInjectedLightCurveDatabase):
     def __init__(self):
         super().__init__()
         self.batch_size = 10
@@ -24,7 +24,7 @@ class ToyDatabase(StandardAndInjectedLightCurveDatabase):
             ToySineWaveLightCurveCollection(),
         ]
 
-class ToyDatabaseWithAuxiliary(StandardAndInjectedLightCurveDatabase):
+class ToyRamjetDatabaseWithAuxiliary(StandardAndInjectedLightCurveDatabase):
     def __init__(self):
         super().__init__()
         self.batch_size = 10
@@ -49,7 +49,7 @@ class ToyDatabaseWithAuxiliary(StandardAndInjectedLightCurveDatabase):
         ]
 
 
-class ToyDatabaseWithFlatValueAsLabel(StandardAndInjectedLightCurveDatabase):
+class ToyRamjetDatabaseWithFlatValueAsLabel(StandardAndInjectedLightCurveDatabase):
     def __init__(self):
         super().__init__()
         self.batch_size = 10

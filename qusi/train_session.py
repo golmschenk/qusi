@@ -3,7 +3,7 @@ from typing import List
 from qusi.light_curve_dataset import LightCurveDataset
 
 
-class TrainRun:
+class TrainSession:
     def __init__(self,
                  train_datasets: LightCurveDataset | List[LightCurveDataset],
                  validation_datasets: LightCurveDataset | List[LightCurveDataset]):
@@ -13,3 +13,6 @@ class TrainRun:
         if not isinstance(validation_datasets, list):
             validation_datasets = [validation_datasets]
         self.validation_datasets: List[LightCurveDataset] = validation_datasets
+
+    def run(self):
+        pass

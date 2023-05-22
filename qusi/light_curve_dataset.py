@@ -6,10 +6,35 @@ from ramjet.photometric_database.light_curve_collection import LightCurveCollect
 
 
 class LightCurveDataset(IterableDataset):
-    def __init__(self):
-        self.standard_light_curve_collections: List[LightCurveCollection] = []
-        self.injectee_light_curve_collection: List[LightCurveCollection] = []
-        self.injectable_light_curve_collections: List[LightCurveCollection] = []
+    def __init__(self,
+                 standard_light_curve_collections: List[LightCurveCollection],
+                 injectee_light_curve_collections: List[LightCurveCollection],
+                 injectable_light_curve_collections: List[LightCurveCollection]
+                 ):
+        self.standard_light_curve_collections: List[LightCurveCollection] = standard_light_curve_collections
+        self.injectee_light_curve_collections: List[LightCurveCollection] = injectee_light_curve_collections
+        self.injectable_light_curve_collections: List[LightCurveCollection] = injectable_light_curve_collections
+        if len(self.standard_light_curve_collections) == 0 and len(self.injectee_light_curve_collections) == 0:
+            raise ValueError('Either the standard or injectee light curve collection lists must not be empty. '
+                             'Both were empty.')
         self.include_standard_in_injectee = False  # TODO: Should this be automatically detected?
 
-
+    @classmethod
+    def new(cls,
+            standard_light_curve_collections: List[LightCurveCollection] | None = None,
+            injectee_light_curve_collections: List[LightCurveCollection] | None = None,
+            injectable_light_curve_collections: List[LightCurveCollection] | None = None,
+            ):
+        if standard_light_curve_collections is None and injectee_light_curve_collections is None:
+            raise ValueError('Either the standard or injectee light curve collection lists must be specified. '
+                             'Both were `None`.')
+        if standard_light_curve_collections is None:
+            standard_light_curve_collections = []
+        if injectee_light_curve_collections is None:
+            injectee_light_curve_collections = []
+        if injectable_light_curve_collections is None:
+            injectable_light_curve_collections = []
+        instance = cls(standard_light_curve_collections=standard_light_curve_collections,
+                       injectee_light_curve_collections=injectee_light_curve_collections,
+                       injectable_light_curve_collections=injectable_light_curve_collections)
+        return instance

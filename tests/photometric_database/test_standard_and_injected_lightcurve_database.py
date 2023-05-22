@@ -7,7 +7,7 @@ from pathlib import Path
 
 import ramjet.photometric_database.light_curve_database
 import ramjet.photometric_database.standard_and_injected_light_curve_database as database_module
-from ramjet.photometric_database.derived.toy_database import ToyDatabaseWithAuxiliary, ToyDatabaseWithFlatValueAsLabel
+from ramjet.photometric_database.derived.toy_database import ToyRamjetDatabaseWithAuxiliary, ToyRamjetDatabaseWithFlatValueAsLabel
 from ramjet.photometric_database.light_curve_collection import LightCurveCollection
 from ramjet.photometric_database.standard_and_injected_light_curve_database import \
     StandardAndInjectedLightCurveDatabase, OutOfBoundsInjectionHandlingMethod
@@ -792,7 +792,7 @@ class TestStandardAndInjectedLightCurveDatabase:
 
     @pytest.mark.integration
     def test_labels_match_observation(self):
-        database = ToyDatabaseWithAuxiliary()
+        database = ToyRamjetDatabaseWithAuxiliary()
         train_dataset, validation_dataset = database.generate_datasets()
         train_batch = next(iter(train_dataset))
         for light_curve_tensor, auxiliary_value_tensor, label_tensor in zip(
@@ -805,7 +805,7 @@ class TestStandardAndInjectedLightCurveDatabase:
 
     @pytest.mark.integration
     def test_labels_match_observation_when_single_collection_has_multiple_labels(self):
-        database = ToyDatabaseWithFlatValueAsLabel()
+        database = ToyRamjetDatabaseWithFlatValueAsLabel()
         train_dataset, validation_dataset = database.generate_datasets()
         train_batch = next(iter(train_dataset))
         for light_curve_tensor, label_tensor in zip(train_batch[0], train_batch[1]):
