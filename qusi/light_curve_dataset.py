@@ -38,3 +38,14 @@ class LightCurveDataset(IterableDataset):
                        injectee_light_curve_collections=injectee_light_curve_collections,
                        injectable_light_curve_collections=injectable_light_curve_collections)
         return instance
+
+
+def is_injected_dataset(dataset: LightCurveDataset):
+    return len(dataset.injectee_light_curve_collections) > 0
+
+
+def contains_injected_dataset(datasets: List[LightCurveDataset]):
+    for dataset in datasets:
+        if is_injected_dataset(dataset):
+            return True
+    return False
