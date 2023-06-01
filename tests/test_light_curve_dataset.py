@@ -1,7 +1,8 @@
 from itertools import islice
 from unittest.mock import Mock, MagicMock
 
-from qusi.light_curve_dataset import is_injected_dataset, contains_injected_dataset, interleave_datasets_infinitely
+from qusi.light_curve_dataset import is_injected_dataset, contains_injected_dataset, interleave_iterables_infinitely
+from tests.test_utilities import IterableMock
 
 
 def test_is_injected_dataset():
@@ -29,11 +30,11 @@ def test_contains_injected_dataset():
     assert contains_injected_dataset(datasets_with_injected)
 
 
-def test_interleave_datasets_infinitely():
-    dataset0 = MagicMock()
+def test_interleave_iterables_infinitely():
+    dataset0 = IterableMock()
     dataset0.__iter__.return_value = iter([1, 2, 3])
-    dataset1 = MagicMock()
+    dataset1 = IterableMock()
     dataset1.__iter__.return_value = iter(['a', 'b'])
-    combined_dataset = interleave_datasets_infinitely(dataset0, dataset1)
+    combined_dataset = interleave_iterables_infinitely(dataset0, dataset1)
     first_eight_elements = list(islice(combined_dataset, 8))
     assert first_eight_elements == [1, 'a', 2, 'b', 3, 'a', 1, 'b']

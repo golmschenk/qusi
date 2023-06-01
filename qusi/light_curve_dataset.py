@@ -1,5 +1,5 @@
 from itertools import chain, cycle
-from typing import List
+from typing import List, Iterable
 
 from torch.utils.data import Dataset, Subset, IterableDataset
 
@@ -41,6 +41,12 @@ class LightCurveDataset(IterableDataset):
         return instance
 
 
+    def __iter__(self):
+        # TODO: Next up. This will probably be a major function. Needs to get the list of paths, load the data,
+        # TODO: inject, and keep track of which thing should be up next to load.
+        pass
+
+
 def is_injected_dataset(dataset: LightCurveDataset):
     return len(dataset.injectee_light_curve_collections) > 0
 
@@ -52,5 +58,5 @@ def contains_injected_dataset(datasets: List[LightCurveDataset]):
     return False
 
 
-def interleave_datasets_infinitely(*datasets: LightCurveDataset):
-    return chain.from_iterable(zip(*map(cycle, datasets)))
+def interleave_iterables_infinitely(*iterables: Iterable):
+    return chain.from_iterable(zip(*map(cycle, iterables)))
