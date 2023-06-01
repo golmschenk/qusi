@@ -1,3 +1,4 @@
+from itertools import chain, cycle
 from typing import List
 
 from torch.utils.data import Dataset, Subset, IterableDataset
@@ -49,3 +50,7 @@ def contains_injected_dataset(datasets: List[LightCurveDataset]):
         if is_injected_dataset(dataset):
             return True
     return False
+
+
+def interleave_datasets_infinitely(*datasets: LightCurveDataset):
+    return chain.from_iterable(zip(*map(cycle, datasets)))
