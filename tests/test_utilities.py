@@ -1,8 +1,10 @@
-from abc import ABC
-from typing import Iterable, Iterator
+from typing import Iterable
 from unittest.mock import MagicMock
 
 
 class IterableMock(MagicMock, Iterable):
+    """
+    A workaround class to fix inspections where MagicMock was not considered iterable for type checking.
+    """
     def __iter__(self):
         return super().__iter__()
