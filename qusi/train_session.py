@@ -2,7 +2,8 @@ from typing import List
 
 from torch.utils.data import DataLoader
 
-from qusi.light_curve_dataset import LightCurveDataset, contains_injected_dataset, interleave_iterables_infinitely
+from qusi.light_curve_dataset import LightCurveDataset, contains_injected_dataset, \
+    interleave_infinite_iterators, InterleavedDataset
 
 
 class TrainSession:
@@ -41,9 +42,10 @@ class TrainSession:
         return instance
 
     def run(self):
-        train_dataset = interleave_iterables_infinitely(*self.train_datasets)
+        train_dataset = InterleavedDataset.new(*self.train_datasets)
         train_dataloader = DataLoader(train_dataset, batch_size=self.batch_size)
-        for batch_index, (light_curve, target) in enumerate(train_dataloader):
+        train_dataloader_iter = iter(train_dataloader)
+        for batch_index, (light_curve_batch, label_batch) in enumerate(train_dataloader):
             print(batch_index)
     # TODO: Create training loop.
 

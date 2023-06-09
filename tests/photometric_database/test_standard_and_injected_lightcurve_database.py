@@ -10,7 +10,8 @@ import ramjet.photometric_database.standard_and_injected_light_curve_database as
 from ramjet.photometric_database.derived.toy_database import ToyRamjetDatabaseWithAuxiliary, ToyRamjetDatabaseWithFlatValueAsLabel
 from ramjet.photometric_database.light_curve_collection import LightCurveCollection
 from ramjet.photometric_database.standard_and_injected_light_curve_database import \
-    StandardAndInjectedLightCurveDatabase, OutOfBoundsInjectionHandlingMethod
+    StandardAndInjectedLightCurveDatabase
+from ramjet.photometric_database.light_curve_dataset_manipulations import OutOfBoundsInjectionHandlingMethod
 import ramjet.photometric_database.light_curve_database as light_curve_database_module
 
 

@@ -4,7 +4,8 @@ from ramjet.photometric_database.derived.tess_two_minute_cadence_transit_light_c
     TessTwoMinuteCadenceNonTransitLightCurveCollection, \
     TessTwoMinuteCadenceConfirmedTransitLightCurveCollection
 from ramjet.photometric_database.standard_and_injected_light_curve_database import \
-    StandardAndInjectedLightCurveDatabase, OutOfBoundsInjectionHandlingMethod
+    StandardAndInjectedLightCurveDatabase
+from ramjet.photometric_database.light_curve_dataset_manipulations import OutOfBoundsInjectionHandlingMethod
 
 
 class TessTwoMinuteCadenceStandardTransitDatabase(StandardAndInjectedLightCurveDatabase):
