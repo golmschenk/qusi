@@ -48,17 +48,20 @@ class TrainSession:
     def run(self):
         train_dataset = InterleavedDataset.new(*self.train_datasets)
         train_dataloader = DataLoader(train_dataset, batch_size=self.batch_size)
-        train_dataloader_iter = iter(train_dataloader)
-        # for batch_index, (light_curve_batch, label_batch) in enumerate(train_dataloader):
-        #     print(batch_index)
+        validation_dataloaders: List[DataLoader] = []
+        for validation_dataset in self.validation_datasets:
+            validation_dataloaders.append(DataLoader(validation_dataset, batch_size=self.batch_size))
         model = SingleDenseLayerBinaryClassificationModel(input_size=100)
         loss_function = BCELoss()
         optimizer = Adam(model.parameters())
-        train_loop(dataloader=train_dataloader, model_=model, loss_fn=loss_function, optimizer=optimizer, steps=self.train_steps_per_epoch)
+        for epoch_index in range(7):
+            train_epoch(dataloader=train_dataloader, model_=model, loss_fn=loss_function, optimizer=optimizer, steps=self.train_steps_per_epoch)
+            for validation_dataloader in validation_dataloaders:
+                validation_epoch(dataloader=validation_dataloader, model_=model, loss_fn=loss_function, steps=self.validation_steps_per_epoch)
 
 
 
-def train_loop(dataloader, model_, loss_fn, optimizer, steps):
+def train_epoch(dataloader, model_, loss_fn, optimizer, steps):
     for batch, (X, y) in enumerate(dataloader):
         # Compute prediction and loss
         # TODO: The conversion to float32 probably shouldn't be here, but the default collate_fn seems to be converting
@@ -78,6 +81,20 @@ def train_loop(dataloader, model_, loss_fn, optimizer, steps):
             print(f"loss: {loss:>7f}  [{current:>5d}/{steps:>5d}]")
         if batch >= steps + 1:
             break
-    # TODO: Create training loop.
 
+def validation_epoch(dataloader, model_, loss_fn, steps):
+    validation_loss, correct = 0, 0
 
+    with torch.no_grad():
+        for batch, (X, y) in enumerate(dataloader):
+            y = y.to(torch.float32)
+            X = X.to(torch.float32)
+            pred = model_(X)
+            validation_loss += loss_fn(pred, y).item()
+            correct += (torch.round(pred) == y).type(torch.float32).sum().item()
+            if batch >= steps + 1:
+                break
+
+    validation_loss /= steps
+    correct /= steps * 103
+    print(f"Validation Error: \nAvg loss: {validation_loss:>8f} \n")
