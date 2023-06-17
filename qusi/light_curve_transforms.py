@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import torch
 import numpy.typing as npt
 import numpy as np
@@ -13,5 +15,5 @@ def from_observation_to_fluxes_array_and_label_array(light_curve_observation: Li
     return fluxes, np.array(label, dtype=np.float32)
 
 
-def to_tensor(array: npt.NDArray[np.float32]) -> Tensor:
-    return torch.tensor(array)
+def pair_array_to_tensor(arrays: Tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]) -> (Tensor, Tensor):
+    return torch.tensor(arrays[0]), torch.tensor(arrays[1])

@@ -25,12 +25,13 @@ def run_viewer(light_curve_path: Path, port: int = 5007):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('light_curve_path')
+    parser.add_argument('--port', nargs='?', const=5007, type=int)
     args = parser.parse_args()
     light_curve_path = Path(args.light_curve_path)
     if not light_curve_path.exists():
         print(f'File {light_curve_path} not found.')
         raise SystemExit(1)
-    run_viewer(light_curve_path)
+    run_viewer(light_curve_path, port=args.port)
 
 
 if __name__ == '__main__':

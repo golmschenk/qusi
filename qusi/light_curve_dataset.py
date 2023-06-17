@@ -9,7 +9,8 @@ from torchvision import transforms
 from qusi.light_curve import LightCurve
 from qusi.light_curve_collection import LightCurveCollection
 from qusi.light_curve_observation import LightCurveObservation
-from qusi.light_curve_transforms import to_tensor, from_observation_to_fluxes_array_and_label_array
+from qusi.light_curve_transforms import pair_array_to_tensor, from_observation_to_fluxes_array_and_label_array, \
+    pair_array_to_tensor
 from ramjet.photometric_database.light_curve_dataset_manipulations import OutOfBoundsInjectionHandlingMethod, \
     BaselineFluxEstimationMethod, inject_signal_into_light_curve_with_intermediates
 
@@ -32,6 +33,7 @@ class LightCurveDataset(IterableDataset):
         self.include_standard_in_injectee = False  # TODO: Should this be automatically detected?
         self.transform = transforms.Compose([
             from_observation_to_fluxes_array_and_label_array,
+            pair_array_to_tensor,
         ]) # TODO: remove hard coded and make available at multiple steps.
 
     @classmethod

@@ -1,9 +1,13 @@
 from typing import List
 
+import torch
+from torch.nn import BCELoss
+from torch.optim import Adam
 from torch.utils.data import DataLoader
 
 from qusi.light_curve_dataset import LightCurveDataset, contains_injected_dataset, \
     interleave_infinite_iterators, InterleavedDataset
+from qusi.single_dense_layer_model import SingleDenseLayerBinaryClassificationModel
 
 
 class TrainSession:
@@ -45,8 +49,35 @@ class TrainSession:
         train_dataset = InterleavedDataset.new(*self.train_datasets)
         train_dataloader = DataLoader(train_dataset, batch_size=self.batch_size)
         train_dataloader_iter = iter(train_dataloader)
-        for batch_index, (light_curve_batch, label_batch) in enumerate(train_dataloader):
-            print(batch_index)
+        # for batch_index, (light_curve_batch, label_batch) in enumerate(train_dataloader):
+        #     print(batch_index)
+        model = SingleDenseLayerBinaryClassificationModel(input_size=100)
+        loss_function = BCELoss()
+        optimizer = Adam(model.parameters())
+        train_loop(dataloader=train_dataloader, model_=model, loss_fn=loss_function, optimizer=optimizer, steps=self.train_steps_per_epoch)
+
+
+
+def train_loop(dataloader, model_, loss_fn, optimizer, steps):
+    for batch, (X, y) in enumerate(dataloader):
+        # Compute prediction and loss
+        # TODO: The conversion to float32 probably shouldn't be here, but the default collate_fn seems to be converting
+        #  to float64. Probably should override the default collate.
+        y = y.to(torch.float32)
+        X = X.to(torch.float32)
+        pred = model_(X)
+        loss = loss_fn(pred, y)
+
+        # Backpropagation
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+        if batch % 100 == 0:
+            loss, current = loss.item(), (batch + 1) * len(X)
+            print(f"loss: {loss:>7f}  [{current:>5d}/{steps:>5d}]")
+        if batch >= steps + 1:
+            break
     # TODO: Create training loop.
 
 
