@@ -1,3 +1,5 @@
+from datetime import datetime
+from pathlib import Path
 from typing import List
 
 import torch
@@ -46,6 +48,12 @@ class TrainSession:
         return instance
 
     def run(self):
+        current_datetime = datetime.now()
+        datetime_string = current_datetime.strftime("%Y_%m_%d_%H_%M_%S")
+        sessions_directory = Path('sessions')
+        sessions_directory.mkdir(exist_ok=True)
+        session_directory = sessions_directory.joinpath(f'session_{datetime_string}')
+        session_directory.mkdir(exist_ok=True)
         train_dataset = InterleavedDataset.new(*self.train_datasets)
         train_dataloader = DataLoader(train_dataset, batch_size=self.batch_size)
         validation_dataloaders: List[DataLoader] = []
@@ -58,7 +66,7 @@ class TrainSession:
             train_epoch(dataloader=train_dataloader, model_=model, loss_fn=loss_function, optimizer=optimizer, steps=self.train_steps_per_epoch)
             for validation_dataloader in validation_dataloaders:
                 validation_epoch(dataloader=validation_dataloader, model_=model, loss_fn=loss_function, steps=self.validation_steps_per_epoch)
-
+        torch.save(model.state_dict(), session_directory.joinpath('latest_model.pth'))
 
 
 def train_epoch(dataloader, model_, loss_fn, optimizer, steps):
