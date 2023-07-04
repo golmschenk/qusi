@@ -6,10 +6,22 @@ from qusi.light_curve import LightCurve
 from qusi.light_curve_observation import LightCurveObservation
 
 
-class LabeledLightCurveCollection(Iterable):
+class LightCurveCollection:
     """
     :ivar get_paths_function: The function to load the list of paths.
     :ivar load_times_and_fluxes_from_path_function: The function to load the times and fluxes from the light curve.
+    """
+    def __init__(self,
+                 get_paths_function: Callable[[], Iterable[Path]],
+                 load_times_and_fluxes_from_path_function: Callable[[Path], LightCurve]):
+        self.get_paths_function: Callable[[], Iterable[Path]] = get_paths_function
+        self.load_times_and_fluxes_from_path_function: Callable[[Path], LightCurve] = \
+            load_times_and_fluxes_from_path_function
+        self.random = random.Random(0)
+
+
+class LabeledLightCurveCollection(LightCurveCollection):
+    """
     :ivar load_label_from_path_function: The function to load the label for the light curve.
     """
 
@@ -17,11 +29,9 @@ class LabeledLightCurveCollection(Iterable):
                  get_paths_function: Callable[[], Iterable[Path]],
                  load_times_and_fluxes_from_path_function: Callable[[Path], LightCurve],
                  load_label_from_path_function: Callable[[Path], int]):
-        self.get_paths_function: Callable[[], Iterable[Path]] = get_paths_function
-        self.load_times_and_fluxes_from_path_function: Callable[[Path], LightCurve] = \
-            load_times_and_fluxes_from_path_function
+        super().__init__(get_paths_function=get_paths_function,
+                         load_times_and_fluxes_from_path_function=load_times_and_fluxes_from_path_function)
         self.load_label_from_path_function: Callable[[Path], int] = load_label_from_path_function
-        self.random = random.Random(0)
 
     @classmethod
     def new(cls,
@@ -60,7 +70,7 @@ class LabeledLightCurveCollection(Iterable):
                    load_times_and_fluxes_from_path_function=load_times_and_fluxes_from_path_function,
                    load_label_from_path_function=load_label_from_path_function)
 
-    def __iter__(self) -> Iterator[LightCurveObservation]:
+    def observation_iter(self) -> Iterator[LightCurveObservation]:
         """
         Get the iterable that will iterate through the light curves of the collection.
 

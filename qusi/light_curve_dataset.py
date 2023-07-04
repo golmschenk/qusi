@@ -1,15 +1,14 @@
 import copy
 from enum import Enum
-from itertools import chain
-from typing import List, Iterable, Self, Tuple, TypeVar, Iterator
+from typing import List, Iterable, Self, Tuple, TypeVar, Iterator, Callable
 
-from torch.utils.data import IterableDataset, Dataset
+from torch.utils.data import IterableDataset
 from torchvision import transforms
 
 from qusi.light_curve import LightCurve
 from qusi.light_curve_collection import LabeledLightCurveCollection
 from qusi.light_curve_observation import LightCurveObservation
-from qusi.light_curve_transforms import pair_array_to_tensor, from_observation_to_fluxes_array_and_label_array, \
+from qusi.light_curve_transforms import from_observation_to_fluxes_array_and_label_array, \
     pair_array_to_tensor
 from ramjet.photometric_database.light_curve_dataset_manipulations import OutOfBoundsInjectionHandlingMethod, \
     BaselineFluxEstimationMethod, inject_signal_into_light_curve_with_intermediates
@@ -58,32 +57,23 @@ class LightCurveDataset(IterableDataset):
 
 
     def __iter__(self):
-        # TODO: Create iters for light curve collections so this class can just pull the next observation
-        #  from the collection at will. This class should then shuffle buffer them and then inject from there.
-        #  Should look into where the data loader will be able to multiprocess this... Looks like for iterable sets
-        #  each process would have a copy of the dataset. Having a seed based on the worker number might be sufficient.
-        #  It might also make sense to have the light curve collection decide how it should be shuffled. This would both
-        #  prevent the need to have a window of light curves loaded, but also, it's much more likely that the shuffling
-        #  will depend on the light curve collection rather than the dataset (e.g., TESS FFI needs a buffered window,
-        #  planet candidates paths can be stored in memory and full shuffled, generated might not need to be shuffled at
-        #  all or just have their input parameters shuffled.
         base_light_curve_collection_iter_and_type_pairs: \
             List[Tuple[Iterator[LightCurveObservation], LightCurveCollectionType]] = []
         injectee_collections = copy.copy(self.injectee_light_curve_collections)
         for standard_collection in self.standard_light_curve_collections:
             if standard_collection in injectee_collections:
-                base_light_curve_collection_iter_and_type_pairs.append((loop_iter(standard_collection),
-                                                                        LightCurveCollectionType.STANDARD_AND_INJECTEE))
+                base_light_curve_collection_iter_and_type_pairs.append(
+                    (loop_iter_function(standard_collection.observation_iter), LightCurveCollectionType.STANDARD_AND_INJECTEE))
                 injectee_collections.remove(standard_collection)
             else:
-                base_light_curve_collection_iter_and_type_pairs.append((loop_iter(standard_collection),
-                                                                        LightCurveCollectionType.STANDARD))
+                base_light_curve_collection_iter_and_type_pairs.append(
+                    (loop_iter_function(standard_collection.observation_iter), LightCurveCollectionType.STANDARD))
         for injectee_collection in injectee_collections:
-            base_light_curve_collection_iter_and_type_pairs.append((loop_iter(injectee_collection),
-                                                                    LightCurveCollectionType.INJECTEE))
+            base_light_curve_collection_iter_and_type_pairs.append(
+                (loop_iter_function(injectee_collection.observation_iter), LightCurveCollectionType.INJECTEE))
         injectable_light_curve_collection_iters: List[Iterator[LightCurveObservation]] = []
         for injectable_collection in self.injectable_light_curve_collections:
-            injectable_light_curve_collection_iters.append(loop_iter(injectable_collection))
+            injectable_light_curve_collection_iters.append(loop_iter_function(injectable_collection.observation_iter))
         while True:
             for base_light_curve_collection_iter_and_type_pair in base_light_curve_collection_iter_and_type_pairs:
                 base_collection_iter, collection_type = base_light_curve_collection_iter_and_type_pair
@@ -141,9 +131,9 @@ def interleave_infinite_iterators(*infinite_iterators: Iterator):
 T = TypeVar('T')
 
 
-def loop_iter(iterable: Iterable[T]) -> Iterator[T]:
+def loop_iter_function(iter_function: Callable[[], Iterable[T]]) -> Iterator[T]:
     while True:
-        iterator = iter(iterable)
+        iterator = iter_function()
         for element in iterator:
             yield element
 
