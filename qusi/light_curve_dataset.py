@@ -7,7 +7,7 @@ from torch.utils.data import IterableDataset, Dataset
 from torchvision import transforms
 
 from qusi.light_curve import LightCurve
-from qusi.light_curve_collection import LightCurveCollection
+from qusi.light_curve_collection import LabeledLightCurveCollection
 from qusi.light_curve_observation import LightCurveObservation
 from qusi.light_curve_transforms import pair_array_to_tensor, from_observation_to_fluxes_array_and_label_array, \
     pair_array_to_tensor
@@ -20,13 +20,13 @@ class LightCurveDataset(IterableDataset):
     A dataset of light curve data.
     """
     def __init__(self,
-                 standard_light_curve_collections: List[LightCurveCollection],
-                 injectee_light_curve_collections: List[LightCurveCollection],
-                 injectable_light_curve_collections: List[LightCurveCollection]
+                 standard_light_curve_collections: List[LabeledLightCurveCollection],
+                 injectee_light_curve_collections: List[LabeledLightCurveCollection],
+                 injectable_light_curve_collections: List[LabeledLightCurveCollection]
                  ):
-        self.standard_light_curve_collections: List[LightCurveCollection] = standard_light_curve_collections
-        self.injectee_light_curve_collections: List[LightCurveCollection] = injectee_light_curve_collections
-        self.injectable_light_curve_collections: List[LightCurveCollection] = injectable_light_curve_collections
+        self.standard_light_curve_collections: List[LabeledLightCurveCollection] = standard_light_curve_collections
+        self.injectee_light_curve_collections: List[LabeledLightCurveCollection] = injectee_light_curve_collections
+        self.injectable_light_curve_collections: List[LabeledLightCurveCollection] = injectable_light_curve_collections
         if len(self.standard_light_curve_collections) == 0 and len(self.injectee_light_curve_collections) == 0:
             raise ValueError('Either the standard or injectee light curve collection lists must not be empty. '
                              'Both were empty.')
@@ -38,9 +38,9 @@ class LightCurveDataset(IterableDataset):
 
     @classmethod
     def new(cls,
-            standard_light_curve_collections: List[LightCurveCollection] | None = None,
-            injectee_light_curve_collections: List[LightCurveCollection] | None = None,
-            injectable_light_curve_collections: List[LightCurveCollection] | None = None,
+            standard_light_curve_collections: List[LabeledLightCurveCollection] | None = None,
+            injectee_light_curve_collections: List[LabeledLightCurveCollection] | None = None,
+            injectable_light_curve_collections: List[LabeledLightCurveCollection] | None = None,
             ) -> Self:
         if standard_light_curve_collections is None and injectee_light_curve_collections is None:
             raise ValueError('Either the standard or injectee light curve collection lists must be specified. '

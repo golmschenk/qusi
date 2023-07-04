@@ -4,10 +4,10 @@ from typing import Iterable, Union
 import numpy as np
 
 from qusi.light_curve import LightCurve
-from qusi.light_curve_collection import LightCurveCollection, create_constant_label_for_path_function
+from qusi.light_curve_collection import LabeledLightCurveCollection, create_constant_label_for_path_function
 
 
-class ToyLightCurveCollection(LightCurveCollection):
+class ToyLightCurveCollection(LabeledLightCurveCollection):
     """
     A collection of simple toy light curves.
     """

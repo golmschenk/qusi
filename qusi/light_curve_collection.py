@@ -6,7 +6,7 @@ from qusi.light_curve import LightCurve
 from qusi.light_curve_observation import LightCurveObservation
 
 
-class LightCurveCollection(Iterable):
+class LabeledLightCurveCollection(Iterable):
     """
     :ivar get_paths_function: The function to load the list of paths.
     :ivar load_times_and_fluxes_from_path_function: The function to load the times and fluxes from the light curve.
