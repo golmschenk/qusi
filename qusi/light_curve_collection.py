@@ -20,6 +20,12 @@ class LightCurveCollectionBase(ABC):
         pass
 
 
+class LightCurveObservationCollectionBase(LightCurveCollectionBase):
+    @abstractmethod
+    def observation_iter(self) -> Iterator[LightCurveObservation]:
+        pass
+
+
 class PathIterableBase(ABC):
     @abstractmethod
     def get_shuffled_paths(self) -> List[Path]:
@@ -94,7 +100,7 @@ class LightCurveCollection(LightCurveCollectionBase):
         return self.load_times_and_fluxes_from_path_function(path)
 
 
-class LabeledLightCurveCollection(LightCurveCollectionBase):
+class LabeledLightCurveCollection(LightCurveObservationCollectionBase):
     """
     :ivar path_iterable: The PathIterableBase object for the collection.
     :ivar light_curve_collection: The LightCurveCollectionBase object for the collection.
