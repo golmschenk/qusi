@@ -162,3 +162,37 @@ class InterleavedDataset(IterableDataset):
         # noinspection PyTypeChecker
         dataset_iterators = list(map(iter, self.datasets))
         return interleave_infinite_iterators(*dataset_iterators)
+
+
+class ConcatenatedIterableDataset(IterableDataset):
+    def __init__(self, *datasets: IterableDataset):
+        self.datasets: Tuple[IterableDataset] = datasets
+
+    @classmethod
+    def new(cls, *datasets: IterableDataset):
+        instance = cls(*datasets)
+        return instance
+
+    def __iter__(self):
+        for dataset in self.datasets:
+            for element in dataset:
+                yield element
+
+
+class LimitedIterableDataset(IterableDataset):
+    def __init__(self, dataset: IterableDataset, limit: int):
+        self.dataset: IterableDataset = dataset
+        self.limit: int = limit
+
+    @classmethod
+    def new(cls, dataset: IterableDataset, limit: int):
+        instance = cls(dataset, limit)
+        return instance
+
+    def __iter__(self):
+        count = 0
+        for element in self.dataset:
+            yield element
+            count += 1
+            if count >= self.limit:
+                break
