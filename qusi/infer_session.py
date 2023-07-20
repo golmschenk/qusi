@@ -30,16 +30,17 @@ class InferSession:
         return instance
 
     def run(self):
-        sessions_directory = Path('sessions')
-        session_directory = sessions_directory.joinpath(f'session_2023_07_19_15_11_56')
-        infer_dataset = ConcatenatedIterableDataset.new(*self.infer_datasets)
-        infer_dataloader = DataLoader(infer_dataset, batch_size=self.batch_size)
-        model = SingleDenseLayerBinaryClassificationModel(input_size=self.batch_size)
-        model_path = session_directory.joinpath('latest_model.pth')
-        model.load_state_dict(torch.load(model_path))
-        model.eval()
-        infer_epoch(dataloader=infer_dataloader, model_=model)
-        torch.save(model.state_dict(), session_directory.joinpath('latest_model.pth'))
+        with torch.no_grad():
+            sessions_directory = Path('sessions')
+            session_directory = sessions_directory.joinpath(f'session_2023_07_19_15_11_56')
+            infer_dataset = ConcatenatedIterableDataset.new(*self.infer_datasets)
+            infer_dataloader = DataLoader(infer_dataset, batch_size=self.batch_size)
+            model = SingleDenseLayerBinaryClassificationModel(input_size=100)
+            model_path = session_directory.joinpath('latest_model.pth')
+            model.load_state_dict(torch.load(model_path))
+            model.eval()
+            predictions = infer_epoch(dataloader=infer_dataloader, model_=model)
+        return predictions
 
 
 def infer_epoch(dataloader, model_):
