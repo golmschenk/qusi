@@ -7,8 +7,7 @@ from torch.nn import BCELoss
 from torch.optim import Adam
 from torch.utils.data import DataLoader
 
-from qusi.light_curve_dataset import LightCurveDataset, contains_injected_dataset, \
-    interleave_infinite_iterators, InterleavedDataset
+from qusi.light_curve_dataset import LightCurveDataset, InterleavedDataset
 from qusi.single_dense_layer_model import SingleDenseLayerBinaryClassificationModel
 
 
@@ -59,7 +58,7 @@ class TrainSession:
         validation_dataloaders: List[DataLoader] = []
         for validation_dataset in self.validation_datasets:
             validation_dataloaders.append(DataLoader(validation_dataset, batch_size=self.batch_size))
-        model = SingleDenseLayerBinaryClassificationModel(input_size=100)
+        model = SingleDenseLayerBinaryClassificationModel(input_size=self.batch_size)
         loss_function = BCELoss()
         optimizer = Adam(model.parameters())
         for epoch_index in range(7):
@@ -90,6 +89,7 @@ def train_epoch(dataloader, model_, loss_fn, optimizer, steps):
         if batch >= steps + 1:
             break
 
+
 def validation_epoch(dataloader, model_, loss_fn, steps):
     validation_loss, correct = 0, 0
 
@@ -104,5 +104,5 @@ def validation_epoch(dataloader, model_, loss_fn, steps):
                 break
 
     validation_loss /= steps
-    correct /= steps * 103
+    correct /= steps * dataloader.batch_size
     print(f"Validation Error: \nAvg loss: {validation_loss:>8f} \n")

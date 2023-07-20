@@ -1,10 +1,7 @@
-from datetime import datetime
 from pathlib import Path
 from typing import List
 
 import torch
-from torch.nn import BCELoss
-from torch.optim import Adam
 from torch.utils.data import DataLoader
 
 from qusi.light_curve_dataset import LightCurveDataset, contains_injected_dataset, \
@@ -37,7 +34,7 @@ class InferSession:
         session_directory = sessions_directory.joinpath(f'session_2023_07_19_15_11_56')
         infer_dataset = ConcatenatedIterableDataset.new(*self.infer_datasets)
         infer_dataloader = DataLoader(infer_dataset, batch_size=self.batch_size)
-        model = SingleDenseLayerBinaryClassificationModel(input_size=100)
+        model = SingleDenseLayerBinaryClassificationModel(input_size=self.batch_size)
         model_path = session_directory.joinpath('latest_model.pth')
         model.load_state_dict(torch.load(model_path))
         model.eval()

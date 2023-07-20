@@ -7,5 +7,6 @@ light_curve_dataset = LimitedIterableDataset.new(
                                                             toy_sine_wave_light_curve_collection]),
     limit=1000
 )
-train_run = InferSession.new(infer_datasets=[light_curve_dataset], batch_size=103)
-train_run.run()
+batch_size = 100
+infer_session = InferSession.new(infer_datasets=[light_curve_dataset], batch_size=batch_size)
+infer_session.run()
