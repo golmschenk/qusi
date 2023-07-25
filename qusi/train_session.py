@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import List
 
 import torch
-from torch.nn import BCELoss
+from torch.nn import BCELoss, Module
 from torch.optim import Adam
 from torch.utils.data import DataLoader
 
@@ -15,12 +15,14 @@ class TrainSession:
     def __init__(self,
                  train_datasets: List[LightCurveDataset],
                  validation_datasets: List[LightCurveDataset],
+                 model: Module,
                  batch_size: int,
                  train_steps_per_epoch: int | None = None,
                  validation_steps_per_epoch: int | None = None,
                  ):
         self.train_datasets: List[LightCurveDataset] = train_datasets
         self.validation_datasets: List[LightCurveDataset] = validation_datasets
+        self.model: Module = model
         self.batch_size: int = batch_size
         self.train_steps_per_epoch: int = train_steps_per_epoch
         self.validation_steps_per_epoch: int = validation_steps_per_epoch
@@ -30,6 +32,7 @@ class TrainSession:
             train_datasets: LightCurveDataset | List[LightCurveDataset],
             validation_datasets: LightCurveDataset | List[LightCurveDataset],
             batch_size: int,
+            model: Module,
             train_steps_per_epoch: int,
             validation_steps_per_epoch: int,
             ):
@@ -41,6 +44,7 @@ class TrainSession:
         validation_datasets: List[LightCurveDataset] = validation_datasets
         instance = cls(train_datasets=train_datasets,
                        validation_datasets=validation_datasets,
+                       model=model,
                        batch_size=batch_size,
                        train_steps_per_epoch=train_steps_per_epoch,
                        validation_steps_per_epoch=validation_steps_per_epoch)
@@ -58,14 +62,15 @@ class TrainSession:
         validation_dataloaders: List[DataLoader] = []
         for validation_dataset in self.validation_datasets:
             validation_dataloaders.append(DataLoader(validation_dataset, batch_size=self.batch_size))
-        model = SingleDenseLayerBinaryClassificationModel(input_size=self.batch_size)
         loss_function = BCELoss()
-        optimizer = Adam(model.parameters())
+        optimizer = Adam(self.model.parameters())
         for epoch_index in range(7):
-            train_epoch(dataloader=train_dataloader, model_=model, loss_fn=loss_function, optimizer=optimizer, steps=self.train_steps_per_epoch)
+            train_epoch(dataloader=train_dataloader, model_=self.model, loss_fn=loss_function, optimizer=optimizer,
+                        steps=self.train_steps_per_epoch)
             for validation_dataloader in validation_dataloaders:
-                validation_epoch(dataloader=validation_dataloader, model_=model, loss_fn=loss_function, steps=self.validation_steps_per_epoch)
-        torch.save(model.state_dict(), session_directory.joinpath('latest_model.pth'))
+                validation_epoch(dataloader=validation_dataloader, model_=self.model, loss_fn=loss_function,
+                                 steps=self.validation_steps_per_epoch)
+        torch.save(self.model.state_dict(), session_directory.joinpath('latest_model.pth'))
 
 
 def train_epoch(dataloader, model_, loss_fn, optimizer, steps):

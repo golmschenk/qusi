@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import List
 
 import torch
+from torch.nn import Module
 from torch.utils.data import DataLoader
 
 from qusi.light_curve_dataset import LightCurveDataset, contains_injected_dataset, \
@@ -12,19 +13,23 @@ from qusi.single_dense_layer_model import SingleDenseLayerBinaryClassificationMo
 class InferSession:
     def __init__(self,
                  infer_datasets: List[LightCurveDataset],
+                 model: Module,
                  batch_size: int,
                  ):
         self.infer_datasets: List[LightCurveDataset] = infer_datasets
+        self.model = model
         self.batch_size: int = batch_size
 
     @classmethod
     def new(cls,
             infer_datasets: LightCurveDataset | List[LightCurveDataset],
+            model: Module,
             batch_size: int,
             ):
         if not isinstance(infer_datasets, list):
             infer_datasets = [infer_datasets]
         instance = cls(infer_datasets=infer_datasets,
+                       model=model,
                        batch_size=batch_size,
                        )
         return instance
@@ -32,14 +37,13 @@ class InferSession:
     def run(self):
         with torch.no_grad():
             sessions_directory = Path('sessions')
-            session_directory = sessions_directory.joinpath(f'session_2023_07_19_15_11_56')
+            session_directory = sessions_directory.joinpath(f'session_2023_07_25_14_59_51')
             infer_dataset = ConcatenatedIterableDataset.new(*self.infer_datasets)
             infer_dataloader = DataLoader(infer_dataset, batch_size=self.batch_size)
-            model = SingleDenseLayerBinaryClassificationModel(input_size=100)
             model_path = session_directory.joinpath('latest_model.pth')
-            model.load_state_dict(torch.load(model_path))
-            model.eval()
-            predictions = infer_epoch(dataloader=infer_dataloader, model_=model)
+            self.model.load_state_dict(torch.load(model_path))
+            self.model.eval()
+            predictions = infer_epoch(dataloader=infer_dataloader, model_=self.model)
         return predictions
 
 
