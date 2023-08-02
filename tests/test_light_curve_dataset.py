@@ -31,7 +31,7 @@ def test_contains_injected_dataset():
     assert contains_injected_dataset(datasets_with_injected)
 
 
-def test_interleave_iterables_infinitely():
+def test_interleave_infinite_iterators():
     dataset0 = IterableMock()
     dataset0.__iter__.return_value = itertools.cycle(iter([1, 2, 3]))
     dataset1 = IterableMock()
