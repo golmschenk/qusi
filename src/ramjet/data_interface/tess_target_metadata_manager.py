@@ -37,7 +37,7 @@ class TessTargetMetadataManger:
         row_dictionary_list = []
         table_name = convert_class_to_table_name(TessTargetMetadata)
         for light_curve_path in light_curve_paths:
-            tic_id, _ = self.tess_data_interface.get_tic_id_and_sector_from_file_path(light_curve_path)
+            tic_id, _ = get_tic_id_and_sector_from_file_path(light_curve_path)
             uuid_name = f'{table_name} TIC {tic_id}'
             uuid = metadatabase_uuid(uuid_name)
             dataset_split = dataset_split_from_uuid(uuid)

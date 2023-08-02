@@ -192,7 +192,7 @@ class TessToiDataInterface:
         suspected_planet_data_products = tess_data_interface.get_product_list(suspected_planet_observations)
         suspected_planet_light_curve_data_products = suspected_planet_data_products[
             suspected_planet_data_products['productFilename'].str.endswith('lc.fits')]
-        suspected_planet_download_manifest = tess_data_interface.download_products(
+        suspected_planet_download_manifest = download_products(
             suspected_planet_light_curve_data_products, data_directory=self.data_directory)
         print(f'Verifying and moving light curves to {directory}...')
         directory.mkdir(parents=True, exist_ok=True)

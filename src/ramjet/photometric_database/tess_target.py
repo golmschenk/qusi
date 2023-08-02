@@ -12,7 +12,7 @@ from typing import Union
 import requests
 from astroquery.gaia import Gaia
 
-from ramjet.data_interface.tess_data_interface import TessDataInterface
+from ramjet.data_interface.tess_data_interface import TessDataInterface, get_tess_input_catalog_row
 
 
 class TessTarget:
@@ -38,7 +38,7 @@ class TessTarget:
         """
         target = TessTarget()
         target.tic_id = tic_id
-        tic_row = cls.tess_data_interface.get_tess_input_catalog_row(target.tic_id)
+        tic_row = get_tess_input_catalog_row(target.tic_id)
         target.radius = tic_row['rad']
         if np.isnan(target.radius):
             gaia_source_id_string = tic_row['GAIA']

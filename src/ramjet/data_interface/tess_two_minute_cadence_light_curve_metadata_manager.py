@@ -7,7 +7,7 @@ from peewee import IntegerField, CharField, SchemaManager
 
 from ramjet.data_interface.metadatabase import MetadatabaseModel, metadatabase, metadatabase_uuid, \
     convert_class_to_table_name, dataset_split_from_uuid
-from ramjet.data_interface.tess_data_interface import TessDataInterface
+from ramjet.data_interface.tess_data_interface import TessDataInterface, get_tic_id_and_sector_from_file_path
 
 
 class TessTwoMinuteCadenceLightCurveMetadata(MetadatabaseModel):
@@ -44,7 +44,7 @@ class TessTwoMinuteCadenceLightCurveMetadataManger:
         row_dictionary_list = []
         table_name = convert_class_to_table_name(TessTwoMinuteCadenceLightCurveMetadata)
         for light_curve_path in light_curve_paths:
-            tic_id, sector = self.tess_data_interface.get_tic_id_and_sector_from_file_path(light_curve_path)
+            tic_id, sector = get_tic_id_and_sector_from_file_path(light_curve_path)
             uuid_name = f'{table_name} TIC {tic_id} sector {sector}'
             uuid = metadatabase_uuid(uuid_name)
             dataset_split = dataset_split_from_uuid(uuid)

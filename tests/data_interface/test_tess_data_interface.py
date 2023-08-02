@@ -2,7 +2,6 @@
 Tests for the TessDataInterface class.
 """
 from pathlib import Path
-from typing import Any
 from unittest.mock import Mock, ANY, patch
 import numpy as np
 import pandas as pd
@@ -13,6 +12,7 @@ import pytest
 from astroquery.utils import TableList
 
 import ramjet.data_interface.tess_data_interface
+import ramjet.data_interface.tess_data_interface as tess_data_interface_module
 from ramjet.data_interface.tess_data_interface import TessDataInterface, TessFluxType
 
 
@@ -53,8 +53,8 @@ class TestTessDataInterface:
         mock_download_products.return_value = mock_manifest
         fake_data_products_data_frame = pd.DataFrame()
         data_directory = Path('fake/data/directory')
-        query_result = tess_data_interface.download_products(fake_data_products_data_frame,
-                                                             data_directory=data_directory)
+        query_result = tess_data_interface_module.download_products(fake_data_products_data_frame,
+                                                                    data_directory=data_directory)
         mock_download_products.assert_called_with(ANY,
                                                   download_dir=str(data_directory))
         assert isinstance(query_result, pd.DataFrame)
@@ -62,7 +62,7 @@ class TestTessDataInterface:
 
     def test_can_filter_observations_to_get_only_single_sector_observations(self, tess_data_interface):
         observations = pd.DataFrame({'dataURL': ['a_lc.fits', 'b_dvt.fits', 'c_dvr.pdf', 'd_lc.fits']})
-        single_sector_observations = tess_data_interface.filter_for_single_sector_observations(observations)
+        single_sector_observations = tess_data_interface_module.filter_for_single_sector_observations(observations)
         assert single_sector_observations.shape[0] == 2
         assert 'a_lc.fits' in single_sector_observations['dataURL'].values
         assert 'd_lc.fits' in single_sector_observations['dataURL'].values
@@ -70,31 +70,31 @@ class TestTessDataInterface:
 
     def test_can_filter_observations_to_get_only_multi_sector_observations(self, tess_data_interface):
         observations = pd.DataFrame({'dataURL': ['a_lc.fits', 'b_dvt.fits', 'c_dvr.pdf', 'd_lc.fits']})
-        multi_sector_observations = tess_data_interface.filter_for_multi_sector_observations(observations)
+        multi_sector_observations = tess_data_interface_module.filter_for_multi_sector_observations(observations)
         assert multi_sector_observations.shape[0] == 1
         assert 'b_dvt.fits' in multi_sector_observations['dataURL'].values
         assert 'a_lc.fits' not in multi_sector_observations['dataURL'].values
 
     def test_can_get_tic_from_single_sector_obs_id(self, tess_data_interface):
-        tic_id0 = tess_data_interface.get_tic_id_from_single_sector_obs_id(
+        tic_id0 = tess_data_interface_module.get_tic_id_from_single_sector_obs_id(
             'tess2018206045859-s0001-0000000117544915-0120-s')
         assert tic_id0 == 117544915
-        tic_id1 = tess_data_interface.get_tic_id_from_single_sector_obs_id(
+        tic_id1 = tess_data_interface_module.get_tic_id_from_single_sector_obs_id(
             'tess2018319095959-s0005-0000000025132999-0125-s')
         assert tic_id1 == 25132999
 
     def test_can_get_sector_from_single_sector_obs_id(self, tess_data_interface):
-        sector0 = tess_data_interface.get_sector_from_single_sector_obs_id(
+        sector0 = tess_data_interface_module.get_sector_from_single_sector_obs_id(
             'tess2019112060037-s0011-0000000025132999-0143-s')
         assert sector0 == 11
-        sector1 = tess_data_interface.get_sector_from_single_sector_obs_id(
+        sector1 = tess_data_interface_module.get_sector_from_single_sector_obs_id(
             'tess2018319095959-s0005-0000000025132999-0125-s')
         assert sector1 == 5
 
     def test_can_add_tic_id_column_to_single_sector_observations(self, tess_data_interface):
         single_sector_observations = pd.DataFrame({'obs_id': ['tess2018319095959-s0005-0000000025132999-0125-s',
                                                               'tess2018206045859-s0001-0000000117544915-0120-s']})
-        single_sector_observations = tess_data_interface.add_tic_id_column_to_single_sector_observations(
+        single_sector_observations = tess_data_interface_module.add_tic_id_column_to_single_sector_observations(
             single_sector_observations)
         assert 'TIC ID' in single_sector_observations.columns
         assert 25132999 in single_sector_observations['TIC ID'].values
@@ -103,7 +103,7 @@ class TestTessDataInterface:
     def test_can_add_sector_column_to_single_sector_observations(self, tess_data_interface):
         single_sector_observations = pd.DataFrame({'obs_id': ['tess2018319095959-s0005-0000000025132999-0125-s',
                                                               'tess2018206045859-s0001-0000000117544915-0120-s']})
-        single_sector_observations = tess_data_interface.add_sector_column_to_single_sector_observations(
+        single_sector_observations = tess_data_interface_module.add_sector_column_to_single_sector_observations(
             single_sector_observations)
         assert 'Sector' in single_sector_observations.columns
         assert 5 in single_sector_observations['Sector'].values
@@ -223,7 +223,7 @@ class TestTessDataInterface:
     def test_can_get_the_coordinates_of_a_target_based_on_tic_id(self, mock_query_criteria, tess_data_interface):
         mock_query_result = Table({'ra': [62.2, 62.2], 'dec': [-71.4, -71.4]})
         mock_query_criteria.return_value = mock_query_result
-        coordinates = tess_data_interface.get_target_coordinates(tic_id=0)
+        coordinates = tess_data_interface_module.get_target_coordinates(tic_id=0)
         assert coordinates.ra.deg == 62.2
         assert coordinates.dec.deg == -71.4
 
@@ -232,7 +232,7 @@ class TestTessDataInterface:
         mock_query_result = TableList({0: Table({'VarType': [b'RR', b'SNI']})})
         mock_query_region.return_value = mock_query_result
         coordinates = SkyCoord(1, 1, unit="deg")
-        variable_data_frame = tess_data_interface.get_variable_data_frame_for_coordinates(coordinates)
+        variable_data_frame = tess_data_interface_module.get_variable_data_frame_for_coordinates(coordinates)
         assert variable_data_frame['VarType'].iloc[0] == b'RR'
         assert variable_data_frame['VarType'].iloc[1] == b'SNI'
 
@@ -241,16 +241,16 @@ class TestTessDataInterface:
         mock_query_result = TableList({})
         mock_query_region.return_value = mock_query_result
         coordinates = SkyCoord(1, 1, unit="deg")
-        variable_data_frame = tess_data_interface.get_variable_data_frame_for_coordinates(coordinates)
+        variable_data_frame = tess_data_interface_module.get_variable_data_frame_for_coordinates(coordinates)
         assert isinstance(variable_data_frame, pd.DataFrame)
 
-    def test_can_get_variable_stars_by_tic_id(self, tess_data_interface):
+    def test_can_get_variable_stars_by_tic_id(self):
         tic_id_coordinates_result = SkyCoord(62.2, -71.4, unit="deg")
         variables_for_coordinates_result = pd.DataFrame({'VarType': [b'RR', b'SNI']})
-        tess_data_interface.get_target_coordinates = Mock(return_value=tic_id_coordinates_result)
-        tess_data_interface.get_variable_data_frame_for_coordinates = Mock(
+        tess_data_interface_module.get_target_coordinates = Mock(return_value=tic_id_coordinates_result)
+        tess_data_interface_module.get_variable_data_frame_for_coordinates = Mock(
             return_value=variables_for_coordinates_result)
-        variable_data_frame = tess_data_interface.get_variable_data_frame_for_tic_id(tic_id=0)
+        variable_data_frame = tess_data_interface_module.get_variable_data_frame_for_tic_id(tic_id=0)
         assert variable_data_frame['VarType'].iloc[0] == b'RR'
         assert variable_data_frame['VarType'].iloc[1] == b'SNI'
 
@@ -267,24 +267,25 @@ class TestTessDataInterface:
         assert sorted(sectors) == [5, 7]
 
     def test_can_get_tic_id_and_sector_from_human_readable_file_name(self, tess_data_interface):
-        tic_id0, sector0 = tess_data_interface.get_tic_id_and_sector_from_file_path(
+        tic_id0, sector0 = tess_data_interface_module.get_tic_id_and_sector_from_file_path(
             'TIC 289890301 sector 15 second half')
         assert tic_id0 == 289890301
         assert sector0 == 15
-        tic_id1, sector1 = tess_data_interface.get_tic_id_and_sector_from_file_path('output/TIC 169480782 sector 5.png')
+        tic_id1, sector1 = tess_data_interface_module.get_tic_id_and_sector_from_file_path(
+            'output/TIC 169480782 sector 5.png')
         assert tic_id1 == 169480782
         assert sector1 == 5
 
     def test_get_tic_id_and_sector_raises_error_with_unknown_pattern(self, tess_data_interface):
         with pytest.raises(ValueError):
-            tess_data_interface.get_tic_id_and_sector_from_file_path('a b c d e f g')
+            tess_data_interface_module.get_tic_id_and_sector_from_file_path('a b c d e f g')
 
     def test_can_get_tic_id_and_sector_from_tess_obs_id_style_file_name(self, tess_data_interface):
-        tic_id0, sector0 = tess_data_interface.get_tic_id_and_sector_from_file_path(
+        tic_id0, sector0 = tess_data_interface_module.get_tic_id_and_sector_from_file_path(
             'mast:TESS/product/tess2019006130736-s0007-0000000278956474-0131-s_lc.fits')
         assert tic_id0 == 278956474
         assert sector0 == 7
-        tic_id1, sector1 = tess_data_interface.get_tic_id_and_sector_from_file_path(
+        tic_id1, sector1 = tess_data_interface_module.get_tic_id_and_sector_from_file_path(
             'tess2018319095959-s0005-0000000278956474-0125-s')
         assert tic_id1 == 278956474
         assert sector1 == 5
@@ -293,6 +294,6 @@ class TestTessDataInterface:
     def test_can_get_the_tic_row_of_a_target_based_on_tic_id(self, mock_query_criteria, tess_data_interface):
         mock_query_result = Table({'ra': [62.2, 62.2], 'dec': [-71.4, -71.4]})
         mock_query_criteria.return_value = mock_query_result
-        tic_row = tess_data_interface.get_tess_input_catalog_row(tic_id=0)
+        tic_row = tess_data_interface_module.get_tess_input_catalog_row(tic_id=0)
         assert tic_row['ra'] == 62.2
         assert tic_row['dec'] == -71.4

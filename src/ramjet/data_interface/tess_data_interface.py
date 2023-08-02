@@ -74,10 +74,64 @@ class NoDataProductsFoundException(Exception):
     pass
 
 
+def get_variable_data_frame_for_tic_id(tic_id):
+    """
+    Gets a data frame containing all known variables near a TIC target (including the target if applicable).
+
+    :param tic_id: The TIC target to search for variables near.
+    :return: A data frame of the variables near the target (including the target if applicable).
+    """
+    coordinates = get_target_coordinates(tic_id)
+    return get_variable_data_frame_for_coordinates(coordinates)
+
+
+def add_sector_column_to_single_sector_observations(observations: pd.DataFrame) -> pd.DataFrame:
+    """
+    Adds a column with the sector the data was taken from.
+
+    :param observations: The table of single-sector observations.
+    :return: The table with the added sector column.
+    """
+    observations[ColumnName.SECTOR] = observations['obs_id'].map(get_sector_from_single_sector_obs_id)
+    return observations
+
+
+def add_tic_id_column_to_single_sector_observations(data_frame: pd.DataFrame) -> pd.DataFrame:
+    """
+    Adds a column with the TIC ID the row is related to.
+
+    :param data_frame: The data frame of single-sector entries.
+    :return: The table with the added TIC ID column.
+    """
+    data_frame[ColumnName.TIC_ID] = data_frame['obs_id'].map(get_tic_id_from_single_sector_obs_id)
+    return data_frame
+
+
+def print_variables_near_tess_target(tic_id):
+    """
+    Prints all variable stars near a given TESS target (including the target if applicable).
+
+    :param tic_id: The TIC target to search for variables near.
+    """
+    variable_data_frame = get_variable_data_frame_for_tic_id(tic_id)
+    if variable_data_frame.shape[0] == 0:
+        print('No known variables found.')
+        return
+    print('Variable type abbreviation explanations: http://www.sai.msu.su/gcvs/gcvs/vartype.htm')
+    print_data_frame = pd.DataFrame()
+    print_data_frame['Variable Type'] = variable_data_frame['VarType'].str.decode('utf-8')
+    print_data_frame['Max magnitude'] = variable_data_frame['magMax']
+    print_data_frame['Period (days)'] = variable_data_frame['Period']
+    print_data_frame.sort_values('Max magnitude', inplace=True)
+    print_data_frame.reset_index(drop=True, inplace=True)
+    print(print_data_frame)
+
+
 class TessDataInterface:
     """
     A class for common interfacing with TESS data, such as downloading, sorting, and manipulating.
     """
+
     def __init__(self):
         Observations.TIMEOUT = 2000
         Observations.PAGESIZE = 3000
@@ -101,31 +155,14 @@ class TessDataInterface:
         :return: The list of time series observations as rows in a Pandas data frame.
         """
         if tic_id is None or np.isscalar(tic_id):
-            observations = self.get_all_tess_time_series_observations_chunk(tic_id)
+            observations = get_all_tess_time_series_observations_chunk(tic_id)
         else:
             observations_chunks = []
             for tic_id_list_chunk in np.array_split(tic_id, math.ceil(len(tic_id) / self.mast_input_query_chunk_size)):
-                observations_chunk = self.get_all_tess_time_series_observations_chunk(tic_id_list_chunk)
+                observations_chunk = get_all_tess_time_series_observations_chunk(tic_id_list_chunk)
                 observations_chunks.append(observations_chunk)
             observations = pd.concat(observations_chunks, ignore_index=True)
         return observations
-
-    @staticmethod
-    @retry(retry_on_exception=is_common_mast_connection_error, stop_max_attempt_number=10)
-    def get_all_tess_time_series_observations_chunk(tic_id: Union[int, List[int]] = None) -> pd.DataFrame:
-        """
-        Gets all TESS time-series observations, limited to science data product level. Repeats download attempt on
-        error.
-
-        :param tic_id: An optional TIC ID or list of TIC IDs to limit the query to.
-        :return: The list of time series observations as rows in a Pandas data frame.
-        """
-        if tic_id is None:
-            tic_id = []  # When the empty list is passed to `query_criteria`, any value is considered a match.
-        tess_observations = Observations.query_criteria(obs_collection='TESS', dataproduct_type='timeseries',
-                                                        calib_level=3,  # Science data product level.
-                                                        target_name=tic_id)
-        return tess_observations.to_pandas()
 
     def get_product_list(self, observations: pd.DataFrame) -> pd.DataFrame:
         """
@@ -138,122 +175,14 @@ class TessDataInterface:
         if observations.shape[0] > 1:
             product_list_chunks = []
             for observations_chunk in np.array_split(observations,
-                                                     math.ceil(observations.shape[0] / self.mast_input_query_chunk_size)):
-                product_list_chunk = self.get_product_list_chunk(observations_chunk)
+                                                     math.ceil(
+                                                         observations.shape[0] / self.mast_input_query_chunk_size)):
+                product_list_chunk = get_product_list_chunk(observations_chunk)
                 product_list_chunks.append(product_list_chunk)
             product_list = pd.concat(product_list_chunks, ignore_index=True)
         else:
-            product_list = self.get_product_list_chunk(observations)
+            product_list = get_product_list_chunk(observations)
         return product_list
-
-    @staticmethod
-    @retry(retry_on_exception=is_common_mast_connection_error, stop_max_attempt_number=10)
-    def get_product_list_chunk(observations: pd.DataFrame) -> pd.DataFrame:
-        """
-        A wrapper for MAST's `get_product_list`, allowing the use of Pandas DataFrames instead of AstroPy Tables.
-        Retries on error when communicating with the MAST server.
-
-        :param observations: The data frame of observations to get. Will be converted from DataFrame to Table for query.
-        :return: The data frame of the product list. Will be converted from Table to DataFrame for use.
-        """
-        data_products = Observations.get_product_list(Table.from_pandas(observations))
-        return data_products.to_pandas()
-
-    @staticmethod
-    @retry(retry_on_exception=is_common_mast_connection_error, stop_max_attempt_number=10)
-    def download_products(data_products: pd.DataFrame, data_directory: Path) -> pd.DataFrame:
-        """
-         A wrapper for MAST's `download_products`, allowing the use of Pandas DataFrames instead of AstroPy Tables.
-        Retries on error when communicating with the MAST server.
-
-        :param data_products: The data frame of data products to download. Will be converted from DataFrame to Table
-                              for sending the request to MAST.
-        :param data_directory: The path to download the data to.
-        :return: The manifest of the download. Will be converted from Table to DataFrame for use.
-        """
-        manifest = Observations.download_products(Table.from_pandas(data_products), download_dir=str(data_directory))
-        if manifest is None:
-            raise NoDataProductsFoundException
-        return manifest.to_pandas()
-
-    @staticmethod
-    def filter_for_single_sector_observations(time_series_observations: pd.DataFrame) -> pd.DataFrame:
-        """
-        Filters a data frame of observations to get only the single sector observations.
-
-        :param time_series_observations: A data frame of observations to filter for single sector observations.
-        :return: The data frame of single sector observations.
-        """
-        single_sector_observations = time_series_observations[
-            time_series_observations['dataURL'].str.endswith('lc.fits')
-        ]
-        return single_sector_observations.copy()
-
-    @staticmethod
-    def filter_out_twenty_second_cadence_observations(time_series_observations: pd.DataFrame) -> pd.DataFrame:
-        """
-        Removes 20-second cadence data from the observation data frame.
-
-        :param time_series_observations: A data frame of observations to filtered.
-        :return: The data frame without 20-second cadence data.
-        """
-        observations_without_twenty_second_cadence = time_series_observations[
-            ~time_series_observations['dataURL'].str.endswith('fast-lc.fits')
-        ]
-        return observations_without_twenty_second_cadence.copy()
-
-    @staticmethod
-    def filter_for_multi_sector_observations(time_series_observations: pd.DataFrame) -> pd.DataFrame:
-        """
-        Filters a data frame of observations to get only the multi sector observations.
-
-        :param time_series_observations: A data frame of observations to filter for multi sector observations.
-        :return: The data frame of multi sector observations.
-        """
-        multi_sector_observations = time_series_observations[
-            time_series_observations['dataURL'].str.endswith('dvt.fits')
-        ]
-        return multi_sector_observations.copy()
-
-    @staticmethod
-    def get_tic_id_from_single_sector_obs_id(obs_id: str) -> int:
-        """
-        Extracts the TIC ID from a single-sector obs_id string.
-
-        :param obs_id: The obs_id to extract from.
-        :return: The extracted TIC ID.
-        """
-        return int(obs_id.split('-')[2].lstrip('0'))
-
-    @staticmethod
-    def get_sector_from_single_sector_obs_id(obs_id: str) -> int:
-        """
-        Extracts the sector from a single-sector obs_id string.
-
-        :param obs_id: The obs_id to extract from.
-        :return: The extracted sector number.
-        """
-        return int(obs_id.split('-')[1][1:])
-
-    def add_tic_id_column_to_single_sector_observations(self, data_frame: pd.DataFrame) -> pd.DataFrame:
-        """
-        Adds a column with the TIC ID the row is related to.
-
-        :param data_frame: The data frame of single-sector entries.
-        :return: The table with the added TIC ID column.
-        """
-        data_frame[ColumnName.TIC_ID] = data_frame['obs_id'].map(self.get_tic_id_from_single_sector_obs_id)
-        return data_frame
-
-    def add_sector_column_to_single_sector_observations(self, observations: pd.DataFrame) -> pd.DataFrame:
-        """
-        Adds a column with the sector the data was taken from.
-
-        :param observations: The table of single-sector observations.
-        :return: The table with the added sector column.
-        """
-        observations[ColumnName.SECTOR] = observations['obs_id'].map(self.get_sector_from_single_sector_obs_id)
-        return observations
 
     def load_light_curve_from_fits_file(self, light_curve_path: Union[str, Path]) -> Dict[str, np.ndarray]:
         """
@@ -268,7 +197,7 @@ class TessDataInterface:
         except OSError:  # If the FITS file is corrupt, re-download (seems to happen often enough).
             light_curve_path = Path(light_curve_path)  # In case it's currently a string.
             light_curve_path.unlink()
-            tic_id, sector = self.get_tic_id_and_sector_from_file_path(light_curve_path)
+            tic_id, sector = get_tic_id_and_sector_from_file_path(light_curve_path)
             self.download_two_minute_cadence_light_curve(tic_id=tic_id, sector=sector,
                                                          save_directory=light_curve_path.parent)
             with fits.open(light_curve_path) as hdu_list:
@@ -324,7 +253,7 @@ class TessDataInterface:
         return fluxes, flux_errors, times
 
     def download_two_minute_cadence_light_curve(self, tic_id: int, sector: int = None,
-                                               save_directory: Union[Path, str] = None) -> Path:
+                                                save_directory: Union[Path, str] = None) -> Path:
         """
         Downloads a light curve from MAST.
 
@@ -335,9 +264,9 @@ class TessDataInterface:
         :return: The path to the downloaded file.
         """
         observations = self.get_all_tess_time_series_observations(tic_id=tic_id)
-        single_sector_observations = self.filter_for_single_sector_observations(observations)
-        two_minute_observations = self.filter_out_twenty_second_cadence_observations(single_sector_observations)
-        observations_with_sectors = self.add_sector_column_to_single_sector_observations(two_minute_observations)
+        single_sector_observations = filter_for_single_sector_observations(observations)
+        two_minute_observations = filter_out_twenty_second_cadence_observations(single_sector_observations)
+        observations_with_sectors = add_sector_column_to_single_sector_observations(two_minute_observations)
         if sector is not None:
             observations_with_sectors = observations_with_sectors[
                 observations_with_sectors[ColumnName.SECTOR] == sector]
@@ -345,7 +274,7 @@ class TessDataInterface:
             observations_with_sectors = observations_with_sectors.head(1)
         product_list = self.get_product_list(observations_with_sectors)
         light_curves_product_list = product_list[product_list['productSubGroupDescription'] == 'LC']
-        manifest = self.download_products(light_curves_product_list, data_directory=Path(tempfile.gettempdir()))
+        manifest = download_products(light_curves_product_list, data_directory=Path(tempfile.gettempdir()))
         light_curve_path = Path(manifest['Local Path'].iloc[0])
         if save_directory is not None:
             save_directory = Path(save_directory)
@@ -356,19 +285,19 @@ class TessDataInterface:
         return light_curve_path
 
     def plot_light_curve_from_mast(self, tic_id: int, sector: int = None, exclude_flux_outliers: bool = False,
-                                  base_data_point_size=3):
+                                   base_data_point_size=3):
         """
         Downloads and plots a light curve from MAST.
 
         :param tic_id: The TIC ID of the light curve target to download.
         :param sector: The sector to download. If not specified, downloads first available sector.
-        :param exclude_flux_outliers: Whether or not to exclude flux outlier data points when plotting.
+        :param exclude_flux_outliers: Whether to exclude flux outlier data points when plotting.
         :param base_data_point_size: The size of the data points to use when plotting (and related sizes).
         """
         light_curve_path = self.download_two_minute_cadence_light_curve(tic_id, sector)
         fluxes, times = self.load_fluxes_and_times_from_fits_file(light_curve_path)
         if sector is None:
-            sector = self.get_sector_from_single_sector_obs_id(str(light_curve_path.stem))
+            sector = get_sector_from_single_sector_obs_id(str(light_curve_path.stem))
         title = f'TIC {tic_id} sector {sector}'
         if exclude_flux_outliers:
             title += ' (outliers removed)'
@@ -389,7 +318,7 @@ class TessDataInterface:
         sap_fluxes, sap_times = self.load_fluxes_and_times_from_fits_file(light_curve_path, TessFluxType.SAP)
         normalized_sap_fluxes = sap_fluxes / np.median(sap_fluxes)
         if sector is None:
-            _, sector = self.get_tic_id_and_sector_from_file_path(light_curve_path)
+            _, sector = get_tic_id_and_sector_from_file_path(light_curve_path)
         title = f'TIC {tic_id} sector {sector}'
         figure = create_dual_light_curve_figure(fluxes0=normalized_pdcsap_fluxes, times0=pdcsap_times, name0='PDCSAP',
                                                 fluxes1=normalized_sap_fluxes, times1=sap_times, name1='SAP',
@@ -421,75 +350,6 @@ class TessDataInterface:
         figure.sizing_mode = 'stretch_width'
         show(figure)
 
-    @staticmethod
-    def get_target_coordinates(tic_id: int) -> SkyCoord:
-        """
-        Get the sky coordinates of the target by a TIC ID.
-
-        :param tic_id: The target's TIC ID.
-        :return: The coordinates of the target.
-        """
-        target_observations = Catalogs.query_criteria(catalog='TIC', ID=tic_id).to_pandas()
-        ra = target_observations['ra'].iloc[0]
-        dec = target_observations['dec'].iloc[0]
-        return SkyCoord(ra, dec, unit='deg')
-
-    @staticmethod
-    @retry(retry_on_exception=is_common_mast_connection_error, stop_max_attempt_number=10)
-    def get_tess_input_catalog_row(tic_id: int) -> pd.Series:
-        """
-        Get the TIC row for a TIC ID.
-
-        :param tic_id: The target's TIC ID.
-        :return: The row of a the TIC corresponding to the TIC ID.
-        """
-        target_observations = Catalogs.query_criteria(catalog='TIC', ID=tic_id).to_pandas()
-        return target_observations.iloc[0]
-
-    @staticmethod
-    def get_variable_data_frame_for_coordinates(coordinates, radius='21s') -> pd.DataFrame:
-        """
-        Gets a data frame containing all known variables within a radius of the given coordinates.
-
-        :param coordinates: The coordinates to search.
-        :param radius: The radius to search. TESS has a pixel size of 21 arcseconds across.
-        :return: The data frame of the variables. Returns an empty data frame if none exist.
-        """
-        variable_table_list = Vizier.query_region(coordinates, radius=radius, catalog='B/gcvs/gcvs_cat')
-        if len(variable_table_list) > 0:
-            return variable_table_list[0].to_pandas()
-        else:
-            return pd.DataFrame()
-
-    def get_variable_data_frame_for_tic_id(self, tic_id):
-        """
-        Gets a data frame containing all known variables near a TIC target (including the target if applicable).
-
-        :param tic_id: The TIC target to search for variables near.
-        :return: A data frame of the variables near the target (including the target if applicable).
-        """
-        coordinates = self.get_target_coordinates(tic_id)
-        return self.get_variable_data_frame_for_coordinates(coordinates)
-
-    def print_variables_near_tess_target(self, tic_id):
-        """
-        Prints all variable stars near a given TESS target (including the target if applicable).
-
-        :param tic_id: The TIC target to search for variables near.
-        """
-        variable_data_frame = self.get_variable_data_frame_for_tic_id(tic_id)
-        if variable_data_frame.shape[0] == 0:
-            print('No known variables found.')
-            return
-        print('Variable type abbreviation explanations: http://www.sai.msu.su/gcvs/gcvs/vartype.htm')
-        print_data_frame = pd.DataFrame()
-        print_data_frame['Variable Type'] = variable_data_frame['VarType'].str.decode('utf-8')
-        print_data_frame['Max magnitude'] = variable_data_frame['magMax']
-        print_data_frame['Period (days)'] = variable_data_frame['Period']
-        print_data_frame.sort_values('Max magnitude', inplace=True)
-        print_data_frame.reset_index(drop=True, inplace=True)
-        print(print_data_frame)
-
     def download_two_minute_cadence_light_curves(self, save_directory: Path, limit: Union[None, int] = None):
         """
         Downloads all two minute cadence light curves from TESS.
@@ -507,7 +367,7 @@ class TessDataInterface:
         light_curve_data_products = data_products[data_products['productFilename'].str.endswith('lc.fits')]
         if limit is not None:
             light_curve_data_products = light_curve_data_products.sample(frac=1, random_state=0).head(limit)
-        download_manifest = self.download_products(light_curve_data_products, data_directory=save_directory)
+        download_manifest = download_products(light_curve_data_products, data_directory=save_directory)
         print(f'Moving light curves to {save_directory}...')
         for _, manifest_row in download_manifest.iterrows():
             if manifest_row['Status'] == 'COMPLETE':
@@ -523,9 +383,9 @@ class TessDataInterface:
         :return: The list of sectors.
         """
         time_series_observations = self.get_all_tess_time_series_observations(tic_id)
-        single_sector_observations = self.filter_for_single_sector_observations(time_series_observations)
-        two_minute_observations = self.filter_out_twenty_second_cadence_observations(single_sector_observations)
-        single_sector_observations = self.add_sector_column_to_single_sector_observations(two_minute_observations)
+        single_sector_observations = filter_for_single_sector_observations(time_series_observations)
+        two_minute_observations = filter_out_twenty_second_cadence_observations(single_sector_observations)
+        single_sector_observations = add_sector_column_to_single_sector_observations(two_minute_observations)
         return sorted(single_sector_observations[ColumnName.SECTOR].unique())
 
     def get_all_two_minute_single_sector_observations(self, tic_ids: List[int] = None) -> pd.DataFrame:
@@ -536,11 +396,11 @@ class TessDataInterface:
         :return: The data frame containing the observation information.
         """
         tess_observations = self.get_all_tess_time_series_observations(tic_id=tic_ids)
-        single_sector_observations = self.filter_for_single_sector_observations(tess_observations)
-        two_minute_observations = self.filter_out_twenty_second_cadence_observations(single_sector_observations)
-        two_minute_observations = self.add_tic_id_column_to_single_sector_observations(
+        single_sector_observations = filter_for_single_sector_observations(tess_observations)
+        two_minute_observations = filter_out_twenty_second_cadence_observations(single_sector_observations)
+        two_minute_observations = add_tic_id_column_to_single_sector_observations(
             two_minute_observations)
-        two_minute_observations = self.add_sector_column_to_single_sector_observations(
+        two_minute_observations = add_sector_column_to_single_sector_observations(
             two_minute_observations)
         return two_minute_observations
 
@@ -556,31 +416,177 @@ class TessDataInterface:
             _ = light_curve['TIME'][0]  # Basic check if the light_curve file is malformed.
         except (OSError, TypeError):
             print(f'{light_curve_path} seems to be malformed. Re-downloading and replacing.')
-            sector = self.get_sector_from_single_sector_obs_id(str(light_curve_path.stem))
-            tic_id = self.get_tic_id_from_single_sector_obs_id(str(light_curve_path.stem))
+            sector = get_sector_from_single_sector_obs_id(str(light_curve_path.stem))
+            tic_id = get_tic_id_from_single_sector_obs_id(str(light_curve_path.stem))
             self.download_two_minute_cadence_light_curve(tic_id, sector, save_directory=light_curve_path.parent)
 
-    @staticmethod
-    def get_tic_id_and_sector_from_file_path(file_path: Union[Path, str]):
-        """
-        Gets the TIC ID and sector from commonly encountered file name patterns.
 
-        :param file_path: The path of the file to extract the TIC ID and sector.
-        :return: The TIC ID and sector. The sector might be omitted (as None).
-        """
-        if isinstance(file_path, str):
-            file_path = Path(file_path)
-        file_name = file_path.stem
-        # Search for the human readable version. E.g., "TIC 169480782 sector 5"
-        match = re.search(r'TIC (\d+) sector (\d+)', file_name)
-        if match:
-            return int(match.group(1)), int(match.group(2))
-        # Search for the TESS obs_id version. E.g., "tess2018319095959-s0005-0000000278956474-0125-s"
-        match = re.search(r'tess\d+-s(\d+)-(\d+)-\d+-s', file_name)
-        if match:
-            return int(match.group(2)), int(match.group(1))
-        # Raise an error if none of the patterns matched.
-        raise ValueError(f'{file_name} does not match a known pattern to extract TIC ID and sector from.')
+def get_tic_id_and_sector_from_file_path(file_path: Union[Path, str]):
+    """
+    Gets the TIC ID and sector from commonly encountered file name patterns.
+
+    :param file_path: The path of the file to extract the TIC ID and sector.
+    :return: The TIC ID and sector. The sector might be omitted (as None).
+    """
+    if isinstance(file_path, str):
+        file_path = Path(file_path)
+    file_name = file_path.stem
+    # Search for the human-readable version. E.g., "TIC 169480782 sector 5"
+    match = re.search(r'TIC (\d+) sector (\d+)', file_name)
+    if match:
+        return int(match.group(1)), int(match.group(2))
+    # Search for the TESS obs_id version. E.g., "tess2018319095959-s0005-0000000278956474-0125-s"
+    match = re.search(r'tess\d+-s(\d+)-(\d+)-\d+-s', file_name)
+    if match:
+        return int(match.group(2)), int(match.group(1))
+    # Raise an error if none of the patterns matched.
+    raise ValueError(f'{file_name} does not match a known pattern to extract TIC ID and sector from.')
+
+
+def get_variable_data_frame_for_coordinates(coordinates, radius='21s') -> pd.DataFrame:
+    """
+    Gets a data frame containing all known variables within a radius of the given coordinates.
+
+    :param coordinates: The coordinates to search.
+    :param radius: The radius to search. TESS has a pixel size of 21 arcseconds across.
+    :return: The data frame of the variables. Returns an empty data frame if none exist.
+    """
+    variable_table_list = Vizier.query_region(coordinates, radius=radius, catalog='B/gcvs/gcvs_cat')
+    if len(variable_table_list) > 0:
+        return variable_table_list[0].to_pandas()
+    else:
+        return pd.DataFrame()
+
+
+@retry(retry_on_exception=is_common_mast_connection_error, stop_max_attempt_number=10)
+def get_tess_input_catalog_row(tic_id: int) -> pd.Series:
+    """
+    Get the TIC row for a TIC ID.
+
+    :param tic_id: The target's TIC ID.
+    :return: The row of a the TIC corresponding to the TIC ID.
+    """
+    target_observations = Catalogs.query_criteria(catalog='TIC', ID=tic_id).to_pandas()
+    return target_observations.iloc[0]
+
+
+@retry(retry_on_exception=is_common_mast_connection_error, stop_max_attempt_number=10)
+def get_all_tess_time_series_observations_chunk(tic_id: Union[int, List[int]] = None) -> pd.DataFrame:
+    """
+    Gets all TESS time-series observations, limited to science data product level. Repeats download attempt on
+    error.
+
+    :param tic_id: An optional TIC ID or list of TIC IDs to limit the query to.
+    :return: The list of time series observations as rows in a Pandas data frame.
+    """
+    if tic_id is None:
+        tic_id = []  # When the empty list is passed to `query_criteria`, any value is considered a match.
+    tess_observations = Observations.query_criteria(obs_collection='TESS', dataproduct_type='timeseries',
+                                                    calib_level=3,  # Science data product level.
+                                                    target_name=tic_id)
+    return tess_observations.to_pandas()
+
+
+@retry(retry_on_exception=is_common_mast_connection_error, stop_max_attempt_number=10)
+def get_product_list_chunk(observations: pd.DataFrame) -> pd.DataFrame:
+    """
+    A wrapper for MAST's `get_product_list`, allowing the use of Pandas DataFrames instead of AstroPy Tables.
+    Retries on error when communicating with the MAST server.
+
+    :param observations: The data frame of observations to get. Will be converted from DataFrame to Table for query.
+    :return: The data frame of the product list. Will be converted from Table to DataFrame for use.
+    """
+    data_products = Observations.get_product_list(Table.from_pandas(observations))
+    return data_products.to_pandas()
+
+
+@retry(retry_on_exception=is_common_mast_connection_error, stop_max_attempt_number=10)
+def download_products(data_products: pd.DataFrame, data_directory: Path) -> pd.DataFrame:
+    """
+     A wrapper for MAST's `download_products`, allowing the use of Pandas DataFrames instead of AstroPy Tables.
+    Retries on error when communicating with the MAST server.
+
+    :param data_products: The data frame of data products to download. Will be converted from DataFrame to Table
+                          for sending the request to MAST.
+    :param data_directory: The path to download the data to.
+    :return: The manifest of the download. Will be converted from Table to DataFrame for use.
+    """
+    manifest = Observations.download_products(Table.from_pandas(data_products), download_dir=str(data_directory))
+    if manifest is None:
+        raise NoDataProductsFoundException
+    return manifest.to_pandas()
+
+
+def filter_for_single_sector_observations(time_series_observations: pd.DataFrame) -> pd.DataFrame:
+    """
+    Filters a data frame of observations to get only the single sector observations.
+
+    :param time_series_observations: A data frame of observations to filter for single sector observations.
+    :return: The data frame of single sector observations.
+    """
+    single_sector_observations = time_series_observations[
+        time_series_observations['dataURL'].str.endswith('lc.fits')
+    ]
+    return single_sector_observations.copy()
+
+
+def filter_out_twenty_second_cadence_observations(time_series_observations: pd.DataFrame) -> pd.DataFrame:
+    """
+    Removes 20-second cadence data from the observation data frame.
+
+    :param time_series_observations: A data frame of observations to filtered.
+    :return: The data frame without 20-second cadence data.
+    """
+    observations_without_twenty_second_cadence = time_series_observations[
+        ~time_series_observations['dataURL'].str.endswith('fast-lc.fits')
+    ]
+    return observations_without_twenty_second_cadence.copy()
+
+
+def filter_for_multi_sector_observations(time_series_observations: pd.DataFrame) -> pd.DataFrame:
+    """
+    Filters a data frame of observations to get only the multi sector observations.
+
+    :param time_series_observations: A data frame of observations to filter for multi sector observations.
+    :return: The data frame of multi sector observations.
+    """
+    multi_sector_observations = time_series_observations[
+        time_series_observations['dataURL'].str.endswith('dvt.fits')
+    ]
+    return multi_sector_observations.copy()
+
+
+def get_tic_id_from_single_sector_obs_id(obs_id: str) -> int:
+    """
+    Extracts the TIC ID from a single-sector obs_id string.
+
+    :param obs_id: The obs_id to extract from.
+    :return: The extracted TIC ID.
+    """
+    return int(obs_id.split('-')[2].lstrip('0'))
+
+
+def get_sector_from_single_sector_obs_id(obs_id: str) -> int:
+    """
+    Extracts the sector from a single-sector obs_id string.
+
+    :param obs_id: The obs_id to extract from.
+    :return: The extracted sector number.
+    """
+    return int(obs_id.split('-')[1][1:])
+
+
+def get_target_coordinates(tic_id: int) -> SkyCoord:
+    """
+    Get the sky coordinates of the target by a TIC ID.
+
+    :param tic_id: The target's TIC ID.
+    :return: The coordinates of the target.
+    """
+    target_observations = Catalogs.query_criteria(catalog='TIC', ID=tic_id).to_pandas()
+    ra = target_observations['ra'].iloc[0]
+    dec = target_observations['dec'].iloc[0]
+    return SkyCoord(ra, dec, unit='deg')
 
 
 if __name__ == '__main__':
