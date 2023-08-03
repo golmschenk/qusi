@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from random import Random
 from abc import ABC, abstractmethod
 from pathlib import Path
@@ -32,12 +33,10 @@ class PathIterableBase(ABC):
         pass
 
 
+@dataclass
 class PathIterable(PathIterableBase):
-    def __init__(self,
-                 get_paths_function: Callable[[], Iterable[Path]],
-                 random_number_generator: Random):
-        self.get_paths_function: Callable[[], Iterable[Path]] = get_paths_function
-        self.random_number_generator = random_number_generator
+    get_paths_function: Callable[[], Iterable[Path]]
+    random_number_generator: Random
 
     def get_shuffled_paths(self) -> Iterable[Path]:
         """
@@ -50,20 +49,15 @@ class PathIterable(PathIterableBase):
         return light_curve_paths
 
 
+@dataclass
 class LightCurveCollection(LightCurveCollectionBase):
     """
     :ivar path_iterable: The PathIterableBase object for the collection.
     :ivar load_times_and_fluxes_from_path_function: The function to load the times and fluxes from the light curve.
     """
-
-    def __init__(self,
-                 path_iterable: PathIterableBase,
-                 load_times_and_fluxes_from_path_function: Callable[
-                     [Path], Tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]]):
-        self.path_iterable: PathIterableBase = path_iterable
-        self.load_times_and_fluxes_from_path_function: Callable[
-            [Path], Tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]] = \
-            load_times_and_fluxes_from_path_function
+    path_iterable: PathIterableBase
+    load_times_and_fluxes_from_path_function: Callable[
+        [Path], Tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]]
 
     @classmethod
     def new(cls,
@@ -100,20 +94,16 @@ class LightCurveCollection(LightCurveCollectionBase):
         return self.load_times_and_fluxes_from_path_function(path)
 
 
+@dataclass
 class LabeledLightCurveCollection(LightCurveObservationCollectionBase):
     """
     :ivar path_iterable: The PathIterableBase object for the collection.
     :ivar light_curve_collection: The LightCurveCollectionBase object for the collection.
     :ivar load_label_from_path_function: The function to load the label for the light curve.
     """
-
-    def __init__(self,
-                 path_iterable: PathIterableBase,
-                 light_curve_collection: LightCurveCollectionBase,
-                 load_label_from_path_function: Callable[[Path], int]):
-        self.path_iterable: PathIterableBase = path_iterable
-        self.light_curve_collection: LightCurveCollectionBase = light_curve_collection
-        self.load_label_from_path_function: Callable[[Path], int] = load_label_from_path_function
+    path_iterable: PathIterableBase
+    light_curve_collection: LightCurveCollectionBase
+    load_label_from_path_function: Callable[[Path], int]
 
     @classmethod
     def new(cls,

@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from pathlib import Path
 from typing import List
 
@@ -10,15 +11,11 @@ from qusi.light_curve_dataset import LightCurveDataset, contains_injected_datase
 from qusi.single_dense_layer_model import SingleDenseLayerBinaryClassificationModel
 
 
+@dataclass
 class InferSession:
-    def __init__(self,
-                 infer_datasets: List[LightCurveDataset],
-                 model: Module,
-                 batch_size: int,
-                 ):
-        self.infer_datasets: List[LightCurveDataset] = infer_datasets
-        self.model = model
-        self.batch_size: int = batch_size
+    infer_datasets: List[LightCurveDataset]
+    model: Module
+    batch_size: int
 
     @classmethod
     def new(cls,

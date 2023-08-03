@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import List
@@ -11,21 +12,14 @@ from qusi.light_curve_dataset import LightCurveDataset, InterleavedDataset
 from qusi.single_dense_layer_model import SingleDenseLayerBinaryClassificationModel
 
 
+@dataclass
 class TrainSession:
-    def __init__(self,
-                 train_datasets: List[LightCurveDataset],
-                 validation_datasets: List[LightCurveDataset],
-                 model: Module,
-                 batch_size: int,
-                 train_steps_per_epoch: int | None = None,
-                 validation_steps_per_epoch: int | None = None,
-                 ):
-        self.train_datasets: List[LightCurveDataset] = train_datasets
-        self.validation_datasets: List[LightCurveDataset] = validation_datasets
-        self.model: Module = model
-        self.batch_size: int = batch_size
-        self.train_steps_per_epoch: int = train_steps_per_epoch
-        self.validation_steps_per_epoch: int = validation_steps_per_epoch
+    train_datasets: List[LightCurveDataset]
+    validation_datasets: List[LightCurveDataset]
+    model: Module
+    batch_size: int
+    train_steps_per_epoch: int
+    validation_steps_per_epoch: int
 
     @classmethod
     def new(cls,
