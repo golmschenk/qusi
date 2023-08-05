@@ -5,7 +5,8 @@ description = ""
 authors = ["Greg Olmschenk <greg@olmschenk.com>"]
 readme = "README.md"
 packages = [
-    {include = "ramjet"}
+    {include = "ramjet", from="src"},
+    {include = "qusi", from="src"}
 ]
 
 [tool.poetry.scripts]
