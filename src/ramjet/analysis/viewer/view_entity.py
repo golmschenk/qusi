@@ -4,9 +4,7 @@ from pathlib import Path
 from typing import Any, Union
 
 from ramjet.analysis.transit_vetter import TransitVetter
-from ramjet.data_interface.tess_data_interface import TessDataInterface
 from ramjet.data_interface.tess_toi_data_interface import TessToiDataInterface
-from ramjet.photometric_database.light_curve import LightCurve
 from ramjet.photometric_database.tess_ffi_light_curve import TessFfiLightCurve
 from ramjet.photometric_database.tess_light_curve import TessLightCurve
 from ramjet.photometric_database.tess_target import TessTarget
@@ -14,7 +12,6 @@ from ramjet.photometric_database.tess_target import TessTarget
 
 class ViewEntity:
     """A class grouping the objects related to one entity for the viewer."""
-    tess_data_interface = TessDataInterface()
     tess_toi_data_interface = TessToiDataInterface()
     vetter = TransitVetter()
 

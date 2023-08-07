@@ -6,7 +6,8 @@ from typing import Union
 import pandas as pd
 import requests
 
-from ramjet.data_interface.tess_data_interface import TessDataInterface
+from ramjet.data_interface.tess_data_interface import get_all_two_minute_single_sector_observations, get_product_list, \
+    download_products
 
 
 class ToiColumns(Enum):
@@ -178,18 +179,17 @@ class TessToiDataInterface:
         :param directory: The directory to download the light curves to. Defaults to the data interface directory.
         """
         print("Downloading ExoFOP TOI disposition CSV...")
-        tess_data_interface = TessDataInterface()
         if isinstance(directory, str):
             directory = Path(directory)
         tic_ids = self.toi_dispositions[ToiColumns.tic_id.value].unique()
         print('Downloading TESS observation list...')
-        single_sector_observations = tess_data_interface.get_all_two_minute_single_sector_observations(tic_ids)
+        single_sector_observations = get_all_two_minute_single_sector_observations(tic_ids)
         print("Downloading light curves which are confirmed or suspected planets in TOI dispositions...")
         suspected_planet_dispositions = self.toi_dispositions[
             self.toi_dispositions[ToiColumns.disposition.value] != 'FP']
         suspected_planet_observations = pd.merge(single_sector_observations, suspected_planet_dispositions, how='inner',
                                                  on=[ToiColumns.tic_id.value, ToiColumns.sector.value])
-        suspected_planet_data_products = tess_data_interface.get_product_list(suspected_planet_observations)
+        suspected_planet_data_products = get_product_list(suspected_planet_observations)
         suspected_planet_light_curve_data_products = suspected_planet_data_products[
             suspected_planet_data_products['productFilename'].str.endswith('lc.fits')]
         suspected_planet_download_manifest = download_products(

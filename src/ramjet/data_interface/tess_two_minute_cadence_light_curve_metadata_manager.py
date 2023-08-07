@@ -7,7 +7,7 @@ from peewee import IntegerField, CharField, SchemaManager
 
 from ramjet.data_interface.metadatabase import MetadatabaseModel, metadatabase, metadatabase_uuid, \
     convert_class_to_table_name, dataset_split_from_uuid
-from ramjet.data_interface.tess_data_interface import TessDataInterface, get_tic_id_and_sector_from_file_path
+from ramjet.data_interface.tess_data_interface import get_tic_id_and_sector_from_file_path
 
 
 class TessTwoMinuteCadenceLightCurveMetadata(MetadatabaseModel):
@@ -28,10 +28,8 @@ class TessTwoMinuteCadenceLightCurveMetadata(MetadatabaseModel):
 
 class TessTwoMinuteCadenceLightCurveMetadataManger:
     """
-    A class for managing the meta data of the two minute cadence TESS light curves.
+    A class for managing the metadata of the two-minute cadence TESS light curves.
     """
-    tess_data_interface = TessDataInterface()
-
     def __init__(self):
         self.light_curve_root_directory_path = Path('data/tess_two_minute_cadence_light_curves')
 

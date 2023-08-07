@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import List, Union, Any, Optional
 from astropy.io import fits
 
-from ramjet.data_interface.tess_data_interface import TessDataInterface
+from ramjet.data_interface.tess_data_interface import download_two_minute_cadence_light_curve
 from ramjet.photometric_database.tess_light_curve import TessLightCurve
 
 
@@ -40,7 +40,6 @@ class TessTwoMinuteCadenceLightCurve(TessLightCurve):
     """
     A class to represent a TESS two minute cadence light curve.
     """
-    mast_tess_data_interface = TessDataInterface()
 
     def __init__(self):
         super().__init__()
@@ -83,8 +82,7 @@ class TessTwoMinuteCadenceLightCurve(TessLightCurve):
                                      specific ones may speed the process when loading many light curves.
         :return: The light curve.
         """
-        light_curve_path = cls.mast_tess_data_interface.download_two_minute_cadence_light_curve(tic_id=tic_id,
-                                                                                                sector=sector)
+        light_curve_path = download_two_minute_cadence_light_curve(tic_id=tic_id, sector=sector)
         light_curve = cls.from_path(path=light_curve_path, fits_indexes_to_load=fits_indexes_to_load)
         return light_curve
 

@@ -12,15 +12,13 @@ from typing import Union
 import requests
 from astroquery.gaia import Gaia
 
-from ramjet.data_interface.tess_data_interface import TessDataInterface, get_tess_input_catalog_row
+from ramjet.data_interface.tess_data_interface import get_tess_input_catalog_row
 
 
 class TessTarget:
     """
     A class to represent an TESS target. Usually a star or star system.
     """
-    tess_data_interface = TessDataInterface()
-
     def __init__(self):
         self.tic_id: Union[int, None] = None
         self.radius: Union[float, None] = None

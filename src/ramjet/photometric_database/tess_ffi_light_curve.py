@@ -22,7 +22,6 @@ try:
 except ImportError:
     from backports.strenum import StrEnum
 
-from ramjet.data_interface.tess_data_interface import TessDataInterface
 from ramjet.photometric_database.tess_light_curve import TessLightCurve
 
 
@@ -67,8 +66,6 @@ class TessFfiLightCurve(TessLightCurve):
     """
     A class to for a class to represent a TESS FFI light curve.
     """
-    mast_tess_data_interface = TessDataInterface()
-
     def __init__(self):
         super().__init__()
         self.flux_column_names = [TessFfiColumnName.CORRECTED_FLUX.value,

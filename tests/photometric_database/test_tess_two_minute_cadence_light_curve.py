@@ -75,11 +75,12 @@ class TestTessTwoMinuteCadenceFileBasedLightCurve:
             assert light_curve.tic_id == 169480782
             assert light_curve.sector == 5
 
-    def test_from_mast_factory_requests_a_mast_download_and_uses_the_resulting_file_with_the_path_factory(self):
+    @patch.object(module, 'download_two_minute_cadence_light_curve')
+    def test_from_mast_factory_requests_a_mast_download_and_uses_the_resulting_file_with_the_path_factory(
+            self, mock_download):
         mock_light_curve = Mock()
         mock_light_curve_path = Mock()
-        mock_download = Mock(return_value=mock_light_curve_path)
-        TessTwoMinuteCadenceLightCurve.mast_tess_data_interface.download_two_minute_cadence_light_curve = mock_download
+        mock_download.return_value = mock_light_curve_path
         mock_from_path = Mock(return_value=mock_light_curve)
         TessTwoMinuteCadenceLightCurve.from_path = mock_from_path
         light_curve = TessTwoMinuteCadenceLightCurve.from_mast(tic_id=1, sector=2)

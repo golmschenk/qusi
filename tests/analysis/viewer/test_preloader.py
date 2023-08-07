@@ -10,7 +10,6 @@ import pytest
 
 import ramjet.analysis.viewer.preloader as module
 from ramjet.analysis.viewer.preloader import Preloader
-from ramjet.analysis.viewer.view_entity import ViewEntity
 
 
 @pytest.mark.skipif("TRAVIS" in os.environ and os.environ["TRAVIS"] == "true",

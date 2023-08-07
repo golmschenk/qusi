@@ -56,7 +56,7 @@ class TessTwoMinuteCadenceLightCurveCollection(SqlMetadataLightCurveCollection):
         :param path: The path to the light curve file.
         :return: The times and the fluxes of the light curve.
         """
-        fluxes, times = self.tess_data_interface.load_fluxes_and_times_from_fits_file(path, self.flux_type)
+        fluxes, times = load_fluxes_and_times_from_fits_file(path, self.flux_type)
         return times, fluxes
 
     def load_times_and_magnifications_from_path(self, path: Path) -> (np.ndarray, np.ndarray):
@@ -66,7 +66,7 @@ class TessTwoMinuteCadenceLightCurveCollection(SqlMetadataLightCurveCollection):
         :param path: The path to the light curve/signal file.
         :return: The times and the magnifications of the light curve/signal.
         """
-        fluxes, times = self.tess_data_interface.load_fluxes_and_times_from_fits_file(path, self.flux_type)
+        fluxes, times = load_fluxes_and_times_from_fits_file(path, self.flux_type)
         magnifications, times = self.generate_synthetic_signal_from_real_data(fluxes, times)
         return times, magnifications
 
@@ -74,7 +74,7 @@ class TessTwoMinuteCadenceLightCurveCollection(SqlMetadataLightCurveCollection):
         """
         Downloads the light curve collection.
         """
-        self.tess_data_interface.download_two_minute_cadence_light_curves(self.data_directory)
+        download_two_minute_cadence_light_curves(self.data_directory)
 
 
 class TessTwoMinuteCadenceTargetDatasetSplitLightCurveCollection(TessTwoMinuteCadenceLightCurveCollection):

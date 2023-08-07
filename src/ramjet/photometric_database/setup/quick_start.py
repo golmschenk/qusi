@@ -18,7 +18,7 @@ def download_and_build_tables():
 
 def download():
     tess_data_interface = TessDataInterface()
-    tess_data_interface.download_two_minute_cadence_light_curves(Path('data/tess_two_minute_cadence_light_curves'),
+    download_two_minute_cadence_light_curves(Path('data/tess_two_minute_cadence_light_curves'),
                                                                  limit=10000)
     tess_toi_data_interface = TessToiDataInterface()
     tess_toi_data_interface.download_exofop_toi_light_curves_to_directory(
