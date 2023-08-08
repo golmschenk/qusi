@@ -14,7 +14,7 @@ from ramjet.data_interface.tess_data_interface import download_two_minute_cadenc
 from ramjet.photometric_database.tess_light_curve import TessLightCurve
 
 
-class TessTwoMinuteCadenceColumnName(Enum):
+class TessMissionLightCurveColumnName(Enum):
     """
     An enum to represent the column names of the TESS two minute cadence data.
     """
@@ -25,7 +25,7 @@ class TessTwoMinuteCadenceColumnName(Enum):
     PDCSAP_FLUX_ERROR = 'pdcsap_flux_error'
 
 
-class TessTwoMinuteCadenceMastFitsIndex(Enum):
+class TessMissionLightCurveFitsIndex(Enum):
     """
     An enum to represent the indexes of the TESS two minute cadence data in MAST FITS files.
     """
@@ -36,19 +36,19 @@ class TessTwoMinuteCadenceMastFitsIndex(Enum):
     PDCSAP_FLUX_ERROR = 'PDCSAP_FLUX_ERR'
 
 
-class TessTwoMinuteCadenceLightCurve(TessLightCurve):
+class TessMissionLightCurve(TessLightCurve):
     """
     A class to represent a TESS two minute cadence light curve.
     """
 
     def __init__(self):
         super().__init__()
-        self.flux_column_names = [TessTwoMinuteCadenceColumnName.PDCSAP_FLUX.value,
-                                  TessTwoMinuteCadenceColumnName.SAP_FLUX.value]
+        self.flux_column_names = [TessMissionLightCurveColumnName.PDCSAP_FLUX.value,
+                                  TessMissionLightCurveColumnName.SAP_FLUX.value]
 
     @classmethod
-    def from_path(cls, path: Path, fits_indexes_to_load: Union[List[TessTwoMinuteCadenceMastFitsIndex], None] = None
-                  ) -> TessTwoMinuteCadenceLightCurve:
+    def from_path(cls, path: Path, fits_indexes_to_load: Union[List[TessMissionLightCurveFitsIndex], None] = None
+                  ) -> TessMissionLightCurve:
         """
         Creates a TESS two minute light curve from a path to the MAST FITS file.
 
@@ -58,21 +58,21 @@ class TessTwoMinuteCadenceLightCurve(TessLightCurve):
         :return: The light curve.
         """
         light_curve = cls()
-        light_curve.time_column_name = TessTwoMinuteCadenceColumnName.TIME__BTJD.value
+        light_curve.time_column_name = TessMissionLightCurveColumnName.TIME__BTJD.value
         if fits_indexes_to_load is None:
-            fits_indexes_to_load = list(TessTwoMinuteCadenceMastFitsIndex)
+            fits_indexes_to_load = list(TessMissionLightCurveFitsIndex)
         with fits.open(path) as hdu_list:
             light_curve_table = hdu_list[1].data  # Light curve information is in first extension table.
             for fits_index in fits_indexes_to_load:
-                column_name = TessTwoMinuteCadenceColumnName[fits_index.name]
+                column_name = TessMissionLightCurveColumnName[fits_index.name]
                 light_curve.data_frame[column_name.value] = light_curve_table[fits_index.value]
         light_curve.tic_id, light_curve.sector = cls.get_tic_id_and_sector_from_file_path(path)
         return light_curve
 
     @classmethod
     def from_mast(cls, tic_id: int, sector: Optional[int] = None,
-                  fits_indexes_to_load: Union[List[TessTwoMinuteCadenceMastFitsIndex], None] = None
-                  ) -> TessTwoMinuteCadenceLightCurve:
+                  fits_indexes_to_load: Union[List[TessMissionLightCurveFitsIndex], None] = None
+                  ) -> TessMissionLightCurve:
         """
         Downloads a FITS file from MAST and creates a TESS two minute light curve from it.
 
@@ -87,7 +87,7 @@ class TessTwoMinuteCadenceLightCurve(TessLightCurve):
         return light_curve
 
     @classmethod
-    def from_identifier(cls, identifier: Any) -> TessTwoMinuteCadenceLightCurve:
+    def from_identifier(cls, identifier: Any) -> TessMissionLightCurve:
         """
         Loads the light curve in a generalized way, attempting to infer the light curve based on the passed identifier.
 
@@ -117,7 +117,7 @@ class TessTwoMinuteCadenceLightCurve(TessLightCurve):
         :return: The TIC ID and sector. The sector might be omitted (as None).
         """
         file_name = file_path.stem
-        tic_id, sector = TessTwoMinuteCadenceLightCurve.get_tic_id_and_sector_from_identifier_string(file_name)
+        tic_id, sector = TessMissionLightCurve.get_tic_id_and_sector_from_identifier_string(file_name)
         return tic_id, sector
 
     @staticmethod
@@ -128,11 +128,11 @@ class TessTwoMinuteCadenceLightCurve(TessLightCurve):
         :param identifier_string: The string to extract the TIC ID and sector.
         :return: The TIC ID and sector. The sector might be omitted (as None).
         """
-        # Search for the human readable version. E.g., "TIC 169480782 sector 5"
+        # Search for the human-readable version. E.g., "TIC 169480782 sector 5"
         match = re.search(r'TIC (\d+) sector (\d+)', identifier_string)
         if match:
             return int(match.group(1)), int(match.group(2))
-        # Search for the human readable TIC only version. E.g., "TIC 169480782"
+        # Search for the human-readable TIC only version. E.g., "TIC 169480782"
         match = re.search(r'TIC (\d+)', identifier_string)
         if match:
             return int(match.group(1)), None
@@ -146,3 +146,7 @@ class TessTwoMinuteCadenceLightCurve(TessLightCurve):
             return int(match.group(1)), int(match.group(2))
         # Raise an error if none of the patterns matched.
         raise ValueError(f'{identifier_string} does not match a known pattern to extract TIC ID and sector from.')
+
+
+class TessTwoMinuteCadenceLightCurve(TessMissionLightCurve):
+    pass

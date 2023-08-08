@@ -19,12 +19,12 @@ Downloading the light curve
 ---------------------------
 
 To view a TESS light curve, we first need to get the light curve data from the Mikulski Archive for Space Telescopes
-(MAST). To do this, we use the :code:`TessTwoMinuteCadenceLightCurve` class in the following way:
+(MAST). To do this, we use the :code:`TessMissionLightCurve` class in the following way:
 
 .. code-block:: python
 
-    from ramjet.photometric_database.tess_two_minute_cadence_light_curve import TessTwoMinuteCadenceLightCurve
-    light_curve = TessTwoMinuteCadenceLightCurve.from_mast(tic_id=370101492, sector=12)
+    from ramjet.photometric_database.tess_two_minute_cadence_light_curve import TessMissionLightCurve
+    light_curve = TessMissionLightCurve.from_mast(tic_id=370101492, sector=12)
 
 Any valid TIC ID and sector can be used in the above code.
 
