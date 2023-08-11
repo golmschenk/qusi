@@ -524,8 +524,18 @@ def get_all_tess_spoc_light_curve_observations_chunk(tic_id: Union[int, List[int
                                                     calib_level=4,  # Science data product level.
                                                     target_name=tic_id)
     observations_data_frame = tess_observations.to_pandas()
-    observations_data_frame = filter_for_single_sector_observations(observations_data_frame)
     return observations_data_frame
+
+
+def download_spoc_light_curves_for_tic_ids(tic_ids: List[int], download_directory: Path) -> List[Path]:
+    light_curve_observations = get_all_tess_spoc_light_curve_observations(tic_id=tic_ids)
+    data_product_list = get_product_list(light_curve_observations)
+    light_curve_data_product_list = data_product_list[
+        data_product_list['productFilename'].str.endswith('lc.fits')]
+    light_curve_data_product_download_manifest = download_products(light_curve_data_product_list,
+                                                                   data_directory=download_directory)
+    light_curve_paths = list(map(Path, light_curve_data_product_download_manifest['Local Path'].values))
+    return light_curve_paths
 
 
 def initialize_astroquery():
@@ -573,6 +583,7 @@ def download_products(data_products: pd.DataFrame, data_directory: Path) -> pd.D
     return manifest.to_pandas()
 
 
+# TODO: This is a misnomer, because target pixel files are still single sector observations. Rename this.
 def filter_for_single_sector_observations(time_series_observations: pd.DataFrame) -> pd.DataFrame:
     """
     Filters a data frame of observations to get only the single sector observations.
