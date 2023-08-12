@@ -1,6 +1,9 @@
 """
 Code for a class for common interfacing with TESS data, such as downloading, sorting, and manipulating.
 """
+import itertools
+from io import StringIO
+
 import astroquery
 import lightkurve
 
@@ -19,6 +22,7 @@ from pathlib import Path
 from typing import Union, List, Dict
 import numpy as np
 import pandas as pd
+import polars as pl
 import requests
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
@@ -293,7 +297,7 @@ def load_light_curve_from_fits_file(light_curve_path: Union[str, Path]) -> Dict[
         light_curve_path.unlink()
         tic_id, sector = get_tic_id_and_sector_from_file_path(light_curve_path)
         download_two_minute_cadence_light_curve(tic_id=tic_id, sector=sector,
-                                                     save_directory=light_curve_path.parent)
+                                                save_directory=light_curve_path.parent)
         with fits.open(light_curve_path) as hdu_list:
             light_curve = hdu_list[1].data  # Light curve information is in first extension table.
     return light_curve
@@ -527,14 +531,46 @@ def get_all_tess_spoc_light_curve_observations_chunk(tic_id: Union[int, List[int
     return observations_data_frame
 
 
-def download_spoc_light_curves_for_tic_ids(tic_ids: List[int], download_directory: Path) -> List[Path]:
+def get_spoc_target_list_from_mast() -> pl.DataFrame:
+    sector_data_frames: List[pl.DataFrame] = []
+    for sector_index in itertools.count(1):
+        response = requests.get(f'https://archive.stsci.edu/hlsps/tess-spoc/target_lists/s{sector_index:04d}.csv')
+        if response.status_code != 200:
+            break
+        csv_string = response.text[1:]  # Remove hashtag from header.
+        sector_data_frame = pl.read_csv(StringIO(csv_string))
+        sector_data_frames.append(sector_data_frame)
+    if len(sector_data_frames) == 0:
+        raise ValueError('No SPOC target lists found. Check network connection.')
+    target_list_data_frame = pl.concat(sector_data_frames)
+    return target_list_data_frame
+
+
+def download_spoc_light_curves(download_directory: Path, tic_ids: List[int] | None = None,
+                               limit: int | None = None) -> List[Path]:
+    print(f'Starting download of SPOC light curves to directory `{download_directory}`.')
+    print(f'Retrieving observations list from MAST...')
     light_curve_observations = get_all_tess_spoc_light_curve_observations(tic_id=tic_ids)
+    print(f'Retrieving data products list from MAST...')
     data_product_list = get_product_list(light_curve_observations)
-    light_curve_data_product_list = data_product_list[
+    light_curve_data_products = data_product_list[
         data_product_list['productFilename'].str.endswith('lc.fits')]
-    light_curve_data_product_download_manifest = download_products(light_curve_data_product_list,
+    if limit is not None:
+        light_curve_data_products = light_curve_data_products.sample(frac=1, random_state=0).head(limit)
+    print(f'Downloading light curves...')
+    light_curve_data_product_download_manifest = download_products(light_curve_data_products,
                                                                    data_directory=download_directory)
-    light_curve_paths = list(map(Path, light_curve_data_product_download_manifest['Local Path'].values))
+    light_curve_paths = []
+    print(f'Moving light curves to {download_directory}...')
+    for _, manifest_row in light_curve_data_product_download_manifest.iterrows():
+        if manifest_row['Status'] == 'COMPLETE':
+            original_file_path = Path(manifest_row['Local Path'])
+            updated_file_path = download_directory.joinpath(original_file_path.name)
+            original_file_path.rename(updated_file_path)
+            light_curve_paths.append(updated_file_path)
+        else:
+            raise ValueError(
+                f'{manifest_row["Local Path"]} was found to not have been completed in the download manifest.')
     return light_curve_paths
 
 
@@ -583,7 +619,6 @@ def download_products(data_products: pd.DataFrame, data_directory: Path) -> pd.D
     return manifest.to_pandas()
 
 
-# TODO: This is a misnomer, because target pixel files are still single sector observations. Rename this.
 def filter_for_single_sector_observations(time_series_observations: pd.DataFrame) -> pd.DataFrame:
     """
     Filters a data frame of observations to get only the single sector observations.
