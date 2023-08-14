@@ -141,7 +141,7 @@ class TessMissionLightCurve(TessLightCurve):
         if match:
             return int(match.group(2)), int(match.group(1))
         # Search for the TESS SPOC version. E.g., "hlsp_tess-spoc_tess_phot_0000000007583207-s0026_tess_v1_lc"
-        match = re.search(r'hlsp_tess-spoc_tess_phot_(\d+)-s(\d+)_tess_v1_lc', identifier_string)
+        match = re.search(r'hlsp_tess-spoc_tess_phot_(\d+)-s(\d+)_tess_v1', identifier_string)
         if match:
             return int(match.group(1)), int(match.group(2))
         # Raise an error if none of the patterns matched.

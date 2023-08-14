@@ -37,6 +37,10 @@ from bokeh.plotting import figure as Figure
 
 from ramjet.analysis.light_curve_visualizer import plot_light_curve, create_dual_light_curve_figure
 
+import logging
+
+logger = logging.getLogger('ramjet')
+
 
 class TessFluxType(Enum):
     """
@@ -530,7 +534,7 @@ def get_all_tess_spoc_light_curve_observations_chunk(tic_id: Union[int, List[int
     return observations_data_frame
 
 
-def get_spoc_target_data_frame_from_mast() -> pl.DataFrame:
+def get_spoc_tic_id_list_from_mast() -> List[int]:
     sector_data_frames: List[pl.DataFrame] = []
     for sector_index in itertools.count(1):
         response = requests.get(f'https://archive.stsci.edu/hlsps/tess-spoc/target_lists/s{sector_index:04d}.csv')
@@ -542,38 +546,51 @@ def get_spoc_target_data_frame_from_mast() -> pl.DataFrame:
     if len(sector_data_frames) == 0:
         raise ValueError('No SPOC target lists found. Check network connection.')
     target_list_data_frame = pl.concat(sector_data_frames)
-    return target_list_data_frame
+    tic_ids = target_list_data_frame['TIC_ID'].to_list()
+    return tic_ids
 
 
 def download_spoc_light_curves_for_tic_ids_incremental(tic_ids: List[int], download_directory: Path,
+                                                       sectors: List[int] | None = None,
                                                        limit: int | None = None, chunk_size: int = 1000) -> List[Path]:
     shuffle(tic_ids)
     paths = []
+    logger.info(f'Downloading light curves to {download_directory}...')
     for tic_id_list_chunk in np.array_split(tic_ids, math.ceil(len(tic_ids) / chunk_size)):
         chunk_limit = limit - len(paths)
-        paths_chunk = download_spoc_light_curves_for_tic_ids(tic_id_list_chunk, download_directory, chunk_limit)
+        paths_chunk = download_spoc_light_curves_for_tic_ids_chunk(tic_id_list_chunk, download_directory,
+                                                                   sectors=sectors,
+                                                                   limit=chunk_limit)
         paths.extend(paths_chunk)
         if len(paths) >= limit:
             break
+        logger.info(f'{len(paths)} downloaded...')
+    logger.info(f'Finished downloading {len(paths)} light curves.')
     return paths
 
 
-def download_spoc_light_curves_for_tic_ids(tic_ids: List[int], download_directory: Path,
-                                           limit: int | None = None) -> List[Path]:
-    print(f'Starting download of SPOC light curves to directory `{download_directory}`.')
-    print(f'Retrieving observations list from MAST...')
+def get_sector_from_spoc_obs_id(obs_id: str) -> int:
+    match = re.search(r'hlsp_tess-spoc_tess_phot_\d+-s(\d+)_tess_v1', obs_id)
+    if match:
+        return int(match.group(1))
+
+
+def download_spoc_light_curves_for_tic_ids_chunk(tic_ids: List[int], download_directory: Path,
+                                                 sectors: List[int] | None = None,
+                                                 limit: int | None = None) -> List[Path]:
     light_curve_observations = get_all_tess_spoc_light_curve_observations(tic_id=tic_ids)
-    print(f'Retrieving data products list from MAST...')
+    light_curve_observations[ColumnName.SECTOR] = light_curve_observations['obs_id'].map(get_sector_from_spoc_obs_id)
+    if sectors is not None:
+        light_curve_observations = light_curve_observations[
+            light_curve_observations[ColumnName.SECTOR].isin(sectors)]
     data_product_list = get_product_list(light_curve_observations)
     light_curve_data_products = data_product_list[
         data_product_list['productFilename'].str.endswith('lc.fits')]
     if limit is not None:
         light_curve_data_products = light_curve_data_products.sample(frac=1, random_state=0).head(limit)
-    print(f'Downloading light curves...')
     light_curve_data_product_download_manifest = download_products(light_curve_data_products,
                                                                    data_directory=download_directory)
     light_curve_paths = []
-    print(f'Moving light curves to {download_directory}...')
     for _, manifest_row in light_curve_data_product_download_manifest.iterrows():
         if manifest_row['Status'] == 'COMPLETE':
             original_file_path = Path(manifest_row['Local Path'])
