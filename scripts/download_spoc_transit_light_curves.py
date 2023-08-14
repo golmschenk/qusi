@@ -8,15 +8,18 @@ from bokeh.io import show
 from bokeh.plotting import figure as Figure
 
 from ramjet.data_interface.tess_data_interface import download_products, \
-    get_all_tess_spoc_light_curve_observations, get_product_list, download_spoc_light_curves, \
-    get_spoc_target_list_from_mast
+    get_all_tess_spoc_light_curve_observations, get_product_list, download_spoc_light_curves_for_tic_ids, \
+    get_spoc_target_data_frame_from_mast, download_spoc_light_curves_for_tic_ids_incremental
 from ramjet.photometric_database.tess_two_minute_cadence_light_curve import TessMissionLightCurve
 
 # tic_ids = ['115419674']
 tic_id = 115419674
 
-spoc_target_list = get_spoc_target_list_from_mast()
-light_curve_paths = download_spoc_light_curves(Path('data/check_spoc'), limit=1000)
+spoc_target_data_frame = get_spoc_target_data_frame_from_mast()
+spoc_target_tic_ids = spoc_target_data_frame['TIC_ID'].to_list()
+light_curve_paths = download_spoc_light_curves_for_tic_ids_incremental(
+    tic_ids=spoc_target_tic_ids, download_directory=Path('data/check_spoc'), limit=1000)
+# TODO: Use shuffled SPOC target list to download targets up to limit specified.
 for light_curve_path in light_curve_paths:
     light_curve = TessMissionLightCurve.from_path(light_curve_path)
     for column_name in light_curve.data_frame:

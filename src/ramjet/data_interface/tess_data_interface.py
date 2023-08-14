@@ -3,6 +3,7 @@ Code for a class for common interfacing with TESS data, such as downloading, sor
 """
 import itertools
 from io import StringIO
+from random import shuffle
 
 import astroquery
 import lightkurve
@@ -491,7 +492,7 @@ def get_all_tess_time_series_observations_chunk(tic_id: Union[int, List[int]] = 
     return tess_observations.to_pandas()
 
 
-def get_all_tess_spoc_light_curve_observations(tic_id: Union[int, List[int]] = None,
+def get_all_tess_spoc_light_curve_observations(tic_id: Union[int, List[int]],
                                                mast_input_query_chunk_size: int = 1000) -> pd.DataFrame:
     """
     Gets all TESS SPOC light curves. Breaks large queries up to make the communication with MAST smoother.
@@ -500,7 +501,7 @@ def get_all_tess_spoc_light_curve_observations(tic_id: Union[int, List[int]] = N
     :param mast_input_query_chunk_size: The size of the chunks to process.
     :return: The list of time series observations as rows in a Pandas data frame.
     """
-    if tic_id is None or np.isscalar(tic_id):
+    if np.isscalar(tic_id):
         observations = get_all_tess_spoc_light_curve_observations_chunk(tic_id)
     else:
         observations_chunks = []
@@ -512,7 +513,7 @@ def get_all_tess_spoc_light_curve_observations(tic_id: Union[int, List[int]] = N
 
 
 @retry(retry_on_exception=is_common_mast_connection_error, stop_max_attempt_number=10)
-def get_all_tess_spoc_light_curve_observations_chunk(tic_id: Union[int, List[int]] = None) -> pd.DataFrame:
+def get_all_tess_spoc_light_curve_observations_chunk(tic_id: Union[int, List[int]]) -> pd.DataFrame:
     """
     Gets all TESS time-series observations, limited to science data product level. Repeats download attempt on
     error.
@@ -521,8 +522,6 @@ def get_all_tess_spoc_light_curve_observations_chunk(tic_id: Union[int, List[int
     :return: The list of time series observations as rows in a Pandas data frame.
     """
     initialize_astroquery()
-    if tic_id is None:
-        tic_id = []  # When the empty list is passed to `query_criteria`, any value is considered a match.
     tess_observations = Observations.query_criteria(obs_collection='HLSP', dataproduct_type='timeseries',
                                                     provenance_name='TESS-SPOC',
                                                     calib_level=4,  # Science data product level.
@@ -531,7 +530,7 @@ def get_all_tess_spoc_light_curve_observations_chunk(tic_id: Union[int, List[int
     return observations_data_frame
 
 
-def get_spoc_target_list_from_mast() -> pl.DataFrame:
+def get_spoc_target_data_frame_from_mast() -> pl.DataFrame:
     sector_data_frames: List[pl.DataFrame] = []
     for sector_index in itertools.count(1):
         response = requests.get(f'https://archive.stsci.edu/hlsps/tess-spoc/target_lists/s{sector_index:04d}.csv')
@@ -546,8 +545,21 @@ def get_spoc_target_list_from_mast() -> pl.DataFrame:
     return target_list_data_frame
 
 
-def download_spoc_light_curves(download_directory: Path, tic_ids: List[int] | None = None,
-                               limit: int | None = None) -> List[Path]:
+def download_spoc_light_curves_for_tic_ids_incremental(tic_ids: List[int], download_directory: Path,
+                                                       limit: int | None = None, chunk_size: int = 1000) -> List[Path]:
+    shuffle(tic_ids)
+    paths = []
+    for tic_id_list_chunk in np.array_split(tic_ids, math.ceil(len(tic_ids) / chunk_size)):
+        chunk_limit = limit - len(paths)
+        paths_chunk = download_spoc_light_curves_for_tic_ids(tic_id_list_chunk, download_directory, chunk_limit)
+        paths.extend(paths_chunk)
+        if len(paths) >= limit:
+            break
+    return paths
+
+
+def download_spoc_light_curves_for_tic_ids(tic_ids: List[int], download_directory: Path,
+                                           limit: int | None = None) -> List[Path]:
     print(f'Starting download of SPOC light curves to directory `{download_directory}`.')
     print(f'Retrieving observations list from MAST...')
     light_curve_observations = get_all_tess_spoc_light_curve_observations(tic_id=tic_ids)
