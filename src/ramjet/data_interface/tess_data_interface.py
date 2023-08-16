@@ -3,7 +3,7 @@ Code for a class for common interfacing with TESS data, such as downloading, sor
 """
 import itertools
 from io import StringIO
-from random import shuffle
+from random import shuffle, Random
 
 import astroquery
 import lightkurve
@@ -553,7 +553,8 @@ def get_spoc_tic_id_list_from_mast() -> List[int]:
 def download_spoc_light_curves_for_tic_ids_incremental(tic_ids: List[int], download_directory: Path,
                                                        sectors: List[int] | None = None,
                                                        limit: int | None = None, chunk_size: int = 1000) -> List[Path]:
-    shuffle(tic_ids)
+    random = Random(0)
+    random.shuffle(tic_ids)
     paths = []
     logger.info(f'Downloading light curves to {download_directory}...')
     for tic_id_list_chunk in np.array_split(tic_ids, math.ceil(len(tic_ids) / chunk_size)):
