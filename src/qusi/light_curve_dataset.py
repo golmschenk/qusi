@@ -8,7 +8,7 @@ from torchvision import transforms
 
 from qusi.light_curve import LightCurve
 from qusi.light_curve_collection import LabeledLightCurveCollection
-from qusi.light_curve_observation import LightCurveObservation
+from qusi.light_curve_observation import LightCurveObservation, remove_nan_flux_data_points_from_light_curve_observation
 from qusi.light_curve_transforms import from_observation_to_fluxes_array_and_label_array, \
     pair_array_to_tensor
 from ramjet.photometric_database.light_curve_database import make_times_and_fluxes_array_uniform_length, \
@@ -33,11 +33,12 @@ class LightCurveDataset(IterableDataset):
             raise ValueError('Either the standard or injectee light curve collection lists must not be empty. '
                              'Both were empty.')
         self.include_standard_in_injectee = False  # TODO: Should this be automatically detected?
-        self.transform = transforms.Compose([
+        self.transforms = [
+            remove_nan_flux_data_points_from_light_curve_observation,
             from_observation_to_fluxes_array_and_label_array,
             partial(make_times_and_label_array_uniform_length, length=1000),
             pair_array_to_tensor,
-        ]) # TODO: remove hard coded and make available at multiple steps.
+        ]  # TODO: remove hard coded and make available at multiple steps.
 
     @classmethod
     def new(cls,
@@ -86,7 +87,7 @@ class LightCurveDataset(IterableDataset):
                     # TODO: Preprocessing step should be here. Or maybe that should all be on the light curve collection
                     #  as well? Or passed in somewhere else?
                     standard_light_curve = next(base_collection_iter)
-                    transformed_standard_light_curve = self.transform(standard_light_curve)
+                    transformed_standard_light_curve = self.apply_transforms(standard_light_curve)
                     yield transformed_standard_light_curve
                 if collection_type in [LightCurveCollectionType.INJECTEE,
                                        LightCurveCollectionType.STANDARD_AND_INJECTEE]:
@@ -94,8 +95,14 @@ class LightCurveDataset(IterableDataset):
                         injectable_light_curve = next(injectable_light_curve_collection_iter)
                         injectee_light_curve = next(base_collection_iter)
                         injected_light_curve = inject_light_curve(injectee_light_curve, injectable_light_curve)
-                        transformed_injected_light_curve = self.transform(injected_light_curve)
+                        transformed_injected_light_curve = self.apply_transforms(injected_light_curve)
                         yield transformed_injected_light_curve
+
+
+    def apply_transforms(self, x):
+        for transform in self.transforms:
+            x = transform(x)
+        return x
 
 
 def inject_light_curve(injectee_observation: LightCurveObservation, injectable_observation: LightCurveObservation

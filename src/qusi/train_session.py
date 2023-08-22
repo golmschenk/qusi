@@ -77,9 +77,9 @@ def train_phase(dataloader, model_, loss_fn, optimizer, steps):
         loss.backward()
         optimizer.step()
 
-        if batch % 100 == 0:
+        if batch % 10 == 0:
             loss, current = loss.item(), (batch + 1) * len(X)
-            print(f"loss: {loss:>7f}  [{current:>5d}/{steps:>5d}]")
+            print(f"loss: {loss:>7f}  [{current:>5d}/{steps * len(X):>5d}]")
         if batch >= steps + 1:
             break
 

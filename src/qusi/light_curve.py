@@ -1,3 +1,4 @@
+from copy import deepcopy
 from dataclasses import dataclass
 from typing import Self
 
@@ -27,3 +28,11 @@ class LightCurve:
         :return: The light curve.
         """
         return cls(times=times, fluxes=fluxes)
+
+
+def remove_nan_flux_data_points_from_light_curve(light_curve: LightCurve) -> LightCurve:
+    light_curve = deepcopy(light_curve)
+    nan_flux_indexes = np.isnan(light_curve.fluxes)
+    light_curve.fluxes = light_curve.fluxes[~nan_flux_indexes]
+    light_curve.times = light_curve.times[~nan_flux_indexes]
+    return light_curve
