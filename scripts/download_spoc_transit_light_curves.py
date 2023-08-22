@@ -1,33 +1,61 @@
 from pathlib import Path
 
 import numpy as np
-from bokeh.io import show
-from bokeh.plotting import figure as Figure
 
 from ramjet.data_interface.tess_data_interface import \
     get_spoc_tic_id_list_from_mast, download_spoc_light_curves_for_tic_ids_incremental
 from ramjet.data_interface.tess_toi_data_interface import TessToiDataInterface, ToiColumns
-from ramjet.photometric_database.tess_two_minute_cadence_light_curve import TessMissionLightCurve
 
-negative_paths = Path('scripts/data/spoc_transit_experiment/negatives')
-# spoc_target_tic_ids = get_spoc_tic_id_list_from_mast()
-# negative_light_curve_paths = download_spoc_light_curves_for_tic_ids_incremental(
-#     tic_ids=spoc_target_tic_ids, download_directory=Path('data/spoc_transit_experiment/negatives'), limit=3000)
-# tess_toi_data_interface = TessToiDataInterface()
-# suspected_planet_tic_ids = tess_toi_data_interface.toi_dispositions[
-#     tess_toi_data_interface.toi_dispositions[ToiColumns.disposition.value] != 'FP'][ToiColumns.tic_id.value]
-# positive_light_curve_paths = download_spoc_light_curves_for_tic_ids_incremental(
-#     tic_ids=spoc_target_tic_ids, download_directory=Path('data/spoc_transit_experiment/positives'), limit=1000)
-sectors = []
-median_time_diffs = []
-negative_light_curve_paths = negative_paths.glob('*.fits')
-for light_curve_path in negative_light_curve_paths:
-    light_curve = TessMissionLightCurve.from_path(light_curve_path)
-    times = light_curve.times[~np.isnan(light_curve.times)]
-    median_time_diff = np.nanmedian(np.diff(times))
-    sector = light_curve.sector
-    sectors.append(sector)
-    median_time_diffs.append(median_time_diff)
-figure = Figure()
-figure.circle(x=sectors, y=median_time_diffs)
-show(figure)
+
+def main():
+    spoc_target_tic_ids = get_spoc_tic_id_list_from_mast()
+    tess_toi_data_interface = TessToiDataInterface()
+    positive_tic_ids = tess_toi_data_interface.toi_dispositions[
+        tess_toi_data_interface.toi_dispositions[ToiColumns.disposition.value] != 'FP'][ToiColumns.tic_id.value]
+    negative_tic_ids = list(set(spoc_target_tic_ids) - set(positive_tic_ids))
+    positive_tic_ids_splits = np.split(
+        np.array(negative_tic_ids), [int(len(positive_tic_ids) * 0.8), int(len(positive_tic_ids) * 0.9)])
+    positive_train_tic_ids = positive_tic_ids_splits[0].tolist()
+    positive_validation_tic_ids = positive_tic_ids_splits[1].tolist()
+    positive_test_tic_ids = positive_tic_ids_splits[2].tolist()
+    negative_tic_ids_splits = np.split(
+        np.array(negative_tic_ids), [int(len(negative_tic_ids) * 0.8), int(len(negative_tic_ids) * 0.9)])
+    negative_train_tic_ids = negative_tic_ids_splits[0].tolist()
+    negative_validation_tic_ids = negative_tic_ids_splits[1].tolist()
+    negative_test_tic_ids = negative_tic_ids_splits[2].tolist()
+    sectors = list(range(27, 56))
+
+    download_spoc_light_curves_for_tic_ids_incremental(
+        tic_ids=positive_train_tic_ids,
+        download_directory=Path('data/spoc_transit_experiment/train/positives'),
+        sectors=sectors,
+        limit=1000)
+    download_spoc_light_curves_for_tic_ids_incremental(
+        tic_ids=negative_train_tic_ids,
+        download_directory=Path('data/spoc_transit_experiment/train/negatives'),
+        sectors=sectors,
+        limit=3000)
+    download_spoc_light_curves_for_tic_ids_incremental(
+        tic_ids=positive_validation_tic_ids,
+        download_directory=Path('data/spoc_transit_experiment/validation/positives'),
+        sectors=sectors,
+        limit=100)
+    download_spoc_light_curves_for_tic_ids_incremental(
+        tic_ids=negative_validation_tic_ids,
+        download_directory=Path('data/spoc_transit_experiment/validation/negatives'),
+        sectors=sectors,
+        limit=300)
+    download_spoc_light_curves_for_tic_ids_incremental(
+        tic_ids=positive_test_tic_ids,
+        download_directory=Path('data/spoc_transit_experiment/test/positives'),
+        sectors=sectors,
+        limit=100)
+    download_spoc_light_curves_for_tic_ids_incremental(
+        tic_ids=negative_test_tic_ids,
+        download_directory=Path('data/spoc_transit_experiment/test/negatives'),
+        sectors=sectors,
+        limit=300)
+
+
+if __name__ == '__main__':
+    main()

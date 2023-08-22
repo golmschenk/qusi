@@ -1,5 +1,6 @@
 import copy
 from enum import Enum
+from functools import partial
 from typing import List, Iterable, Self, Tuple, TypeVar, Iterator, Callable
 
 from torch.utils.data import IterableDataset
@@ -10,6 +11,8 @@ from qusi.light_curve_collection import LabeledLightCurveCollection
 from qusi.light_curve_observation import LightCurveObservation
 from qusi.light_curve_transforms import from_observation_to_fluxes_array_and_label_array, \
     pair_array_to_tensor
+from ramjet.photometric_database.light_curve_database import make_times_and_fluxes_array_uniform_length, \
+    make_times_and_label_array_uniform_length
 from ramjet.photometric_database.light_curve_dataset_manipulations import OutOfBoundsInjectionHandlingMethod, \
     BaselineFluxEstimationMethod, inject_signal_into_light_curve_with_intermediates
 
@@ -32,6 +35,7 @@ class LightCurveDataset(IterableDataset):
         self.include_standard_in_injectee = False  # TODO: Should this be automatically detected?
         self.transform = transforms.Compose([
             from_observation_to_fluxes_array_and_label_array,
+            partial(make_times_and_label_array_uniform_length, length=1000),
             pair_array_to_tensor,
         ]) # TODO: remove hard coded and make available at multiple steps.
 

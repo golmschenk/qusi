@@ -3,9 +3,10 @@ import math
 import shutil
 from abc import ABC
 from pathlib import Path
-from typing import List, Union, Callable, Iterable
+from typing import List, Union, Callable, Iterable, Tuple
 
 import numpy as np
+import numpy.typing as npt
 import tensorflow as tf
 
 
@@ -18,6 +19,19 @@ def preprocess_times(light_curve_array: np.ndarray) -> None:
     """
     times = light_curve_array[:, 0]
     light_curve_array[:, 0] = calculate_time_differences(times)
+
+
+def make_times_and_fluxes_array_uniform_length(arrays: Tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]], length: int, randomize: bool = True) -> (np.ndarray, np.ndarray):
+    times, fluxes = arrays
+    light_curve_array = np.stack([times, fluxes], axis=-1)
+    uniform_length_light_curve_array = make_uniform_length(light_curve_array, length=length, randomize=randomize)
+    return uniform_length_light_curve_array[:, 0], uniform_length_light_curve_array[:, 1]
+
+
+def make_times_and_label_array_uniform_length(arrays: Tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]], length: int, randomize: bool = True) -> (np.ndarray, np.ndarray):
+    times, label = arrays
+    uniform_length_times = make_uniform_length(times, length=length, randomize=randomize)
+    return uniform_length_times, label
 
 
 def make_uniform_length(example: np.ndarray, length: int, randomize: bool = True) -> np.ndarray:
