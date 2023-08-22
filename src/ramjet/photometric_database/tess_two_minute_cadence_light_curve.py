@@ -4,6 +4,8 @@ Code to for a class to represent a TESS two minute cadence light curve.
 from __future__ import annotations
 
 import re
+import sys
+
 import numpy as np
 from enum import Enum
 from pathlib import Path
@@ -65,7 +67,9 @@ class TessMissionLightCurve(TessLightCurve):
             light_curve_table = hdu_list[1].data  # Light curve information is in first extension table.
             for fits_index in fits_indexes_to_load:
                 column_name = TessMissionLightCurveColumnName[fits_index.name]
-                light_curve.data_frame[column_name.value] = light_curve_table[fits_index.value]
+                column = light_curve_table[fits_index.value]
+                column = ensure_native_byte_order(column)
+                light_curve.data_frame[column_name.value] = column
         light_curve.tic_id, light_curve.sector = cls.get_tic_id_and_sector_from_file_path(path)
         return light_curve
 
@@ -150,3 +154,11 @@ class TessMissionLightCurve(TessLightCurve):
 
 class TessTwoMinuteCadenceLightCurve(TessMissionLightCurve):
     pass
+
+
+def ensure_native_byte_order(array: np.ndarray) -> np.ndarray:
+    native_byte_order = '>' if sys.byteorder == 'big' else '<'
+    if array.dtype.byteorder in ['|', '=', native_byte_order]:
+        return array
+    else:
+        return array.byteswap().newbyteorder(native_byte_order)
