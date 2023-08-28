@@ -1,4 +1,5 @@
 import torch
+from torch import Tensor
 from torch.nn import Module, Linear, Sigmoid
 
 
@@ -8,7 +9,7 @@ class SingleDenseLayerBinaryClassificationModel(Module):
         self.dense = Linear(in_features=input_size, out_features=1)
         self.activation = Sigmoid()
 
-    def forward(self, x):
+    def forward(self, x: Tensor):
         x = self.dense(x)
         x = self.activation(x)
         x = torch.reshape(x, (-1,))

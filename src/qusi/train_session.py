@@ -9,7 +9,6 @@ from torch.optim import Adam
 from torch.utils.data import DataLoader
 
 from qusi.light_curve_dataset import LightCurveDataset, InterleavedDataset
-from qusi.single_dense_layer_model import SingleDenseLayerBinaryClassificationModel
 
 
 @dataclass
