@@ -9,23 +9,18 @@ class Hadryss(Module):
     def __init__(self):
         super().__init__()
         self.sigmoid = Sigmoid()
-        self.block0 = LightCurveNetworkBlock(input_channels=1, output_channels=8, kernel_size=3, pooling_size=2,
-                                             batch_normalization=False, dropout_rate=0)
+        self.block0 = LightCurveNetworkBlock(input_channels=1, output_channels=8, kernel_size=3, pooling_size=2)
         self.block1 = LightCurveNetworkBlock(input_channels=8, output_channels=8, kernel_size=3, pooling_size=2)
         self.block2 = LightCurveNetworkBlock(input_channels=8, output_channels=16, kernel_size=3, pooling_size=2)
         self.block3 = LightCurveNetworkBlock(input_channels=16, output_channels=32, kernel_size=3, pooling_size=2)
         self.block4 = LightCurveNetworkBlock(input_channels=32, output_channels=64, kernel_size=3, pooling_size=2)
         self.block5 = LightCurveNetworkBlock(input_channels=64, output_channels=128, kernel_size=3, pooling_size=2)
-        self.block6 = LightCurveNetworkBlock(input_channels=128, output_channels=128, kernel_size=3, pooling_size=1,
-                                             dropout_rate=0.5)
-        self.block7 = LightCurveNetworkBlock(input_channels=128, output_channels=128, kernel_size=3, pooling_size=1,
-                                             dropout_rate=0.5)
+        self.block6 = LightCurveNetworkBlock(input_channels=128, output_channels=128, kernel_size=3, pooling_size=1)
+        self.block7 = LightCurveNetworkBlock(input_channels=128, output_channels=128, kernel_size=3, pooling_size=1)
         self.block8 = LightCurveNetworkBlock(input_channels=128, output_channels=20, kernel_size=3, pooling_size=1,
-                                             spatial=False, dropout_rate=0.5, length=7)
-        self.block9 = LightCurveNetworkBlock(input_channels=20, output_channels=20, kernel_size=7, pooling_size=1,
-                                             dropout_rate=0.5)
-        self.block10 = LightCurveNetworkBlock(input_channels=20, output_channels=20, kernel_size=1, pooling_size=1,
-                                              batch_normalization=False, dropout_rate=0)
+                                             spatial=False, length=7)
+        self.block9 = LightCurveNetworkBlock(input_channels=20, output_channels=20, kernel_size=7, pooling_size=1)
+        self.block10 = LightCurveNetworkBlock(input_channels=20, output_channels=20, kernel_size=1, pooling_size=1)
         self.prediction_layer = Conv1d(in_channels=20, out_channels=1, kernel_size=1)
 
     def forward(self, x: Tensor) -> Tensor:
@@ -49,7 +44,7 @@ class Hadryss(Module):
 
 class LightCurveNetworkBlock(Module):
     def __init__(self, input_channels: int, output_channels: int, kernel_size: int, pooling_size: int,
-                 dropout_rate: float = 0.1, batch_normalization: bool = True, spatial: bool = True,
+                 dropout_rate: float = 0.0, batch_normalization: bool = False, spatial: bool = True,
                  length: int | None = None):
         super().__init__()
         self.leaky_relu = LeakyReLU()
