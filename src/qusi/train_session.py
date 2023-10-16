@@ -17,13 +17,14 @@ class TrainSession:
     validation_datasets: List[LightCurveDataset]
     model: Module
     batch_size: int
+    cycles: int
     train_steps_per_cycle: int
     validation_steps_per_cycle: int
 
     @classmethod
     def new(cls, train_datasets: LightCurveDataset | List[LightCurveDataset],
             validation_datasets: LightCurveDataset | List[LightCurveDataset], model: Module, batch_size: int,
-            train_steps_per_cycle: int, validation_steps_per_cycle: int):
+            cycles: int, train_steps_per_cycle: int, validation_steps_per_cycle: int):
         if not isinstance(train_datasets, list):
             train_datasets = [train_datasets]
         train_datasets: List[LightCurveDataset] = train_datasets
@@ -34,6 +35,7 @@ class TrainSession:
                        validation_datasets=validation_datasets,
                        model=model,
                        batch_size=batch_size,
+                       cycles=cycles,
                        train_steps_per_cycle=train_steps_per_cycle,
                        validation_steps_per_cycle=validation_steps_per_cycle)
         return instance
@@ -52,7 +54,7 @@ class TrainSession:
             validation_dataloaders.append(DataLoader(validation_dataset, batch_size=self.batch_size))
         loss_function = BCELoss()
         optimizer = Adam(self.model.parameters())
-        for cycle_index in range(7):
+        for cycle_index in range(self.cycles):
             train_phase(dataloader=train_dataloader, model_=self.model, loss_fn=loss_function, optimizer=optimizer,
                         steps=self.train_steps_per_cycle)
             for validation_dataloader in validation_dataloaders:
