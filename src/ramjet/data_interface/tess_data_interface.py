@@ -550,9 +550,9 @@ def get_spoc_tic_id_list_from_mast() -> List[int]:
     return tic_ids
 
 
-def download_spoc_light_curves_for_tic_ids_incremental(tic_ids: List[int], download_directory: Path,
-                                                       sectors: List[int] | None = None,
-                                                       limit: int | None = None, chunk_size: int = 1000) -> List[Path]:
+def download_spoc_light_curves_for_tic_ids(tic_ids: List[int], download_directory: Path,
+                                           sectors: List[int] | None = None,
+                                           limit: int | None = None, chunk_size: int = 1000) -> List[Path]:
     random = Random(0)
     random.shuffle(tic_ids)
     paths = []

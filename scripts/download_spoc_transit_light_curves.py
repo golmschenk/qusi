@@ -3,7 +3,7 @@ from pathlib import Path
 import numpy as np
 
 from ramjet.data_interface.tess_data_interface import \
-    get_spoc_tic_id_list_from_mast, download_spoc_light_curves_for_tic_ids_incremental
+    get_spoc_tic_id_list_from_mast, download_spoc_light_curves_for_tic_ids
 from ramjet.data_interface.tess_toi_data_interface import TessToiDataInterface, ToiColumns
 
 
@@ -25,32 +25,32 @@ def main():
     negative_test_tic_ids = negative_tic_ids_splits[2].tolist()
     sectors = list(range(27, 56))
 
-    download_spoc_light_curves_for_tic_ids_incremental(
+    download_spoc_light_curves_for_tic_ids(
         tic_ids=positive_train_tic_ids,
         download_directory=Path('data/spoc_transit_experiment/train/positives'),
         sectors=sectors,
         limit=1000)
-    download_spoc_light_curves_for_tic_ids_incremental(
+    download_spoc_light_curves_for_tic_ids(
         tic_ids=negative_train_tic_ids,
         download_directory=Path('data/spoc_transit_experiment/train/negatives'),
         sectors=sectors,
         limit=3000)
-    download_spoc_light_curves_for_tic_ids_incremental(
+    download_spoc_light_curves_for_tic_ids(
         tic_ids=positive_validation_tic_ids,
         download_directory=Path('data/spoc_transit_experiment/validation/positives'),
         sectors=sectors,
         limit=100)
-    download_spoc_light_curves_for_tic_ids_incremental(
+    download_spoc_light_curves_for_tic_ids(
         tic_ids=negative_validation_tic_ids,
         download_directory=Path('data/spoc_transit_experiment/validation/negatives'),
         sectors=sectors,
         limit=300)
-    download_spoc_light_curves_for_tic_ids_incremental(
+    download_spoc_light_curves_for_tic_ids(
         tic_ids=positive_test_tic_ids,
         download_directory=Path('data/spoc_transit_experiment/test/positives'),
         sectors=sectors,
         limit=100)
-    download_spoc_light_curves_for_tic_ids_incremental(
+    download_spoc_light_curves_for_tic_ids(
         tic_ids=negative_test_tic_ids,
         download_directory=Path('data/spoc_transit_experiment/test/negatives'),
         sectors=sectors,
