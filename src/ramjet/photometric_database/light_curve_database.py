@@ -28,7 +28,7 @@ def make_times_and_fluxes_array_uniform_length(arrays: Tuple[npt.NDArray[np.floa
     return uniform_length_light_curve_array[:, 0], uniform_length_light_curve_array[:, 1]
 
 
-def make_times_and_label_array_uniform_length(arrays: Tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]], length: int, randomize: bool = True) -> (np.ndarray, np.ndarray):
+def make_fluxes_and_label_array_uniform_length(arrays: Tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]], length: int, randomize: bool = True) -> (np.ndarray, np.ndarray):
     times, label = arrays
     uniform_length_times = make_uniform_length(times, length=length, randomize=randomize)
     return uniform_length_times, label

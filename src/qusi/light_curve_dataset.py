@@ -1,10 +1,16 @@
 import copy
 from enum import Enum
 from functools import partial
-from typing import List, Iterable, Self, Tuple, TypeVar, Iterator, Callable
+from typing import List, Iterable, Self, Tuple, TypeVar, Iterator, Callable, Any
 
+import numpy as np
+import torch
+from bokeh.io import show
+from torch import Tensor
 from torch.utils.data import IterableDataset
 from torchvision import transforms
+from bokeh.plotting import figure as Figure
+import numpy.typing as npt
 
 from qusi.light_curve import LightCurve
 from qusi.light_curve_collection import LabeledLightCurveCollection
@@ -12,7 +18,7 @@ from qusi.light_curve_observation import LightCurveObservation, remove_nan_flux_
 from qusi.light_curve_transforms import from_observation_to_fluxes_array_and_label_array, \
     pair_array_to_tensor
 from ramjet.photometric_database.light_curve_database import make_times_and_fluxes_array_uniform_length, \
-    make_times_and_label_array_uniform_length
+    make_fluxes_and_label_array_uniform_length
 from ramjet.photometric_database.light_curve_dataset_manipulations import OutOfBoundsInjectionHandlingMethod, \
     BaselineFluxEstimationMethod, inject_signal_into_light_curve_with_intermediates
 
@@ -24,7 +30,8 @@ class LightCurveDataset(IterableDataset):
     def __init__(self,
                  standard_light_curve_collections: List[LabeledLightCurveCollection],
                  injectee_light_curve_collections: List[LabeledLightCurveCollection],
-                 injectable_light_curve_collections: List[LabeledLightCurveCollection]
+                 injectable_light_curve_collections: List[LabeledLightCurveCollection],
+                 post_injection_transform: Callable[[Any], Any],
                  ):
         self.standard_light_curve_collections: List[LabeledLightCurveCollection] = standard_light_curve_collections
         self.injectee_light_curve_collections: List[LabeledLightCurveCollection] = injectee_light_curve_collections
@@ -33,12 +40,7 @@ class LightCurveDataset(IterableDataset):
             raise ValueError('Either the standard or injectee light curve collection lists must not be empty. '
                              'Both were empty.')
         self.include_standard_in_injectee = False  # TODO: Should this be automatically detected?
-        self.transforms = [
-            remove_nan_flux_data_points_from_light_curve_observation,
-            from_observation_to_fluxes_array_and_label_array,
-            partial(make_times_and_label_array_uniform_length, length=1000),
-            pair_array_to_tensor,
-        ]  # TODO: remove hard coded and make available at multiple steps.
+        self.post_injection_transform: Callable[[Any], Any] = post_injection_transform
 
     @classmethod
     def new(cls,
@@ -57,7 +59,8 @@ class LightCurveDataset(IterableDataset):
             injectable_light_curve_collections = []
         instance = cls(standard_light_curve_collections=standard_light_curve_collections,
                        injectee_light_curve_collections=injectee_light_curve_collections,
-                       injectable_light_curve_collections=injectable_light_curve_collections)
+                       injectable_light_curve_collections=injectable_light_curve_collections,
+                       post_injection_transform=default_post_injection_transform)
         return instance
 
 
@@ -87,7 +90,7 @@ class LightCurveDataset(IterableDataset):
                     # TODO: Preprocessing step should be here. Or maybe that should all be on the light curve collection
                     #  as well? Or passed in somewhere else?
                     standard_light_curve = next(base_collection_iter)
-                    transformed_standard_light_curve = self.apply_transforms(standard_light_curve)
+                    transformed_standard_light_curve = self.post_injection_transform(standard_light_curve)
                     yield transformed_standard_light_curve
                 if collection_type in [LightCurveCollectionType.INJECTEE,
                                        LightCurveCollectionType.STANDARD_AND_INJECTEE]:
@@ -95,14 +98,8 @@ class LightCurveDataset(IterableDataset):
                         injectable_light_curve = next(injectable_light_curve_collection_iter)
                         injectee_light_curve = next(base_collection_iter)
                         injected_light_curve = inject_light_curve(injectee_light_curve, injectable_light_curve)
-                        transformed_injected_light_curve = self.apply_transforms(injected_light_curve)
+                        transformed_injected_light_curve = self.post_injection_transform(injected_light_curve)
                         yield transformed_injected_light_curve
-
-
-    def apply_transforms(self, x):
-        for transform in self.transforms:
-            x = transform(x)
-        return x
 
 
 def inject_light_curve(injectee_observation: LightCurveObservation, injectable_observation: LightCurveObservation
@@ -207,3 +204,22 @@ class LimitedIterableDataset(IterableDataset):
             count += 1
             if count >= self.limit:
                 break
+
+
+def default_post_injection_transform(x: LightCurveObservation) -> (Tensor, Tensor):
+    x = remove_nan_flux_data_points_from_light_curve_observation(x)
+    x = from_observation_to_fluxes_array_and_label_array(x)
+    x = make_fluxes_and_label_array_uniform_length(x, length=2500)
+    x = pair_array_to_tensor(x)
+    x = (normalize_tensor_by_modified_z_score(x[0]), x[1])
+    return x
+
+
+def normalize_tensor_by_modified_z_score(tensor: Tensor) -> Tensor:
+    median = torch.median(tensor)
+    deviation_from_median = tensor - median
+    absolute_deviation_from_median = torch.abs(deviation_from_median)
+    median_absolute_deviation_from_median = torch.median(absolute_deviation_from_median)
+    modified_z_score = 0.6745 * deviation_from_median / median_absolute_deviation_from_median
+    return modified_z_score
+

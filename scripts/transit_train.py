@@ -11,31 +11,36 @@ from qusi.train_session import TrainSession
 from ramjet.photometric_database.tess_two_minute_cadence_light_curve import TessMissionLightCurve
 
 
+def get_negative_train_paths():
+    return list(Path('data/spoc_transit_experiment/train/negatives').glob('*.fits'))
+
+
+def get_negative_validation_paths():
+    return list(Path('data/spoc_transit_experiment/validation/negatives').glob('*.fits'))
+
+
+def get_positive_train_paths():
+    return list(Path('data/spoc_transit_experiment/train/positives').glob('*.fits'))
+
+
+def get_positive_validation_paths():
+    return list(Path('data/spoc_transit_experiment/validation/positives').glob('*.fits'))
+
+
+def load_times_and_fluxes_from_path(path: Path) -> (np.ndarray, np.ndarray):
+    light_curve = TessMissionLightCurve.from_path(path)
+    return light_curve.times, light_curve.fluxes
+
+
+def positive_label_function(_path: Path) -> int:
+    return 1
+
+
+def negative_label_function(_path: Path) -> int:
+    return 0
+
+
 def main():
-    def get_negative_train_paths():
-        return list(Path('data/spoc_transit_experiment/train/negatives').glob('*.fits'))
-
-
-    def get_negative_validation_paths():
-        return list(Path('data/spoc_transit_experiment/validation/negatives').glob('*.fits'))
-
-
-    def get_positive_train_paths():
-        return list(Path('data/spoc_transit_experiment/train/positives').glob('*.fits'))
-
-
-    def get_positive_validation_paths():
-        return list(Path('data/spoc_transit_experiment/validation/positives').glob('*.fits'))
-
-
-    def load_times_and_fluxes_from_path(path: Path) -> (np.ndarray, np.ndarray):
-        light_curve = TessMissionLightCurve.from_path(path)
-        return light_curve.times, light_curve.fluxes
-
-
-    positive_label_function = create_constant_label_for_path_function(1)
-    negative_label_function = create_constant_label_for_path_function(0)
-
     positive_train_light_curve_collection = LabeledLightCurveCollection.new(
         get_paths_function=get_positive_train_paths,
         load_times_and_fluxes_from_path_function=load_times_and_fluxes_from_path,

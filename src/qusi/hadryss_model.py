@@ -15,16 +15,16 @@ class Hadryss(Module):
         self.block3 = LightCurveNetworkBlock(input_channels=16, output_channels=32, kernel_size=3, pooling_size=2)
         self.block4 = LightCurveNetworkBlock(input_channels=32, output_channels=64, kernel_size=3, pooling_size=2)
         self.block5 = LightCurveNetworkBlock(input_channels=64, output_channels=128, kernel_size=3, pooling_size=2)
-        self.block6 = LightCurveNetworkBlock(input_channels=128, output_channels=128, kernel_size=3, pooling_size=1)
-        self.block7 = LightCurveNetworkBlock(input_channels=128, output_channels=128, kernel_size=3, pooling_size=1)
+        self.block6 = LightCurveNetworkBlock(input_channels=128, output_channels=128, kernel_size=3, pooling_size=2)
+        self.block7 = LightCurveNetworkBlock(input_channels=128, output_channels=128, kernel_size=3, pooling_size=2)
         self.block8 = LightCurveNetworkBlock(input_channels=128, output_channels=20, kernel_size=3, pooling_size=1,
                                              spatial=False, length=7)
-        self.block9 = LightCurveNetworkBlock(input_channels=20, output_channels=20, kernel_size=7, pooling_size=1)
+        self.block9 = LightCurveNetworkBlock(input_channels=20, output_channels=20, kernel_size=5, pooling_size=1)
         self.block10 = LightCurveNetworkBlock(input_channels=20, output_channels=20, kernel_size=1, pooling_size=1)
         self.prediction_layer = Conv1d(in_channels=20, out_channels=1, kernel_size=1)
 
     def forward(self, x: Tensor) -> Tensor:
-        x = x.reshape([-1, 1, 1000])
+        x = x.reshape([-1, 1, 2500])
         x = self.block0(x)
         x = self.block1(x)
         x = self.block2(x)
@@ -73,6 +73,7 @@ class LightCurveNetworkBlock(Module):
 
     def forward(self, x):
         x = self.convolution(x)
+        x = self.leaky_relu(x)
         if self.dropout is not None:
             x = self.dropout(x)
         if self.max_pooling is not None:

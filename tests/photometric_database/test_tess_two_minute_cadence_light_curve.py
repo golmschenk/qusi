@@ -13,11 +13,11 @@ from ramjet.photometric_database.tess_two_minute_cadence_light_curve import Tess
 class TestTessTwoMinuteCadenceFileBasedLightCurve:
     @pytest.fixture
     def fake_hdu_list(self):
-        mock_hdu_data = {TessMissionLightCurveFitsIndex.TIME__BTJD.value: [0, 1],
-                         TessMissionLightCurveFitsIndex.PDCSAP_FLUX.value: [2, 3],
-                         TessMissionLightCurveFitsIndex.SAP_FLUX.value: [4, 5],
-                         TessMissionLightCurveFitsIndex.PDCSAP_FLUX_ERROR.value: [6, 7],
-                         TessMissionLightCurveFitsIndex.SAP_FLUX_ERROR.value: [8, 9]}
+        mock_hdu_data = {TessMissionLightCurveFitsIndex.TIME__BTJD.value: np.array([0, 1], dtype=np.float32),
+                         TessMissionLightCurveFitsIndex.PDCSAP_FLUX.value: np.array([2, 3], dtype=np.float32),
+                         TessMissionLightCurveFitsIndex.SAP_FLUX.value: np.array([4, 5], dtype=np.float32),
+                         TessMissionLightCurveFitsIndex.PDCSAP_FLUX_ERROR.value: np.array([6, 7], dtype=np.float32),
+                         TessMissionLightCurveFitsIndex.SAP_FLUX_ERROR.value: np.array([8, 9], dtype=np.float32)}
         mock_hdu = Mock()
         mock_hdu.data = mock_hdu_data
         mock_hdu_list = [None, mock_hdu]  # TESS light curve data is in index 1 of the HDU list.

@@ -48,10 +48,26 @@ class TrainSession:
         session_directory = sessions_directory.joinpath(f'session_{datetime_string}')
         session_directory.mkdir(exist_ok=True)
         train_dataset = InterleavedDataset.new(*self.train_datasets)
-        train_dataloader = DataLoader(train_dataset, batch_size=self.batch_size)
+        torch.multiprocessing.set_start_method('spawn')
+        debug = False
+        if debug:
+            workers_per_dataloader = 0
+            prefetch_factor = None
+            persistent_workers = False
+        else:
+            workers_per_dataloader = 10
+            prefetch_factor = 10
+            persistent_workers = True
+        train_dataloader = DataLoader(train_dataset, batch_size=self.batch_size, pin_memory=True,
+                                      persistent_workers=persistent_workers, prefetch_factor=prefetch_factor, num_workers=workers_per_dataloader)
         validation_dataloaders: List[DataLoader] = []
         for validation_dataset in self.validation_datasets:
-            validation_dataloaders.append(DataLoader(validation_dataset, batch_size=self.batch_size))
+            validation_dataloaders.append(DataLoader(validation_dataset, batch_size=self.batch_size, pin_memory=True,
+                                                     persistent_workers=persistent_workers, prefetch_factor=prefetch_factor, num_workers=workers_per_dataloader))
+        if torch.cuda.is_available():
+            device = torch.device('cuda')
+        else:
+            device = torch.device('cpu')
         loss_function = BCELoss()
         optimizer = Adam(self.model.parameters())
         for cycle_index in range(self.cycles):
