@@ -68,7 +68,8 @@ class TrainSession:
             device = torch.device('cuda')
         else:
             device = torch.device('cpu')
-        loss_function = BCELoss()
+        self.model = self.model.to(device)
+        loss_function = BCELoss().to(device)
         optimizer = Adam(self.model.parameters())
         for cycle_index in range(self.cycles):
             train_phase(dataloader=train_dataloader, model_=self.model, loss_fn=loss_function, optimizer=optimizer,
@@ -80,7 +81,8 @@ class TrainSession:
 
 
 def train_phase(dataloader, model_, loss_fn, optimizer, steps, device):
-    for batch, (X, y) in enumerate(dataloader):
+    model_.train()
+    for batch_index, (X, y) in enumerate(dataloader):
         # Compute prediction and loss
         # TODO: The conversion to float32 probably shouldn't be here, but the default collate_fn seems to be converting
         #  to float64. Probably should override the default collate.
@@ -94,14 +96,15 @@ def train_phase(dataloader, model_, loss_fn, optimizer, steps, device):
         loss.backward()
         optimizer.step()
 
-        if batch % 10 == 0:
-            loss, current = loss.to('cpu').item(), (batch + 1) * len(X)
-            print(f"loss: {loss:>7f}  [{current:>5d}/{steps * len(X):>5d}]")
-        if batch >= steps + 1:
+        if batch_index % 10 == 0:
+            loss, current = loss.to('cpu').item(), (batch_index + 1) * len(X)
+            print(f"loss: {loss:>7f}  [{current:>5d}/{steps * len(X):>5d}]", flush=True)
+        if batch_index >= steps:
             break
 
 
 def validation_phase(dataloader, model_, loss_fn, steps, device):
+    model_.eval()
     validation_loss, correct = 0, 0
 
     with torch.no_grad():
@@ -110,7 +113,7 @@ def validation_phase(dataloader, model_, loss_fn, steps, device):
             X = X.to(torch.float32).to(device)
             pred = model_(X)
             validation_loss += loss_fn(pred, y).to('cpu').item()
-            correct += (torch.round(pred.to('cpu')) == y).type(torch.float32).sum().item()
+            correct += (torch.round(pred) == y).type(torch.float32).sum().to('cpu').item()
             if batch >= steps + 1:
                 break
 
