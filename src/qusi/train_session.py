@@ -92,7 +92,6 @@ def train_phase(dataloader, model_, loss_fn, optimizer, steps, device):
         #  to float64. Probably should override the default collate.
         y = y.to(torch.float32).to(device)
         X = X.to(torch.float32).to(device)
-        show_all(X, y)
         pred = model_(X)
         loss = loss_fn(pred, y)
 
@@ -125,19 +124,4 @@ def validation_phase(dataloader, model_, loss_fn, steps, device):
     validation_loss /= steps
     correct /= steps * dataloader.batch_size
     print(f"Validation Error: \nAvg loss: {validation_loss:>8f} \n")
-
-
-def quick_view(fluxes_tensor: Tensor):
-    figure = Figure()
-    fluxes_array = fluxes_tensor.numpy()
-    figure.line(x=list(range(len(fluxes_array))), y=fluxes_array)
-    return figure
-
-def show_all(x_list, y_list):
-    column_contents = []
-    for x, y in zip(x_list, y_list):
-        column_contents.append(quick_view(x))
-        column_contents.append(Div(text=f'{y.numpy()}'))
-    column = Column(*column_contents)
-    show(column)
 
