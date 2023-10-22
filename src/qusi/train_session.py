@@ -72,20 +72,20 @@ class TrainSession:
         optimizer = Adam(self.model.parameters())
         for cycle_index in range(self.cycles):
             train_phase(dataloader=train_dataloader, model_=self.model, loss_fn=loss_function, optimizer=optimizer,
-                        steps=self.train_steps_per_cycle)
+                        steps=self.train_steps_per_cycle, device=device)
             for validation_dataloader in validation_dataloaders:
                 validation_phase(dataloader=validation_dataloader, model_=self.model, loss_fn=loss_function,
-                                 steps=self.validation_steps_per_cycle)
+                                 steps=self.validation_steps_per_cycle, device=device)
         torch.save(self.model.state_dict(), session_directory.joinpath('latest_model.pth'))
 
 
-def train_phase(dataloader, model_, loss_fn, optimizer, steps):
+def train_phase(dataloader, model_, loss_fn, optimizer, steps, device):
     for batch, (X, y) in enumerate(dataloader):
         # Compute prediction and loss
         # TODO: The conversion to float32 probably shouldn't be here, but the default collate_fn seems to be converting
         #  to float64. Probably should override the default collate.
-        y = y.to(torch.float32)
-        X = X.to(torch.float32)
+        y = y.to(torch.float32).to(device)
+        X = X.to(torch.float32).to(device)
         pred = model_(X)
         loss = loss_fn(pred, y)
 
@@ -95,22 +95,22 @@ def train_phase(dataloader, model_, loss_fn, optimizer, steps):
         optimizer.step()
 
         if batch % 10 == 0:
-            loss, current = loss.item(), (batch + 1) * len(X)
+            loss, current = loss.to('cpu').item(), (batch + 1) * len(X)
             print(f"loss: {loss:>7f}  [{current:>5d}/{steps * len(X):>5d}]")
         if batch >= steps + 1:
             break
 
 
-def validation_phase(dataloader, model_, loss_fn, steps):
+def validation_phase(dataloader, model_, loss_fn, steps, device):
     validation_loss, correct = 0, 0
 
     with torch.no_grad():
         for batch, (X, y) in enumerate(dataloader):
-            y = y.to(torch.float32)
-            X = X.to(torch.float32)
+            y = y.to(torch.float32).to(device)
+            X = X.to(torch.float32).to(device)
             pred = model_(X)
-            validation_loss += loss_fn(pred, y).item()
-            correct += (torch.round(pred) == y).type(torch.float32).sum().item()
+            validation_loss += loss_fn(pred, y).to('cpu').item()
+            correct += (torch.round(pred.to('cpu')) == y).type(torch.float32).sum().item()
             if batch >= steps + 1:
                 break
 
