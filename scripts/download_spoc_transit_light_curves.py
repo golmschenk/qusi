@@ -14,7 +14,7 @@ def main():
         tess_toi_data_interface.toi_dispositions[ToiColumns.disposition.value] != 'FP'][ToiColumns.tic_id.value]
     negative_tic_ids = list(set(spoc_target_tic_ids) - set(positive_tic_ids))
     positive_tic_ids_splits = np.split(
-        np.array(negative_tic_ids), [int(len(positive_tic_ids) * 0.8), int(len(positive_tic_ids) * 0.9)])
+        np.array(positive_tic_ids), [int(len(positive_tic_ids) * 0.8), int(len(positive_tic_ids) * 0.9)])
     positive_train_tic_ids = positive_tic_ids_splits[0].tolist()
     positive_validation_tic_ids = positive_tic_ids_splits[1].tolist()
     positive_test_tic_ids = positive_tic_ids_splits[2].tolist()

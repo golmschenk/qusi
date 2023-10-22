@@ -4,9 +4,13 @@ from pathlib import Path
 from typing import List
 
 import torch
+from bokeh.io import show
+from bokeh.models import Div, Column
+from torch import Tensor
 from torch.nn import BCELoss, Module
 from torch.optim import Adam
 from torch.utils.data import DataLoader
+from bokeh.plotting import figure as Figure
 
 from qusi.light_curve_dataset import LightCurveDataset, InterleavedDataset
 
@@ -49,7 +53,7 @@ class TrainSession:
         session_directory.mkdir(exist_ok=True)
         train_dataset = InterleavedDataset.new(*self.train_datasets)
         torch.multiprocessing.set_start_method('spawn')
-        debug = False
+        debug = True
         if debug:
             workers_per_dataloader = 0
             prefetch_factor = None
@@ -88,6 +92,7 @@ def train_phase(dataloader, model_, loss_fn, optimizer, steps, device):
         #  to float64. Probably should override the default collate.
         y = y.to(torch.float32).to(device)
         X = X.to(torch.float32).to(device)
+        show_all(X, y)
         pred = model_(X)
         loss = loss_fn(pred, y)
 
@@ -120,3 +125,19 @@ def validation_phase(dataloader, model_, loss_fn, steps, device):
     validation_loss /= steps
     correct /= steps * dataloader.batch_size
     print(f"Validation Error: \nAvg loss: {validation_loss:>8f} \n")
+
+
+def quick_view(fluxes_tensor: Tensor):
+    figure = Figure()
+    fluxes_array = fluxes_tensor.numpy()
+    figure.line(x=list(range(len(fluxes_array))), y=fluxes_array)
+    return figure
+
+def show_all(x_list, y_list):
+    column_contents = []
+    for x, y in zip(x_list, y_list):
+        column_contents.append(quick_view(x))
+        column_contents.append(Div(text=f'{y.numpy()}'))
+    column = Column(*column_contents)
+    show(column)
+
