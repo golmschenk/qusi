@@ -49,6 +49,7 @@ uvloop = "^0.17.0"
 filelock = "^3.9.0"
 torch = "^2.0.1"
 torchvision = "^0.15.2"
+polars = "^0.19.10"
 
 [tool.poetry.group.dev.dependencies]
 pytest-pycharm = "^0.7.0"
