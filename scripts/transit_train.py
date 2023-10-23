@@ -65,8 +65,8 @@ def main():
     model = Hadryss()
     train_session = TrainSession.new(train_datasets=[train_light_curve_dataset],
                                      validation_datasets=[validation_light_curve_dataset],
-                                     model=model, batch_size=100, cycles=30, train_steps_per_cycle=5000,
-                                     validation_steps_per_cycle=500)
+                                     model=model, batch_size=100, cycles=30, train_steps_per_cycle=500,
+                                     validation_steps_per_cycle=50)
     train_session.run()
 
 

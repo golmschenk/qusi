@@ -78,25 +78,25 @@ class TrainSession:
         loss_function = BCELoss().to(device)
         optimizer = AdamW(self.model.parameters())
         for cycle_index in range(self.cycles):
-            train_phase(dataloader=train_dataloader, model_=self.model, loss_fn=loss_function, optimizer=optimizer,
+            train_phase(dataloader=train_dataloader, model=self.model, loss_function=loss_function, optimizer=optimizer,
                         steps=self.train_steps_per_cycle, device=device)
             for validation_dataloader in validation_dataloaders:
-                validation_phase(dataloader=validation_dataloader, model_=self.model, loss_fn=loss_function,
+                validation_phase(dataloader=validation_dataloader, model=self.model, loss_function=loss_function,
                                  steps=self.validation_steps_per_cycle, device=device)
             wandb_commit(process_rank=0)
             torch.save(self.model.state_dict(), session_directory.joinpath('latest_model.pth'))
 
 
-def train_phase(dataloader, model_, loss_fn, optimizer, steps, device):
-    model_.train()
-    for batch_index, (X, y) in enumerate(dataloader):
+def train_phase(dataloader, model, loss_function, optimizer, steps, device):
+    model.train()
+    for batch_index, (input_features, targets) in enumerate(dataloader):
         # Compute prediction and loss
         # TODO: The conversion to float32 probably shouldn't be here, but the default collate_fn seems to be converting
         #  to float64. Probably should override the default collate.
-        y = y.to(torch.float32).to(device)
-        X = X.to(torch.float32).to(device)
-        pred = model_(X)
-        loss = loss_fn(pred, y)
+        targets = targets.to(torch.float32).to(device)
+        input_features = input_features.to(torch.float32).to(device)
+        predicted_targets = model(input_features)
+        loss = loss_function(predicted_targets, targets)
 
         # Backpropagation
         optimizer.zero_grad()
@@ -104,24 +104,24 @@ def train_phase(dataloader, model_, loss_fn, optimizer, steps, device):
         optimizer.step()
 
         if batch_index % 10 == 0:
-            loss, current = loss.to('cpu').item(), (batch_index + 1) * len(X)
-            print(f"loss: {loss:>7f}  [{current:>5d}/{steps * len(X):>5d}]", flush=True)
+            loss, current = loss.to('cpu').item(), (batch_index + 1) * len(input_features)
+            print(f"loss: {loss:>7f}  [{current:>5d}/{steps * len(input_features):>5d}]", flush=True)
         if batch_index >= steps:
             break
         wandb_log('loss', loss, process_rank=0)
 
 
-def validation_phase(dataloader, model_, loss_fn, steps, device):
-    model_.eval()
+def validation_phase(dataloader, model, loss_function, steps, device):
+    model.eval()
     validation_loss, correct = 0, 0
 
     with torch.no_grad():
-        for batch, (X, y) in enumerate(dataloader):
-            y = y.to(torch.float32).to(device)
-            X = X.to(torch.float32).to(device)
-            pred = model_(X)
-            validation_loss += loss_fn(pred, y).to('cpu').item()
-            correct += (torch.round(pred) == y).type(torch.float32).sum().to('cpu').item()
+        for batch, (input_features, targets) in enumerate(dataloader):
+            targets = targets.to(torch.float32).to(device)
+            input_features = input_features.to(torch.float32).to(device)
+            predicted_targets = model(input_features)
+            validation_loss += loss_function(predicted_targets, targets).to('cpu').item()
+            correct += (torch.round(predicted_targets) == targets).type(torch.float32).sum().to('cpu').item()
             if batch >= steps + 1:
                 break
 
