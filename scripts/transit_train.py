@@ -3,10 +3,8 @@ from pathlib import Path
 import numpy as np
 
 from qusi.hadryss_model import Hadryss
-from qusi.light_curve_collection import LabeledLightCurveCollection, \
-    create_constant_label_for_path_function
+from qusi.light_curve_collection import LabeledLightCurveCollection
 from qusi.light_curve_dataset import LightCurveDataset
-from qusi.single_dense_layer_model import SingleDenseLayerBinaryClassificationModel
 from qusi.train_session import TrainSession
 from ramjet.photometric_database.tess_two_minute_cadence_light_curve import TessMissionLightCurve
 

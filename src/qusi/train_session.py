@@ -4,15 +4,13 @@ from pathlib import Path
 from typing import List
 
 import torch
-from bokeh.io import show
-from bokeh.models import Div, Column
-from torch import Tensor
+import wandb
 from torch.nn import BCELoss, Module
 from torch.optim import Adam
 from torch.utils.data import DataLoader
-from bokeh.plotting import figure as Figure
 
 from qusi.light_curve_dataset import LightCurveDataset, InterleavedDataset
+from qusi.wandb_liaison import wandb_init, wandb_log, wandb_commit
 
 
 @dataclass
@@ -47,13 +45,15 @@ class TrainSession:
     def run(self):
         current_datetime = datetime.now()
         datetime_string = current_datetime.strftime("%Y_%m_%d_%H_%M_%S")
+        wandb_init(process_rank=0, project='qusi', entity='ramjet',
+                   settings=wandb.Settings(start_method='fork'))
         sessions_directory = Path('sessions')
         sessions_directory.mkdir(exist_ok=True)
         session_directory = sessions_directory.joinpath(f'session_{datetime_string}')
         session_directory.mkdir(exist_ok=True)
         train_dataset = InterleavedDataset.new(*self.train_datasets)
         torch.multiprocessing.set_start_method('spawn')
-        debug = True
+        debug = False
         if debug:
             workers_per_dataloader = 0
             prefetch_factor = None
@@ -70,6 +70,8 @@ class TrainSession:
                                                      persistent_workers=persistent_workers, prefetch_factor=prefetch_factor, num_workers=workers_per_dataloader))
         if torch.cuda.is_available():
             device = torch.device('cuda')
+        elif torch.backends.mps.is_available():
+            device = torch.device("mps")
         else:
             device = torch.device('cpu')
         self.model = self.model.to(device)
@@ -81,7 +83,8 @@ class TrainSession:
             for validation_dataloader in validation_dataloaders:
                 validation_phase(dataloader=validation_dataloader, model_=self.model, loss_fn=loss_function,
                                  steps=self.validation_steps_per_cycle, device=device)
-        torch.save(self.model.state_dict(), session_directory.joinpath('latest_model.pth'))
+            wandb_commit(process_rank=0)
+            torch.save(self.model.state_dict(), session_directory.joinpath('latest_model.pth'))
 
 
 def train_phase(dataloader, model_, loss_fn, optimizer, steps, device):
@@ -105,6 +108,7 @@ def train_phase(dataloader, model_, loss_fn, optimizer, steps, device):
             print(f"loss: {loss:>7f}  [{current:>5d}/{steps * len(X):>5d}]", flush=True)
         if batch_index >= steps:
             break
+        wandb_log('loss', loss, process_rank=0)
 
 
 def validation_phase(dataloader, model_, loss_fn, steps, device):
@@ -124,4 +128,4 @@ def validation_phase(dataloader, model_, loss_fn, steps, device):
     validation_loss /= steps
     correct /= steps * dataloader.batch_size
     print(f"Validation Error: \nAvg loss: {validation_loss:>8f} \n")
-
+    wandb_log('val_loss', validation_loss, process_rank=0)
