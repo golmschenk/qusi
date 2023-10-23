@@ -6,7 +6,7 @@ from typing import List
 import torch
 import wandb
 from torch.nn import BCELoss, Module
-from torch.optim import Adam
+from torch.optim import AdamW
 from torch.utils.data import DataLoader
 
 from qusi.light_curve_dataset import LightCurveDataset, InterleavedDataset
@@ -76,7 +76,7 @@ class TrainSession:
             device = torch.device('cpu')
         self.model = self.model.to(device)
         loss_function = BCELoss().to(device)
-        optimizer = Adam(self.model.parameters())
+        optimizer = AdamW(self.model.parameters())
         for cycle_index in range(self.cycles):
             train_phase(dataloader=train_dataloader, model_=self.model, loss_fn=loss_function, optimizer=optimizer,
                         steps=self.train_steps_per_cycle, device=device)
