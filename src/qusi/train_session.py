@@ -89,6 +89,7 @@ class TrainSession:
 
 def train_phase(dataloader, model, loss_function, optimizer, steps, device):
     model.train()
+    total_loss = 0
     for batch_index, (input_features, targets) in enumerate(dataloader):
         # Compute prediction and loss
         # TODO: The conversion to float32 probably shouldn't be here, but the default collate_fn seems to be converting
@@ -103,12 +104,13 @@ def train_phase(dataloader, model, loss_function, optimizer, steps, device):
         loss.backward()
         optimizer.step()
 
+        loss, current = loss.to('cpu').item(), (batch_index + 1) * len(input_features)
+        total_loss += loss
         if batch_index % 10 == 0:
-            loss, current = loss.to('cpu').item(), (batch_index + 1) * len(input_features)
             print(f"loss: {loss:>7f}  [{current:>5d}/{steps * len(input_features):>5d}]", flush=True)
-        if batch_index >= steps:
+        if batch_index + 1 >= steps:
             break
-        wandb_log('loss', loss, process_rank=0)
+        wandb_log('loss', total_loss / steps, process_rank=0)
 
 
 def validation_phase(dataloader, model, loss_function, steps, device):
@@ -122,7 +124,7 @@ def validation_phase(dataloader, model, loss_function, steps, device):
             predicted_targets = model(input_features)
             validation_loss += loss_function(predicted_targets, targets).to('cpu').item()
             correct += (torch.round(predicted_targets) == targets).type(torch.float32).sum().to('cpu').item()
-            if batch >= steps + 1:
+            if batch + 1 >= steps:
                 break
 
     validation_loss /= steps
