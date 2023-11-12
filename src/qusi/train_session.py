@@ -52,8 +52,6 @@ class TrainSession:
                    settings=wandb.Settings(start_method='fork'))
         sessions_directory = Path('sessions')
         sessions_directory.mkdir(exist_ok=True)
-        session_directory = sessions_directory.joinpath(f'session_{datetime_string}')
-        session_directory.mkdir(exist_ok=True)
         train_dataset = InterleavedDataset.new(*self.train_datasets)
         torch.multiprocessing.set_start_method('spawn')
         debug = False
@@ -96,8 +94,8 @@ class TrainSession:
                 validation_phase(dataloader=validation_dataloader, model=self.model, loss_function=loss_function,
                                  metric_functions=metric_functions, steps=self.validation_steps_per_cycle,
                                  device=device)
+            save_model(self.model, suffix='latest_model', process_rank=0)
             wandb_commit(process_rank=0)
-            torch.save(self.model.state_dict(), session_directory.joinpath('latest_model.pth'))
 
 
 def train_phase(dataloader, model, loss_function, metric_functions: List[Module], optimizer, steps, device):
@@ -167,3 +165,11 @@ def validation_phase(dataloader, model, loss_function, metric_functions: List[Mo
     for metric_function_index, metric_function in enumerate(metric_functions):
         wandb_log(f'val_{get_metric_name(metric_function)}', cycle_metric_values[metric_function_index],
                   process_rank=0)
+
+
+def save_model(model: Module, suffix: str, process_rank: int):
+    if process_rank == 0:
+        model_name = wandb.run.name
+        if model_name == '':
+            model_name = wandb.run.id
+        torch.save(model.state_dict(), Path(f'sessions/{model_name}_{suffix}.pt'))
