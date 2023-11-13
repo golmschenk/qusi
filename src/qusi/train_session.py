@@ -16,78 +16,57 @@ from qusi.light_curve_dataset import LightCurveDataset, InterleavedDataset
 from qusi.wandb_liaison import wandb_init, wandb_log, wandb_commit
 
 
-@dataclass
-class TrainSession:
-    train_datasets: List[LightCurveDataset]
-    validation_datasets: List[LightCurveDataset]
-    model: Module
-    batch_size: int
-    cycles: int
-    train_steps_per_cycle: int
-    validation_steps_per_cycle: int
-
-    @classmethod
-    def new(cls, train_datasets: List[LightCurveDataset],
-            validation_datasets: List[LightCurveDataset], model: Module, batch_size: int,
-            cycles: int, train_steps_per_cycle: int, validation_steps_per_cycle: int):
-        instance = cls(train_datasets=train_datasets,
-                       validation_datasets=validation_datasets,
-                       model=model,
-                       batch_size=batch_size,
-                       cycles=cycles,
-                       train_steps_per_cycle=train_steps_per_cycle,
-                       validation_steps_per_cycle=validation_steps_per_cycle)
-        return instance
-
-    def run(self):
-        wandb_init(process_rank=0, project='qusi', entity='ramjet',
-                   settings=wandb.Settings(start_method='fork'))
-        sessions_directory = Path('sessions')
-        sessions_directory.mkdir(exist_ok=True)
-        train_dataset = InterleavedDataset.new(*self.train_datasets)
-        torch.multiprocessing.set_start_method('spawn')
-        debug = False
-        if debug:
-            workers_per_dataloader = 0
-            prefetch_factor = None
-            persistent_workers = False
-        else:
-            workers_per_dataloader = 10
-            prefetch_factor = 10
-            persistent_workers = True
-        train_dataloader = DataLoader(train_dataset, batch_size=self.batch_size, pin_memory=True,
-                                      persistent_workers=persistent_workers, prefetch_factor=prefetch_factor,
-                                      num_workers=workers_per_dataloader)
-        validation_dataloaders: List[DataLoader] = []
-        for validation_dataset in self.validation_datasets:
-            validation_dataloaders.append(DataLoader(validation_dataset, batch_size=self.batch_size, pin_memory=True,
-                                                     persistent_workers=persistent_workers,
-                                                     prefetch_factor=prefetch_factor,
-                                                     num_workers=workers_per_dataloader))
-        if torch.cuda.is_available() and not debug:
-            device = torch.device('cuda')
-        elif torch.backends.mps.is_available() and not debug:
-            device = torch.device("mps")
-        else:
-            device = torch.device('cpu')
-        self.model = self.model.to(device, non_blocking=True)
-        loss_function = BCELoss().to(device, non_blocking=True)
-        metric_functions = [BinaryAccuracy()]
-        optimizer = AdamW(self.model.parameters())
-        metric_functions_on_device: List[Module] = []
-        for metric_function in metric_functions:
-            metric_functions_on_device.append(metric_function.to(device, non_blocking=True))
-        metric_functions = metric_functions_on_device
-        for cycle_index in range(self.cycles):
-            train_phase(dataloader=train_dataloader, model=self.model, loss_function=loss_function,
-                        metric_functions=metric_functions, optimizer=optimizer,
-                        steps=self.train_steps_per_cycle, device=device)
-            for validation_dataloader in validation_dataloaders:
-                validation_phase(dataloader=validation_dataloader, model=self.model, loss_function=loss_function,
-                                 metric_functions=metric_functions, steps=self.validation_steps_per_cycle,
-                                 device=device)
-            save_model(self.model, suffix='latest_model', process_rank=0)
-            wandb_commit(process_rank=0)
+def train_session(train_datasets: List[LightCurveDataset],
+                  validation_datasets: List[LightCurveDataset], model: Module, batch_size: int,
+                  cycles: int, train_steps_per_cycle: int, validation_steps_per_cycle: int):
+    wandb_init(process_rank=0, project='qusi', entity='ramjet',
+               settings=wandb.Settings(start_method='fork'))
+    sessions_directory = Path('sessions')
+    sessions_directory.mkdir(exist_ok=True)
+    train_dataset = InterleavedDataset.new(*train_datasets)
+    torch.multiprocessing.set_start_method('spawn')
+    debug = False
+    if debug:
+        workers_per_dataloader = 0
+        prefetch_factor = None
+        persistent_workers = False
+    else:
+        workers_per_dataloader = 10
+        prefetch_factor = 10
+        persistent_workers = True
+    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, pin_memory=True,
+                                  persistent_workers=persistent_workers, prefetch_factor=prefetch_factor,
+                                  num_workers=workers_per_dataloader)
+    validation_dataloaders: List[DataLoader] = []
+    for validation_dataset in validation_datasets:
+        validation_dataloaders.append(DataLoader(validation_dataset, batch_size=batch_size, pin_memory=True,
+                                                 persistent_workers=persistent_workers,
+                                                 prefetch_factor=prefetch_factor,
+                                                 num_workers=workers_per_dataloader))
+    if torch.cuda.is_available() and not debug:
+        device = torch.device('cuda')
+    elif torch.backends.mps.is_available() and not debug:
+        device = torch.device("mps")
+    else:
+        device = torch.device('cpu')
+    model = model.to(device, non_blocking=True)
+    loss_function = BCELoss().to(device, non_blocking=True)
+    metric_functions = [BinaryAccuracy()]
+    optimizer = AdamW(model.parameters())
+    metric_functions_on_device: List[Module] = []
+    for metric_function in metric_functions:
+        metric_functions_on_device.append(metric_function.to(device, non_blocking=True))
+    metric_functions = metric_functions_on_device
+    for cycle_index in range(cycles):
+        train_phase(dataloader=train_dataloader, model=model, loss_function=loss_function,
+                    metric_functions=metric_functions, optimizer=optimizer,
+                    steps=train_steps_per_cycle, device=device)
+        for validation_dataloader in validation_dataloaders:
+            validation_phase(dataloader=validation_dataloader, model=model, loss_function=loss_function,
+                             metric_functions=metric_functions, steps=validation_steps_per_cycle,
+                             device=device)
+        save_model(model, suffix='latest_model', process_rank=0)
+        wandb_commit(process_rank=0)
 
 
 def train_phase(dataloader, model, loss_function, metric_functions: List[Module], optimizer, steps, device):

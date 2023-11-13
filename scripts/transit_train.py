@@ -5,7 +5,7 @@ import numpy as np
 from qusi.hadryss_model import Hadryss
 from qusi.light_curve_collection import LabeledLightCurveCollection
 from qusi.light_curve_dataset import LightCurveDataset
-from qusi.train_session import TrainSession
+from qusi.train_session import train_session
 from ramjet.photometric_database.tess_two_minute_cadence_light_curve import TessMissionLightCurve
 
 
@@ -63,11 +63,8 @@ def main():
         standard_light_curve_collections=[positive_validation_light_curve_collection,
                                           negative_validation_light_curve_collection])
     model = Hadryss()
-    train_session = TrainSession.new(train_datasets=[train_light_curve_dataset],
-                                     validation_datasets=[validation_light_curve_dataset],
-                                     model=model, batch_size=100, cycles=100, train_steps_per_cycle=100,
-                                     validation_steps_per_cycle=10)
-    train_session.run()
+    train_session(train_datasets=[train_light_curve_dataset], validation_datasets=[validation_light_curve_dataset],
+                  model=model, batch_size=100, cycles=100, train_steps_per_cycle=100, validation_steps_per_cycle=10)
 
 
 if __name__ == '__main__':
