@@ -27,15 +27,9 @@ class TrainSession:
     validation_steps_per_cycle: int
 
     @classmethod
-    def new(cls, train_datasets: LightCurveDataset | List[LightCurveDataset],
-            validation_datasets: LightCurveDataset | List[LightCurveDataset], model: Module, batch_size: int,
+    def new(cls, train_datasets: List[LightCurveDataset],
+            validation_datasets: List[LightCurveDataset], model: Module, batch_size: int,
             cycles: int, train_steps_per_cycle: int, validation_steps_per_cycle: int):
-        if not isinstance(train_datasets, list):
-            train_datasets = [train_datasets]
-        train_datasets: List[LightCurveDataset] = train_datasets
-        if not isinstance(validation_datasets, list):
-            validation_datasets = [validation_datasets]
-        validation_datasets: List[LightCurveDataset] = validation_datasets
         instance = cls(train_datasets=train_datasets,
                        validation_datasets=validation_datasets,
                        model=model,
@@ -46,8 +40,6 @@ class TrainSession:
         return instance
 
     def run(self):
-        current_datetime = datetime.now()
-        datetime_string = current_datetime.strftime("%Y_%m_%d_%H_%M_%S")
         wandb_init(process_rank=0, project='qusi', entity='ramjet',
                    settings=wandb.Settings(start_method='fork'))
         sessions_directory = Path('sessions')
