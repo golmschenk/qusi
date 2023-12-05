@@ -1,13 +1,12 @@
 from pathlib import Path
+from typing import List
 
 import numpy as np
 import torch
-from bokeh.io import show
-from bokeh.models import Div, Column
-from torch import Tensor
-from torch.nn import Module, DataParallel
+from torch.nn import Module, BCELoss
+from torch.types import Device
 from torch.utils.data import DataLoader
-from bokeh.plotting import figure as Figure
+from torchmetrics.classification import BinaryAccuracy
 
 from qusi.hadryss_model import Hadryss
 from qusi.light_curve_collection import LabeledLightCurveCollection
@@ -46,59 +45,59 @@ def main():
         load_times_and_fluxes_from_path_function=load_times_and_fluxes_from_path,
         load_label_from_path_function=negative_label_function)
 
-
     test_light_curve_dataset = LightCurveDataset.new(
         standard_light_curve_collections=[positive_test_light_curve_collection,
                                           negative_test_light_curve_collection])
 
     model = Hadryss()
-    train_session = InferSession.new(infer_datasets=[test_light_curve_dataset], model=model, batch_size=100)
-    train_session.run()
+    device = get_device()
+    model.load_state_dict(torch.load('sessions/pleasant-lion-32_latest_model.pt', map_location=device))
+    metric_functions = [BinaryAccuracy(), BCELoss()]
+    results = run_test_session(test_datasets=[test_light_curve_dataset], model=model, metric_functions=metric_functions,
+                               batch_size=100, device=device, steps=100)
+    return results
 
 
-def infer_session(dataset_path: Path):
+def run_test_session(test_datasets: List[LightCurveDataset], model: Module, metric_functions: List[Module],
+                     batch_size: int, device: Device, steps: int):
+    test_dataloaders: List[DataLoader] = []
+    for test_dataset in test_datasets:
+        test_dataloaders.append(DataLoader(test_dataset, batch_size=batch_size, pin_memory=True))
+    model.eval()
+    results = []
+    for test_dataloader in test_dataloaders:
+        result = phase_test(test_dataloader, model, metric_functions, device=device, steps=steps)
+        results.append(result)
+    return results
+
+
+def get_device():
     if torch.cuda.is_available():
         device = torch.device('cuda')
     else:
         device = torch.device('cpu')
+    return device
 
-    evaluation_dataset = NicerDataset.new(
-        dataset_path=dataset_path,
-        parameters_transform=PrecomputedNormalizeParameters(),
-        phase_amplitudes_transform=PrecomputedNormalizePhaseAmplitudes())
-    validation_dataset, test_dataset = split_dataset_into_fractional_datasets(evaluation_dataset, [0.5, 0.5])
 
-    batch_size = 100
-
-    test_dataloader = DataLoader(test_dataset, batch_size=batch_size)
-
-    model = DataParallel(LiraTraditionalShape8xWidthWithNoDoNoBn())
-    model = model.to(device)
-    model.load_state_dict(torch.load('sessions/ncy8keio_latest_model.pt', map_location=device))
+def phase_test(dataloader, model: Module, metric_functions: List[Module], device: Device, steps: int):
+    batch_count = 0
+    metric_totals = torch.zeros(size=[len(metric_functions)])
     model.eval()
-    loss_function = PlusOneChiSquaredStatisticMetric()
-
-    test_phase(test_dataloader, model, loss_function, device=device)
-
-
-def test_phase(dataloader, model_: Module, loss_fn, device):
-    num_batches = len(dataloader)
-    test_loss, correct = 0, 0
-
     with torch.no_grad():
-        for batch_index, (inputs_tensor, targets) in enumerate(dataloader):
-            print(batch_index * dataloader.batch_size)
-            inputs_tensor = inputs_tensor.to(device)
-            targets = targets
-            predicted_targets = model_(inputs_tensor)
-            test_loss += loss_fn(predicted_targets.to('cpu'), targets).to(device).item()
-            pass
-
-
-    test_loss /= num_batches
-    print(f"Test Error: \nAvg loss: {test_loss:>8f} \n")
+        for input_features, targets in dataloader:
+            input_features = input_features.to(device, non_blocking=True)
+            targets = targets.to(device, non_blocking=True)
+            predicted_targets = model(input_features)
+            for metric_function_index, metric_function in enumerate(metric_functions):
+                batch_metric_value = metric_function(predicted_targets.to(device, non_blocking=True),
+                                                     targets)
+                metric_totals[metric_function_index] += batch_metric_value.to('cpu', non_blocking=True)
+            batch_count += 1
+            if batch_count >= steps:
+                break
+    cycle_metric_values = metric_totals / batch_count
+    return cycle_metric_values
 
 
 if __name__ == '__main__':
     main()
-

@@ -44,7 +44,6 @@ class LightCurveDataset(IterableDataset):
         if len(self.standard_light_curve_collections) == 0 and len(self.injectee_light_curve_collections) == 0:
             raise ValueError('Either the standard or injectee light curve collection lists must not be empty. '
                              'Both were empty.')
-        self.include_standard_in_injectee = False  # TODO: Should this be automatically detected?
         self.post_injection_transform: Callable[[Any], Any] = post_injection_transform
 
     @classmethod
