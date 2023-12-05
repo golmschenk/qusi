@@ -53,13 +53,14 @@ def main():
     device = get_device()
     model.load_state_dict(torch.load('sessions/pleasant-lion-32_latest_model.pt', map_location=device))
     metric_functions = [BinaryAccuracy(), BCELoss()]
-    results = run_test_session(test_datasets=[test_light_curve_dataset], model=model, metric_functions=metric_functions,
-                               batch_size=100, device=device, steps=100)
+    results = infinite_datasets_test_session(test_datasets=[test_light_curve_dataset], model=model,
+                                             metric_functions=metric_functions, batch_size=100, device=device,
+                                             steps=100)
     return results
 
 
-def run_test_session(test_datasets: List[LightCurveDataset], model: Module, metric_functions: List[Module],
-                     batch_size: int, device: Device, steps: int):
+def infinite_datasets_test_session(test_datasets: List[LightCurveDataset], model: Module,
+                                   metric_functions: List[Module], batch_size: int, device: Device, steps: int):
     test_dataloaders: List[DataLoader] = []
     for test_dataset in test_datasets:
         test_dataloaders.append(DataLoader(test_dataset, batch_size=batch_size, pin_memory=True))
