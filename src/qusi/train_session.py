@@ -45,8 +45,6 @@ def train_session(train_datasets: List[LightCurveDataset],
                                                  num_workers=workers_per_dataloader))
     if torch.cuda.is_available() and not debug:
         device = torch.device('cuda')
-    elif torch.backends.mps.is_available() and not debug:
-        device = torch.device("mps")
     else:
         device = torch.device('cpu')
     model = model.to(device, non_blocking=True)
