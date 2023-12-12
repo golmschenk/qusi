@@ -8,9 +8,9 @@ from torch.types import Device
 from torch.utils.data import DataLoader
 from torchmetrics.classification import BinaryAccuracy
 
+from qusi.finite_standard_light_curve_dataset import FiniteStandardLightCurveDataset
 from qusi.hadryss_model import Hadryss
 from qusi.light_curve_collection import LabeledLightCurveCollection
-from qusi.light_curve_dataset import LightCurveDataset
 from ramjet.photometric_database.tess_two_minute_cadence_light_curve import TessMissionLightCurve
 
 
@@ -45,7 +45,7 @@ def main():
         load_times_and_fluxes_from_path_function=load_times_and_fluxes_from_path,
         load_label_from_path_function=negative_label_function)
 
-    test_light_curve_dataset = LightCurveDataset.new(
+    test_light_curve_dataset = FiniteStandardLightCurveDataset.new(
         standard_light_curve_collections=[positive_test_light_curve_collection,
                                           negative_test_light_curve_collection])
 
@@ -53,21 +53,20 @@ def main():
     device = get_device()
     model.load_state_dict(torch.load('sessions/pleasant-lion-32_latest_model.pt', map_location=device))
     metric_functions = [BinaryAccuracy(), BCELoss()]
-    results = infinite_datasets_test_session(test_datasets=[test_light_curve_dataset], model=model,
-                                             metric_functions=metric_functions, batch_size=100, device=device,
-                                             steps=100)
+    results = finite_datasets_test_session(test_datasets=[test_light_curve_dataset], model=model,
+                                             metric_functions=metric_functions, batch_size=100, device=device)
     return results
 
 
-def infinite_datasets_test_session(test_datasets: List[LightCurveDataset], model: Module,
-                                   metric_functions: List[Module], batch_size: int, device: Device, steps: int):
+def finite_datasets_test_session(test_datasets: List[FiniteStandardLightCurveDataset], model: Module,
+                                   metric_functions: List[Module], batch_size: int, device: Device):
     test_dataloaders: List[DataLoader] = []
     for test_dataset in test_datasets:
         test_dataloaders.append(DataLoader(test_dataset, batch_size=batch_size, pin_memory=True))
     model.eval()
     results = []
     for test_dataloader in test_dataloaders:
-        result = infinite_dataset_test_phase(test_dataloader, model, metric_functions, device=device, steps=steps)
+        result = finite_dataset_test_phase(test_dataloader, model, metric_functions, device=device)
         results.append(result)
     return results
 
@@ -80,7 +79,7 @@ def get_device():
     return device
 
 
-def infinite_dataset_test_phase(dataloader, model: Module, metric_functions: List[Module], device: Device, steps: int):
+def finite_dataset_test_phase(dataloader, model: Module, metric_functions: List[Module], device: Device):
     batch_count = 0
     metric_totals = torch.zeros(size=[len(metric_functions)])
     model.eval()
@@ -94,8 +93,6 @@ def infinite_dataset_test_phase(dataloader, model: Module, metric_functions: Lis
                                                      targets)
                 metric_totals[metric_function_index] += batch_metric_value.to('cpu', non_blocking=True)
             batch_count += 1
-            if batch_count >= steps:
-                break
     cycle_metric_values = metric_totals / batch_count
     return cycle_metric_values
 

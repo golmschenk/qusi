@@ -26,6 +26,10 @@ class LightCurveObservationCollectionBase(LightCurveCollectionBase):
     def observation_iter(self) -> Iterator[LightCurveObservation]:
         pass
 
+class LightCurveObservationIndexableBase(ABC):
+    @abstractmethod
+    def __getitem__(self, indexes: int | Tuple[int]) -> LightCurveObservation | Tuple[LightCurveObservation]:
+        pass
 
 class PathIterableBase(ABC):
     @abstractmethod
@@ -37,8 +41,18 @@ class PathIterableBase(ABC):
         pass
 
 
+class PathIndexableBase(ABC):
+    @abstractmethod
+    def __getitem__(self, indexes: int | Tuple[int]) -> Path | Tuple[Path]:
+        pass
+
+
+class PathGetterBase(PathIterableBase, PathIndexableBase):
+    pass
+
+
 @dataclass
-class PathIterable(PathIterableBase):
+class PathGetter(PathGetterBase):
     """
     A class to get paths from a path generation function.
 
@@ -49,7 +63,8 @@ class PathIterable(PathIterableBase):
     random_number_generator: Random
 
     @classmethod
-    def new(cls, get_paths_function: Callable[[], Iterable[Path]], random_number_generator: Random) -> Self:
+    def new(cls, get_paths_function: Callable[[], Iterable[Path]]) -> Self:
+        random_number_generator = Random(0)
         instance = cls(get_paths_function=get_paths_function, random_number_generator=random_number_generator)
         return instance
 
@@ -71,6 +86,14 @@ class PathIterable(PathIterableBase):
         """
         light_curve_paths = list(self.get_paths_function())
         return light_curve_paths
+
+    def __getitem__(self, index: int | Tuple[int]) -> Path | Tuple[Path]:
+        light_curve_paths = self.get_paths()
+        indexed_light_curve_paths = np.array(light_curve_paths)[index]
+        if isinstance(indexed_light_curve_paths, Path):
+            return indexed_light_curve_paths
+        else:
+            return indexed_light_curve_paths.tolist()
 
 
 @dataclass
@@ -96,9 +119,7 @@ class LightCurveCollection(LightCurveCollectionBase):
         :param load_times_and_fluxes_from_path_function: The function to load the times and fluxes from the light curve.
         :return: The light curve collection.
         """
-        random_number_generator = Random(0)
-        path_iterable = PathIterable.new(get_paths_function=get_paths_function,
-                                         random_number_generator=random_number_generator)
+        path_iterable = PathGetter.new(get_paths_function=get_paths_function)
         return cls(path_iterable=path_iterable,
                    load_times_and_fluxes_from_path_function=load_times_and_fluxes_from_path_function)
 
@@ -119,13 +140,13 @@ class LightCurveCollection(LightCurveCollectionBase):
 
 
 @dataclass
-class LabeledLightCurveCollection(LightCurveObservationCollectionBase):
+class LabeledLightCurveCollection(LightCurveObservationCollectionBase, LightCurveObservationIndexableBase):
     """
-    :ivar path_iterable: The PathIterableBase object for the collection.
+    :ivar path_getter: The PathGetterBase object for the collection.
     :ivar light_curve_collection: The LightCurveCollectionBase object for the collection.
     :ivar load_label_from_path_function: The function to load the label for the light curve.
     """
-    path_iterable: PathIterableBase
+    path_getter: PathGetterBase
     light_curve_collection: LightCurveCollectionBase
     load_label_from_path_function: Callable[[Path], int]
 
@@ -144,13 +165,11 @@ class LabeledLightCurveCollection(LightCurveObservationCollectionBase):
         :param load_label_from_path_function: The function to load the label for the light curve.
         :return: The light curve collection.
         """
-        random_number_generator = Random(0)
-        path_iterable = PathIterable.new(get_paths_function=get_paths_function,
-                                         random_number_generator=random_number_generator)
+        path_iterable = PathGetter.new(get_paths_function=get_paths_function)
         light_curve_collection = LightCurveCollection(
             path_iterable=path_iterable,
             load_times_and_fluxes_from_path_function=load_times_and_fluxes_from_path_function)
-        return cls(path_iterable=path_iterable,
+        return cls(path_getter=path_iterable,
                    light_curve_collection=light_curve_collection,
                    load_label_from_path_function=load_label_from_path_function)
 
@@ -170,13 +189,11 @@ class LabeledLightCurveCollection(LightCurveObservationCollectionBase):
         :return: The light curve collection.
         """
         load_label_from_path_function = create_constant_label_for_path_function(label)
-        random_number_generator = Random(0)
-        path_iterable = PathIterable.new(get_paths_function=get_paths_function,
-                                         random_number_generator=random_number_generator)
+        path_iterable = PathGetter.new(get_paths_function=get_paths_function)
         light_curve_collection = LightCurveCollection(
             path_iterable=path_iterable,
             load_times_and_fluxes_from_path_function=load_times_and_fluxes_from_path_function)
-        return cls(path_iterable=path_iterable,
+        return cls(path_getter=path_iterable,
                    light_curve_collection=light_curve_collection,
                    load_label_from_path_function=load_label_from_path_function)
 
@@ -192,13 +209,21 @@ class LabeledLightCurveCollection(LightCurveObservationCollectionBase):
 
         :return: The iterable of the light curves.
         """
-        light_curve_paths = self.path_iterable.get_shuffled_paths()
+        light_curve_paths = self.path_getter.get_shuffled_paths()
         for light_curve_path in light_curve_paths:
             times, fluxes = self.light_curve_collection.load_times_and_fluxes_from_path(light_curve_path)
             label = self.load_label_from_path_function(light_curve_path)
             light_curve = LightCurve.new(times, fluxes)
             light_curve_observation = LightCurveObservation.new(light_curve, label)
             yield light_curve_observation
+
+    def __getitem__(self, index: int) -> LightCurveObservation:
+        light_curve_path = self.path_getter[index]
+        times, fluxes = self.light_curve_collection.load_times_and_fluxes_from_path(light_curve_path)
+        label = self.load_label_from_path_function(light_curve_path)
+        light_curve = LightCurve.new(times, fluxes)
+        light_curve_observation = LightCurveObservation.new(light_curve, label)
+        return light_curve_observation
 
 
 def create_constant_label_for_path_function(label: int) -> Callable[[Path], int]:

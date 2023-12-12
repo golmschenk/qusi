@@ -9,20 +9,20 @@ from qusi.train_session import train_session
 from ramjet.photometric_database.tess_two_minute_cadence_light_curve import TessMissionLightCurve
 
 
-def get_negative_train_paths():
-    return list(Path('data/spoc_transit_experiment/train/negatives').glob('*.fits'))
-
-
-def get_negative_validation_paths():
-    return list(Path('data/spoc_transit_experiment/validation/negatives').glob('*.fits'))
-
-
 def get_positive_train_paths():
     return list(Path('data/spoc_transit_experiment/train/positives').glob('*.fits'))
 
 
+def get_negative_train_paths():
+    return list(Path('data/spoc_transit_experiment/train/negatives').glob('*.fits'))
+
+
 def get_positive_validation_paths():
     return list(Path('data/spoc_transit_experiment/validation/positives').glob('*.fits'))
+
+
+def get_negative_validation_paths():
+    return list(Path('data/spoc_transit_experiment/validation/negatives').glob('*.fits'))
 
 
 def load_times_and_fluxes_from_path(path: Path) -> (np.ndarray, np.ndarray):
