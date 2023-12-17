@@ -20,10 +20,10 @@ from torchvision import transforms
 from bokeh.plotting import figure as Figure
 import numpy.typing as npt
 
-from qusi.light_curve import LightCurve
+from qusi.light_curve import LightCurve, remove_nan_flux_data_points_from_light_curve
 from qusi.light_curve_collection import LabeledLightCurveCollection
 from qusi.light_curve_observation import LightCurveObservation, remove_nan_flux_data_points_from_light_curve_observation
-from qusi.light_curve_transforms import from_observation_to_fluxes_array_and_label_array, \
+from qusi.light_curve_transforms import from_light_curve_observation_to_fluxes_array_and_label_array, \
     pair_array_to_tensor
 
 
@@ -64,7 +64,7 @@ class LightCurveDataset(IterableDataset):
         instance = cls(standard_light_curve_collections=standard_light_curve_collections,
                        injectee_light_curve_collections=injectee_light_curve_collections,
                        injectable_light_curve_collections=injectable_light_curve_collections,
-                       post_injection_transform=default_post_injection_transform)
+                       post_injection_transform=default_light_curve_observation_post_injection_transform)
         return instance
 
     def __iter__(self):
@@ -210,14 +210,21 @@ class LimitedIterableDataset(IterableDataset):
                 break
 
 
-def default_post_injection_transform(x: LightCurveObservation) -> (Tensor, Tensor):
+def default_light_curve_observation_post_injection_transform(x: LightCurveObservation) -> (Tensor, Tensor):
     x = remove_nan_flux_data_points_from_light_curve_observation(x)
-    x = from_observation_to_fluxes_array_and_label_array(x)
+    x = from_light_curve_observation_to_fluxes_array_and_label_array(x)
     x = make_fluxes_and_label_array_uniform_length(x, length=2500)
     x = pair_array_to_tensor(x)
     x = (normalize_tensor_by_modified_z_score(x[0]), x[1])
     return x
 
+def default_light_curve_post_injection_transform(x: LightCurve) -> (Tensor, Tensor):
+    x = remove_nan_flux_data_points_from_light_curve(x)
+    x = x.fluxes
+    x = make_uniform_length(x, length=2500)
+    x = torch.tensor(x)
+    x = normalize_tensor_by_modified_z_score(x)
+    return x
 
 def normalize_tensor_by_modified_z_score(tensor: Tensor) -> Tensor:
     median = torch.median(tensor)
@@ -230,8 +237,8 @@ def normalize_tensor_by_modified_z_score(tensor: Tensor) -> Tensor:
 
 def make_fluxes_and_label_array_uniform_length(arrays: Tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]],
                                                length: int, randomize: bool = True) -> (np.ndarray, np.ndarray):
-    times, label = arrays
-    uniform_length_times = make_uniform_length(times, length=length, randomize=randomize)
+    fluxes, label = arrays
+    uniform_length_times = make_uniform_length(fluxes, length=length, randomize=randomize)
     return uniform_length_times, label
 
 

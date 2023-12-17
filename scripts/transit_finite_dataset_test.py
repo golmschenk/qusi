@@ -8,7 +8,7 @@ from torch.types import Device
 from torch.utils.data import DataLoader
 from torchmetrics.classification import BinaryAccuracy
 
-from qusi.finite_standard_light_curve_dataset import FiniteStandardLightCurveDataset
+from qusi.finite_standard_light_curve_observation_dataset import FiniteStandardLightCurveObservationDataset
 from qusi.hadryss_model import Hadryss
 from qusi.light_curve_collection import LabeledLightCurveCollection
 from ramjet.photometric_database.tess_two_minute_cadence_light_curve import TessMissionLightCurve
@@ -45,7 +45,7 @@ def main():
         load_times_and_fluxes_from_path_function=load_times_and_fluxes_from_path,
         load_label_from_path_function=negative_label_function)
 
-    test_light_curve_dataset = FiniteStandardLightCurveDataset.new(
+    test_light_curve_dataset = FiniteStandardLightCurveObservationDataset.new(
         standard_light_curve_collections=[positive_test_light_curve_collection,
                                           negative_test_light_curve_collection])
 
@@ -58,8 +58,8 @@ def main():
     return results
 
 
-def finite_datasets_test_session(test_datasets: List[FiniteStandardLightCurveDataset], model: Module,
-                                   metric_functions: List[Module], batch_size: int, device: Device):
+def finite_datasets_test_session(test_datasets: List[FiniteStandardLightCurveObservationDataset], model: Module,
+                                 metric_functions: List[Module], batch_size: int, device: Device):
     test_dataloaders: List[DataLoader] = []
     for test_dataset in test_datasets:
         test_dataloaders.append(DataLoader(test_dataset, batch_size=batch_size, pin_memory=True))

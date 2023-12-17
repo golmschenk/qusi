@@ -97,12 +97,12 @@ class PathGetter(PathGetterBase):
 
 
 @dataclass
-class LightCurveCollection(LightCurveCollectionBase):
+class LightCurveCollection(LightCurveCollectionBase, LightCurveObservationIndexableBase):
     """
-    :ivar path_iterable: The PathIterableBase object for the collection.
+    :ivar path_getter: The PathIterableBase object for the collection.
     :ivar load_times_and_fluxes_from_path_function: The function to load the times and fluxes from the light curve.
     """
-    path_iterable: PathIterableBase
+    path_getter: PathGetterBase
     load_times_and_fluxes_from_path_function: Callable[
         [Path], Tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]]
 
@@ -119,8 +119,8 @@ class LightCurveCollection(LightCurveCollectionBase):
         :param load_times_and_fluxes_from_path_function: The function to load the times and fluxes from the light curve.
         :return: The light curve collection.
         """
-        path_iterable = PathGetter.new(get_paths_function=get_paths_function)
-        return cls(path_iterable=path_iterable,
+        path_getter = PathGetter.new(get_paths_function=get_paths_function)
+        return cls(path_getter=path_getter,
                    load_times_and_fluxes_from_path_function=load_times_and_fluxes_from_path_function)
 
     def light_curve_iter(self) -> Iterator[LightCurve]:
@@ -129,7 +129,7 @@ class LightCurveCollection(LightCurveCollectionBase):
 
         :return: The iterable of the light curves.
         """
-        light_curve_paths = self.path_iterable.get_shuffled_paths()
+        light_curve_paths = self.path_getter.get_shuffled_paths()
         for light_curve_path in light_curve_paths:
             times, fluxes = self.load_times_and_fluxes_from_path_function(light_curve_path)
             light_curve = LightCurve.new(times, fluxes)
@@ -137,6 +137,12 @@ class LightCurveCollection(LightCurveCollectionBase):
 
     def load_times_and_fluxes_from_path(self, path) -> Tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]:
         return self.load_times_and_fluxes_from_path_function(path)
+
+    def __getitem__(self, index: int) -> LightCurve:
+        light_curve_path = self.path_getter[index]
+        times, fluxes = self.load_times_and_fluxes_from_path(light_curve_path)
+        light_curve = LightCurve.new(times, fluxes)
+        return light_curve
 
 
 @dataclass
@@ -167,7 +173,7 @@ class LabeledLightCurveCollection(LightCurveObservationCollectionBase, LightCurv
         """
         path_iterable = PathGetter.new(get_paths_function=get_paths_function)
         light_curve_collection = LightCurveCollection(
-            path_iterable=path_iterable,
+            path_getter=path_iterable,
             load_times_and_fluxes_from_path_function=load_times_and_fluxes_from_path_function)
         return cls(path_getter=path_iterable,
                    light_curve_collection=light_curve_collection,
@@ -191,7 +197,7 @@ class LabeledLightCurveCollection(LightCurveObservationCollectionBase, LightCurv
         load_label_from_path_function = create_constant_label_for_path_function(label)
         path_iterable = PathGetter.new(get_paths_function=get_paths_function)
         light_curve_collection = LightCurveCollection(
-            path_iterable=path_iterable,
+            path_getter=path_iterable,
             load_times_and_fluxes_from_path_function=load_times_and_fluxes_from_path_function)
         return cls(path_getter=path_iterable,
                    light_curve_collection=light_curve_collection,
