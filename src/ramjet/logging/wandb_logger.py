@@ -13,7 +13,6 @@ import wandb
 from typing import Optional, Dict
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from tensorflow import keras
 from pathos.helpers import mp as multiprocess
 
 from ramjet.photometric_database.light_curve import LightCurve
@@ -240,24 +239,6 @@ class WandbLogger:
                 break
             except TypeError:
                 continue
-
-
-class WandbLoggerCallback(keras.callbacks.Callback):
-    """
-    A callback for the training loop to call to utilize the wandb logger.
-    """
-    def __init__(self, logger: WandbLogger):
-        super().__init__()
-        self.logger = logger
-
-    def on_epoch_begin(self, epoch, logs=None):
-        """Called at the beginning of an epoch."""
-        if epoch == 0 or self.is_power(epoch, 10):
-            self.logger.request_examples_from_py_mapper_processes()
-
-    def on_epoch_end(self, epoch, logs=None):
-        """Called at the end of an epoch."""
-        self.logger.process_py_mapper_example_queues(epoch)
 
     @staticmethod
     def is_power(number: int, base: int) -> bool:
