@@ -8,7 +8,7 @@ astropy==4.2
 pandas==1.2.3
 tornado==6.1
 pathos==0.2.7
-tensorflow==2.10.1
+tensorflow==2.11.1
 exoplanet==0.4.5
 peewee==3.14.4
 requests==2.25.1
