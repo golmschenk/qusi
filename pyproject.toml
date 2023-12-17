@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "astroramjet"
-version = "0.7.1"
+version = "0.7.2"
 description = ""
 authors = ["Greg Olmschenk <greg@olmschenk.com>"]
 readme = "README.md"
