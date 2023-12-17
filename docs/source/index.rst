@@ -10,6 +10,8 @@ Welcome to qusi's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   reference_index
+
 
 
 Indices and tables

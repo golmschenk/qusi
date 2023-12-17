@@ -161,6 +161,17 @@ six = ">=1.6.1,<2.0"
 wheel = ">=0.23.0,<1.0"
 
 [[package]]
+name = "atpublic"
+version = "4.0"
+description = "Keep all y'all's __all__'s in sync"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "atpublic-4.0-py3-none-any.whl", hash = "sha256:80057c55641253b86dcb68b524f82328172371b6547d4c7462a9127fbfbbabfc"},
+    {file = "atpublic-4.0.tar.gz", hash = "sha256:0f40433219e124edf115c6c363808ca6f0e1cfa7d160d86b2fb94793086d1294"},
+]
+
+[[package]]
 name = "autograd"
 version = "1.5"
 description = "Efficiently computes derivatives of numpy code."
@@ -3710,4 +3721,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<3.12"
-content-hash = "185f50cf278382cbb73aed11ec13facfeb5c19c3141433652a4eb2ce8822291f"
+content-hash = "08b10a8eff7f6471eecbfe879dd2a81b66ad1eff962e7b33eb4811a7687a0d1f"
