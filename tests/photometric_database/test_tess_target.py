@@ -5,15 +5,17 @@ from collections import defaultdict
 
 import pytest
 
+import ramjet.photometric_database.tess_target as tess_target_module
 from ramjet.photometric_database.tess_target import TessTarget
 
 
 class TestTessTarget:
-    def test_from_tic_id_uses_gaia_radius_if_tic_radius_is_nan(self):
+    @patch.object(tess_target_module, 'get_tess_input_catalog_row')
+    def test_from_tic_id_uses_gaia_radius_if_tic_radius_is_nan(self, mock_get_tess_input_catalog_row):
         stub_tic_row = defaultdict(int)
         stub_tic_row['rad'] = np.nan
         stub_tic_row['GAIA'] = 1
-        TessTarget.tess_data_interface.get_tess_input_catalog_row = Mock(return_value=stub_tic_row)
+        mock_get_tess_input_catalog_row.return_value = stub_tic_row
         mock_gaia_mass = Mock()
         with patch.object(TessTarget, 'get_radius_from_gaia') as mock_get_radius_from_gaia:
             mock_get_radius_from_gaia.return_value = mock_gaia_mass

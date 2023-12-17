@@ -7,17 +7,17 @@ import pytest
 from tensorflow.keras.losses import BinaryCrossentropy
 
 from ramjet.models.single_layer_model import SingleLayerModel, SingleLayerModelWithAuxiliary
-from ramjet.photometric_database.derived.toy_database import ToyDatabase, ToyDatabaseWithAuxiliary
+from ramjet.photometric_database.derived.toy_database import ToyRamjetDatabase, ToyRamjetDatabaseWithAuxiliary
 from ramjet.trial import create_logging_callbacks, create_logging_metrics
 
 
 @pytest.mark.integration
 @pytest.mark.slow
-def test_train():
+def test_ramjet_train():
     """Tests a complete training setup with a toy database and model."""
     os.environ['WANDB_API_KEY'] = 'fake_key'
     os.environ['WANDB_MODE'] = 'offline'
-    database = ToyDatabase()
+    database = ToyRamjetDatabase()
     model = SingleLayerModel()
     trial_name = f'{type(model).__name__}'
     epochs_to_run = 2
@@ -40,7 +40,7 @@ def test_train_with_auxiliary_information():
     """Tests a complete training setup with a toy database and model using auxiliary information."""
     os.environ['WANDB_API_KEY'] = 'fake_key'
     os.environ['WANDB_MODE'] = 'offline'
-    database = ToyDatabaseWithAuxiliary()
+    database = ToyRamjetDatabaseWithAuxiliary()
     model = SingleLayerModelWithAuxiliary()
     trial_name = f'{type(model).__name__}'
     epochs_to_run = 2

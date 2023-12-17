@@ -10,9 +10,9 @@ class TestTessFfiLightCurveMetadataManager:
     @pytest.fixture
     def metadata_manger(self) -> TessFfiLightCurveMetadataManager:
         """
-        The meta data manager class instance under test.
+        The metadata manager class instance under test.
 
-        :return: The meta data manager.
+        :return: The metadata manager.
         """
         return TessFfiLightCurveMetadataManager()
 

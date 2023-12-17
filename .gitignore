@@ -111,19 +111,7 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
-### VirtualEnv template
-# Virtualenv
-# http://iamzed.com/2009/05/07/a-primer-on-virtualenv/
-.Python
-[Bb]in
-[Ii]nclude
-[Ll]ib
-[Ll]ib64
-[Ll]ocal
-[Ss]cripts
-pyvenv.cfg
-.venv
-pip-selfcheck.json
+
 ### Python template
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -234,5 +222,5 @@ venv.bak/
 data/**
 !/data/.template_metadatabase.sqlite3
 logs/
-/ramjet/photometric_database/microlensing_signal_meta_data/moa9yr_events_meta_oct2018.txt
+/src/ramjet/photometric_database/microlensing_signal_meta_data/moa9yr_events_meta_oct2018.txt
 /wandb/

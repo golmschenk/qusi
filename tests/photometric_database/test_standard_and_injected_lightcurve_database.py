@@ -7,10 +7,12 @@ from pathlib import Path
 
 import ramjet.photometric_database.light_curve_database
 import ramjet.photometric_database.standard_and_injected_light_curve_database as database_module
-from ramjet.photometric_database.derived.toy_database import ToyDatabaseWithAuxiliary, ToyDatabaseWithFlatValueAsLabel
+from ramjet.photometric_database.derived.toy_database import ToyRamjetDatabaseWithAuxiliary, ToyRamjetDatabaseWithFlatValueAsLabel
 from ramjet.photometric_database.light_curve_collection import LightCurveCollection
 from ramjet.photometric_database.standard_and_injected_light_curve_database import \
-    StandardAndInjectedLightCurveDatabase, OutOfBoundsInjectionHandlingMethod
+    StandardAndInjectedLightCurveDatabase
+from ramjet.photometric_database.light_curve_dataset_manipulations import OutOfBoundsInjectionHandlingMethod
+import ramjet.photometric_database.light_curve_database as light_curve_database_module
 
 
 class TestStandardAndInjectedLightCurveDatabase:
@@ -91,7 +93,16 @@ class TestStandardAndInjectedLightCurveDatabase:
     @patch.object(ramjet.photometric_database.light_curve_database.np.random, 'randint', return_value=0)
     def test_database_can_generate_training_and_validation_datasets(self, mock_randint, mock_random,
                                                                     database_with_collections):
-        training_dataset, validation_dataset = database_with_collections.generate_datasets()
+        with (
+            patch.object(light_curve_database_module, 'normalize_on_percentiles') as mock_normalize_on_percentiles,
+            patch.object(light_curve_database_module, 'randomly_roll_elements') as mock_randomly_roll_elements,
+            patch.object(light_curve_database_module, 'remove_random_elements') as mock_remove_random_elements
+        ):
+            # Remove other preprocessing to keep it simple.
+            mock_normalize_on_percentiles.side_effect = lambda fluxes: fluxes
+            mock_randomly_roll_elements.side_effect = lambda fluxes: fluxes
+            mock_remove_random_elements.side_effect = lambda fluxes: fluxes
+            training_dataset, validation_dataset = database_with_collections.generate_datasets()
         training_batch = next(iter(training_dataset))
         training_batch_examples = training_batch[0]
         training_batch_labels = training_batch[1]
@@ -122,10 +133,20 @@ class TestStandardAndInjectedLightCurveDatabase:
         database = deterministic_database
         light_curve_collection = database.training_standard_light_curve_collections[0]
         paths_dataset = database.generate_paths_dataset_from_light_curve_collection(light_curve_collection)
-        light_curve_and_label_dataset = database.generate_standard_light_curve_and_label_dataset(paths_dataset,
-                                                                                                 light_curve_collection.load_times_fluxes_and_flux_errors_from_path,
-                                                                                                 light_curve_collection.load_auxiliary_information_for_path,
-                                                                                                 light_curve_collection.load_label_from_path)
+        with (
+            patch.object(light_curve_database_module, 'normalize_on_percentiles') as mock_normalize_on_percentiles,
+            patch.object(light_curve_database_module, 'randomly_roll_elements') as mock_randomly_roll_elements,
+            patch.object(light_curve_database_module, 'remove_random_elements') as mock_remove_random_elements
+        ):
+            # Remove other preprocessing to keep it simple.
+            mock_normalize_on_percentiles.side_effect = lambda fluxes: fluxes
+            mock_randomly_roll_elements.side_effect = lambda fluxes: fluxes
+            mock_remove_random_elements.side_effect = lambda fluxes: fluxes
+            light_curve_and_label_dataset = database.generate_standard_light_curve_and_label_dataset(
+                paths_dataset,
+                light_curve_collection.load_times_fluxes_and_flux_errors_from_path,
+                light_curve_collection.load_auxiliary_information_for_path,
+                light_curve_collection.load_label_from_path)
         light_curve_and_label = next(iter(light_curve_and_label_dataset))
         assert light_curve_and_label[0].numpy().shape == (3, 1)
         assert np.array_equal(light_curve_and_label[0].numpy(), [[0], [1], [2]])  # Standard light_curve 0.
@@ -139,10 +160,19 @@ class TestStandardAndInjectedLightCurveDatabase:
         load_label_from_path_function = light_curve_collection.load_label_from_path
         expected_label = load_label_from_path_function(Path())
         load_from_path_function = light_curve_collection.load_times_fluxes_and_flux_errors_from_path
-        light_curve, label = database.preprocess_standard_light_curve(load_from_path_function,
-                                                                      light_curve_collection.load_auxiliary_information_for_path,
-                                                                      load_label_from_path_function,
-                                                                      tf.convert_to_tensor(str(light_curve_path)))
+        with (
+            patch.object(light_curve_database_module, 'normalize_on_percentiles') as mock_normalize_on_percentiles,
+            patch.object(light_curve_database_module, 'randomly_roll_elements') as mock_randomly_roll_elements,
+            patch.object(light_curve_database_module, 'remove_random_elements') as mock_remove_random_elements
+        ):
+            # Remove other preprocessing to keep it simple.
+            mock_normalize_on_percentiles.side_effect = lambda fluxes: fluxes
+            mock_randomly_roll_elements.side_effect = lambda fluxes: fluxes
+            mock_remove_random_elements.side_effect = lambda fluxes: fluxes
+            light_curve, label = database.preprocess_standard_light_curve(load_from_path_function,
+                                                                          light_curve_collection.load_auxiliary_information_for_path,
+                                                                          load_label_from_path_function,
+                                                                          tf.convert_to_tensor(str(light_curve_path)))
         assert light_curve.shape == (3, 1)
         assert np.array_equal(light_curve, [[0], [1], [2]])  # Standard light_curve 0.
         assert np.array_equal(label, [expected_label])  # Standard label 0.
@@ -197,12 +227,21 @@ class TestStandardAndInjectedLightCurveDatabase:
             injectee_light_curve_collection)
         injectable_paths_dataset = database_with_collections.generate_paths_dataset_from_light_curve_collection(
             injectable_light_curve_collection)
-        light_curve_and_label_dataset = database_with_collections.generate_injected_light_curve_and_label_dataset(
-            injectee_paths_dataset, injectee_light_curve_collection.load_times_fluxes_and_flux_errors_from_path,
-            injectee_light_curve_collection.load_auxiliary_information_for_path,
-            injectable_paths_dataset,
-            injectable_light_curve_collection.load_times_magnifications_and_magnification_errors_from_path,
-            injectable_light_curve_collection.load_label_from_path)
+        with (
+            patch.object(light_curve_database_module, 'normalize_on_percentiles') as mock_normalize_on_percentiles,
+            patch.object(light_curve_database_module, 'randomly_roll_elements') as mock_randomly_roll_elements,
+            patch.object(light_curve_database_module, 'remove_random_elements') as mock_remove_random_elements
+        ):
+            # Remove other preprocessing to keep it simple.
+            mock_normalize_on_percentiles.side_effect = lambda fluxes: fluxes
+            mock_randomly_roll_elements.side_effect = lambda fluxes: fluxes
+            mock_remove_random_elements.side_effect = lambda fluxes: fluxes
+            light_curve_and_label_dataset = database_with_collections.generate_injected_light_curve_and_label_dataset(
+                injectee_paths_dataset, injectee_light_curve_collection.load_times_fluxes_and_flux_errors_from_path,
+                injectee_light_curve_collection.load_auxiliary_information_for_path,
+                injectable_paths_dataset,
+                injectable_light_curve_collection.load_times_magnifications_and_magnification_errors_from_path,
+                injectable_light_curve_collection.load_label_from_path)
         light_curve_and_label = next(iter(light_curve_and_label_dataset))
         assert light_curve_and_label[0].numpy().shape == (3, 1)
         assert np.array_equal(light_curve_and_label[0].numpy(), [[0.5], [3], [5.5]])  # Injected light_curve 0
@@ -221,13 +260,22 @@ class TestStandardAndInjectedLightCurveDatabase:
         expected_label = load_label_from_path_function(Path())
         injectable_load_from_path_function = \
             injectable_light_curve_collection.load_times_magnifications_and_magnification_errors_from_path
-        light_curve, label = database.preprocess_injected_light_curve(
-            injectee_load_from_path_function,
-            injectee_light_curve_collection.load_auxiliary_information_for_path,
-            injectable_load_from_path_function,
-            load_label_from_path_function,
-            tf.convert_to_tensor(str(injectee_light_curve_path)),
-            tf.convert_to_tensor(str(injectable_light_curve_path)))
+        with (
+            patch.object(light_curve_database_module, 'normalize_on_percentiles') as mock_normalize_on_percentiles,
+            patch.object(light_curve_database_module, 'randomly_roll_elements') as mock_randomly_roll_elements,
+            patch.object(light_curve_database_module, 'remove_random_elements') as mock_remove_random_elements
+        ):
+            # Remove other preprocessing to keep it simple.
+            mock_normalize_on_percentiles.side_effect = lambda fluxes: fluxes
+            mock_randomly_roll_elements.side_effect = lambda fluxes: fluxes
+            mock_remove_random_elements.side_effect = lambda fluxes: fluxes
+            light_curve, label = database.preprocess_injected_light_curve(
+                injectee_load_from_path_function,
+                injectee_light_curve_collection.load_auxiliary_information_for_path,
+                injectable_load_from_path_function,
+                load_label_from_path_function,
+                tf.convert_to_tensor(str(injectee_light_curve_path)),
+                tf.convert_to_tensor(str(injectable_light_curve_path)))
         assert light_curve.shape == (3, 1)
         assert np.array_equal(light_curve, [[0.5], [3], [5.5]])  # Injected light_curve 0.
         assert np.array_equal(label, [expected_label])  # Injected label 0.
@@ -258,7 +306,118 @@ class TestStandardAndInjectedLightCurveDatabase:
         assert next(iter(standard_paths_datasets[0])).numpy() == b'standard_path0.ext'
         assert next(iter(standard_paths_datasets[1])).numpy() == b'standard_path1.ext'
 
-    def test_can_inject_signal_into_fluxes(self, database_with_collections):
+    def test_can_inject_signal_into_fluxes(self):
+        light_curve_fluxes = np.array([1, 2, 3, 4, 5])
+        light_curve_times = np.array([10, 20, 30, 40, 50])
+        signal_magnifications = np.array([1, 3, 1])
+        signal_times = np.array([0, 20, 40])
+        fluxes_with_injected_signal = database_module.inject_signal_into_light_curve(
+            light_curve_times,
+            light_curve_fluxes,
+            signal_times,
+            signal_magnifications)
+        assert np.array_equal(fluxes_with_injected_signal, np.array([1, 5, 9, 7, 5]))
+
+    def test_inject_signal_errors_on_out_of_bounds(self):
+        light_curve_fluxes = np.array([1, 2, 3, 4, 5, 3])
+        light_curve_times = np.array([10, 20, 30, 40, 50, 60])
+        signal_magnifications = np.array([1, 3, 1])
+        signal_times = np.array([0, 20, 40])
+        with pytest.raises(ValueError):
+            database_module.inject_signal_into_light_curve(
+                light_curve_times,
+                light_curve_fluxes,
+                signal_times,
+                signal_magnifications)
+
+    def test_inject_signal_can_be_told_to_allow_out_of_bounds(self):
+        light_curve_fluxes = np.array([1, 2, 3, 4, 5, 3])
+        light_curve_times = np.array([10, 20, 30, 40, 50, 60])
+        signal_magnifications = np.array([1, 3, 1])
+        signal_times = np.array([0, 20, 40])
+        with patch.object(database_module.np.random, 'random') as mock_random:
+            mock_random.return_value = 0
+            fluxes_with_injected_signal = database_module.inject_signal_into_light_curve(
+                light_curve_times,
+                light_curve_fluxes,
+                signal_times,
+                signal_magnifications,
+                out_of_bounds_injection_handling_method=OutOfBoundsInjectionHandlingMethod.RANDOM_INJECTION_LOCATION)
+        assert np.array_equal(fluxes_with_injected_signal, np.array([1, 5, 9, 7, 5, 3]))
+
+    def test_inject_signal_using_repeats_for_out_of_bounds(self):
+        light_curve_fluxes = np.array([1, 1, 1, 1, 1, 1, 1])
+        light_curve_times = np.array([10, 20, 30, 40, 50, 60, 70])
+        signal_magnifications = np.array([1, 2])
+        signal_times = np.array([0, 10])
+        with patch.object(database_module.np.random, 'random') as mock_random:
+            mock_random.return_value = 0.6  # Make signal offset end up as 40
+            fluxes_with_injected_signal0 = database_module.inject_signal_into_light_curve(
+                light_curve_times,
+                light_curve_fluxes,
+                signal_times,
+                signal_magnifications,
+                out_of_bounds_injection_handling_method=OutOfBoundsInjectionHandlingMethod.REPEAT_SIGNAL)
+        assert np.array_equal(fluxes_with_injected_signal0, np.array([2, 1, 2, 1, 2, 1, 2]))
+        with patch.object(database_module.np.random, 'random') as mock_random:
+            mock_random.return_value = 0.8  # Make signal offset end up as 50
+            fluxes_with_injected_signal1 = database_module.inject_signal_into_light_curve(
+                light_curve_times,
+                light_curve_fluxes,
+                signal_times,
+                signal_magnifications,
+                out_of_bounds_injection_handling_method=OutOfBoundsInjectionHandlingMethod.REPEAT_SIGNAL)
+        assert np.array_equal(fluxes_with_injected_signal1, np.array([1, 2, 1, 2, 1, 2, 1]))
+
+    def test_injected_signal_randomly_varies_injectable_portion_used_when_injectable_larger_than_injectee(
+            self):
+        injectee_fluxes = np.array([1, 2, 3])
+        injectee_times = np.array([10, 20, 30])
+        injectable_magnifications = np.array([1, 3, 1])
+        injectable_times = np.array([0, 20, 40])
+        with patch.object(database_module.np.random, 'random') as mock_random:
+            mock_random.return_value = 0
+            injected = database_module.inject_signal_into_light_curve(
+                injectee_times,
+                injectee_fluxes,
+                injectable_times,
+                injectable_magnifications)
+            assert np.array_equal(injected, np.array([1, 4, 7]))
+        with patch.object(database_module.np.random, 'random') as mock_random:
+            mock_random.return_value = 1
+            injected = database_module.inject_signal_into_light_curve(
+                injectee_times,
+                injectee_fluxes,
+                injectable_times,
+                injectable_magnifications)
+            assert np.array_equal(injected, np.array([5, 4, 3]))
+
+    def test_injected_signal_randomly_varies_injection_location_when_injectee_larger_than_injectable(
+            self):
+        injectee_fluxes = np.array([1, 2, 3, 4, 5])
+        injectee_times = np.array([10, 20, 30, 40, 50])
+        injectable_magnifications = np.array([1, 3, 1])
+        injectable_times = np.array([0, 10, 20])
+        with patch.object(database_module.np.random, 'random') as mock_random:
+            mock_random.return_value = 0
+            injected = database_module.inject_signal_into_light_curve(
+                injectee_times,
+                injectee_fluxes,
+                injectable_times,
+                injectable_magnifications,
+                out_of_bounds_injection_handling_method=OutOfBoundsInjectionHandlingMethod.RANDOM_INJECTION_LOCATION)
+            assert np.array_equal(injected, np.array([1, 8, 3, 4, 5]))
+        with patch.object(database_module.np.random, 'random') as mock_random:
+            mock_random.return_value = 1
+            injected = database_module.inject_signal_into_light_curve(
+                injectee_times,
+                injectee_fluxes,
+                injectable_times,
+                injectable_magnifications,
+                out_of_bounds_injection_handling_method=OutOfBoundsInjectionHandlingMethod.RANDOM_INJECTION_LOCATION)
+            assert np.array_equal(injected, np.array([1, 2, 3, 10, 5]))
+
+    def test_database_can_inject_signal_into_fluxes(self, database_with_collections):
         light_curve_fluxes = np.array([1, 2, 3, 4, 5])
         light_curve_times = np.array([10, 20, 30, 40, 50])
         signal_magnifications = np.array([1, 3, 1])
@@ -269,7 +428,7 @@ class TestStandardAndInjectedLightCurveDatabase:
                                                                                                signal_times)
         assert np.array_equal(fluxes_with_injected_signal, np.array([1, 5, 9, 7, 5]))
 
-    def test_inject_signal_errors_on_out_of_bounds(self, database_with_collections):
+    def test_database_inject_signal_errors_on_out_of_bounds(self, database_with_collections):
         light_curve_fluxes = np.array([1, 2, 3, 4, 5, 3])
         light_curve_times = np.array([10, 20, 30, 40, 50, 60])
         signal_magnifications = np.array([1, 3, 1])
@@ -278,7 +437,7 @@ class TestStandardAndInjectedLightCurveDatabase:
             database_with_collections.inject_signal_into_light_curve(light_curve_fluxes, light_curve_times,
                                                                      signal_magnifications, signal_times)
 
-    def test_inject_signal_can_be_told_to_allow_out_of_bounds(self, database_with_collections):
+    def test_database_inject_signal_can_be_told_to_allow_out_of_bounds(self, database_with_collections):
         light_curve_fluxes = np.array([1, 2, 3, 4, 5, 3])
         light_curve_times = np.array([10, 20, 30, 40, 50, 60])
         signal_magnifications = np.array([1, 3, 1])
@@ -293,7 +452,7 @@ class TestStandardAndInjectedLightCurveDatabase:
                                                                                                    signal_times)
         assert np.array_equal(fluxes_with_injected_signal, np.array([1, 5, 9, 7, 5, 3]))
 
-    def test_inject_signal_using_repeats_for_out_of_bounds(self, database_with_collections):
+    def test_database_inject_signal_using_repeats_for_out_of_bounds(self, database_with_collections):
         light_curve_fluxes = np.array([1, 1, 1, 1, 1, 1, 1])
         light_curve_times = np.array([10, 20, 30, 40, 50, 60, 70])
         signal_magnifications = np.array([1, 2])
@@ -314,7 +473,7 @@ class TestStandardAndInjectedLightCurveDatabase:
                                                                                                     signal_times)
         assert np.array_equal(fluxes_with_injected_signal1, np.array([1, 2, 1, 2, 1, 2, 1]))
 
-    def test_injected_signal_randomly_varies_injectable_portion_used_when_injectable_larger_than_injectee(
+    def test_database_injected_signal_randomly_varies_injectable_portion_used_when_injectable_larger_than_injectee(
             self, database_with_collections):
         injectee_fluxes = np.array([1, 2, 3])
         injectee_times = np.array([10, 20, 30])
@@ -333,7 +492,7 @@ class TestStandardAndInjectedLightCurveDatabase:
                                                                                 injectable_times)
             assert np.array_equal(injected, np.array([5, 4, 3]))
 
-    def test_injected_signal_randomly_varies_injection_location_when_injectee_larger_than_injectable(
+    def test_database_injected_signal_randomly_varies_injection_location_when_injectee_larger_than_injectable(
             self, database_with_collections):
         injectee_fluxes = np.array([1, 2, 3, 4, 5])
         injectee_times = np.array([10, 20, 30, 40, 50])
@@ -357,7 +516,7 @@ class TestStandardAndInjectedLightCurveDatabase:
     def test_can_intersperse_datasets(self, database_with_collections):
         dataset0 = tf.data.Dataset.from_tensor_slices([[0], [2], [4]])
         dataset1 = tf.data.Dataset.from_tensor_slices([[1], [3], [5]])
-        interspersed_dataset = database_with_collections.intersperse_datasets([dataset0, dataset1])
+        interspersed_dataset = database_module.intersperse_datasets([dataset0, dataset1])
         assert list(interspersed_dataset) == [[0], [1], [2], [3], [4], [5]]
 
     def test_can_intersperse_zipped_example_label_datasets(self, database_with_collections):
@@ -367,7 +526,7 @@ class TestStandardAndInjectedLightCurveDatabase:
         examples_dataset1 = tf.data.Dataset.from_tensor_slices([[1, 1], [3, 3], [5, 5]])
         labels_dataset1 = tf.data.Dataset.from_tensor_slices([[-1], [-3], [-5]])
         dataset1 = tf.data.Dataset.zip((examples_dataset1, labels_dataset1))
-        interspersed_dataset = database_with_collections.intersperse_datasets([dataset0, dataset1])
+        interspersed_dataset = database_module.intersperse_datasets([dataset0, dataset1])
         interspersed_dataset_iterator = iter(interspersed_dataset)
         examples_and_labels0 = next(interspersed_dataset_iterator)
         assert np.array_equal(examples_and_labels0[0], [0, 0])
@@ -388,7 +547,16 @@ class TestStandardAndInjectedLightCurveDatabase:
         database_with_collections.training_injectable_light_curve_collections = []
         database_with_collections.validation_injectee_light_curve_collection = None
         database_with_collections.validation_injectable_light_curve_collections = []
-        training_dataset, validation_dataset = database_with_collections.generate_datasets()
+        with (
+            patch.object(light_curve_database_module, 'normalize_on_percentiles') as mock_normalize_on_percentiles,
+            patch.object(light_curve_database_module, 'randomly_roll_elements') as mock_randomly_roll_elements,
+            patch.object(light_curve_database_module, 'remove_random_elements') as mock_remove_random_elements
+        ):
+            # Remove other preprocessing to keep it simple.
+            mock_normalize_on_percentiles.side_effect = lambda fluxes: fluxes
+            mock_randomly_roll_elements.side_effect = lambda fluxes: fluxes
+            mock_remove_random_elements.side_effect = lambda fluxes: fluxes
+            training_dataset, validation_dataset = database_with_collections.generate_datasets()
         training_batch = next(iter(training_dataset))
         training_batch_examples = training_batch[0]
         training_batch_labels = training_batch[1]
@@ -408,9 +576,18 @@ class TestStandardAndInjectedLightCurveDatabase:
         light_curve_collection = database_with_collections.training_standard_light_curve_collections[0]
         paths_dataset = database_with_collections.generate_paths_dataset_from_light_curve_collection(
             light_curve_collection)
-        path_and_light_curve_dataset = database_with_collections.generate_infer_path_and_light_curve_dataset(
-            paths_dataset, light_curve_collection.load_times_fluxes_and_flux_errors_from_path,
-            light_curve_collection.load_auxiliary_information_for_path)
+        with (
+            patch.object(light_curve_database_module, 'normalize_on_percentiles') as mock_normalize_on_percentiles,
+            patch.object(light_curve_database_module, 'randomly_roll_elements') as mock_randomly_roll_elements,
+            patch.object(light_curve_database_module, 'remove_random_elements') as mock_remove_random_elements
+        ):
+            # Remove other preprocessing to keep it simple.
+            mock_normalize_on_percentiles.side_effect = lambda fluxes: fluxes
+            mock_randomly_roll_elements.side_effect = lambda fluxes: fluxes
+            mock_remove_random_elements.side_effect = lambda fluxes: fluxes
+            path_and_light_curve_dataset = database_with_collections.generate_infer_path_and_light_curve_dataset(
+                paths_dataset, light_curve_collection.load_times_fluxes_and_flux_errors_from_path,
+                light_curve_collection.load_auxiliary_information_for_path)
         path_and_light_curve = next(iter(path_and_light_curve_dataset))
         assert np.array_equal(path_and_light_curve[0].numpy(), b'standard_path0.ext')  # Standard path 0.
         assert path_and_light_curve[1].numpy().shape == (3, 1)
@@ -422,10 +599,19 @@ class TestStandardAndInjectedLightCurveDatabase:
         light_curve_path = light_curve_collection.get_paths()[0]
         expected_label = light_curve_collection.label
         load_from_path_function = light_curve_collection.load_times_fluxes_and_flux_errors_from_path
-        path, light_curve = database_with_collections.preprocess_infer_light_curve(
-            load_from_path_function,
-            light_curve_collection.load_auxiliary_information_for_path,
-            tf.convert_to_tensor(str(light_curve_path)))
+        with (
+            patch.object(light_curve_database_module, 'normalize_on_percentiles') as mock_normalize_on_percentiles,
+            patch.object(light_curve_database_module, 'randomly_roll_elements') as mock_randomly_roll_elements,
+            patch.object(light_curve_database_module, 'remove_random_elements') as mock_remove_random_elements
+        ):
+            # Remove other preprocessing to keep it simple.
+            mock_normalize_on_percentiles.side_effect = lambda fluxes: fluxes
+            mock_randomly_roll_elements.side_effect = lambda fluxes: fluxes
+            mock_remove_random_elements.side_effect = lambda fluxes: fluxes
+            path, light_curve = database_with_collections.preprocess_infer_light_curve(
+                load_from_path_function,
+                light_curve_collection.load_auxiliary_information_for_path,
+                tf.convert_to_tensor(str(light_curve_path)))
         assert np.array_equal(path, 'standard_path0.ext')  # Standard path 0.
         assert light_curve.shape == (3, 1)
         assert np.array_equal(light_curve, [[0], [1], [2]])  # Standard light_curve 0.
@@ -473,7 +659,7 @@ class TestStandardAndInjectedLightCurveDatabase:
                                                                 ([0, 0], np.array([0, 0]))])
     def test_expand_label_to_training_dimensions(self, original_label, expected_label):
         database = StandardAndInjectedLightCurveDatabase()
-        label = database.expand_label_to_training_dimensions(original_label)
+        label = database_module.expand_label_to_training_dimensions(original_label)
         assert type(label) is np.ndarray
         assert np.array_equal(label, expected_label)
 
@@ -483,8 +669,9 @@ class TestStandardAndInjectedLightCurveDatabase:
         label_dataset = tf.data.Dataset.from_tensor_slices([[0], [-2], [-4]])
         light_curve_auxiliary_and_label_dataset = tf.data.Dataset.zip(
             (light_curve_dataset, auxiliary_dataset, label_dataset))
-        observation_and_label_dataset = StandardAndInjectedLightCurveDatabase() \
-            .from_light_curve_auxiliary_and_label_to_observation_and_label(light_curve_auxiliary_and_label_dataset)
+        observation_and_label_dataset = \
+            database_module.from_light_curve_auxiliary_and_label_to_observation_and_label(
+                light_curve_auxiliary_and_label_dataset)
         dataset_iterator = iter(observation_and_label_dataset)
         observation_and_label0 = next(dataset_iterator)
         assert np.array_equal(observation_and_label0[0][0], [0, 0])
@@ -514,7 +701,16 @@ class TestStandardAndInjectedLightCurveDatabase:
         database.time_steps_per_example = 3
         database.number_of_parallel_processes_per_map = 1
         database.number_of_auxiliary_values = 2
-        training_dataset, validation_dataset = database.generate_datasets()
+        with (
+            patch.object(light_curve_database_module, 'normalize_on_percentiles') as mock_normalize_on_percentiles,
+            patch.object(light_curve_database_module, 'randomly_roll_elements') as mock_randomly_roll_elements,
+            patch.object(light_curve_database_module, 'remove_random_elements') as mock_remove_random_elements
+        ):
+            # Remove other preprocessing to keep it simple.
+            mock_normalize_on_percentiles.side_effect = lambda fluxes: fluxes
+            mock_randomly_roll_elements.side_effect = lambda fluxes: fluxes
+            mock_remove_random_elements.side_effect = lambda fluxes: fluxes
+            training_dataset, validation_dataset = database.generate_datasets()
         training_batch = next(iter(training_dataset))
         training_batch_observations = training_batch[0]
         training_batch_labels = training_batch[1]
@@ -545,7 +741,7 @@ class TestStandardAndInjectedLightCurveDatabase:
         example_dataset = tf.data.Dataset.from_generator(examples_generator, output_types=tf.float32)
         label_dataset = tf.data.Dataset.from_generator(labels_generator, output_types=tf.float32)
         dataset = tf.data.Dataset.zip((example_dataset, label_dataset))
-        padded_window_dataset = database.padded_window_dataset_for_zipped_example_and_label_dataset(
+        padded_window_dataset = database_module.padded_window_dataset_for_zipped_example_and_label_dataset(
             dataset=dataset, batch_size=3, window_shift=2, padded_shapes=([None], [None]))
         padded_window_iterator = iter(padded_window_dataset)
         batch0 = next(padded_window_iterator)
@@ -557,9 +753,9 @@ class TestStandardAndInjectedLightCurveDatabase:
         example_dataset = tf.data.Dataset.from_tensor_slices([1, 2, 3, 4, 5])
         label_dataset = tf.data.Dataset.from_tensor_slices([-1, -2, -3, -4, -5])
         dataset = tf.data.Dataset.zip((example_dataset, label_dataset))
-        windowed_dataset = database.window_dataset_for_zipped_example_and_label_dataset(dataset,
-                                                                                        batch_size=3,
-                                                                                        window_shift=2)
+        windowed_dataset = database_module.window_dataset_for_zipped_example_and_label_dataset(dataset,
+                                                                                               batch_size=3,
+                                                                                               window_shift=2)
         windowed_dataset_iterator = iter(windowed_dataset)
         batch0 = next(windowed_dataset_iterator)
         assert np.array_equal(batch0[0], [1, 2, 3])
@@ -573,8 +769,8 @@ class TestStandardAndInjectedLightCurveDatabase:
         labels_dataset = tf.data.Dataset.from_tensor_slices([0, 1, 2, 3, 4])
         zipped_dataset = tf.data.Dataset.zip((examples_dataset, labels_dataset))
 
-        windowed_dataset = database.flat_window_zipped_example_and_label_dataset(zipped_dataset, batch_size=3,
-                                                                                 window_shift=2)
+        windowed_dataset = database_module.flat_window_zipped_example_and_label_dataset(zipped_dataset, batch_size=3,
+                                                                                        window_shift=2)
 
         windowed_list = list(windowed_dataset.as_numpy_iterator())
         assert windowed_list == [(b'a', 0), (b'b', 1), (b'c', 2), (b'c', 2), (b'd', 3), (b'e', 4), (b'e', 4)]
@@ -585,8 +781,9 @@ class TestStandardAndInjectedLightCurveDatabase:
         zipped_dataset = tf.data.Dataset.zip((examples_dataset, labels_dataset))
         shuffled_zipped_dataset = zipped_dataset.shuffle(buffer_size=5)
 
-        windowed_dataset = database.flat_window_zipped_example_and_label_dataset(shuffled_zipped_dataset, batch_size=3,
-                                                                                 window_shift=2)
+        windowed_dataset = database_module.flat_window_zipped_example_and_label_dataset(shuffled_zipped_dataset,
+                                                                                        batch_size=3,
+                                                                                        window_shift=2)
 
         windowed_list = list(windowed_dataset.as_numpy_iterator())
         correct_pairings = {b'a': 0, b'b': 1, b'c': 2, b'd': 3, b'e': 4}
@@ -596,7 +793,7 @@ class TestStandardAndInjectedLightCurveDatabase:
 
     @pytest.mark.integration
     def test_labels_match_observation(self):
-        database = ToyDatabaseWithAuxiliary()
+        database = ToyRamjetDatabaseWithAuxiliary()
         train_dataset, validation_dataset = database.generate_datasets()
         train_batch = next(iter(train_dataset))
         for light_curve_tensor, auxiliary_value_tensor, label_tensor in zip(
@@ -609,7 +806,7 @@ class TestStandardAndInjectedLightCurveDatabase:
 
     @pytest.mark.integration
     def test_labels_match_observation_when_single_collection_has_multiple_labels(self):
-        database = ToyDatabaseWithFlatValueAsLabel()
+        database = ToyRamjetDatabaseWithFlatValueAsLabel()
         train_dataset, validation_dataset = database.generate_datasets()
         train_batch = next(iter(train_dataset))
         for light_curve_tensor, label_tensor in zip(train_batch[0], train_batch[1]):
