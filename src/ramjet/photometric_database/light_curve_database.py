@@ -7,7 +7,7 @@ from typing import List, Union, Callable, Iterable, Tuple
 
 import numpy as np
 import numpy.typing as npt
-import tensorflow as tf
+
 
 
 def preprocess_times(light_curve_array: np.ndarray) -> None:
@@ -52,25 +52,6 @@ def make_uniform_length(example: np.ndarray, length: int, randomize: bool = True
     return example
 
 
-def get_ratio_enforced_dataset(positive_training_dataset: tf.data.Dataset,
-                               negative_training_dataset: tf.data.Dataset,
-                               positive_to_negative_data_ratio: float) -> tf.data.Dataset:
-    """Generates a dataset with an enforced data ratio."""
-    if positive_to_negative_data_ratio is not None:
-        positive_count = len(list(positive_training_dataset))
-        negative_count = len(list(negative_training_dataset))
-        existing_ratio = positive_count / negative_count
-        if existing_ratio < positive_to_negative_data_ratio:
-            desired_number_of_positive_examples = int(positive_to_negative_data_ratio * negative_count)
-            positive_training_dataset = repeat_dataset_to_size(positive_training_dataset,
-                                                               desired_number_of_positive_examples)
-        else:
-            desired_number_of_negative_examples = int((1 / positive_to_negative_data_ratio) * positive_count)
-            negative_training_dataset = repeat_dataset_to_size(negative_training_dataset,
-                                                               desired_number_of_negative_examples)
-    return positive_training_dataset.concatenate(negative_training_dataset)
-
-
 class LightCurveDatabase(ABC):
     """A base generalized database for photometric data to be subclassed."""
 
@@ -92,36 +73,6 @@ class LightCurveDatabase(ABC):
         :return: The window shift size.
         """
         return self.batch_size // 10
-
-    def get_training_and_validation_datasets_for_file_paths(
-            self, example_paths: Union[Iterable[Path], Callable[[], Iterable[Path]]]
-    ) -> (tf.data.Dataset, tf.data.Dataset):
-        """
-        Creates training and validation datasets from a list of all file paths. The database validation ratio is used
-        to determine the size of the split.
-
-        :param example_paths: The total list of file paths.
-        :return: The training and validation datasets.
-        """
-
-        def element_should_be_in_validation(index, _):
-            """Checks if the element should be in the validation set based on the index."""
-            return index % int(1 / self.validation_ratio) == 0
-
-        def element_should_be_in_training(index, element):
-            """Checks if the element should be in the training set based on the index."""
-            return not element_should_be_in_validation(index, element)
-
-        def drop_index(_, element):
-            """Drops the index from the index element pair dataset."""
-            return element
-
-        example_paths_dataset = paths_dataset_from_list_or_generator_factory(example_paths)
-        training_example_paths_dataset = example_paths_dataset.enumerate().filter(element_should_be_in_training
-                                                                                  ).map(drop_index)
-        validation_example_paths_dataset = example_paths_dataset.enumerate().filter(element_should_be_in_validation
-                                                                                    ).map(drop_index)
-        return training_example_paths_dataset, validation_example_paths_dataset
 
     def clear_data_directory(self):
         """
@@ -258,13 +209,6 @@ def remove_random_elements(light_curve: np.ndarray, ratio: float = 0.01) -> np.n
     return np.delete(light_curve, random_indexes, axis=0)
 
 
-def repeat_dataset_to_size(dataset: tf.data.Dataset, size: int) -> tf.data.Dataset:
-    """Repeats a dataset to make it a desired length."""
-    current_size = len(list(dataset))
-    times_to_repeat = math.ceil(size / current_size)
-    return dataset.repeat(times_to_repeat).take(size)
-
-
 def randomly_roll_elements(example: np.ndarray) -> np.ndarray:
     """Randomly rolls the elements."""
     example = np.roll(example, np.random.randint(example.shape[0]), axis=0)
@@ -289,28 +233,6 @@ def extract_shuffled_chunk_and_remainder(array_to_extract_from: Union[List, np.n
     remaining_chunks = np.delete(chunks, chunk_to_extract_index, axis=0)
     remainder = np.concatenate(remaining_chunks)
     return extracted_chunk, remainder
-
-
-def paths_dataset_from_list_or_generator_factory(
-        list_or_generator_factory: Union[Iterable[Path], Callable[[], Iterable[Path]]]
-) -> tf.data.Dataset:
-    """
-    Produces a dataset from either the examples path list or example paths factory to strings.
-
-    :param list_or_generator_factory: The list or generator factory.
-    :return: The new path generator.
-    """
-
-    def paths_to_strings_generator():
-        """A generator from either the examples path list or example paths factory to strings."""
-        if isinstance(list_or_generator_factory, Callable):  # If factory, produce a new generator/list.
-            resolved_example_paths = list_or_generator_factory()
-        else:  # Otherwise, the paths are already a resolved list, and can be directly used.
-            resolved_example_paths = list_or_generator_factory
-        for path in resolved_example_paths:
-            yield str(path)
-
-    return tf.data.Dataset.from_generator(paths_to_strings_generator, output_types=tf.string)
 
 
 def calculate_time_differences(times: np.ndarray) -> np.ndarray:
