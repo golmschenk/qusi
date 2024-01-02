@@ -13,7 +13,7 @@ setuptools.setup(
     author_email='golmschenk@gmail.com',
     description='',
     long_description=long_description,
-    install_requires=['retrying', 'numpy', 'pandas', 'tensorflow', 'astropy', 'astroquery', 'requests', 'pyarrow',
+    install_requires=['retrying', 'numpy', 'pandas', 'astropy', 'astroquery', 'requests', 'pyarrow',
                       'matplotlib', 'pipreqs', 'bokeh', 'pymc3', 'Theano', 'exoplanet', 'scipy', 'setuptools',
                       'dataset', 'pathos', 'peewee']
 )

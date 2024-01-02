@@ -1,55 +1,44 @@
-from dataclasses import dataclass
-from pathlib import Path
 from typing import List
 
+import numpy as np
 import torch
 from torch.nn import Module
+from torch.types import Device
 from torch.utils.data import DataLoader
 
-from qusi.light_curve_dataset import LightCurveDataset, contains_injected_dataset, \
-    interleave_infinite_iterators, InterleavedDataset, ConcatenatedIterableDataset
-from qusi.single_dense_layer_model import SingleDenseLayerBinaryClassificationModel
+from qusi.finite_standard_light_curve_dataset import FiniteStandardLightCurveDataset
 
 
-@dataclass
-class InferSession:
-    infer_datasets: List[LightCurveDataset]
-    model: Module
-    batch_size: int
-
-    @classmethod
-    def new(cls,
-            infer_datasets: LightCurveDataset | List[LightCurveDataset],
-            model: Module,
-            batch_size: int,
-            ):
-        if not isinstance(infer_datasets, list):
-            infer_datasets = [infer_datasets]
-        instance = cls(infer_datasets=infer_datasets,
-                       model=model,
-                       batch_size=batch_size,
-                       )
-        return instance
-
-    def run(self):
-        with torch.no_grad():
-            sessions_directory = Path('sessions')
-            session_directory = sessions_directory.joinpath(f'session_2023_07_25_14_59_51')
-            infer_dataset = ConcatenatedIterableDataset.new(*self.infer_datasets)
-            infer_dataloader = DataLoader(infer_dataset, batch_size=self.batch_size)
-            model_path = session_directory.joinpath('latest_model.pth')
-            self.model.load_state_dict(torch.load(model_path))
-            self.model.eval()
-            predictions = infer_epoch(dataloader=infer_dataloader, model_=self.model)
-        return predictions
+def infer_session(infer_datasets: List[FiniteStandardLightCurveDataset], model: Module,
+                  batch_size: int, device: Device):
+    infer_dataloaders: List[DataLoader] = []
+    for infer_dataset in infer_datasets:
+        infer_dataloaders.append(DataLoader(infer_dataset, batch_size=batch_size, pin_memory=True))
+    model.eval()
+    results = []
+    for infer_dataloader in infer_dataloaders:
+        result = infer_phase(infer_dataloader, model, device=device)
+        results.append(result)
+    return results
 
 
-def infer_epoch(dataloader, model_):
-    batch_predictions = []
-    for batch, (X, y) in enumerate(dataloader):
-        y = y.to(torch.float32)
-        X = X.to(torch.float32)
-        pred = model_(X).to('cpu')
-        batch_predictions.append(pred)
-    predictions = torch.cat(batch_predictions, dim=0)
-    return predictions
+def get_device():
+    if torch.cuda.is_available():
+        device = torch.device('cuda')
+    else:
+        device = torch.device('cpu')
+    return device
+
+
+def infer_phase(dataloader, model: Module, device: Device):
+    batch_count = 0
+    batches_of_predicted_targets = []
+    model.eval()
+    with torch.no_grad():
+        for input_features in dataloader:
+            input_features = input_features.to(device, non_blocking=True)
+            batch_predicted_targets = model(input_features)
+            batches_of_predicted_targets.append(batch_predicted_targets)
+            batch_count += 1
+    predicted_targets = np.concatenate(batches_of_predicted_targets, axis=0)
+    return predicted_targets
