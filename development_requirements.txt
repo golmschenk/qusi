@@ -2,7 +2,6 @@ retrying
 tenacity
 numpy
 pandas
-tensorflow
 astropy
 astroquery
 requests

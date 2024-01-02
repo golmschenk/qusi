@@ -1,11 +1,10 @@
 """
 Tests for the LightCurveDatabase class.
 """
-from pathlib import Path
 from typing import Any
 from unittest.mock import Mock, patch
+
 import numpy as np
-import tensorflow as tf
 import pytest
 
 import ramjet.photometric_database.light_curve_database as module
