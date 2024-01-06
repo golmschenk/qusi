@@ -15,9 +15,9 @@ The next thing we'll do is download a dataset of light curves that include cases
 
 .. code:: sh
 
-    python examples/download_spoc_transit_light_curves
+    python examples/download_spoc_transit_light_curves.py
 
-The main thing to know is that this will create a `data` directory within the project directory and within that will be a `spoc_transit_experiment` directory, referring to the data for the experiment of finding transiting planets within the TESS SPOC data. This will further contain 3 directories. One for train data, one for validation data, and one for test data. Within each of those, it will create a `positive` directory, that will hold the light curves with transits, and a `negative` directory, that will hold the light curves without transits. `qusi` is flexible about the data structure, so this format is not required for other problems, but it's one easy way to structure the data. So the project directory tree now looks like:
+The main thing to know is that this will create a `data` directory within the project directory and within that will be a `spoc_transit_experiment` directory, referring to the data for the experiment of finding transiting planets within the TESS SPOC data. This will further contain 3 directories. One for train data, one for validation data, and one for test data. Within each of those, it will create a `positive` directory, that will hold the light curves with transits, and a `negative` directory, that will hold the light curves without transits. So the project directory tree now looks like:
 
 .. code::
 
@@ -33,3 +33,22 @@ The main thing to know is that this will create a `data` directory within the pr
                 negative
                 positive
     examples
+
+Each of these `positive` and `negative` data directories will now contain a set of light curves. The reason why the code in this script is not very important for you to know, is that it's mostly irrelevant for future uses. When you're working on your own problem, you'll obtain your data some other way. And `qusi` is flexible about the data structure, so this directory structure is not required. It's just one way to structure the data.
+
+Train the network
+-----------------
+
+Next, we'll look at the `examples/transit_train.py` file. In this script is a `main` function which will train our neural network on our data. The training script has 3 main components:
+
+#. Code to prepare our datasets.
+#. Code to prepare the neural network model.
+#. Code to running the training of the model on the datasets.
+
+Since `qusi` provides both models and and training loop code, the only one of these components that every user will be expected to deal with is preparing the dataset, since you'll eventually want to have `qusi` tackle the task you're interested in which will require you're own data. And the `qusi` dataset component will help make your data more suitable for training a neural network. However, we're going to save how to set up your own dataset (and how these example datasets are created) for the next tutorial. For now, we'll just use the example datasets as is. So, in the example script, you will see the first couple of lines of the `main` function call other functions that produce an example train and validation dataset for us. Then we choose one of the neural network models `qusi` provides (in this case the `Hadryss` model). Then finally, we start the training session. To run this training, simply run the script with:
+
+.. code:: sh
+
+    python examples/transit_train.py
+
+You should see some output showing basic training statistics from the terminal as it runs through the training loop. It will run for as many train cycles as were specified in the script.
