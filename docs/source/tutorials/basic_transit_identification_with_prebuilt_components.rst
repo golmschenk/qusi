@@ -1,5 +1,5 @@
-Basic transit finding with prebuilt components
-==============================================
+Basic transit identification with prebuilt components
+=====================================================
 
 This tutorial will get you up and running with a neural network (NN) that can identify transiting exoplanets in data from the Transiting Exoplanet Survey Satellite (TESS). Many of the components used in this example will be prebuilt bits of code that we'll import from the package's example code. However, in later tutorials, we'll walkthrough how you would build each of these pieces yourself and how you would modify it for whatever your use case is.
 
