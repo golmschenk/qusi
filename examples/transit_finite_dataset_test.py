@@ -15,7 +15,8 @@ def main():
     metric_functions = [BinaryAccuracy(), BCELoss()]
     results = finite_datasets_test_session(test_datasets=[test_light_curve_dataset], model=model,
                                            metric_functions=metric_functions, batch_size=100, device=device)
-    return results
+    print(f'Binary accuracy: {results[0][0]}')
+    print(f'Binary cross entropy: {results[0][1]}')
 
 
 if __name__ == '__main__':

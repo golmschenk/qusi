@@ -36,6 +36,23 @@ The main thing to know is that this will create a `data` directory within the pr
 
 Each of these `positive` and `negative` data directories will now contain a set of light curves. The reason why the code in this script is not very important for you to know, is that it's mostly irrelevant for future uses. When you're working on your own problem, you'll obtain your data some other way. And `qusi` is flexible about the data structure, so this directory structure is not required. It's just one way to structure the data.
 
+Preparing for training
+----------------------
+
+`qusi` uses Weights & Biases (`wandb`), a machine learning logging platform, to record metrics from training experiments. Among other things, it will create plots showing the training progress and allow easy comparison among the various runs. While you can run the `wandb` platform locally, it's easiest to use their cloud platform, which has `free academic research team projects and free personal projects <https://wandb.ai/site/pricing>`_. To use it with `qusi`, `sign up for an account <https://wandb.ai/site>`_, then from your project directory use
+
+.. code:: sh
+
+    wandb login
+
+to login. If you want to proceed without a `wandb` account and log the data offline, you will need to run
+
+.. code:: sh
+
+    wandb offline
+
+This will only log runs locally. If you choose the offline route, at some point, you will want to follow `their guide to run the local server <https://docs.wandb.ai/guides/hosting/how-to-guides/basic-setup>`_ so that you can view the metric plots. However, for the moment, just running `wandb offline` will allow you to proceed with this tutorial.
+
 Train the network
 -----------------
 
@@ -51,4 +68,15 @@ Since `qusi` provides both models and and training loop code, the only one of th
 
     python examples/transit_train.py
 
-You should see some output showing basic training statistics from the terminal as it runs through the training loop. It will run for as many train cycles as were specified in the script.
+You should see some output showing basic training statistics from the terminal as it runs through the training loop. It will run for as many train cycles as were specified in the script. On every completed cycle, `qusi` will save the latest version of the fitted model to `sessions/<wandb_run_name>/latest_model`.
+
+Test the fitted model
+---------------------
+
+A "fitted model" is a model which has been trained, or fitted, on some training data. Next, we'll take the fitted model we produced during training, and test it on data it didn't see during the training process. This is what happens in the `examples/transit_finite_dataset_test.py` script. The `main` function will look semi-similar to from the training script. Again, we'll defer how the dataset is produced until the next tutorial. Then we create the model as we did before, but this time we load the fitted parameters of the model from the saved file. Here, you will need to update the script to point to your saved model produced in the last section. Then we can run the script with
+
+.. code:: sh
+
+    python examples/transit_finite_dataset_test.py
+
+This will run the network on the test data, producing the metrics that are requested in the file.
