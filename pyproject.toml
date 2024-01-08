@@ -1,6 +1,6 @@
 [tool.poetry]
-name = "astroramjet"
-version = "0.7.2"
+name = "qusi"
+version = "0.8.0"
 description = ""
 authors = ["Greg Olmschenk <greg@olmschenk.com>"]
 readme = "README.md"
