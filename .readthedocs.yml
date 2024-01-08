@@ -1,17 +1,19 @@
 # ReadTheDocs configuration file version.
 version: 2
 
-sphinx:
-    configuration: docs/source/conf.py
-
 build:
     os: ubuntu-20.04
     tools:
         python: "3.11"
+    jobs:
+        pre_create_environment:
+          - asdf plugin add poetry
+          - asdf install poetry latest
+          - asdf global poetry latest
+          - poetry config virtualenvs.create false
+        post_install:
+          - poetry install
 
-python:
-    install:
-        - method: pip
-          path: .
-          extra_requirements:
-              - dev
+sphinx:
+    configuration: docs/source/conf.py
+    fail_on_warning: true
