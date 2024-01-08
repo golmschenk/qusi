@@ -11,7 +11,7 @@ def main():
     test_light_curve_dataset = get_transit_finite_test_dataset()
     model = Hadryss()
     device = get_device()
-    model.load_state_dict(torch.load('sessions/kind-terrain-34_latest_model.pt', map_location=device))
+    model.load_state_dict(torch.load('sessions/<wandb_run_name>_latest_model.pt', map_location=device))
     metric_functions = [BinaryAccuracy(), BCELoss()]
     results = finite_datasets_test_session(test_datasets=[test_light_curve_dataset], model=model,
                                            metric_functions=metric_functions, batch_size=100, device=device)
