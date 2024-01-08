@@ -8,8 +8,3 @@ build:
     os: ubuntu-20.04
     tools:
         python: "3.9"
-
-python:
-    install:
-        - requirements: docs/development_requirements.txt
-
