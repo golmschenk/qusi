@@ -13,13 +13,15 @@ from torch.utils.data import DataLoader
 from torchmetrics.classification import BinaryAccuracy
 
 from qusi.light_curve_dataset import LightCurveDataset, InterleavedDataset
+from qusi.train_logging_configuration import TrainLoggingConfiguration
 from qusi.wandb_liaison import wandb_init, wandb_log, wandb_commit
 
 
 def train_session(train_datasets: List[LightCurveDataset],
                   validation_datasets: List[LightCurveDataset], model: Module, batch_size: int,
                   cycles: int, train_steps_per_cycle: int, validation_steps_per_cycle: int):
-    wandb_init(process_rank=0, project='qusi', entity='ramjet',
+    logging_configuration = TrainLoggingConfiguration.new()
+    wandb_init(process_rank=0, project=logging_configuration.wandb_project, entity=logging_configuration.wandb_entity,
                settings=wandb.Settings(start_method='fork'))
     sessions_directory = Path('sessions')
     sessions_directory.mkdir(exist_ok=True)
