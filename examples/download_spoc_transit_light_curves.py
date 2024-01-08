@@ -8,6 +8,7 @@ from ramjet.data_interface.tess_toi_data_interface import TessToiDataInterface, 
 
 
 def main():
+    print('Retrieving metadata...')
     spoc_target_tic_ids = get_spoc_tic_id_list_from_mast()
     tess_toi_data_interface = TessToiDataInterface()
     positive_tic_ids = tess_toi_data_interface.toi_dispositions[
@@ -25,6 +26,7 @@ def main():
     negative_test_tic_ids = negative_tic_ids_splits[2].tolist()
     sectors = list(range(27, 56))
 
+    print('Downloading light curves...')
     download_spoc_light_curves_for_tic_ids(
         tic_ids=positive_train_tic_ids,
         download_directory=Path('data/spoc_transit_experiment/train/positives'),

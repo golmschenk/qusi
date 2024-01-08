@@ -2,6 +2,7 @@ from pathlib import Path
 
 import numpy as np
 
+from qusi.finite_standard_light_curve_observation_dataset import FiniteStandardLightCurveObservationDataset
 from qusi.light_curve_collection import LabeledLightCurveCollection
 from qusi.light_curve_dataset import LightCurveDataset
 
@@ -65,3 +66,26 @@ def get_transit_validation_dataset():
         standard_light_curve_collections=[positive_validation_light_curve_collection,
                                           negative_validation_light_curve_collection])
     return validation_light_curve_dataset
+
+
+def get_negative_test_paths():
+    return list(Path('data/spoc_transit_experiment/test/negatives').glob('*.fits'))
+
+
+def get_positive_test_paths():
+    return list(Path('data/spoc_transit_experiment/test/positives').glob('*.fits'))
+
+
+def get_transit_finite_test_dataset():
+    positive_test_light_curve_collection = LabeledLightCurveCollection.new(
+        get_paths_function=get_positive_test_paths,
+        load_times_and_fluxes_from_path_function=load_times_and_fluxes_from_path,
+        load_label_from_path_function=positive_label_function)
+    negative_test_light_curve_collection = LabeledLightCurveCollection.new(
+        get_paths_function=get_negative_test_paths,
+        load_times_and_fluxes_from_path_function=load_times_and_fluxes_from_path,
+        load_label_from_path_function=negative_label_function)
+    test_light_curve_dataset = FiniteStandardLightCurveObservationDataset.new(
+        standard_light_curve_collections=[positive_test_light_curve_collection,
+                                          negative_test_light_curve_collection])
+    return test_light_curve_dataset

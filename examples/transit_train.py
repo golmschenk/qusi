@@ -1,4 +1,4 @@
-from examples.transit_dataset import get_transit_train_dataset, get_transit_validation_dataset
+from transit_dataset import get_transit_train_dataset, get_transit_validation_dataset
 from qusi.hadryss_model import Hadryss
 from qusi.train_session import train_session
 
