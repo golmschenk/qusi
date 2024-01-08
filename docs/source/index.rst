@@ -10,6 +10,7 @@ Welcome to qusi's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   tutorials/basic_transit_finding_with_prebuilt_components.rst
    reference_index
 
 
