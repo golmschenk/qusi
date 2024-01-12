@@ -35,11 +35,11 @@ def load_times_and_fluxes_from_path(path):
     return light_curve.times, light_curve.fluxes
 
 
-def positive_label_function(_path):
+def positive_label_function(path):
     return 1
 
 
-def negative_label_function(_path):
+def negative_label_function(path):
     return 0
 
 
