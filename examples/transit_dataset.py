@@ -1,11 +1,8 @@
 from pathlib import Path
 
-import numpy as np
-
 from qusi.finite_standard_light_curve_observation_dataset import FiniteStandardLightCurveObservationDataset
 from qusi.light_curve_collection import LabeledLightCurveCollection
 from qusi.light_curve_dataset import LightCurveDataset
-
 from ramjet.photometric_database.tess_two_minute_cadence_light_curve import TessMissionLightCurve
 
 
@@ -25,16 +22,24 @@ def get_negative_validation_paths():
     return list(Path('data/spoc_transit_experiment/validation/negatives').glob('*.fits'))
 
 
-def load_times_and_fluxes_from_path(path: Path) -> (np.ndarray, np.ndarray):
+def get_negative_test_paths():
+    return list(Path('data/spoc_transit_experiment/test/negatives').glob('*.fits'))
+
+
+def get_positive_test_paths():
+    return list(Path('data/spoc_transit_experiment/test/positives').glob('*.fits'))
+
+
+def load_times_and_fluxes_from_path(path):
     light_curve = TessMissionLightCurve.from_path(path)
     return light_curve.times, light_curve.fluxes
 
 
-def positive_label_function(_path: Path) -> int:
+def positive_label_function(_path):
     return 1
 
 
-def negative_label_function(_path: Path) -> int:
+def negative_label_function(_path):
     return 0
 
 
@@ -66,14 +71,6 @@ def get_transit_validation_dataset():
         standard_light_curve_collections=[positive_validation_light_curve_collection,
                                           negative_validation_light_curve_collection])
     return validation_light_curve_dataset
-
-
-def get_negative_test_paths():
-    return list(Path('data/spoc_transit_experiment/test/negatives').glob('*.fits'))
-
-
-def get_positive_test_paths():
-    return list(Path('data/spoc_transit_experiment/test/positives').glob('*.fits'))
 
 
 def get_transit_finite_test_dataset():

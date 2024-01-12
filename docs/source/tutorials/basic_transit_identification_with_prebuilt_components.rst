@@ -58,9 +58,9 @@ Train the network
 
 Next, we'll look at the ``examples/transit_train.py`` file. In this script is a ``main`` function which will train our neural network on our data. The training script has 3 main components:
 
-#. Code to prepare our datasets.
-#. Code to prepare the neural network model.
-#. Code to running the training of the model on the datasets.
+1. Code to prepare our datasets.
+2. Code to prepare the neural network model.
+3. Code to running the training of the model on the datasets.
 
 Since ``qusi`` provides both models and and training loop code, the only one of these components that every user will be expected to deal with is preparing the dataset, since you'll eventually want to have ``qusi`` tackle the task you're interested in which will require you're own data. And the ``qusi`` dataset component will help make your data more suitable for training a neural network. However, we're going to save how to set up your own dataset (and how these example datasets are created) for the next tutorial. For now, we'll just use the example datasets as is. So, in the example script, you will see the first couple of lines of the ``main`` function call other functions that produce an example train and validation dataset for us. Then we choose one of the neural network models ``qusi`` provides (in this case the ``Hadryss`` model). Then finally, we start the training session. To run this training, simply run the script with:
 

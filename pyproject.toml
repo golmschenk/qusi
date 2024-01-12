@@ -46,8 +46,6 @@ polars = "^0.19.10"
 torchmetrics = "^1.2.0"
 stringcase = "^1.2.0"
 atpublic = "^4.0"
-
-[tool.poetry.group.dev.dependencies]
 pytest-pycharm = "^0.7.0"
 furo = "^2023.9.10"
 sphinx = "^6.1.3"

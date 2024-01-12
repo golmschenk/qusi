@@ -10,7 +10,8 @@ Welcome to qusi's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   tutorials/basic_transit_identification_with_prebuilt_components.rst
+   tutorials/basic_transit_identification_with_prebuilt_components
+   tutorials/basic_transit_identification_dataset_construction
    reference_index
 
 
