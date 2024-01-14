@@ -9,16 +9,13 @@ from pathlib import Path
 from typing import List, Iterable, Self, Tuple, TypeVar, Iterator, Callable, Any
 
 import numpy as np
+import numpy.typing as npt
 import torch
-from bokeh.io import show
 from filelock import FileLock
-from scipy.interpolate import interp1d
 from scipy import stats
+from scipy.interpolate import interp1d
 from torch import Tensor
 from torch.utils.data import IterableDataset
-from torchvision import transforms
-from bokeh.plotting import figure as Figure
-import numpy.typing as npt
 
 from qusi.light_curve import LightCurve, remove_nan_flux_data_points_from_light_curve
 from qusi.light_curve_collection import LabeledLightCurveCollection
@@ -45,27 +42,6 @@ class LightCurveDataset(IterableDataset):
             raise ValueError('Either the standard or injectee light curve collection lists must not be empty. '
                              'Both were empty.')
         self.post_injection_transform: Callable[[Any], Any] = post_injection_transform
-
-    @classmethod
-    def new(cls,
-            standard_light_curve_collections: List[LabeledLightCurveCollection] | None = None,
-            injectee_light_curve_collections: List[LabeledLightCurveCollection] | None = None,
-            injectable_light_curve_collections: List[LabeledLightCurveCollection] | None = None,
-            ) -> Self:
-        if standard_light_curve_collections is None and injectee_light_curve_collections is None:
-            raise ValueError('Either the standard or injectee light curve collection lists must be specified. '
-                             'Both were `None`.')
-        if standard_light_curve_collections is None:
-            standard_light_curve_collections = []
-        if injectee_light_curve_collections is None:
-            injectee_light_curve_collections = []
-        if injectable_light_curve_collections is None:
-            injectable_light_curve_collections = []
-        instance = cls(standard_light_curve_collections=standard_light_curve_collections,
-                       injectee_light_curve_collections=injectee_light_curve_collections,
-                       injectable_light_curve_collections=injectable_light_curve_collections,
-                       post_injection_transform=default_light_curve_observation_post_injection_transform)
-        return instance
 
     def __iter__(self):
         base_light_curve_collection_iter_and_type_pairs: \
@@ -104,6 +80,30 @@ class LightCurveDataset(IterableDataset):
                         injected_light_curve = inject_light_curve(injectee_light_curve, injectable_light_curve)
                         transformed_injected_light_curve = self.post_injection_transform(injected_light_curve)
                         yield transformed_injected_light_curve
+
+    @classmethod
+    def new(cls,
+            standard_light_curve_collections: List[LabeledLightCurveCollection] | None = None,
+            injectee_light_curve_collections: List[LabeledLightCurveCollection] | None = None,
+            injectable_light_curve_collections: List[LabeledLightCurveCollection] | None = None,
+            post_injection_transform: Callable[[Any], Any] | None = None,
+            ) -> Self:
+        if standard_light_curve_collections is None and injectee_light_curve_collections is None:
+            raise ValueError('Either the standard or injectee light curve collection lists must be specified. '
+                             'Both were `None`.')
+        if standard_light_curve_collections is None:
+            standard_light_curve_collections = []
+        if injectee_light_curve_collections is None:
+            injectee_light_curve_collections = []
+        if injectable_light_curve_collections is None:
+            injectable_light_curve_collections = []
+        if post_injection_transform is None:
+            post_injection_transform = partial(default_light_curve_observation_post_injection_transform, length=2500)
+        instance = cls(standard_light_curve_collections=standard_light_curve_collections,
+                       injectee_light_curve_collections=injectee_light_curve_collections,
+                       injectable_light_curve_collections=injectable_light_curve_collections,
+                       post_injection_transform=post_injection_transform)
+        return instance
 
 
 def inject_light_curve(injectee_observation: LightCurveObservation, injectable_observation: LightCurveObservation
@@ -210,18 +210,18 @@ class LimitedIterableDataset(IterableDataset):
                 break
 
 
-def default_light_curve_observation_post_injection_transform(x: LightCurveObservation) -> (Tensor, Tensor):
+def default_light_curve_observation_post_injection_transform(x: LightCurveObservation, length: int) -> (Tensor, Tensor):
     x = remove_nan_flux_data_points_from_light_curve_observation(x)
     x = from_light_curve_observation_to_fluxes_array_and_label_array(x)
-    x = make_fluxes_and_label_array_uniform_length(x, length=2500)
+    x = make_fluxes_and_label_array_uniform_length(x, length=length)
     x = pair_array_to_tensor(x)
     x = (normalize_tensor_by_modified_z_score(x[0]), x[1])
     return x
 
-def default_light_curve_post_injection_transform(x: LightCurve) -> (Tensor, Tensor):
+def default_light_curve_post_injection_transform(x: LightCurve, length: int) -> (Tensor, Tensor):
     x = remove_nan_flux_data_points_from_light_curve(x)
     x = x.fluxes
-    x = make_uniform_length(x, length=2500)
+    x = make_uniform_length(x, length=length)
     x = torch.tensor(x)
     x = normalize_tensor_by_modified_z_score(x)
     return x

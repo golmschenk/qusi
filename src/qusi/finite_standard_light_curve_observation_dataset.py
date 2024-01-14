@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from functools import partial
 from typing import List, Callable, Any, Self
 
 import numpy as np
@@ -25,7 +26,8 @@ class FiniteStandardLightCurveObservationDataset(Dataset):
             collection_start_indexes.append(length)
             length += standard_light_curve_collection_length
         instance = cls(standard_light_curve_collections=standard_light_curve_collections,
-                       post_injection_transform=default_light_curve_observation_post_injection_transform,
+                       post_injection_transform=partial(default_light_curve_observation_post_injection_transform,
+                                                        length=2500),
                        length=length,
                        collection_start_indexes=collection_start_indexes)
         return instance

@@ -1,12 +1,12 @@
 from dataclasses import dataclass
+from functools import partial
 from typing import List, Callable, Any, Self
 
 import numpy as np
 from torch.utils.data import Dataset
 
-from qusi.light_curve_collection import LabeledLightCurveCollection, LightCurveCollection
-from qusi.light_curve_dataset import default_light_curve_observation_post_injection_transform, \
-    default_light_curve_post_injection_transform
+from qusi.light_curve_collection import LightCurveCollection
+from qusi.light_curve_dataset import default_light_curve_post_injection_transform
 
 
 @dataclass
@@ -26,7 +26,7 @@ class FiniteStandardLightCurveDataset(Dataset):
             collection_start_indexes.append(length)
             length += standard_light_curve_collection_length
         instance = cls(standard_light_curve_collections=light_curve_collections,
-                       post_injection_transform=default_light_curve_post_injection_transform,
+                       post_injection_transform=partial(default_light_curve_post_injection_transform, length=2500),
                        length=length,
                        collection_start_indexes=collection_start_indexes)
         return instance
