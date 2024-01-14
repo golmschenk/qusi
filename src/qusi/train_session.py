@@ -1,5 +1,3 @@
-from dataclasses import dataclass
-from datetime import datetime
 from pathlib import Path
 from typing import List, Optional
 
@@ -39,15 +37,14 @@ def train_session(train_datasets: List[LightCurveDataset],
         workers_per_dataloader = 10
         prefetch_factor = 10
         persistent_workers = True
-    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, pin_memory=True,
+    train_dataloader = DataLoader(train_dataset, batch_size=hyperparameter_configuration.batch_size, pin_memory=True,
                                   persistent_workers=persistent_workers, prefetch_factor=prefetch_factor,
                                   num_workers=workers_per_dataloader)
     validation_dataloaders: List[DataLoader] = []
     for validation_dataset in validation_datasets:
-        validation_dataloaders.append(DataLoader(validation_dataset, batch_size=batch_size, pin_memory=True,
-                                                 persistent_workers=persistent_workers,
-                                                 prefetch_factor=prefetch_factor,
-                                                 num_workers=workers_per_dataloader))
+        validation_dataloaders.append(DataLoader(validation_dataset, batch_size=hyperparameter_configuration.batch_size,
+                                                 pin_memory=True, persistent_workers=persistent_workers,
+                                                 prefetch_factor=prefetch_factor, num_workers=workers_per_dataloader))
     if torch.cuda.is_available() and not debug:
         device = torch.device('cuda')
     else:
@@ -60,14 +57,14 @@ def train_session(train_datasets: List[LightCurveDataset],
     for metric_function in metric_functions:
         metric_functions_on_device.append(metric_function.to(device, non_blocking=True))
     metric_functions = metric_functions_on_device
-    for cycle_index in range(cycles):
+    for cycle_index in range(hyperparameter_configuration.cycles):
         train_phase(dataloader=train_dataloader, model=model, loss_function=loss_function,
                     metric_functions=metric_functions, optimizer=optimizer,
-                    steps=train_steps_per_cycle, device=device)
+                    steps=hyperparameter_configuration.train_steps_per_cycle, device=device)
         for validation_dataloader in validation_dataloaders:
             validation_phase(dataloader=validation_dataloader, model=model, loss_function=loss_function,
-                             metric_functions=metric_functions, steps=validation_steps_per_cycle,
-                             device=device)
+                             metric_functions=metric_functions,
+                             steps=hyperparameter_configuration.validation_steps_per_cycle, device=device)
         save_model(model, suffix='latest_model', process_rank=0)
         wandb_commit(process_rank=0)
 
