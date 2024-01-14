@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 import numpy as np
 import stringcase
@@ -13,13 +13,16 @@ from torch.utils.data import DataLoader
 from torchmetrics.classification import BinaryAccuracy
 
 from qusi.light_curve_dataset import LightCurveDataset, InterleavedDataset
+from qusi.train_hyperparameter_configuration import TrainHyperparameterConfiguration
 from qusi.train_logging_configuration import TrainLoggingConfiguration
 from qusi.wandb_liaison import wandb_init, wandb_log, wandb_commit
 
 
 def train_session(train_datasets: List[LightCurveDataset],
-                  validation_datasets: List[LightCurveDataset], model: Module, batch_size: int,
-                  cycles: int, train_steps_per_cycle: int, validation_steps_per_cycle: int):
+                  validation_datasets: List[LightCurveDataset], model: Module,
+                  hyperparameter_configuration: Optional[TrainHyperparameterConfiguration]):
+    if hyperparameter_configuration is None:
+        hyperparameter_configuration = TrainHyperparameterConfiguration.new()
     logging_configuration = TrainLoggingConfiguration.new()
     wandb_init(process_rank=0, project=logging_configuration.wandb_project, entity=logging_configuration.wandb_entity,
                settings=wandb.Settings(start_method='fork'))
