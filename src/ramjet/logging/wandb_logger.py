@@ -13,7 +13,6 @@ import wandb
 from typing import Optional, Dict
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from pathos.helpers import mp as multiprocess
 
 from ramjet.photometric_database.light_curve import LightCurve
 
@@ -176,14 +175,6 @@ class WandbLogger:
         """
         for request_queue_name, request_queue in self.request_queues.items():
             request_queue.put(ExampleRequest())
-
-    def create_callback(self) -> WandbLoggerCallback:
-        """
-        Creates a callback for the fit loop to call the logger methods.
-
-        :return: The callback.
-        """
-        return WandbLoggerCallback(self)
 
     def create_request_queue_for_collection(self, name: str) -> multiprocess.Queue:
         """

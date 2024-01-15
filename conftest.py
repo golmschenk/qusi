@@ -35,7 +35,7 @@ def pytest_configure(config):
         'markers', 'slow: Mark a test as a slow test.'
     )
     config.addinivalue_line(
-        'markers', 'External: Mark a test as requiring an external resource (e.g. makes a network call to a URL).'
+        'markers', 'external: Mark a test as requiring an external resource (e.g. makes a network call to a URL).'
     )
 
 
