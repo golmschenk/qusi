@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "qusi"
-version = "0.8.0"
+version = "0.8.1"
 description = ""
 authors = ["Greg Olmschenk <greg@olmschenk.com>"]
 readme = "README.md"
