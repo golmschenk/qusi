@@ -49,7 +49,7 @@ def main():
         standard_light_curve_collections=[positive_test_light_curve_collection,
                                           negative_test_light_curve_collection])
 
-    model = Hadryss()
+    model = Hadryss.new()
     device = get_device()
     model.load_state_dict(torch.load('sessions/pleasant-lion-32_latest_model.pt', map_location=device))
     metric_functions = [BinaryAccuracy(), BCELoss()]

@@ -9,7 +9,7 @@ from qusi.hadryss_model import Hadryss
 
 def main():
     test_light_curve_dataset = get_transit_finite_test_dataset()
-    model = Hadryss()
+    model = Hadryss.new()
     device = get_device()
     model.load_state_dict(torch.load('sessions/<wandb_run_name>_latest_model.pt', map_location=device))
     metric_functions = [BinaryAccuracy(), BCELoss()]

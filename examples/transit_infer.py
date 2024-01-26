@@ -28,7 +28,7 @@ def main():
     test_light_curve_dataset = FiniteStandardLightCurveDataset.new(
         light_curve_collections=[infer_light_curve_collection])
 
-    model = Hadryss()
+    model = Hadryss.new()
     device = get_device()
     model.load_state_dict(torch.load('sessions/pleasant-lion-32_latest_model.pt', map_location=device))
     results = infer_session(infer_datasets=[test_light_curve_dataset], model=model,
