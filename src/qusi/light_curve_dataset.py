@@ -218,7 +218,7 @@ def default_light_curve_observation_post_injection_transform(x: LightCurveObserv
     x = (normalize_tensor_by_modified_z_score(x[0]), x[1])
     return x
 
-def default_light_curve_post_injection_transform(x: LightCurve, length: int) -> (Tensor, Tensor):
+def default_light_curve_post_injection_transform(x: LightCurve, length: int) -> (Tensor):
     x = remove_nan_flux_data_points_from_light_curve(x)
     x = x.fluxes
     x = make_uniform_length(x, length=length)
