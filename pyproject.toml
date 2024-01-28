@@ -6,7 +6,7 @@ authors = [
     { name = "golmschenk", email = "greg@olmschenk.com" },
 ]
 readme = "README.md"
-requires-python = "==3.11"
+requires-python = "==3.11.*"
 packages = [
     {include = "ramjet", from="src"},
     {include = "qusi", from="src"}
