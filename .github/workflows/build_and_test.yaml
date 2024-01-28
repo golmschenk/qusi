@@ -1,0 +1,23 @@
+name: build_and_test
+
+on: [ push, pull_request ]
+
+jobs:
+  build:
+    name: build_and_test_on_${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: install_hatch
+        run: pipx install hatch
+
+      - name: run_tests
+        run: hatch run test
+
+      - name: build_dist
+        run: hatch build
