@@ -9,9 +9,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest, windows-latest, macos-latest ]
+        os: [ ubuntu-latest, windows-latest, macos-latest, macos-latest-xlarge ]
     steps:
       - uses: actions/checkout@v3
+
+      - name: ensure_pipx_on_macos
+        if: runner.os == 'macOS'
+        run: |
+          brew install pipx
+          pipx ensurepath
 
       - name: install_hatch
         run: pipx install hatch
