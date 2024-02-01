@@ -19,7 +19,7 @@ dependencies = [
 "astropy>=5.2.1",
 "astroquery>=0.4.6",
 "requests>=2.28.2",
-"pytest>=7.2.1",
+"pytest>=7.2.1,<8",
 "pyarrow>=11.0.0",
 "gitpython>=3.1.30",
 "matplotlib>=3.6.3",
@@ -54,3 +54,49 @@ build-backend = "hatchling.build"
 
 [tool.hatch.version]
 path = "src/qusi/__about__.py"
+
+[tool.hatch.envs.default]
+dependencies = [
+    "coverage[toml]>=6.5",
+    "pytest",
+]
+[tool.hatch.envs.default.scripts]
+test = "pytest {args:tests}"
+test-cov = "coverage run -m pytest {args:tests}"
+cov-report = [
+    "- coverage combine",
+    "coverage report",
+]
+cov = [
+    "test-cov",
+    "cov-report",
+]
+
+[[tool.hatch.envs.all.matrix]]
+python = ["3.8", "3.9", "3.10", "3.11", "3.12"]
+
+[tool.hatch.envs.types]
+dependencies = [
+    "mypy>=1.0.0",
+]
+[tool.hatch.envs.types.scripts]
+check = "mypy --install-types --non-interactive {args:src/qusi tests}"
+
+[tool.coverage.run]
+source_pkgs = ["qusi", "tests"]
+branch = true
+parallel = true
+omit = [
+    "src/qusi/__about__.py",
+]
+
+[tool.coverage.paths]
+qusi = ["src/qusi", "*/qusi/src/qusi"]
+tests = ["tests", "*/qusi/tests"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "no cov",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]
