@@ -35,9 +35,9 @@ Then install ``qusi`` within this environment.
 
    tutorials/basic_transit_identification_with_prebuilt_components
    tutorials/basic_transit_identification_dataset_construction
-   tutorials/crafting_standard_datasets.rst
-   tutorials/crafting_standard_datasets.rst
-   tutorials/advanced_crafting_datasets.rst
+   tutorials/crafting_standard_datasets
+   tutorials/crafting_injected_datasets
+   tutorials/advanced_crafting_datasets
    reference_index
 
 
