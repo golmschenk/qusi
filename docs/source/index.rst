@@ -17,7 +17,7 @@ To install ``qusi``, with Python >= 3.11:
 
 Although not required, as is generally good practice for any development project, we highly recommend creating a separate virtual environment for each distinct project. For example, via Conda, creating a virtual environment for a project using ``qusi`` might look like:
 
-.. code:: shell
+.. code::
 
     conda create -n project_using_qusi_env python=3.11
 
