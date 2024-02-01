@@ -31,32 +31,32 @@ def main():
         tic_ids=positive_train_tic_ids,
         download_directory=Path('data/spoc_transit_experiment/train/positives'),
         sectors=sectors,
-        limit=1000)
+        limit=2000)
     download_spoc_light_curves_for_tic_ids(
         tic_ids=negative_train_tic_ids,
         download_directory=Path('data/spoc_transit_experiment/train/negatives'),
         sectors=sectors,
-        limit=3000)
+        limit=6000)
     download_spoc_light_curves_for_tic_ids(
         tic_ids=positive_validation_tic_ids,
         download_directory=Path('data/spoc_transit_experiment/validation/positives'),
         sectors=sectors,
-        limit=100)
+        limit=200)
     download_spoc_light_curves_for_tic_ids(
         tic_ids=negative_validation_tic_ids,
         download_directory=Path('data/spoc_transit_experiment/validation/negatives'),
         sectors=sectors,
-        limit=300)
+        limit=600)
     download_spoc_light_curves_for_tic_ids(
         tic_ids=positive_test_tic_ids,
         download_directory=Path('data/spoc_transit_experiment/test/positives'),
         sectors=sectors,
-        limit=100)
+        limit=200)
     download_spoc_light_curves_for_tic_ids(
         tic_ids=negative_test_tic_ids,
         download_directory=Path('data/spoc_transit_experiment/test/negatives'),
         sectors=sectors,
-        limit=300)
+        limit=600)
 
 
 if __name__ == '__main__':

@@ -22,7 +22,7 @@ def infer_session(infer_datasets: List[FiniteStandardLightCurveDataset], model: 
     return results
 
 
-def get_device():
+def get_device() -> Device:
     if torch.cuda.is_available():
         device = torch.device('cuda')
     else:
