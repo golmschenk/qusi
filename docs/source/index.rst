@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-qusi
-====
+Welcome to qusi's documentation!
+================================
 
 Installation
 ------------
@@ -35,6 +35,9 @@ Then install ``qusi`` within this environment.
 
    tutorials/basic_transit_identification_with_prebuilt_components
    tutorials/basic_transit_identification_dataset_construction
+   tutorials/crafting_standard_datasets.rst
+   tutorials/crafting_standard_datasets.rst
+   tutorials/advanced_crafting_datasets.rst
    reference_index
 
 
