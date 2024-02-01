@@ -9,7 +9,7 @@ Welcome to qusi's documentation!
 Installation
 ------------
 
-To install ``qusi``, with Python >= 3.11:
+To install ``qusi`` with Python >= 3.11 use:
 
 .. code:: shell
 
@@ -21,7 +21,7 @@ Although not required, as is generally good practice for any development project
 
     conda create -n project_using_qusi_env python=3.11
 
-Then before working, be sure to activate your environment.
+Then before working, be sure to activate your environment:
 
 .. code:: shell
 

@@ -34,7 +34,7 @@ The main thing to know is that this will create a ``data`` directory within the 
                 positive
     examples
 
-Each of these ``positive`` and ``negative`` data directories will now contain a set of light curves. The reason why the code in this script is not very important for you to know, is that it's mostly irrelevant for future uses. When you're working on your own problem, you'll obtain your data some other way. And ``qusi`` is flexible about the data structure, so this directory structure is not required. It's just one way to structure the data.
+Each of these ``positive`` and ``negative`` data directories will now contain a set of light curves. The reason why the code in this script is not very important for you to know, is that it's mostly irrelevant for future uses. When you're working on your own problem, you'll obtain your data some other way. And ``qusi`` is flexible about the data structure, so this directory structure is not required. It's just one way to structure the data. Note, this is a relatively small dataset to make sure it doesn't take very long to get up and running. To get a better result, you'd want to download all known transiting light curves and a much larger collection non-transiting light curves.
 
 Preparing for training
 ----------------------
@@ -69,6 +69,8 @@ Since ``qusi`` provides both models and and training loop code, the only one of 
     python examples/transit_train.py
 
 You should see some output showing basic training statistics from the terminal as it runs through the training loop. It will run for as many train cycles as were specified in the script. On every completed cycle, ``qusi`` will save the latest version of the fitted model to ``sessions/<wandb_run_name>/latest_model``.
+
+You can also go to your Wandb project to see the metrics over the course of the training in plot form.
 
 Test the fitted model
 ---------------------
