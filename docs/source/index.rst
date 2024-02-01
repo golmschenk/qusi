@@ -3,8 +3,31 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to qusi's documentation!
-================================
+qusi
+====
+
+Installation
+------------
+
+To install ``qusi``, with Python >= 3.11:
+
+.. code:: shell
+
+    pip install qusi
+
+However, although not required, we highly recommend creating a separate virtual environment for each distinct project (not just when using ``qusi``, but generally). For example, via Conda, creating a virtual environment for a project using ``qusi`` might look like:
+
+.. code:: shell
+
+    conda create -n project_using_qusi_env python=3.11
+
+Then before working, be sure to activate your environment.
+
+.. code:: shell
+
+    conda activate project_using_qusi_env
+
+Then install ``qusi`` within this environment.
 
 .. toctree::
    :maxdepth: 2
