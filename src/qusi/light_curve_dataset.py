@@ -17,9 +17,10 @@ from scipy.interpolate import interp1d
 from torch import Tensor
 from torch.utils.data import IterableDataset
 
-from qusi.light_curve import LightCurve, remove_nan_flux_data_points_from_light_curve
+from qusi.light_curve import LightCurve, remove_nan_flux_data_points_from_light_curve, randomly_roll_light_curve
 from qusi.light_curve_collection import LabeledLightCurveCollection
-from qusi.light_curve_observation import LightCurveObservation, remove_nan_flux_data_points_from_light_curve_observation
+from qusi.light_curve_observation import LightCurveObservation, \
+    remove_nan_flux_data_points_from_light_curve_observation, randomly_roll_light_curve_observation
 from qusi.light_curve_transforms import from_light_curve_observation_to_fluxes_array_and_label_array, \
     pair_array_to_tensor
 
@@ -212,6 +213,7 @@ class LimitedIterableDataset(IterableDataset):
 
 def default_light_curve_observation_post_injection_transform(x: LightCurveObservation, length: int) -> (Tensor, Tensor):
     x = remove_nan_flux_data_points_from_light_curve_observation(x)
+    x = randomly_roll_light_curve_observation(x)
     x = from_light_curve_observation_to_fluxes_array_and_label_array(x)
     x = make_fluxes_and_label_array_uniform_length(x, length=length)
     x = pair_array_to_tensor(x)
@@ -220,6 +222,7 @@ def default_light_curve_observation_post_injection_transform(x: LightCurveObserv
 
 def default_light_curve_post_injection_transform(x: LightCurve, length: int) -> (Tensor):
     x = remove_nan_flux_data_points_from_light_curve(x)
+    x = randomly_roll_light_curve(x)
     x = x.fluxes
     x = make_uniform_length(x, length=length)
     x = torch.tensor(x)

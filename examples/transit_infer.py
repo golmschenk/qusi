@@ -30,10 +30,14 @@ def main():
 
     model = Hadryss.new()
     device = get_device()
-    model.load_state_dict(torch.load('sessions/pleasant-lion-32_latest_model.pt', map_location=device))
-    results = infer_session(infer_datasets=[test_light_curve_dataset], model=model,
-                            batch_size=100, device=device)
-    return results
+    model.load_state_dict(torch.load('sessions/honest-shadow-1_latest_model.pt', map_location=device))
+    confidences = infer_session(infer_datasets=[test_light_curve_dataset], model=model,
+                                batch_size=100, device=device)[0]
+    paths = list(get_infer_paths())
+    paths_with_confidences = zip(paths, confidences)
+    sorted_paths_with_confidences = sorted(
+        paths_with_confidences, key=lambda path_with_confidence: path_with_confidence[1], reverse=True)
+    print(sorted_paths_with_confidences)
 
 
 if __name__ == '__main__':
