@@ -30,7 +30,7 @@ def main():
 
     model = Hadryss.new()
     device = get_device()
-    model.load_state_dict(torch.load('sessions/honest-shadow-1_latest_model.pt', map_location=device))
+    model.load_state_dict(torch.load('sessions/<wandb_run_name>_latest_model.pt', map_location=device))
     confidences = infer_session(infer_datasets=[test_light_curve_dataset], model=model,
                                 batch_size=100, device=device)[0]
     paths = list(get_infer_paths())
