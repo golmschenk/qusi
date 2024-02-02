@@ -38,3 +38,11 @@ def remove_nan_flux_data_points_from_light_curve(light_curve: LightCurve) -> Lig
     light_curve.fluxes = light_curve.fluxes[~nan_flux_indexes]
     light_curve.times = light_curve.times[~nan_flux_indexes]
     return light_curve
+
+
+def randomly_roll_light_curve(light_curve: LightCurve) -> LightCurve:
+    light_curve = deepcopy(light_curve)
+    random_index = np.random.randint(light_curve.times.shape[0])
+    light_curve.times = np.roll(light_curve.times, random_index)
+    light_curve.fluxes = np.roll(light_curve.fluxes, random_index)
+    return light_curve
