@@ -6,7 +6,7 @@ authors = [
     { name = "golmschenk", email = "greg@olmschenk.com" },
 ]
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.9"
 packages = [
     {include = "ramjet", from="src"},
     {include = "qusi", from="src"}
@@ -25,7 +25,7 @@ dependencies = [
 "matplotlib>=3.6.3",
 "pipreqs>=0.4.11",
 "bokeh>=3.0.0",
-"scipy>=1.11.0",
+"scipy>=1.10.0",
 "setuptools>=67.1.0",
 "peewee>=3.15.4",
 "pytest-asyncio>=0.20.3",
@@ -75,7 +75,7 @@ cov = [
 ]
 
 [[tool.hatch.envs.all.matrix]]
-python = ["3.8", "3.9", "3.10", "3.11", "3.12"]
+python = ["3.9", "3.10", "3.11", "3.12"]
 
 [tool.hatch.envs.types]
 dependencies = [

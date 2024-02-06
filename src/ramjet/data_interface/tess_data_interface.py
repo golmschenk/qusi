@@ -1,6 +1,8 @@
 """
 Code for a class for common interfacing with TESS data, such as downloading, sorting, and manipulating.
 """
+from __future__ import annotations
+
 import itertools
 from io import StringIO
 from random import shuffle, Random
