@@ -1,5 +1,10 @@
 from pathlib import Path
 
+try:
+    from typing import List
+except ImportError:
+    from typing_extensions import List
+
 import numpy as np
 
 from qusi.light_curve import LightCurve
@@ -15,6 +20,8 @@ class ToyLightCurve:
     def flat(cls, value: float = 1) -> LightCurve:
         """
         Creates a flat light curve.
+
+        :param value: The flux value of the flat light curve.
         """
         length = 100
         fluxes = np.full(shape=[length], fill_value=value, dtype=np.float32)
@@ -33,14 +40,25 @@ class ToyLightCurve:
         return LightCurve.new(times=times, fluxes=fluxes)
 
 
-def toy_light_curve_get_paths_function():
+def toy_light_curve_get_paths_function() -> List[Path]:
+    """
+    A fake function to fulfill the need of returning a list of paths.
+    """
     return [Path('')]
 
-def toy_flat_light_curve_load_times_and_fluxes(path: Path) -> (np.ndarray, np.ndarray):
+
+def toy_flat_light_curve_load_times_and_fluxes(_path: Path) -> (np.ndarray, np.ndarray):
+    """
+    Loads a flat toy light curve.
+    """
     light_curve = ToyLightCurve.flat()
     return light_curve.times, light_curve.fluxes
 
-def toy_sine_wave_light_curve_load_times_and_fluxes(path: Path) -> (np.ndarray, np.ndarray):
+
+def toy_sine_wave_light_curve_load_times_and_fluxes(_path: Path) -> (np.ndarray, np.ndarray):
+    """
+    Loads a sine wave toy light curve.
+    """
     light_curve = ToyLightCurve.sine_wave()
     return light_curve.times, light_curve.fluxes
 
