@@ -116,9 +116,12 @@ class TessFfiLightCurve(TessLightCurve):
         :return: The TIC ID and sector. The sector might be omitted (as None).
         """
         path = str(Path(path))
+        sep_str = os.sep
+        if sep_str == '\\':
+            sep_str = '\\\\'
         # Search for Brian Powell's FFI path convention with directory structure sector, magnitude, target.
         # E.g., "tesslcs_sector_12/tesslcs_tmag_1_2/tesslc_290374453"
-        match = re.search(rf'tesslcs_sector_(\d+)(?:_104)?{os.sep}(?:2_min_cadence_targets|tesslcs_tmag_\d+_\d+){os.sep}tesslc_(\d+)', path)
+        match = re.search(rf'tesslcs_sector_(\d+)(?:_104)?{sep_str}(?:2_min_cadence_targets|tesslcs_tmag_\d+_\d+){sep_str}tesslc_(\d+)', path)
         if match:
             return int(match.group(2)), int(match.group(1))
         # Search for Brian Powell's FFI path convention with only the file name containing the target.
@@ -142,9 +145,12 @@ class TessFfiLightCurve(TessLightCurve):
         :return: The magnitude floored.
         """
         file_path_string = str(Path(file_path))
+        sep_str = os.sep
+        if sep_str == '\\':
+            sep_str = '\\\\'
         # Search for Brian Powell's FFI path convention with directory structure sector, magnitude, target.
         # E.g., "tesslcs_sector_12/tesslcs_tmag_1_2/tesslc_290374453"
-        match = re.search(rf'tesslcs_sector_\d+(?:_104)?{os.sep}tesslcs_tmag_(\d+)_\d+{os.sep}tesslc_\d+', file_path_string)
+        match = re.search(rf'tesslcs_sector_\d+(?:_104)?{sep_str}tesslcs_tmag_(\d+)_\d+{sep_str}tesslc_\d+', file_path_string)
         if match:
             return int(match.group(1))
         raise ValueError(f'{file_path_string} does not match a known pattern to extract magnitude from.')
