@@ -2,7 +2,6 @@ import argparse
 import platform
 from pathlib import Path
 
-import uvloop
 from bokeh import plotting
 from bokeh.application import Application
 from bokeh.application.handlers import DirectoryHandler
@@ -13,6 +12,7 @@ plotting.output_notebook.__doc__ = ''
 
 def run_viewer(light_curve_path: Path, port: int = 5007):
     if platform.system() != 'Windows':
+        import uvloop
         uvloop.install()
     print(f'Opening viewer on http://localhost:{port}/')
     handler = DirectoryHandler(filename=str(Path(__file__).parent), argv=[light_curve_path])

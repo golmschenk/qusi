@@ -35,7 +35,7 @@ dependencies = [
 "beautifulsoup4>=4.11.2",
 "lxml>=4.9.2",
 "lightkurve>=2.3.0",
-"uvloop>=0.17.0",
+"uvloop>=0.17.0; platform_system != 'Windows'",
 "filelock>=3.9.0",
 "torch>=2.0.1",
 "torchvision>=0.15.2",
