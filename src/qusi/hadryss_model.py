@@ -1,5 +1,8 @@
 import math
-from typing import Self, List
+try:
+    from typing import Self, List
+except ImportError:
+    from typing_extensions import Self, List
 
 import torch
 from torch import Tensor

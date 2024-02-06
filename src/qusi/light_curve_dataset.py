@@ -6,7 +6,11 @@ import socket
 from enum import Enum
 from functools import partial
 from pathlib import Path
-from typing import List, Iterable, Self, Tuple, TypeVar, Iterator, Callable, Any
+try:
+    from typing import List, Iterable, Self, Tuple, TypeVar, Iterator, Callable, Any
+except ImportError:
+    from typing_extensions import List, Iterable, Self, Tuple, TypeVar, Iterator, Callable, Any
+
 
 import numpy as np
 import numpy.typing as npt

@@ -6,7 +6,7 @@ authors = [
     { name = "golmschenk", email = "greg@olmschenk.com" },
 ]
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 packages = [
     {include = "ramjet", from="src"},
     {include = "qusi", from="src"}
@@ -46,6 +46,8 @@ dependencies = [
 "pytest-pycharm>=0.7.0",
 "furo>=2023.9.10",
 "sphinx>=6.1.3",
+"backports.strenum",
+"typing_extensions",
 ]
 
 [build-system]
