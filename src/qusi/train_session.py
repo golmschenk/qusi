@@ -1,5 +1,8 @@
 from pathlib import Path
-from typing import List, Optional
+try:
+    from typing import List, Optional
+except ImportError:
+    from typing_extensions import List, Optional
 
 import numpy as np
 import stringcase

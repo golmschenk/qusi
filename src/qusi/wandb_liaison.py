@@ -1,4 +1,7 @@
-from typing import Any, Dict
+try:
+    from typing import Any, Dict
+except ImportError:
+    from typing_extensions import Any, Dict
 
 import wandb as wandb
 

@@ -1,4 +1,7 @@
-from typing import Tuple
+try:
+    from typing import Tuple
+except ImportError:
+    from typing_extensions import Tuple
 
 import torch
 import numpy.typing as npt
