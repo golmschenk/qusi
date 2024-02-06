@@ -13,12 +13,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: ensure_pipx_on_macos
-        if: runner.os == 'macOS'
-        run: |
-          brew install pipx
-          pipx ensurepath
-
       - name: install_hatch
         run: pipx install hatch
 
