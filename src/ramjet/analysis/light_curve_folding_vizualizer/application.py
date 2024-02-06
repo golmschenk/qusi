@@ -1,18 +1,19 @@
+import argparse
+import platform
 from pathlib import Path
 
-import pandas as pd
 import uvloop
 from bokeh import plotting
 from bokeh.application import Application
 from bokeh.application.handlers import DirectoryHandler
 from bokeh.server.server import Server
-import argparse
 
 plotting.output_notebook.__doc__ = ''
 
 
 def run_viewer(light_curve_path: Path, port: int = 5007):
-    uvloop.install()
+    if platform.system() != 'Windows':
+        uvloop.install()
     print(f'Opening viewer on http://localhost:{port}/')
     handler = DirectoryHandler(filename=str(Path(__file__).parent), argv=[light_curve_path])
     application = Application(handler)
