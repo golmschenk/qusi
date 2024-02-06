@@ -114,8 +114,7 @@ class TessFfiLightCurve(TessLightCurve):
         :param path: The path of the file to extract the TIC ID and sector.
         :return: The TIC ID and sector. The sector might be omitted (as None).
         """
-        if isinstance(path, Path):
-            path = str(path)
+        path = str(Path(path))
         # Search for Brian Powell's FFI path convention with directory structure sector, magnitude, target.
         # E.g., "tesslcs_sector_12/tesslcs_tmag_1_2/tesslc_290374453"
         match = re.search(r'tesslcs_sector_(\d+)(?:_104)?/(?:2_min_cadence_targets|tesslcs_tmag_\d+_\d+)/tesslc_(\d+)', path)
@@ -141,14 +140,13 @@ class TessFfiLightCurve(TessLightCurve):
         :param file_path: The path of the file to extract the magnitude.
         :return: The magnitude floored.
         """
-        if isinstance(file_path, Path):
-            file_path = str(file_path)
+        file_path_string = str(Path(file_path))
         # Search for Brian Powell's FFI path convention with directory structure sector, magnitude, target.
         # E.g., "tesslcs_sector_12/tesslcs_tmag_1_2/tesslc_290374453"
-        match = re.search(r'tesslcs_sector_\d+(?:_104)?/tesslcs_tmag_(\d+)_\d+/tesslc_\d+', file_path)
+        match = re.search(r'tesslcs_sector_\d+(?:_104)?/tesslcs_tmag_(\d+)_\d+/tesslc_\d+', file_path_string)
         if match:
             return int(match.group(1))
-        raise ValueError(f'{file_path} does not match a known pattern to extract magnitude from.')
+        raise ValueError(f'{file_path_string} does not match a known pattern to extract magnitude from.')
 
     @staticmethod
     def get_magnitude_from_file(file_path: Union[Path, str]) -> float:
