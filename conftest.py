@@ -1,8 +1,7 @@
 """Configuration for the pytest tests."""
 
-import pytest
 import matplotlib
-
+import pytest
 
 matplotlib.use('Agg')  # Use non-interactive backend to prevent loss of focus during test.
 

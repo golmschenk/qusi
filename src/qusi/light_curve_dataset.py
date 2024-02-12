@@ -8,10 +8,8 @@ import socket
 from enum import Enum
 from functools import partial
 from pathlib import Path
-try:
-    from typing import List, Iterable, Self, Tuple, TypeVar, Iterator, Callable, Any
-except ImportError:
-    from typing_extensions import List, Iterable, Self, Tuple, TypeVar, Iterator, Callable, Any
+from typing import List, Iterable, Tuple, TypeVar, Iterator, Callable, Any
+from typing_extensions import Self
 
 
 import numpy as np

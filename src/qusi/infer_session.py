@@ -1,7 +1,4 @@
-try:
-    from typing import List
-except ImportError:
-    from typing_extensions import List
+from typing import List
 
 import numpy as np
 import torch

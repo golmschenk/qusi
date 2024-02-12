@@ -1,9 +1,6 @@
 from copy import deepcopy
 from dataclasses import dataclass
-try:
-    from typing import Self
-except ImportError:
-    from typing_extensions import Self
+from typing_extensions import Self
 
 from qusi.light_curve import LightCurve, remove_nan_flux_data_points_from_light_curve, randomly_roll_light_curve
 

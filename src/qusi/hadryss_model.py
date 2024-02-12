@@ -1,10 +1,8 @@
 from __future__ import annotations
 
 import math
-try:
-    from typing import Self, List
-except ImportError:
-    from typing_extensions import Self, List
+from typing import List
+from typing_extensions import Self
 
 import torch
 from torch import Tensor

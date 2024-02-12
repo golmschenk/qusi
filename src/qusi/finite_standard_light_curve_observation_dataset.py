@@ -1,9 +1,7 @@
 from dataclasses import dataclass
 from functools import partial
-try:
-    from typing import List, Callable, Any, Self
-except ImportError:
-    from typing_extensions import List, Callable, Any, Self
+from typing import List, Callable, Any
+from typing_extensions import Self
 
 import numpy as np
 from torch.utils.data import Dataset

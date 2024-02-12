@@ -1,9 +1,6 @@
 from copy import deepcopy
 from dataclasses import dataclass
-try:
-    from typing import Self
-except ImportError:
-    from typing_extensions import Self
+from typing_extensions import Self
 
 import numpy as np
 import numpy.typing as npt

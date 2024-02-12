@@ -4,10 +4,8 @@ from dataclasses import dataclass
 from random import Random
 from abc import ABC, abstractmethod
 from pathlib import Path
-try:
-    from typing import Iterable, Callable, Self, Iterator, List, Tuple
-except ImportError:
-    from typing_extensions import Iterable, Callable, Self, Iterator, List, Tuple
+from typing import Iterable, Callable, Iterator, List, Tuple
+from typing_extensions import Self
 
 import numpy as np
 import numpy.typing as npt

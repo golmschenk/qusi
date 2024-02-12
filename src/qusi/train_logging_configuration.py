@@ -1,8 +1,5 @@
 from dataclasses import dataclass
-try:
-    from typing import Any, Dict
-except ImportError:
-    from typing_extensions import Any, Dict
+from typing import Any, Dict
 
 
 @dataclass
