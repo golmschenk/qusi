@@ -1,4 +1,3 @@
-from typing import List
 
 import numpy as np
 import torch
@@ -9,9 +8,9 @@ from torch.utils.data import DataLoader
 from qusi.finite_standard_light_curve_dataset import FiniteStandardLightCurveDataset
 
 
-def infer_session(infer_datasets: List[FiniteStandardLightCurveDataset], model: Module,
+def infer_session(infer_datasets: list[FiniteStandardLightCurveDataset], model: Module,
                   batch_size: int, device: Device):
-    infer_dataloaders: List[DataLoader] = []
+    infer_dataloaders: list[DataLoader] = []
     for infer_dataset in infer_datasets:
         infer_dataloaders.append(DataLoader(infer_dataset, batch_size=batch_size, pin_memory=True))
     model.eval()

@@ -2,7 +2,7 @@ import itertools
 from itertools import islice
 from unittest.mock import Mock
 
-from qusi.light_curve_dataset import is_injected_dataset, contains_injected_dataset, interleave_infinite_iterators
+from qusi.light_curve_dataset import contains_injected_dataset, interleave_infinite_iterators, is_injected_dataset
 from tests.test_utilities import IterableMock
 
 

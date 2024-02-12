@@ -1,13 +1,14 @@
 """
 Code to load view entities in the background so they show up quickly when displayed.
 """
-import pandas as pd
 import asyncio
+import warnings
 from asyncio import Task
 from collections import deque
-import warnings
 from pathlib import Path
-from typing import Union, Deque
+from typing import Deque, Union
+
+import pandas as pd
 
 from ramjet.analysis.viewer.view_entity import ViewEntity
 from ramjet.data_interface.tess_data_interface import NoDataProductsFoundException

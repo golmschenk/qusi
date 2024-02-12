@@ -5,9 +5,8 @@ Code for visualizing light curves.
 from pathlib import Path
 from typing import Union
 
-import numpy
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 from bokeh.models import LinearColorMapper
 from bokeh.palettes import Turbo256

@@ -1,17 +1,17 @@
 """
 Code for displaying a light curve figure.
 """
+from typing import Union
+
 import numpy as np
 import pandas as pd
-from typing import Union, List
-
 from bokeh.colors import Color
-from bokeh.models import ColumnDataSource, GlyphRenderer, CustomJS
+from bokeh.models import ColumnDataSource, CustomJS, GlyphRenderer
 from bokeh.plotting import figure as Figure
 
 from ramjet.analysis.color_palette import light_curve_colors
-from ramjet.analysis.light_curve_visualizer import calculate_inlier_range
 from ramjet.analysis.convert_column_name_to_display_name import convert_column_name_to_display_name
+from ramjet.analysis.light_curve_visualizer import calculate_inlier_range
 from ramjet.photometric_database.light_curve import LightCurve
 
 
@@ -23,13 +23,13 @@ class LightCurveDisplay:
         self.figure: Union[Figure, None] = None
         self.data_source: Union[ColumnDataSource, None] = None
         self.time_column_name: Union[str, None] = None
-        self.flux_column_names: List[str] = []
+        self.flux_column_names: list[str] = []
         self.inlier_range_data_source: Union[ColumnDataSource, None] = None
         self.inlier_range_glyph_renderer: Union[GlyphRenderer, None] = None
         self.exclude_outliers_from_zoom: bool = False
 
     @classmethod
-    def for_columns(cls, time_column_name: str, flux_column_names: List[str], flux_axis_label: str = 'Flux'):
+    def for_columns(cls, time_column_name: str, flux_column_names: list[str], flux_axis_label: str = 'Flux'):
         """
         Creates a light curve display object with the specified columns prepared for display.
 
@@ -60,7 +60,7 @@ class LightCurveDisplay:
                              active_drag='box_zoom', active_scroll='wheel_zoom')
         self.figure.sizing_mode = 'stretch_width'
 
-    def initialize_data_source(self, column_names: List[str]):
+    def initialize_data_source(self, column_names: list[str]):
         """
         Creates a data source with the passed column names.
 

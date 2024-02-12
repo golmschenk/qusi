@@ -1,23 +1,23 @@
 from pathlib import Path
-from typing import List, Optional
+from typing import Optional
 
 import numpy as np
 import stringcase
 import torch
-import wandb
 from torch.nn import BCELoss, Module
 from torch.optim import AdamW
 from torch.utils.data import DataLoader
 from torchmetrics.classification import BinaryAccuracy
 
-from qusi.light_curve_dataset import LightCurveDataset, InterleavedDataset
+import wandb
+from qusi.light_curve_dataset import InterleavedDataset, LightCurveDataset
 from qusi.train_hyperparameter_configuration import TrainHyperparameterConfiguration
 from qusi.train_logging_configuration import TrainLoggingConfiguration
-from qusi.wandb_liaison import wandb_init, wandb_log, wandb_commit
+from qusi.wandb_liaison import wandb_commit, wandb_init, wandb_log
 
 
-def train_session(train_datasets: List[LightCurveDataset],
-                  validation_datasets: List[LightCurveDataset], model: Module,
+def train_session(train_datasets: list[LightCurveDataset],
+                  validation_datasets: list[LightCurveDataset], model: Module,
                   hyperparameter_configuration: Optional[TrainHyperparameterConfiguration]):
     if hyperparameter_configuration is None:
         hyperparameter_configuration = TrainHyperparameterConfiguration.new()
@@ -40,7 +40,7 @@ def train_session(train_datasets: List[LightCurveDataset],
     train_dataloader = DataLoader(train_dataset, batch_size=hyperparameter_configuration.batch_size, pin_memory=True,
                                   persistent_workers=persistent_workers, prefetch_factor=prefetch_factor,
                                   num_workers=workers_per_dataloader)
-    validation_dataloaders: List[DataLoader] = []
+    validation_dataloaders: list[DataLoader] = []
     for validation_dataset in validation_datasets:
         validation_dataloaders.append(DataLoader(validation_dataset, batch_size=hyperparameter_configuration.batch_size,
                                                  pin_memory=True, persistent_workers=persistent_workers,
@@ -53,7 +53,7 @@ def train_session(train_datasets: List[LightCurveDataset],
     loss_function = BCELoss().to(device, non_blocking=True)
     metric_functions = [BinaryAccuracy()]
     optimizer = AdamW(model.parameters())
-    metric_functions_on_device: List[Module] = []
+    metric_functions_on_device: list[Module] = []
     for metric_function in metric_functions:
         metric_functions_on_device.append(metric_function.to(device, non_blocking=True))
     metric_functions = metric_functions_on_device
@@ -69,7 +69,7 @@ def train_session(train_datasets: List[LightCurveDataset],
         wandb_commit(process_rank=0)
 
 
-def train_phase(dataloader, model, loss_function, metric_functions: List[Module], optimizer, steps, device):
+def train_phase(dataloader, model, loss_function, metric_functions: list[Module], optimizer, steps, device):
     model.train()
     total_loss = 0
     metric_totals = np.zeros(shape=[len(metric_functions)])
@@ -111,7 +111,7 @@ def get_metric_name(metric_function):
     return metric_name
 
 
-def validation_phase(dataloader, model, loss_function, metric_functions: List[Module], steps, device):
+def validation_phase(dataloader, model, loss_function, metric_functions: list[Module], steps, device):
     model.eval()
     validation_loss = 0
     metric_totals = np.zeros(shape=[len(metric_functions)])

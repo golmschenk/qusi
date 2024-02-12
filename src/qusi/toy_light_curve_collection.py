@@ -1,7 +1,5 @@
 from pathlib import Path
 
-from typing import List
-
 import numpy as np
 
 from qusi.light_curve import LightCurve
@@ -37,7 +35,7 @@ class ToyLightCurve:
         return LightCurve.new(times=times, fluxes=fluxes)
 
 
-def toy_light_curve_get_paths_function() -> List[Path]:
+def toy_light_curve_get_paths_function() -> list[Path]:
     """
     A fake function to fulfill the need of returning a list of paths.
     """

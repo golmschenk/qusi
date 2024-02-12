@@ -1,8 +1,8 @@
 """
 Code for loading trained models.
 """
-import re
 import datetime
+import re
 from pathlib import Path
 from typing import Union
 

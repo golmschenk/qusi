@@ -5,8 +5,9 @@ from ramjet.data_interface.tess_eclipsing_binary_metadata_manager import TessEcl
 from ramjet.data_interface.tess_ffi_light_curve_metadata_manager import TessFfiLightCurveMetadataManager
 from ramjet.data_interface.tess_target_metadata_manager import TessTargetMetadataManger
 from ramjet.data_interface.tess_transit_metadata_manager import TessTransitMetadataManager
-from ramjet.data_interface.tess_two_minute_cadence_light_curve_metadata_manager import \
-    TessTwoMinuteCadenceLightCurveMetadataManger
+from ramjet.data_interface.tess_two_minute_cadence_light_curve_metadata_manager import (
+    TessTwoMinuteCadenceLightCurveMetadataManger,
+)
 
 
 def build_tables():

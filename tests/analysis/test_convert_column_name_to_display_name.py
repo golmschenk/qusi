@@ -1,5 +1,4 @@
 import pytest
-
 from ramjet.analysis.convert_column_name_to_display_name import convert_column_name_to_display_name
 
 

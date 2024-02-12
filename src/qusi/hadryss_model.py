@@ -1,12 +1,11 @@
 from __future__ import annotations
 
 import math
-from typing import List
-from typing_extensions import Self
 
 import torch
 from torch import Tensor
-from torch.nn import Module, Conv1d, LeakyReLU, Sigmoid, Dropout, Dropout1d, MaxPool1d, BatchNorm1d
+from torch.nn import BatchNorm1d, Conv1d, Dropout, Dropout1d, LeakyReLU, MaxPool1d, Module, Sigmoid
+from typing_extensions import Self
 
 
 class Hadryss(Module):
@@ -68,7 +67,7 @@ class Hadryss(Module):
         instance = cls(input_length=input_length)
         return instance
 
-    def determine_block_pooling_sizes_and_dense_size(self) -> (List[int], int):
+    def determine_block_pooling_sizes_and_dense_size(self) -> (list[int], int):
         number_of_pooling_blocks = 9
         pooling_sizes = [1] * number_of_pooling_blocks
         while True:

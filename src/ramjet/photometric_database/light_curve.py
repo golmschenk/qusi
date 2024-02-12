@@ -4,13 +4,12 @@ Code for a class to represent a light curve. See the contained class docstring f
 from __future__ import annotations
 
 from abc import ABC
-from typing import Union, List, Optional
+from typing import Optional, Union
 
 import lightkurve.lightcurve
 import numpy as np
 import pandas as pd
 from lightkurve.periodogram import LombScarglePeriodogram
-import scipy.signal
 
 
 class LightCurve(ABC):
@@ -20,7 +19,7 @@ class LightCurve(ABC):
     """
     def __init__(self):
         self.data_frame: pd.DataFrame = pd.DataFrame()
-        self.flux_column_names: List[str] = []
+        self.flux_column_names: list[str] = []
         self.time_column_name: Union[str, None] = None
         self._variability_period: Optional[float] = None
         self._variability_period_epoch: Optional[float] = None
@@ -87,7 +86,7 @@ class LightCurve(ABC):
         """
         self.data_frame[column_name] = self.data_frame[column_name] / np.nanmedian(self.data_frame[column_name])
 
-    def convert_columns_to_relative_scale(self, column_names: List[str]):
+    def convert_columns_to_relative_scale(self, column_names: list[str]):
         """
         Converts multiple columns to relative scale.
 

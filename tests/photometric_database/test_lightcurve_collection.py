@@ -3,9 +3,10 @@ from unittest.mock import Mock
 
 import numpy as np
 import pytest
-
-from ramjet.photometric_database.light_curve_collection import LightCurveCollection, \
-    LightCurveCollectionMethodNotImplementedError
+from ramjet.photometric_database.light_curve_collection import (
+    LightCurveCollection,
+    LightCurveCollectionMethodNotImplementedError,
+)
 
 
 class TestLightCurveCollection:
@@ -25,7 +26,7 @@ class TestLightCurveCollection:
             _ = light_curve_collection.load_times_and_fluxes_from_path(Path('path.ext'))
         except LightCurveCollectionMethodNotImplementedError:
             pytest.fail('`LightCurveCollectionMethodNotImplementedError` raised when it should not be.')
-            
+
     def test_load_times_and_fluxes_from_path_can_be_set_by_subclassing(self):
         class SubclassLightCurveCollection(LightCurveCollection):
             def load_times_and_fluxes_from_path(self, path):
@@ -63,7 +64,7 @@ class TestLightCurveCollection:
         light_curve_collection.paths = stub_paths
         paths0 = light_curve_collection.get_paths()
         assert paths0 is stub_paths
-        light_curve_collection.get_paths = lambda: []
+        light_curve_collection.get_paths = list
         paths1 = light_curve_collection.get_paths()
         assert paths1 == []
 

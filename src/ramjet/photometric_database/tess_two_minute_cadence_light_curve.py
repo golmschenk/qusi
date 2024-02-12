@@ -5,11 +5,11 @@ from __future__ import annotations
 
 import re
 import sys
-
-import numpy as np
 from enum import Enum
 from pathlib import Path
-from typing import List, Union, Any, Optional
+from typing import Any, Optional, Union
+
+import numpy as np
 from astropy.io import fits
 
 from ramjet.data_interface.tess_data_interface import download_two_minute_cadence_light_curve
@@ -49,7 +49,7 @@ class TessMissionLightCurve(TessLightCurve):
                                   TessMissionLightCurveColumnName.SAP_FLUX.value]
 
     @classmethod
-    def from_path(cls, path: Path, fits_indexes_to_load: Union[List[TessMissionLightCurveFitsIndex], None] = None
+    def from_path(cls, path: Path, fits_indexes_to_load: Union[list[TessMissionLightCurveFitsIndex], None] = None
                   ) -> TessMissionLightCurve:
         """
         Creates a TESS two minute light curve from a path to the MAST FITS file.
@@ -75,7 +75,7 @@ class TessMissionLightCurve(TessLightCurve):
 
     @classmethod
     def from_mast(cls, tic_id: int, sector: Optional[int] = None,
-                  fits_indexes_to_load: Union[List[TessMissionLightCurveFitsIndex], None] = None
+                  fits_indexes_to_load: Union[list[TessMissionLightCurveFitsIndex], None] = None
                   ) -> TessMissionLightCurve:
         """
         Downloads a FITS file from MAST and creates a TESS two minute light curve from it.

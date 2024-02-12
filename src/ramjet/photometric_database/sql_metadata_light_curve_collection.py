@@ -2,15 +2,18 @@
 Code for a light curve collection that stores its metadata in the SQL database.
 """
 import random
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable, List, Union
+from typing import Union
 from uuid import uuid4
 
-from peewee import Select, Field, Case
+from peewee import Case, Field, Select
 
 from ramjet.data_interface.metadatabase import MetadatabaseModel
-from ramjet.photometric_database.light_curve_collection import LightCurveCollection, \
-    LightCurveCollectionMethodNotImplementedError
+from ramjet.photometric_database.light_curve_collection import (
+    LightCurveCollection,
+    LightCurveCollectionMethodNotImplementedError,
+)
 
 
 class SqlMetadataLightCurveCollection(LightCurveCollection):
@@ -71,7 +74,7 @@ class SqlMetadataLightCurveCollection(LightCurveCollection):
 
     @staticmethod
     def order_by_dataset_split_with_random_start(select_query: Select, dataset_split_field: Field,
-                                                 available_dataset_splits: Union[List[int], None]) -> Select:
+                                                 available_dataset_splits: Union[list[int], None]) -> Select:
         """
         Applies an "order by" on a query using a passed dataset_split field. The "order by" starts at a random
         dataset_split out of the passed available options, then loops back to the minimum dataset_split to include all

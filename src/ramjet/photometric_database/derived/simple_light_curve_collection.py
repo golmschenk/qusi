@@ -1,6 +1,7 @@
-import numpy as np
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
+
+import numpy as np
 
 from ramjet.photometric_database.light_curve_collection import LightCurveCollection
 

@@ -2,17 +2,20 @@
 An abstract class allowing for any number and combination of standard and injectable/injectee light curve collections.
 """
 from functools import partial
-from typing import List, Union, Callable, Tuple, Optional
+from typing import Callable, Optional, Union
 
 import numpy as np
 import numpy.typing as npt
 
-from ramjet.logging.wandb_logger import WandbLogger, WandbLoggableInjection
+from ramjet.logging.wandb_logger import WandbLoggableInjection, WandbLogger
 from ramjet.photometric_database.light_curve import LightCurve
 from ramjet.photometric_database.light_curve_collection import LightCurveCollection
 from ramjet.photometric_database.light_curve_database import LightCurveDatabase
-from ramjet.photometric_database.light_curve_dataset_manipulations import OutOfBoundsInjectionHandlingMethod, \
-    BaselineFluxEstimationMethod, inject_signal_into_light_curve_with_intermediates
+from ramjet.photometric_database.light_curve_dataset_manipulations import (
+    BaselineFluxEstimationMethod,
+    OutOfBoundsInjectionHandlingMethod,
+    inject_signal_into_light_curve_with_intermediates,
+)
 
 
 def inject_signal_into_light_curve(
@@ -55,13 +58,13 @@ class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
 
     def __init__(self):
         super().__init__()
-        self.training_standard_light_curve_collections: List[LightCurveCollection] = []
+        self.training_standard_light_curve_collections: list[LightCurveCollection] = []
         self.training_injectee_light_curve_collection: Union[LightCurveCollection, None] = None
-        self.training_injectable_light_curve_collections: List[LightCurveCollection] = []
-        self.validation_standard_light_curve_collections: List[LightCurveCollection] = []
+        self.training_injectable_light_curve_collections: list[LightCurveCollection] = []
+        self.validation_standard_light_curve_collections: list[LightCurveCollection] = []
         self.validation_injectee_light_curve_collection: Union[LightCurveCollection, None] = None
-        self.validation_injectable_light_curve_collections: List[LightCurveCollection] = []
-        self.inference_light_curve_collections: List[LightCurveCollection] = []
+        self.validation_injectable_light_curve_collections: list[LightCurveCollection] = []
+        self.inference_light_curve_collections: list[LightCurveCollection] = []
         self.shuffle_buffer_size = 10000
         self.number_of_label_values = 1
         self.number_of_auxiliary_values: int = 0
@@ -126,7 +129,7 @@ class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
         return fluxes_with_injected_signal
 
 
-def expand_label_to_training_dimensions(label: Union[int, List[int], Tuple[int], np.ndarray]) -> np.ndarray:
+def expand_label_to_training_dimensions(label: Union[int, list[int], tuple[int], np.ndarray]) -> np.ndarray:
     """
     Expand the label to the appropriate dimensions for training.
 

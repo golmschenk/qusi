@@ -1,9 +1,11 @@
 """
 Code for representing a collection of light curves.
 """
-import numpy as np
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable, Union, List, Optional
+from typing import Union
+
+import numpy as np
 
 
 class LightCurveCollectionMethodNotImplementedError(RuntimeError):
@@ -12,20 +14,19 @@ class LightCurveCollectionMethodNotImplementedError(RuntimeError):
     Note, the standard NotImplementedError is not supposed to be used for cases when non-implemented functions are
     meant to be allowed, which is why a custom class is needed.
     """
-    pass
 
 
 class LightCurveCollection:
     """
-    A class representing a collection of light curves. Used to define how to find, load, and label a set of light 
+    A class representing a collection of light curves. Used to define how to find, load, and label a set of light
     curves.
 
     :ivar label: The default label to be used if the `load_label_from_path` method is not overridden.
     :ivar paths: The default list of paths to be used if the `get_paths` method is not overridden.
     """
     def __init__(self):
-        self.label: Union[float, List[float], np.ndarray, None] = None
-        self.paths: Union[List[Path], None] = None
+        self.label: Union[float, list[float], np.ndarray, None] = None
+        self.paths: Union[list[Path], None] = None
 
     def get_paths(self) -> Iterable[Path]:
         """
@@ -78,7 +79,7 @@ class LightCurveCollection:
         return self.label
 
     @staticmethod
-    def shuffle_and_split_paths(paths: List[Path], dataset_splits: List[int], number_of_splits: int = 10) -> List[Path]:
+    def shuffle_and_split_paths(paths: list[Path], dataset_splits: list[int], number_of_splits: int = 10) -> list[Path]:
         """
         Repeatably shuffles a list of paths and then gets the requested dataset splits from that list of paths.
         Designed to allow splitting a list of paths into training, validation, and testing datasets easily.

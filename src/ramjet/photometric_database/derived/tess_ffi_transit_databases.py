@@ -1,10 +1,13 @@
-from ramjet.photometric_database.derived.tess_ffi_eclipsing_binary_light_curve_collection import \
-    TessFfiAntiEclipsingBinaryForTransitLightCurveCollection
+from ramjet.photometric_database.derived.tess_ffi_eclipsing_binary_light_curve_collection import (
+    TessFfiAntiEclipsingBinaryForTransitLightCurveCollection,
+)
 from ramjet.photometric_database.derived.tess_ffi_light_curve_collection import TessFfiLightCurveCollection
-from ramjet.photometric_database.derived.tess_ffi_transit_light_curve_collections import \
-    TessFfiConfirmedTransitLightCurveCollection, TessFfiNonTransitLightCurveCollection
-from ramjet.photometric_database.standard_and_injected_light_curve_database import StandardAndInjectedLightCurveDatabase
+from ramjet.photometric_database.derived.tess_ffi_transit_light_curve_collections import (
+    TessFfiConfirmedTransitLightCurveCollection,
+    TessFfiNonTransitLightCurveCollection,
+)
 from ramjet.photometric_database.light_curve_dataset_manipulations import OutOfBoundsInjectionHandlingMethod
+from ramjet.photometric_database.standard_and_injected_light_curve_database import StandardAndInjectedLightCurveDatabase
 
 
 class TessFfiDatabase(StandardAndInjectedLightCurveDatabase):

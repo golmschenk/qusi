@@ -1,16 +1,15 @@
-import numpy as np
-import pytest
 from pathlib import Path
-from typing import Tuple
 from unittest.mock import patch
 
+import numpy as np
+import pytest
 import ramjet.photometric_database.tess_ffi_light_curve as module
-from ramjet.photometric_database.tess_ffi_light_curve import TessFfiLightCurve, TessFfiColumnName, TessFfiPickleIndex
+from ramjet.photometric_database.tess_ffi_light_curve import TessFfiColumnName, TessFfiLightCurve, TessFfiPickleIndex
 
 
 class TestTessFfiDataInterface:
     @pytest.fixture
-    def ffi_pickle_contents(self) -> Tuple[int, float, float, float, int, int, np.ndarray, np.ndarray, np.ndarray,
+    def ffi_pickle_contents(self) -> tuple[int, float, float, float, int, int, np.ndarray, np.ndarray, np.ndarray,
                                            np.ndarray, np.ndarray, np.ndarray]:
         """
         Creates a mock content of one of Brian Powell's FFI data files.
@@ -57,7 +56,7 @@ class TestTessFfiDataInterface:
         assert np.array_equal(fluxes, ffi_pickle_contents[8])
         assert np.array_equal(flux_errors, ffi_pickle_contents[10])
         assert np.array_equal(times, ffi_pickle_contents[6])
-    
+
     def test_can_get_tic_id_and_sector_from_ffi_style_file_path(self):
         light_curve = TessFfiLightCurve()
         tic_id0, sector0 = light_curve.get_tic_id_and_sector_from_file_path(

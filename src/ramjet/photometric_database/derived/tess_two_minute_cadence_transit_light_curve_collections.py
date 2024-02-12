@@ -1,14 +1,17 @@
 """
 Code representing the collection of TESS two minute cadence light curves containing transits.
 """
-from typing import List, Union
+from typing import Union
+
 from peewee import Select
 
-from ramjet.data_interface.tess_transit_metadata_manager import TessTransitMetadata, Disposition
-from ramjet.data_interface.tess_two_minute_cadence_light_curve_metadata_manager import \
-    TessTwoMinuteCadenceLightCurveMetadata
-from ramjet.photometric_database.derived.tess_two_minute_cadence_light_curve_collection import \
-    TessTwoMinuteCadenceTargetDatasetSplitLightCurveCollection
+from ramjet.data_interface.tess_transit_metadata_manager import Disposition, TessTransitMetadata
+from ramjet.data_interface.tess_two_minute_cadence_light_curve_metadata_manager import (
+    TessTwoMinuteCadenceLightCurveMetadata,
+)
+from ramjet.photometric_database.derived.tess_two_minute_cadence_light_curve_collection import (
+    TessTwoMinuteCadenceTargetDatasetSplitLightCurveCollection,
+)
 
 
 class TessTwoMinuteCadenceConfirmedTransitLightCurveCollection(
@@ -16,7 +19,7 @@ class TessTwoMinuteCadenceConfirmedTransitLightCurveCollection(
     """
     A class representing the collection of TESS two minute cadence light curves containing transits.
     """
-    def __init__(self, dataset_splits: Union[List[int], None] = None):
+    def __init__(self, dataset_splits: Union[list[int], None] = None):
         super().__init__(dataset_splits=dataset_splits)
         self.label = 1
 
@@ -38,7 +41,7 @@ class TessTwoMinuteCadenceConfirmedAndCandidateTransitLightCurveCollection(
     """
     A class representing the collection of TESS two minute cadence light curves containing transits.
     """
-    def __init__(self, dataset_splits: Union[List[int], None] = None):
+    def __init__(self, dataset_splits: Union[list[int], None] = None):
         super().__init__(dataset_splits=dataset_splits)
         self.label = 1
 
@@ -60,7 +63,7 @@ class TessTwoMinuteCadenceNonTransitLightCurveCollection(TessTwoMinuteCadenceTar
     """
     A class representing the collection of TESS two minute cadence light curves containing transits.
     """
-    def __init__(self, dataset_splits: Union[List[int], None] = None):
+    def __init__(self, dataset_splits: Union[list[int], None] = None):
         super().__init__(dataset_splits=dataset_splits)
         self.label = 0
 

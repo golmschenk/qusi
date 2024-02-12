@@ -1,6 +1,5 @@
 import pytest
-
-from ramjet.photometric_database.derived.toy_light_curve_collection import ToyLightCurveCollection, ToyLightCurve
+from ramjet.photometric_database.derived.toy_light_curve_collection import ToyLightCurve
 
 
 class TestToyLightCurveCollection:

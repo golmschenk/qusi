@@ -1,10 +1,10 @@
 from copy import deepcopy
 from dataclasses import dataclass
-from typing_extensions import Self
 
 import numpy as np
 import numpy.typing as npt
 from public import public
+from typing_extensions import Self
 
 
 @public

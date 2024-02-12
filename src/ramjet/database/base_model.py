@@ -1,7 +1,6 @@
 """
 Code for the the base model of the database to build other models from.
 """
-from typing import Type
 
 from peewee import Model, SqliteDatabase
 
@@ -10,7 +9,7 @@ database = SqliteDatabase('data/database.sqlite3',
                           check_same_thread=False)
 
 
-def convert_class_to_table_name(model_class: Type[Model]):
+def convert_class_to_table_name(model_class: type[Model]):
     """
     Creates the table name based on the model class.
 

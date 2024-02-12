@@ -1,4 +1,3 @@
-from typing import List
 
 import torch
 from torch.nn import Module
@@ -8,9 +7,9 @@ from torch.utils.data import DataLoader
 from qusi.finite_standard_light_curve_observation_dataset import FiniteStandardLightCurveObservationDataset
 
 
-def finite_datasets_test_session(test_datasets: List[FiniteStandardLightCurveObservationDataset], model: Module,
-                                 metric_functions: List[Module], batch_size: int, device: Device):
-    test_dataloaders: List[DataLoader] = []
+def finite_datasets_test_session(test_datasets: list[FiniteStandardLightCurveObservationDataset], model: Module,
+                                 metric_functions: list[Module], batch_size: int, device: Device):
+    test_dataloaders: list[DataLoader] = []
     for test_dataset in test_datasets:
         test_dataloaders.append(DataLoader(test_dataset, batch_size=batch_size, pin_memory=True))
     model.eval()
@@ -29,7 +28,7 @@ def get_device():
     return device
 
 
-def finite_dataset_test_phase(dataloader, model: Module, metric_functions: List[Module], device: Device):
+def finite_dataset_test_phase(dataloader, model: Module, metric_functions: list[Module], device: Device):
     batch_count = 0
     metric_totals = torch.zeros(size=[len(metric_functions)])
     model.eval()

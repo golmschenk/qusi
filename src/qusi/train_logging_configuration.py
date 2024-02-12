@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Dict
+from typing import Any
 
 
 @dataclass
@@ -13,13 +13,13 @@ class TrainLoggingConfiguration:
     """
     wandb_project: str | None
     wandb_entity: str | None
-    additional_log_dictionary: Dict[str, Any]
+    additional_log_dictionary: dict[str, Any]
 
     @classmethod
     def new(cls,
             wandb_project: str | None = None,
             wandb_entity: str | None = None,
-            additional_log_dictionary: Dict[str, Any] | None = None):
+            additional_log_dictionary: dict[str, Any] | None = None):
         if additional_log_dictionary is None:
             additional_log_dictionary = {}
         return cls(wandb_project=wandb_project,

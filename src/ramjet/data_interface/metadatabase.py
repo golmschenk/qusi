@@ -1,11 +1,9 @@
 """
 Code for the the metadatabase.
 """
-import datetime
 from uuid import UUID, uuid5
-from typing import Type
 
-from peewee import Model, SqliteDatabase, DateTimeField
+from peewee import Model, SqliteDatabase
 
 metadatabase = SqliteDatabase('data/metadatabase.sqlite3',
                               pragmas={'journal_mode': 'wal'},
@@ -13,7 +11,7 @@ metadatabase = SqliteDatabase('data/metadatabase.sqlite3',
 metadatabase_uuid_namespace = UUID('ed5c78c4-d8dd-4525-9633-97beac696cd1')
 
 
-def convert_class_to_table_name(model_class: Type[Model]):
+def convert_class_to_table_name(model_class: type[Model]):
     """
     Creates the table name based on the model class.
 

@@ -1,9 +1,11 @@
-import pytest
 from pathlib import Path
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
-from ramjet.data_interface.tess_two_minute_cadence_light_curve_metadata_manager import TessTwoMinuteCadenceLightCurveMetadataManger
+import pytest
 import ramjet.data_interface.tess_two_minute_cadence_light_curve_metadata_manager as module
+from ramjet.data_interface.tess_two_minute_cadence_light_curve_metadata_manager import (
+    TessTwoMinuteCadenceLightCurveMetadataManger,
+)
 
 
 class TestTessTwoMinuteCadenceLightCurveMetadataManger:

@@ -1,9 +1,9 @@
-import pandas as pd
-from unittest.mock import patch, Mock, PropertyMock
+from unittest.mock import PropertyMock, patch
 
+import pandas as pd
 import ramjet.data_interface.tess_transit_metadata_manager as module
-from ramjet.data_interface.tess_transit_metadata_manager import TessTransitMetadataManager, Disposition
 from ramjet.data_interface.tess_toi_data_interface import ToiColumns
+from ramjet.data_interface.tess_transit_metadata_manager import Disposition, TessTransitMetadataManager
 
 
 class TestTessTransitMetadata:

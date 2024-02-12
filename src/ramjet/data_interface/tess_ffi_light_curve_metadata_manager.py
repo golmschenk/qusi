@@ -3,11 +3,16 @@ Code for managing the TESS FFI metadata SQL table.
 """
 import itertools
 from pathlib import Path
-from typing import List
-from peewee import IntegerField, CharField, FloatField, SchemaManager
 
-from ramjet.data_interface.metadatabase import MetadatabaseModel, metadatabase, metadatabase_uuid, \
-    convert_class_to_table_name, dataset_split_from_uuid
+from peewee import CharField, FloatField, IntegerField, SchemaManager
+
+from ramjet.data_interface.metadatabase import (
+    MetadatabaseModel,
+    convert_class_to_table_name,
+    dataset_split_from_uuid,
+    metadatabase,
+    metadatabase_uuid,
+)
 from ramjet.photometric_database.tess_ffi_light_curve import TessFfiLightCurve
 
 
@@ -37,7 +42,7 @@ class TessFfiLightCurveMetadataManager:
     def __init__(self):
         self.light_curve_root_directory_path = Path('data/tess_ffi_light_curves')
 
-    def insert_multiple_rows_from_paths_into_database(self, light_curve_paths: List[Path]):
+    def insert_multiple_rows_from_paths_into_database(self, light_curve_paths: list[Path]):
         """
         Inserts sets of light curve paths into the table.
 

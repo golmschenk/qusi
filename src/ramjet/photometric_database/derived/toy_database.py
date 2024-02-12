@@ -1,7 +1,10 @@
 import numpy as np
 
-from ramjet.photometric_database.derived.toy_light_curve_collection import ToyFlatLightCurveCollection, \
-    ToySineWaveLightCurveCollection, ToyFlatAtValueLightCurveCollection
+from ramjet.photometric_database.derived.toy_light_curve_collection import (
+    ToyFlatAtValueLightCurveCollection,
+    ToyFlatLightCurveCollection,
+    ToySineWaveLightCurveCollection,
+)
 from ramjet.photometric_database.standard_and_injected_light_curve_database import StandardAndInjectedLightCurveDatabase
 
 

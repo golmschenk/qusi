@@ -1,14 +1,15 @@
 """
 Code for a light curve collection of the MOA data.
 """
+import random
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
+
 import numpy as np
 import pandas as pd
 
 from ramjet.photometric_database.light_curve_collection import LightCurveCollection
 from ramjet.photometric_database.microlensing_signal_generator import MagnificationSignal
-import random
 
 
 class MOAPositiveMicrolensingLightCurveCollection(LightCurveCollection):

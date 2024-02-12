@@ -1,13 +1,11 @@
 import os
-
-import pandas as pd
 from asyncio import Task
 from collections import deque
 from pathlib import Path
-from unittest.mock import Mock, patch, AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
+import pandas as pd
 import pytest
-
 import ramjet.analysis.viewer.preloader as module
 from ramjet.analysis.viewer.preloader import Preloader
 

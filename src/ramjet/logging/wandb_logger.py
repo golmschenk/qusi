@@ -6,14 +6,13 @@ from __future__ import annotations
 import math
 import queue
 from abc import ABC, abstractmethod
-from pathlib import Path
+from typing import Optional
 
 import plotly
-import wandb
-from typing import Optional, Dict
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
+import wandb
 from ramjet.photometric_database.light_curve import LightCurve
 
 
@@ -21,7 +20,6 @@ class ExampleRequest:
     """
     A representation of a request for an example.
     """
-    pass
 
 
 class WandbLoggable(ABC):
@@ -140,8 +138,8 @@ class WandbLogger:
     def __init__(self):
         manager = multiprocess.Manager()
         self.lock = manager.Lock()
-        self.request_queues: Dict[str, multiprocess.Queue] = {}
-        self.example_queues: Dict[str, multiprocess.Queue] = {}
+        self.request_queues: dict[str, multiprocess.Queue] = {}
+        self.example_queues: dict[str, multiprocess.Queue] = {}
 
     @classmethod
     def new(cls, entity: Optional[str] = None, project: Optional[str] = None) -> WandbLogger:
@@ -161,7 +159,6 @@ class WandbLogger:
             while True:
                 try:
                     queue_item = example_queue.get(block=False)
-                    pass
                     if isinstance(queue_item, WandbLoggable):
                         queue_item.log(example_queue_name, epoch)
                     else:

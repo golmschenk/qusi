@@ -2,9 +2,8 @@
 A model for the database entity of a TESS planet disposition.
 """
 from enum import Enum
-from typing import List
 
-from peewee import ForeignKeyField, CharField, TextField, AutoField
+from peewee import AutoField, CharField, ForeignKeyField, TextField
 
 from ramjet.database.base_model import BaseModel
 from ramjet.database.tess_target import TessTarget
@@ -49,7 +48,7 @@ class TessPlanetDisposition(BaseModel):
         )
 
     @staticmethod
-    def get_tic_ids_of_passing_vetted_transiting_planet_candidates() -> List[int]:
+    def get_tic_ids_of_passing_vetted_transiting_planet_candidates() -> list[int]:
         """
         Gets the TIC IDs of candidates which have passed vetting of having planet transits.
 

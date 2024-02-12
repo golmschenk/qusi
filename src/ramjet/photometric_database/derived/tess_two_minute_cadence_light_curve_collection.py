@@ -1,17 +1,19 @@
 """
 Code for a light curve collection of the TESS two minute cadence data.
 """
-import numpy as np
 from pathlib import Path
-from typing import Iterable, Union, List
+from typing import Union
 
+import numpy as np
 from peewee import Select
 
 from ramjet.data_interface.metadatabase import MetadatabaseModel
 from ramjet.data_interface.tess_data_interface import TessDataInterface, TessFluxType
 from ramjet.data_interface.tess_target_metadata_manager import TessTargetMetadata
-from ramjet.data_interface.tess_two_minute_cadence_light_curve_metadata_manager import \
-    TessTwoMinuteCadenceLightCurveMetadataManger, TessTwoMinuteCadenceLightCurveMetadata
+from ramjet.data_interface.tess_two_minute_cadence_light_curve_metadata_manager import (
+    TessTwoMinuteCadenceLightCurveMetadata,
+    TessTwoMinuteCadenceLightCurveMetadataManger,
+)
 from ramjet.photometric_database.sql_metadata_light_curve_collection import SqlMetadataLightCurveCollection
 
 
@@ -22,11 +24,11 @@ class TessTwoMinuteCadenceLightCurveCollection(SqlMetadataLightCurveCollection):
     tess_data_interface = TessDataInterface()
     tess_two_minute_cadence_light_curve_metadata_manger = TessTwoMinuteCadenceLightCurveMetadataManger()
 
-    def __init__(self, dataset_splits: Union[List[int], None] = None, flux_type: TessFluxType = TessFluxType.PDCSAP):
+    def __init__(self, dataset_splits: Union[list[int], None] = None, flux_type: TessFluxType = TessFluxType.PDCSAP):
         super().__init__()
         self.data_directory: Path = Path('data/tess_two_minute_cadence_light_curves')
         self.label = 0
-        self.dataset_splits: Union[List[int], None] = dataset_splits
+        self.dataset_splits: Union[list[int], None] = dataset_splits
         self.flux_type: TessFluxType = flux_type
 
     def get_sql_query(self) -> Select:

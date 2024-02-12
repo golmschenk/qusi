@@ -1,7 +1,7 @@
 from pathlib import Path
-from unittest.mock import patch, Mock
-import pytest
+from unittest.mock import Mock, patch
 
+import pytest
 import ramjet.data_interface.tess_ffi_light_curve_metadata_manager as module
 from ramjet.data_interface.tess_ffi_light_curve_metadata_manager import TessFfiLightCurveMetadataManager
 

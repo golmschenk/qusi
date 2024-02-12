@@ -1,2 +1,2 @@
-class TestSelfLensingBinaryDatabase():
+class TestSelfLensingBinaryDatabase:
     pass

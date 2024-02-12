@@ -5,10 +5,10 @@ from __future__ import annotations
 
 import io
 import math
-import numpy as np
-import pandas as pd
 from typing import Union
 
+import numpy as np
+import pandas as pd
 import requests
 from astroquery.gaia import Gaia
 

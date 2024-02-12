@@ -1,9 +1,8 @@
 """
 Code for a model for the TESS target database table.
 """
-from typing import List
 
-from peewee import IntegerField, AutoField
+from peewee import AutoField, IntegerField
 
 from ramjet.database.base_model import BaseModel
 

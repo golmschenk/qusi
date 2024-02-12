@@ -4,10 +4,11 @@ Code for a light curve collection of Agnieszka Cieplak's synthetic signals.
 import re
 import tarfile
 import urllib.request
+from collections.abc import Iterable
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
-from pathlib import Path
-from typing import Iterable
 
 from ramjet.photometric_database.light_curve_collection import LightCurveCollection
 

@@ -1,10 +1,8 @@
+from collections import defaultdict
 from unittest.mock import Mock, patch
 
 import numpy as np
-from collections import defaultdict
-
 import pytest
-
 import ramjet.photometric_database.tess_target as tess_target_module
 from ramjet.photometric_database.tess_target import TessTarget
 

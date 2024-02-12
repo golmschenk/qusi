@@ -4,14 +4,15 @@ A viewer for a CSV file containing a column of paths.
 from __future__ import annotations
 
 import asyncio
+from functools import partial
+from pathlib import Path
+from typing import Union
+
 import numpy as np
 import pandas as pd
-from typing import Union
-from pathlib import Path
-from bokeh.io import curdoc
-from functools import partial
-from bokeh.models import Button, Div, BoxAnnotation
 from bokeh.document import Document
+from bokeh.io import curdoc
+from bokeh.models import BoxAnnotation, Button, Div
 from bokeh.server.server import Server
 
 from ramjet.analysis.transit_vetter import TransitVetter

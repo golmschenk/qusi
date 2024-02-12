@@ -2,11 +2,16 @@
 Code for managing the metadata of the TESS targets.
 """
 from pathlib import Path
-from typing import List
-from peewee import IntegerField, SchemaManager
 
-from ramjet.data_interface.metadatabase import MetadatabaseModel, metadatabase, convert_class_to_table_name, \
-    metadatabase_uuid, dataset_split_from_uuid
+from peewee import IntegerField
+
+from ramjet.data_interface.metadatabase import (
+    MetadatabaseModel,
+    convert_class_to_table_name,
+    dataset_split_from_uuid,
+    metadatabase,
+    metadatabase_uuid,
+)
 from ramjet.data_interface.tess_data_interface import TessDataInterface
 
 
@@ -27,7 +32,7 @@ class TessTargetMetadataManger:
     def __init__(self):
         self.light_curve_root_directory_path = Path('data/tess_two_minute_cadence_light_curves')
 
-    def insert_multiple_rows_from_paths_into_database(self, light_curve_paths: List[Path]) -> int:
+    def insert_multiple_rows_from_paths_into_database(self, light_curve_paths: list[Path]) -> int:
         """
         Inserts sets targets into the table from light curve paths.
 

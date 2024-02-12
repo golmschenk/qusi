@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 import pytest
-
 from ramjet.photometric_database.light_curve import LightCurve
 
 

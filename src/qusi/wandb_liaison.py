@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any
 
 import wandb as wandb
 
@@ -27,6 +27,6 @@ def wandb_log_hyperparameter(name: str, value: Any, process_rank: int):
     if process_rank == 0:  # Only log for the first process.
         wandb.config[name] = value
 
-def wandb_log_hyperparameter_dictionary(hyperparameter_log_dictionary: Dict[str, Any] , process_rank: int):
+def wandb_log_hyperparameter_dictionary(hyperparameter_log_dictionary: dict[str, Any] , process_rank: int):
     for key, value in hyperparameter_log_dictionary.items():
         wandb_log_hyperparameter(key, value, process_rank)

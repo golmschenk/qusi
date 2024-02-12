@@ -3,10 +3,11 @@ Code for a database of MOA light curves including non-microlensing, single lensi
 """
 from ramjet.data_interface.moa_data_interface import MoaDataInterface
 from ramjet.photometric_database.derived.moa_survey_light_curve_collection import MoaSurveyLightCurveCollection
-from ramjet.photometric_database.standard_and_injected_light_curve_database import \
-    StandardAndInjectedLightCurveDatabase
-from ramjet.photometric_database.light_curve_dataset_manipulations import OutOfBoundsInjectionHandlingMethod, \
-    BaselineFluxEstimationMethod
+from ramjet.photometric_database.light_curve_dataset_manipulations import (
+    BaselineFluxEstimationMethod,
+    OutOfBoundsInjectionHandlingMethod,
+)
+from ramjet.photometric_database.standard_and_injected_light_curve_database import StandardAndInjectedLightCurveDatabase
 
 
 class MoaSurveyNoneSingleAndBinaryDatabase(StandardAndInjectedLightCurveDatabase):

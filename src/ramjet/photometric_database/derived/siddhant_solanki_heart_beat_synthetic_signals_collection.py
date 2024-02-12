@@ -10,8 +10,9 @@ try:
     from enum import StrEnum
 except ImportError:
     from backports.strenum import StrEnum
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable, Union, List
+from typing import Union
 
 import numpy as np
 import pandas as pd
@@ -73,7 +74,7 @@ class TessFfiHeartBeatHardNegativeLightcurveCollection(TessFfiLightCurveCollecti
     """
     A class representing the collection of TESS two minute cadence lightcurves containing eclipsing binaries.
     """
-    def __init__(self, dataset_splits: Union[List[int], None] = None,
+    def __init__(self, dataset_splits: Union[list[int], None] = None,
                  magnitude_range: (Union[float, None], Union[float, None]) = (None, None)):
         super().__init__(dataset_splits=dataset_splits, magnitude_range=magnitude_range)
         self.label = 0

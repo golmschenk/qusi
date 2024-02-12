@@ -1,12 +1,11 @@
 """
 Code for interacting with MOA light curve files and metadata.
 """
-import numpy as np
-import pandas as pd
 from collections import defaultdict
-from typing import List, Dict, Union
 from pathlib import Path
+from typing import Union
 
+import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 
@@ -15,12 +14,12 @@ class MoaDataInterface:
     """
     A class for interacting with MOA light curve files and metadata.
     """
-    survey_tag_to_path_list_dictionary_: Union[Dict[str, List[Path]], None] = None
+    survey_tag_to_path_list_dictionary_: Union[dict[str, list[Path]], None] = None
     no_tag_string = 'no_tag'
     all_survey_tags = ['c', 'cf', 'cp', 'cw', 'cs', 'cb', 'v', 'n', 'nr', 'm', 'j', no_tag_string]
 
     @property
-    def survey_tag_to_path_list_dictionary(self) -> Dict[str, List[Path]]:
+    def survey_tag_to_path_list_dictionary(self) -> dict[str, list[Path]]:
         """
         Property allowing the survey tag to path list dictionary to only be loaded once.
 
@@ -122,8 +121,8 @@ class MoaDataInterface:
         except KeyError:
             return self.no_tag_string
 
-    def group_paths_by_tag_in_events_data_frame(self, paths: List[Path], events_data_frame: pd.DataFrame
-                                                ) -> Dict[str, List[Path]]:
+    def group_paths_by_tag_in_events_data_frame(self, paths: list[Path], events_data_frame: pd.DataFrame
+                                                ) -> dict[str, list[Path]]:
         """
         Groups paths into a dictionary based on their tags.
 

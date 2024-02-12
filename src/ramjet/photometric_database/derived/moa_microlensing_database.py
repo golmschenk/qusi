@@ -1,9 +1,11 @@
 """
 Code for creating database based on the MOA microlensing data.
 """
-from ramjet.photometric_database.derived.moa_microlensing_light_curve_collection import \
-    MOAPositiveMicrolensingLightCurveCollection, MOANegativeMicrolensingLightCurveCollection, \
-    MicrolensingSyntheticGeneratedDuringRunningSignalCollection
+from ramjet.photometric_database.derived.moa_microlensing_light_curve_collection import (
+    MicrolensingSyntheticGeneratedDuringRunningSignalCollection,
+    MOANegativeMicrolensingLightCurveCollection,
+    MOAPositiveMicrolensingLightCurveCollection,
+)
 from ramjet.photometric_database.standard_and_injected_light_curve_database import StandardAndInjectedLightCurveDatabase
 
 

@@ -1,11 +1,12 @@
-from ramjet.photometric_database.derived.tess_two_minute_cadence_light_curve_collection import \
-    TessTwoMinuteCadenceTargetDatasetSplitLightCurveCollection
-from ramjet.photometric_database.derived.tess_two_minute_cadence_transit_light_curve_collections import \
-    TessTwoMinuteCadenceNonTransitLightCurveCollection, \
-    TessTwoMinuteCadenceConfirmedTransitLightCurveCollection
-from ramjet.photometric_database.standard_and_injected_light_curve_database import \
-    StandardAndInjectedLightCurveDatabase
+from ramjet.photometric_database.derived.tess_two_minute_cadence_light_curve_collection import (
+    TessTwoMinuteCadenceTargetDatasetSplitLightCurveCollection,
+)
+from ramjet.photometric_database.derived.tess_two_minute_cadence_transit_light_curve_collections import (
+    TessTwoMinuteCadenceConfirmedTransitLightCurveCollection,
+    TessTwoMinuteCadenceNonTransitLightCurveCollection,
+)
 from ramjet.photometric_database.light_curve_dataset_manipulations import OutOfBoundsInjectionHandlingMethod
+from ramjet.photometric_database.standard_and_injected_light_curve_database import StandardAndInjectedLightCurveDatabase
 
 
 class TessTwoMinuteCadenceStandardTransitDatabase(StandardAndInjectedLightCurveDatabase):

@@ -1,8 +1,7 @@
-from typing import Tuple
 
-import torch
-import numpy.typing as npt
 import numpy as np
+import numpy.typing as npt
+import torch
 from torch import Tensor
 
 from qusi.light_curve_observation import LightCurveObservation
@@ -16,7 +15,7 @@ npt.NDArray[np.float32], npt.NDArray[np.float32]):
     return fluxes, np.array(label, dtype=np.float32)
 
 
-def pair_array_to_tensor(arrays: Tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]) -> (Tensor, Tensor):
+def pair_array_to_tensor(arrays: tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]) -> (Tensor, Tensor):
     return torch.tensor(arrays[0]), torch.tensor(arrays[1])
 
 

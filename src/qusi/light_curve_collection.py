@@ -1,14 +1,15 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from random import Random
 from abc import ABC, abstractmethod
+from collections.abc import Iterable, Iterator
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, Callable, Iterator, List, Tuple
-from typing_extensions import Self
+from random import Random
+from typing import Callable
 
 import numpy as np
 import numpy.typing as npt
+from typing_extensions import Self
 
 from qusi.light_curve import LightCurve
 from qusi.light_curve_observation import LightCurveObservation
@@ -20,7 +21,7 @@ class LightCurveCollectionBase(ABC):
         pass
 
     @abstractmethod
-    def load_times_and_fluxes_from_path(self, path) -> Tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]:
+    def load_times_and_fluxes_from_path(self, path) -> tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]:
         pass
 
 
@@ -31,22 +32,22 @@ class LightCurveObservationCollectionBase(LightCurveCollectionBase):
 
 class LightCurveObservationIndexableBase(ABC):
     @abstractmethod
-    def __getitem__(self, indexes: int | Tuple[int]) -> LightCurveObservation | Tuple[LightCurveObservation]:
+    def __getitem__(self, indexes: int | tuple[int]) -> LightCurveObservation | tuple[LightCurveObservation]:
         pass
 
 class PathIterableBase(ABC):
     @abstractmethod
-    def get_shuffled_paths(self) -> List[Path]:
+    def get_shuffled_paths(self) -> list[Path]:
         pass
 
     @abstractmethod
-    def get_paths(self) -> List[Path]:
+    def get_paths(self) -> list[Path]:
         pass
 
 
 class PathIndexableBase(ABC):
     @abstractmethod
-    def __getitem__(self, indexes: int | Tuple[int]) -> Path | Tuple[Path]:
+    def __getitem__(self, indexes: int | tuple[int]) -> Path | tuple[Path]:
         pass
 
 
@@ -90,7 +91,7 @@ class PathGetter(PathGetterBase):
         light_curve_paths = list(self.get_paths_function())
         return light_curve_paths
 
-    def __getitem__(self, index: int | Tuple[int]) -> Path | Tuple[Path]:
+    def __getitem__(self, index: int | tuple[int]) -> Path | tuple[Path]:
         light_curve_paths = self.get_paths()
         indexed_light_curve_paths = np.array(light_curve_paths)[index]
         if isinstance(indexed_light_curve_paths, Path):
@@ -107,13 +108,13 @@ class LightCurveCollection(LightCurveCollectionBase, LightCurveObservationIndexa
     """
     path_getter: PathGetterBase
     load_times_and_fluxes_from_path_function: Callable[
-        [Path], Tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]]
+        [Path], tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]]
 
     @classmethod
     def new(cls,
             get_paths_function: Callable[[], Iterable[Path]],
             load_times_and_fluxes_from_path_function: Callable[
-                [Path], Tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]],
+                [Path], tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]],
             ) -> Self:
         """
         Creates a new light curve collection.
@@ -138,7 +139,7 @@ class LightCurveCollection(LightCurveCollectionBase, LightCurveObservationIndexa
             light_curve = LightCurve.new(times, fluxes)
             yield light_curve
 
-    def load_times_and_fluxes_from_path(self, path) -> Tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]:
+    def load_times_and_fluxes_from_path(self, path) -> tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]:
         return self.load_times_and_fluxes_from_path_function(path)
 
     def __getitem__(self, index: int) -> LightCurve:
@@ -163,7 +164,7 @@ class LabeledLightCurveCollection(LightCurveObservationCollectionBase, LightCurv
     def new(cls,
             get_paths_function: Callable[[], Iterable[Path]],
             load_times_and_fluxes_from_path_function: Callable[
-                [Path], Tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]],
+                [Path], tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]],
             load_label_from_path_function: Callable[[Path], int]
             ) -> Self:
         """
@@ -186,7 +187,7 @@ class LabeledLightCurveCollection(LightCurveObservationCollectionBase, LightCurv
     def new_with_label(cls,
                        get_paths_function: Callable[[], Iterable[Path]],
                        load_times_and_fluxes_from_path_function: Callable[
-                           [Path], Tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]],
+                           [Path], tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]],
                        label: int
                        ) -> Self:
         """
@@ -209,7 +210,7 @@ class LabeledLightCurveCollection(LightCurveObservationCollectionBase, LightCurv
     def light_curve_iter(self) -> Iterator[LightCurve]:
         return self.light_curve_collection.light_curve_iter()
 
-    def load_times_and_fluxes_from_path(self, path) -> Tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]:
+    def load_times_and_fluxes_from_path(self, path) -> tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]:
         return self.light_curve_collection.load_times_and_fluxes_from_path(path=path)
 
     def observation_iter(self) -> Iterator[LightCurveObservation]:

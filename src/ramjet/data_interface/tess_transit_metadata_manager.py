@@ -3,11 +3,10 @@ Code for managing the TESS transit metadata.
 """
 import sqlite3
 import warnings
-from typing import List
+from enum import Enum
 
 import pandas as pd
-from enum import Enum
-from peewee import IntegerField, CharField
+from peewee import CharField, IntegerField
 
 from ramjet.data_interface.metadatabase import MetadatabaseModel, metadatabase
 from ramjet.data_interface.tess_toi_data_interface import TessToiDataInterface, ToiColumns
@@ -77,7 +76,7 @@ class TessTransitMetadataManager:
         print(f'Table built. {row_count} rows added.')
 
     @staticmethod
-    def add_tic_ids_as_confirmed(tic_ids: List[int]):
+    def add_tic_ids_as_confirmed(tic_ids: list[int]):
         """
         Adds the passed TIC IDs as confirmed transits.
 

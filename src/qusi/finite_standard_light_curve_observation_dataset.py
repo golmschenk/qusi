@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 from functools import partial
-from typing import List, Callable, Any
-from typing_extensions import Self
+from typing import Any, Callable
 
 import numpy as np
 from torch.utils.data import Dataset
+from typing_extensions import Self
 
 from qusi.light_curve_collection import LabeledLightCurveCollection
 from qusi.light_curve_dataset import default_light_curve_observation_post_injection_transform
@@ -12,15 +12,15 @@ from qusi.light_curve_dataset import default_light_curve_observation_post_inject
 
 @dataclass
 class FiniteStandardLightCurveObservationDataset(Dataset):
-    standard_light_curve_collections: List[LabeledLightCurveCollection]
+    standard_light_curve_collections: list[LabeledLightCurveCollection]
     post_injection_transform: Callable[[Any], Any]
     length: int
-    collection_start_indexes: List[int]
+    collection_start_indexes: list[int]
 
     @classmethod
-    def new(cls, standard_light_curve_collections: List[LabeledLightCurveCollection]) -> Self:
+    def new(cls, standard_light_curve_collections: list[LabeledLightCurveCollection]) -> Self:
         length = 0
-        collection_start_indexes: List[int] = []
+        collection_start_indexes: list[int] = []
         for standard_light_curve_collection in standard_light_curve_collections:
             standard_light_curve_collection_length = len(
                 list(standard_light_curve_collection.path_getter.get_paths()))

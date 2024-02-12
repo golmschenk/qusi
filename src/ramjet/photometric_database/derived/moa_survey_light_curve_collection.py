@@ -1,13 +1,13 @@
 import re
 import shutil
+import socket
+from collections.abc import Iterable
+from pathlib import Path
+from typing import Union
 
 import numpy as np
 import pandas as pd
-from pathlib import Path
-from typing import List, Union, Iterable
-import socket
 import scipy.stats
-
 from filelock import FileLock
 
 from ramjet.data_interface.moa_data_interface import MoaDataInterface
@@ -20,12 +20,12 @@ class MoaSurveyLightCurveCollection(LightCurveCollection):
     """
     moa_data_interface = MoaDataInterface()
 
-    def __init__(self, survey_tags: List[str], dataset_splits: Union[List[int], None] = None,
-                 label: Union[float, List[float], np.ndarray, None] = None):
+    def __init__(self, survey_tags: list[str], dataset_splits: Union[list[int], None] = None,
+                 label: Union[float, list[float], np.ndarray, None] = None):
         super().__init__()
         self.label = label
-        self.survey_tags: List[str] = survey_tags
-        self.dataset_splits: Union[List[int], None] = dataset_splits
+        self.survey_tags: list[str] = survey_tags
+        self.dataset_splits: Union[list[int], None] = dataset_splits
 
     def get_paths(self) -> Iterable[Path]:
         """
@@ -33,7 +33,7 @@ class MoaSurveyLightCurveCollection(LightCurveCollection):
 
         :return: An iterable of the light curve paths.
         """
-        paths: List[Path] = []
+        paths: list[Path] = []
         for tag in self.survey_tags:
             tag_paths = self.moa_data_interface.survey_tag_to_path_list_dictionary[tag]
             if self.dataset_splits is not None:

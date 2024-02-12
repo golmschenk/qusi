@@ -1,9 +1,7 @@
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import MagicMock, Mock, patch
 
-import pytest
-import numpy as np
 import pandas as pd
-
+import pytest
 import ramjet.data_interface.tess_toi_data_interface as module
 from ramjet.data_interface.tess_toi_data_interface import TessToiDataInterface
 

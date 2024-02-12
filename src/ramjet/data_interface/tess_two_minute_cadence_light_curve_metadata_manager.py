@@ -2,11 +2,16 @@
 Code for managing the meta data of the two minute cadence TESS light curves.
 """
 from pathlib import Path
-from typing import List
-from peewee import IntegerField, CharField, SchemaManager
 
-from ramjet.data_interface.metadatabase import MetadatabaseModel, metadatabase, metadatabase_uuid, \
-    convert_class_to_table_name, dataset_split_from_uuid
+from peewee import CharField, IntegerField, SchemaManager
+
+from ramjet.data_interface.metadatabase import (
+    MetadatabaseModel,
+    convert_class_to_table_name,
+    dataset_split_from_uuid,
+    metadatabase,
+    metadatabase_uuid,
+)
 from ramjet.data_interface.tess_data_interface import get_tic_id_and_sector_from_file_path
 
 
@@ -33,7 +38,7 @@ class TessTwoMinuteCadenceLightCurveMetadataManger:
     def __init__(self):
         self.light_curve_root_directory_path = Path('data/tess_two_minute_cadence_light_curves')
 
-    def insert_multiple_rows_from_paths_into_database(self, light_curve_paths: List[Path]):
+    def insert_multiple_rows_from_paths_into_database(self, light_curve_paths: list[Path]):
         """
         Inserts sets of light curve paths into the table.
 

@@ -1,14 +1,17 @@
 """
 Code for a light curve collection of the TESS FFI data, as produced by Brian Powell.
 """
-import numpy as np
 from pathlib import Path
-from typing import Union, List
+from typing import Union
+
+import numpy as np
 from peewee import Select
 
 from ramjet.data_interface.metadatabase import MetadatabaseModel
-from ramjet.data_interface.tess_ffi_light_curve_metadata_manager import TessFfiLightCurveMetadataManager, \
-    TessFfiLightCurveMetadata
+from ramjet.data_interface.tess_ffi_light_curve_metadata_manager import (
+    TessFfiLightCurveMetadata,
+    TessFfiLightCurveMetadataManager,
+)
 from ramjet.photometric_database.sql_metadata_light_curve_collection import SqlMetadataLightCurveCollection
 from ramjet.photometric_database.tess_ffi_light_curve import TessFfiLightCurve
 
@@ -19,12 +22,12 @@ class TessFfiLightCurveCollection(SqlMetadataLightCurveCollection):
     """
     tess_ffi_light_curve_metadata_manger = TessFfiLightCurveMetadataManager()
 
-    def __init__(self, dataset_splits: Union[List[int], None] = None,
+    def __init__(self, dataset_splits: Union[list[int], None] = None,
                  magnitude_range: (Union[float, None], Union[float, None]) = (None, None)):
         super().__init__()
         self.data_directory: Path = Path('data/tess_ffi_light_curves')
         self.label = 0
-        self.dataset_splits: Union[List[int], None] = dataset_splits
+        self.dataset_splits: Union[list[int], None] = dataset_splits
         self.magnitude_range: (Union[float, None], Union[float, None]) = magnitude_range
 
     def get_sql_query(self) -> Select:

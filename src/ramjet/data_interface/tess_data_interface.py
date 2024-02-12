@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import itertools
 from io import StringIO
-from random import shuffle, Random
+from random import Random
 
 import astroquery
 import lightkurve
@@ -15,6 +15,7 @@ try:
 except ImportError:
     from backports.strenum import StrEnum
 
+import logging
 import math
 import re
 import shutil
@@ -22,7 +23,8 @@ import sys
 import tempfile
 from enum import Enum
 from pathlib import Path
-from typing import Union, List, Dict
+from typing import Union
+
 import numpy as np
 import pandas as pd
 import polars as pl
@@ -30,16 +32,14 @@ import requests
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.table import Table
-from astroquery.mast import Observations, Catalogs
 from astroquery.exceptions import TimeoutError as AstroQueryTimeoutError
+from astroquery.mast import Catalogs, Observations
 from astroquery.vizier import Vizier
 from bokeh.io import show
-from retrying import retry
 from bokeh.plotting import figure as Figure
+from retrying import retry
 
-from ramjet.analysis.light_curve_visualizer import plot_light_curve, create_dual_light_curve_figure
-
-import logging
+from ramjet.analysis.light_curve_visualizer import create_dual_light_curve_figure, plot_light_curve
 
 logger = logging.getLogger('ramjet')
 
@@ -69,20 +69,11 @@ def is_common_mast_connection_error(exception: Exception) -> bool:
     """
     print(f'Retrying on {exception}...', flush=True)
     # TODO: Rename function, as it includes more than just MAST now.
-    return (isinstance(exception, AstroQueryTimeoutError) or
-            isinstance(exception, TimeoutError) or
-            isinstance(exception, requests.exceptions.ReadTimeout) or
-            isinstance(exception, requests.exceptions.ChunkedEncodingError) or
-            isinstance(exception, requests.exceptions.HTTPError) or
-            isinstance(exception, requests.exceptions.ConnectionError) or
-            isinstance(exception, ConnectionResetError) or
-            isinstance(exception, lightkurve.search.SearchError) or
-            isinstance(exception, astroquery.exceptions.RemoteServiceError))
+    return (isinstance(exception, (AstroQueryTimeoutError, ConnectionResetError, TimeoutError, astroquery.exceptions.RemoteServiceError, lightkurve.search.SearchError, requests.exceptions.ChunkedEncodingError, requests.exceptions.ConnectionError, requests.exceptions.HTTPError, requests.exceptions.ReadTimeout)))
 
 
 class NoDataProductsFoundException(Exception):
     """An exception when no data products are found from MAST."""
-    pass
 
 
 def get_variable_data_frame_for_tic_id(tic_id):
@@ -161,7 +152,7 @@ def get_product_list(observations: pd.DataFrame,
     return product_list
 
 
-def get_all_tess_time_series_observations(tic_id: Union[int, List[int]] = None,
+def get_all_tess_time_series_observations(tic_id: Union[int, list[int]] = None,
                                           mast_input_query_chunk_size: int = 1000) -> pd.DataFrame:
     """
     Gets all TESS time-series observations, limited to science data product level. Breaks large queries up to make
@@ -215,7 +206,7 @@ def download_two_minute_cadence_light_curve(tic_id: int, sector: int = None,
     return light_curve_path
 
 
-def get_sectors_target_appears_in(tic_id: int) -> List:
+def get_sectors_target_appears_in(tic_id: int) -> list:
     """
     Gets the list of sectors a TESS target appears in.
 
@@ -229,7 +220,7 @@ def get_sectors_target_appears_in(tic_id: int) -> List:
     return sorted(single_sector_observations[ColumnName.SECTOR].unique())
 
 
-def get_all_two_minute_single_sector_observations(tic_ids: List[int] = None) -> pd.DataFrame:
+def get_all_two_minute_single_sector_observations(tic_ids: list[int] = None) -> pd.DataFrame:
     """
     Gets the data frame containing all the single sector observations, with TIC ID and sector columns.
 
@@ -272,11 +263,11 @@ def download_two_minute_cadence_light_curves(save_directory: Path, limit: Union[
     """
     print(f'Starting download of 2-minute cadence light curves to directory `{save_directory}`.')
     save_directory.mkdir(parents=True, exist_ok=True)
-    print(f'Retrieving observations list from MAST...')
+    print('Retrieving observations list from MAST...')
     single_sector_observations = get_all_two_minute_single_sector_observations()
-    print(f'Retrieving data products list from MAST...')
+    print('Retrieving data products list from MAST...')
     data_products = get_product_list(single_sector_observations)
-    print(f'Downloading light curves...')
+    print('Downloading light curves...')
     light_curve_data_products = data_products[data_products['productFilename'].str.endswith('lc.fits')]
     if limit is not None:
         light_curve_data_products = light_curve_data_products.sample(frac=1, random_state=0).head(limit)
@@ -289,7 +280,7 @@ def download_two_minute_cadence_light_curves(save_directory: Path, limit: Union[
     print('Database ready.')
 
 
-def load_light_curve_from_fits_file(light_curve_path: Union[str, Path]) -> Dict[str, np.ndarray]:
+def load_light_curve_from_fits_file(light_curve_path: Union[str, Path]) -> dict[str, np.ndarray]:
     """
     Loads a light_curve from a FITS file in a dictionary form with the structure of the FITS arrays.
 
@@ -481,7 +472,7 @@ def get_tess_input_catalog_row(tic_id: int) -> pd.Series:
 
 
 @retry(retry_on_exception=is_common_mast_connection_error, stop_max_attempt_number=10)
-def get_all_tess_time_series_observations_chunk(tic_id: Union[int, List[int]] = None) -> pd.DataFrame:
+def get_all_tess_time_series_observations_chunk(tic_id: Union[int, list[int]] = None) -> pd.DataFrame:
     """
     Gets all TESS time-series observations, limited to science data product level. Repeats download attempt on
     error.
@@ -498,7 +489,7 @@ def get_all_tess_time_series_observations_chunk(tic_id: Union[int, List[int]] = 
     return tess_observations.to_pandas()
 
 
-def get_all_tess_spoc_light_curve_observations(tic_id: Union[int, List[int]],
+def get_all_tess_spoc_light_curve_observations(tic_id: Union[int, list[int]],
                                                mast_input_query_chunk_size: int = 1000) -> pd.DataFrame:
     """
     Gets all TESS SPOC light curves. Breaks large queries up to make the communication with MAST smoother.
@@ -519,7 +510,7 @@ def get_all_tess_spoc_light_curve_observations(tic_id: Union[int, List[int]],
 
 
 @retry(retry_on_exception=is_common_mast_connection_error, stop_max_attempt_number=10)
-def get_all_tess_spoc_light_curve_observations_chunk(tic_id: Union[int, List[int]]) -> pd.DataFrame:
+def get_all_tess_spoc_light_curve_observations_chunk(tic_id: Union[int, list[int]]) -> pd.DataFrame:
     """
     Gets all TESS time-series observations, limited to science data product level. Repeats download attempt on
     error.
@@ -536,8 +527,8 @@ def get_all_tess_spoc_light_curve_observations_chunk(tic_id: Union[int, List[int
     return observations_data_frame
 
 
-def get_spoc_tic_id_list_from_mast() -> List[int]:
-    sector_data_frames: List[pl.DataFrame] = []
+def get_spoc_tic_id_list_from_mast() -> list[int]:
+    sector_data_frames: list[pl.DataFrame] = []
     for sector_index in itertools.count(1):
         response = requests.get(f'https://archive.stsci.edu/hlsps/tess-spoc/target_lists/s{sector_index:04d}.csv')
         if response.status_code != 200:
@@ -552,9 +543,9 @@ def get_spoc_tic_id_list_from_mast() -> List[int]:
     return tic_ids
 
 
-def download_spoc_light_curves_for_tic_ids(tic_ids: List[int], download_directory: Path,
-                                           sectors: List[int] | None = None,
-                                           limit: int | None = None, chunk_size: int = 1000) -> List[Path]:
+def download_spoc_light_curves_for_tic_ids(tic_ids: list[int], download_directory: Path,
+                                           sectors: list[int] | None = None,
+                                           limit: int | None = None, chunk_size: int = 1000) -> list[Path]:
     random = Random(0)
     random.shuffle(tic_ids)
     paths = []
@@ -578,9 +569,9 @@ def get_sector_from_spoc_obs_id(obs_id: str) -> int:
         return int(match.group(1))
 
 
-def download_spoc_light_curves_for_tic_ids_chunk(tic_ids: List[int], download_directory: Path,
-                                                 sectors: List[int] | None = None,
-                                                 limit: int | None = None) -> List[Path]:
+def download_spoc_light_curves_for_tic_ids_chunk(tic_ids: list[int], download_directory: Path,
+                                                 sectors: list[int] | None = None,
+                                                 limit: int | None = None) -> list[Path]:
     light_curve_observations = get_all_tess_spoc_light_curve_observations(tic_id=tic_ids)
     light_curve_observations[ColumnName.SECTOR] = light_curve_observations['obs_id'].map(get_sector_from_spoc_obs_id)
     if sectors is not None:

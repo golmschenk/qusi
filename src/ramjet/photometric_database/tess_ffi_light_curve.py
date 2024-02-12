@@ -6,17 +6,16 @@ from __future__ import annotations
 import os
 import pickle
 import re
-
-import numpy as np
 from enum import Enum
 from pathlib import Path
-from typing import Union, List, Optional
+from typing import Optional, Union
 
+import numpy as np
 import pandas as pd
 from astropy import units
-from astropy.coordinates import SkyCoord, Angle
+from astropy.coordinates import Angle, SkyCoord
 from astroquery.vizier import Vizier
-from tenacity import retry, wait_random_exponential, stop_after_attempt, retry_if_exception_type
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_random_exponential
 
 try:
     from enum import StrEnum
@@ -60,8 +59,7 @@ class AdaptIntermittentException(Exception):
 
 
 def adapt_intermittent_error(exception: Exception) -> bool:
-    return (isinstance(exception, OSError) or
-            isinstance(exception, pickle.UnpicklingError))
+    return (isinstance(exception, (OSError, pickle.UnpicklingError)))
 
 class TessFfiLightCurve(TessLightCurve):
     """
@@ -75,7 +73,7 @@ class TessFfiLightCurve(TessLightCurve):
     @classmethod
     @retry(retry=retry_if_exception_type(AdaptIntermittentException),
            wait=wait_random_exponential(multiplier=0.1, max=20), stop=stop_after_attempt(20), reraise=True)
-    def from_path(cls, path: Path, column_names_to_load: Union[List[TessFfiColumnName], None] = None,
+    def from_path(cls, path: Path, column_names_to_load: Union[list[TessFfiColumnName], None] = None,
                   remove_bad_quality_data: bool = True) -> TessFfiLightCurve:
         """
         Creates an FFI TESS light curve from a path to one of Brian Powell's pickle files.
@@ -221,7 +219,7 @@ class GcvsColumnName(StrEnum):
     DEC = 'DEJ2000'
 
 
-def has_gcvs_type(var_type_string: str, labels: List[str]) -> bool:
+def has_gcvs_type(var_type_string: str, labels: list[str]) -> bool:
     var_type_string_without_uncertainty_flags = var_type_string.replace(':', '')
     variable_type_flags = var_type_string_without_uncertainty_flags.split('+')
     for variable_type_flag in variable_type_flags:
@@ -230,7 +228,7 @@ def has_gcvs_type(var_type_string: str, labels: List[str]) -> bool:
     return False
 
 
-def get_gcvs_catalog_entries_for_labels(labels: List[str]) -> pd.DataFrame:
+def get_gcvs_catalog_entries_for_labels(labels: list[str]) -> pd.DataFrame:
     # TODO: Not keeping this function, just copying stuff from it.
     gcvs_catalog_astropy_table = Vizier(columns=['**'], catalog='B/gcvs/gcvs_cat', row_limit=-1).query_constraints()[0]
     gcvs_catalog_data_frame = gcvs_catalog_astropy_table.to_pandas()

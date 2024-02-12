@@ -1,11 +1,10 @@
 from uuid import UUID
 
 import pytest
+from ramjet.data_interface.metadatabase import dataset_split_from_uuid, metadatabase_uuid
 
-from ramjet.data_interface.metadatabase import metadatabase_uuid, dataset_split_from_uuid
 
-
-class TestMetadatabase():
+class TestMetadatabase:
     @pytest.mark.integration
     def test_metadatabase_uuid_is_repeatable(self):
         uuid = metadatabase_uuid('FakeDatabaseTable TIC 1234567 sector 1')

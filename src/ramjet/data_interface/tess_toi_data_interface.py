@@ -6,8 +6,11 @@ from typing import Union
 import pandas as pd
 import requests
 
-from ramjet.data_interface.tess_data_interface import get_all_two_minute_single_sector_observations, get_product_list, \
-    download_products
+from ramjet.data_interface.tess_data_interface import (
+    download_products,
+    get_all_two_minute_single_sector_observations,
+    get_product_list,
+)
 
 
 class ToiColumns(Enum):
@@ -170,7 +173,7 @@ class TessToiDataInterface:
         # Use context options to not truncate printed data.
         with pd.option_context('display.max_rows', None, 'display.max_columns', None, 'display.width', None):
             print(dispositions_data_frame)
-            
+
     def download_exofop_toi_light_curves_to_directory(self, directory: Path):
         """
         Downloads the `ExoFOP database <https://exofop.ipac.caltech.edu/tess/view_toi.php>`_ light curve files to the

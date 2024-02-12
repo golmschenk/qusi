@@ -4,8 +4,8 @@ Code for a class to calculate receiver operating characteristic (ROC) curves.
 from pathlib import Path
 from typing import Union
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 class RocCalculator:

@@ -4,14 +4,16 @@ angular Einstein radius) , s (Projected separation of the masses normalized by t
 q (Mass ratio M_planet/M_host), alpha (Trajectory angle). The distribution for tE and rho are based on the MOA
 observations.
 """
-import requests
+from pathlib import Path
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-from pathlib import Path
+import requests
+
 try:
     from muLAn.models.vbb.vbb import vbbmagU
-except ModuleNotFoundError as error:
+except ModuleNotFoundError:
     vbbmagU = None
 
 

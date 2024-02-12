@@ -4,7 +4,6 @@ Code to download and prepare the data needed for the GPU experiments.
 from pathlib import Path
 
 from ramjet.data_interface.tess_data_interface import TessDataInterface
-from ramjet.data_interface.tess_toi_data_interface import TessToiDataInterface
 from ramjet.photometric_database.setup.tess_two_minute_cadence_transit_metadata import build_tables
 
 

@@ -1,7 +1,6 @@
 """Tests for the RocCalculator class."""
-import pytest
 import numpy as np
-
+import pytest
 from ramjet.analysis.roc_calculator import RocCalculator
 
 

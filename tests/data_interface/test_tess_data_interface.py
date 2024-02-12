@@ -2,17 +2,16 @@
 Tests for the TessDataInterface class.
 """
 from pathlib import Path
-from unittest.mock import Mock, ANY, patch
+from unittest.mock import ANY, Mock, patch
+
 import numpy as np
 import pandas as pd
-from astropy.coordinates import SkyCoord
-from astropy.table import Table
-
 import pytest
-from astroquery.utils import TableList
-
 import ramjet.data_interface.tess_data_interface
 import ramjet.data_interface.tess_data_interface as tess_data_interface_module
+from astropy.coordinates import SkyCoord
+from astropy.table import Table
+from astroquery.utils import TableList
 from ramjet.data_interface.tess_data_interface import TessFluxType
 
 

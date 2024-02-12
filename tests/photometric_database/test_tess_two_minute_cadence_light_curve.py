@@ -1,13 +1,15 @@
 from pathlib import Path
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 import numpy as np
 import pandas as pd
 import pytest
-
 import ramjet.photometric_database.tess_two_minute_cadence_light_curve as module
-from ramjet.photometric_database.tess_two_minute_cadence_light_curve import TessMissionLightCurveColumnName, \
-    TessMissionLightCurveFitsIndex, TessMissionLightCurve
+from ramjet.photometric_database.tess_two_minute_cadence_light_curve import (
+    TessMissionLightCurve,
+    TessMissionLightCurveColumnName,
+    TessMissionLightCurveFitsIndex,
+)
 
 
 class TestTessTwoMinuteCadenceFileBasedLightCurve:

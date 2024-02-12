@@ -3,8 +3,9 @@ Code to prepare the metadata needed for TESS two minute transit related trials.
 """
 from ramjet.data_interface.tess_target_metadata_manager import TessTargetMetadataManger
 from ramjet.data_interface.tess_transit_metadata_manager import TessTransitMetadataManager
-from ramjet.data_interface.tess_two_minute_cadence_light_curve_metadata_manager import \
-    TessTwoMinuteCadenceLightCurveMetadataManger
+from ramjet.data_interface.tess_two_minute_cadence_light_curve_metadata_manager import (
+    TessTwoMinuteCadenceLightCurveMetadataManger,
+)
 
 
 def build_tables():

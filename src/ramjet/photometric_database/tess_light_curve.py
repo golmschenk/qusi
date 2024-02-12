@@ -4,14 +4,13 @@ Code to represent a TESS light curve.
 from __future__ import annotations
 
 import copy
-from typing import Union, Optional, List
+from typing import Optional, Union
 
 import lightkurve
 import numpy as np
-
 import pandas as pd
 from astropy import units
-from astropy.coordinates import SkyCoord, Angle
+from astropy.coordinates import Angle, SkyCoord
 from astroquery.mast import Catalogs
 from lightkurve import SearchResult
 from lightkurve.targetpixelfile import TargetPixelFile
@@ -116,8 +115,8 @@ class TessLightCurve(LightCurve):
         return self.sky_coord.separation(centroid_sky_coord)
 
     @classmethod
-    def load_tic_rows_from_mast_for_list(cls, light_curves: List[TessLightCurve]) -> None:
-        light_curve_tic_ids: List[int] = [light_curve.tic_id for light_curve in light_curves]
+    def load_tic_rows_from_mast_for_list(cls, light_curves: list[TessLightCurve]) -> None:
+        light_curve_tic_ids: list[int] = [light_curve.tic_id for light_curve in light_curves]
         tic_row_data_frame = Catalogs.query_criteria(ID=light_curve_tic_ids, catalog='TIC').to_pandas()
         for light_curve in light_curves:
             light_curve_tic_row_data_frame = tic_row_data_frame[tic_row_data_frame['ID'] == str(light_curve.tic_id)]

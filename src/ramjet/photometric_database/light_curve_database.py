@@ -1,13 +1,11 @@
 """Code for a base generalized database for photometric data to be subclassed."""
-import math
 import shutil
 from abc import ABC
 from pathlib import Path
-from typing import List, Union, Callable, Iterable, Tuple
+from typing import Union
 
 import numpy as np
 import numpy.typing as npt
-
 
 
 def preprocess_times(light_curve_array: np.ndarray) -> None:
@@ -21,14 +19,14 @@ def preprocess_times(light_curve_array: np.ndarray) -> None:
     light_curve_array[:, 0] = calculate_time_differences(times)
 
 
-def make_times_and_fluxes_array_uniform_length(arrays: Tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]], length: int, randomize: bool = True) -> (np.ndarray, np.ndarray):
+def make_times_and_fluxes_array_uniform_length(arrays: tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]], length: int, randomize: bool = True) -> (np.ndarray, np.ndarray):
     times, fluxes = arrays
     light_curve_array = np.stack([times, fluxes], axis=-1)
     uniform_length_light_curve_array = make_uniform_length(light_curve_array, length=length, randomize=randomize)
     return uniform_length_light_curve_array[:, 0], uniform_length_light_curve_array[:, 1]
 
 
-def make_fluxes_and_label_array_uniform_length(arrays: Tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]], length: int, randomize: bool = True) -> (np.ndarray, np.ndarray):
+def make_fluxes_and_label_array_uniform_length(arrays: tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]], length: int, randomize: bool = True) -> (np.ndarray, np.ndarray):
     times, label = arrays
     uniform_length_times = make_uniform_length(times, length=length, randomize=randomize)
     return uniform_length_times, label
@@ -215,7 +213,7 @@ def randomly_roll_elements(example: np.ndarray) -> np.ndarray:
     return example
 
 
-def extract_shuffled_chunk_and_remainder(array_to_extract_from: Union[List, np.ndarray], chunk_ratio: float,
+def extract_shuffled_chunk_and_remainder(array_to_extract_from: Union[list, np.ndarray], chunk_ratio: float,
                                          chunk_to_extract_index: int = 0) -> (np.ndarray, np.ndarray):
     """
     Shuffles an array, extracts a chunk of the data, and returns the chunk and remainder of the array.

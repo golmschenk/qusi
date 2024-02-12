@@ -5,12 +5,11 @@ import math
 import re
 import shutil
 import socket
+from collections.abc import Iterable, Iterator
 from enum import Enum
 from functools import partial
 from pathlib import Path
-from typing import List, Iterable, Tuple, TypeVar, Iterator, Callable, Any
-from typing_extensions import Self
-
+from typing import Any, Callable, TypeVar
 
 import numpy as np
 import numpy.typing as npt
@@ -20,13 +19,19 @@ from scipy import stats
 from scipy.interpolate import interp1d
 from torch import Tensor
 from torch.utils.data import IterableDataset
+from typing_extensions import Self
 
-from qusi.light_curve import LightCurve, remove_nan_flux_data_points_from_light_curve, randomly_roll_light_curve
+from qusi.light_curve import LightCurve, randomly_roll_light_curve, remove_nan_flux_data_points_from_light_curve
 from qusi.light_curve_collection import LabeledLightCurveCollection
-from qusi.light_curve_observation import LightCurveObservation, \
-    remove_nan_flux_data_points_from_light_curve_observation, randomly_roll_light_curve_observation
-from qusi.light_curve_transforms import from_light_curve_observation_to_fluxes_array_and_label_array, \
-    pair_array_to_tensor
+from qusi.light_curve_observation import (
+    LightCurveObservation,
+    randomly_roll_light_curve_observation,
+    remove_nan_flux_data_points_from_light_curve_observation,
+)
+from qusi.light_curve_transforms import (
+    from_light_curve_observation_to_fluxes_array_and_label_array,
+    pair_array_to_tensor,
+)
 
 
 class LightCurveDataset(IterableDataset):
@@ -35,14 +40,14 @@ class LightCurveDataset(IterableDataset):
     """
 
     def __init__(self,
-                 standard_light_curve_collections: List[LabeledLightCurveCollection],
-                 injectee_light_curve_collections: List[LabeledLightCurveCollection],
-                 injectable_light_curve_collections: List[LabeledLightCurveCollection],
+                 standard_light_curve_collections: list[LabeledLightCurveCollection],
+                 injectee_light_curve_collections: list[LabeledLightCurveCollection],
+                 injectable_light_curve_collections: list[LabeledLightCurveCollection],
                  post_injection_transform: Callable[[Any], Any],
                  ):
-        self.standard_light_curve_collections: List[LabeledLightCurveCollection] = standard_light_curve_collections
-        self.injectee_light_curve_collections: List[LabeledLightCurveCollection] = injectee_light_curve_collections
-        self.injectable_light_curve_collections: List[LabeledLightCurveCollection] = injectable_light_curve_collections
+        self.standard_light_curve_collections: list[LabeledLightCurveCollection] = standard_light_curve_collections
+        self.injectee_light_curve_collections: list[LabeledLightCurveCollection] = injectee_light_curve_collections
+        self.injectable_light_curve_collections: list[LabeledLightCurveCollection] = injectable_light_curve_collections
         if len(self.standard_light_curve_collections) == 0 and len(self.injectee_light_curve_collections) == 0:
             raise ValueError('Either the standard or injectee light curve collection lists must not be empty. '
                              'Both were empty.')
@@ -50,7 +55,7 @@ class LightCurveDataset(IterableDataset):
 
     def __iter__(self):
         base_light_curve_collection_iter_and_type_pairs: \
-            List[Tuple[Iterator[LightCurveObservation], LightCurveCollectionType]] = []
+            list[tuple[Iterator[LightCurveObservation], LightCurveCollectionType]] = []
         injectee_collections = copy.copy(self.injectee_light_curve_collections)
         for standard_collection in self.standard_light_curve_collections:
             if standard_collection in injectee_collections:
@@ -64,7 +69,7 @@ class LightCurveDataset(IterableDataset):
         for injectee_collection in injectee_collections:
             base_light_curve_collection_iter_and_type_pairs.append(
                 (loop_iter_function(injectee_collection.observation_iter), LightCurveCollectionType.INJECTEE))
-        injectable_light_curve_collection_iters: List[Iterator[LightCurveObservation]] = []
+        injectable_light_curve_collection_iters: list[Iterator[LightCurveObservation]] = []
         for injectable_collection in self.injectable_light_curve_collections:
             injectable_light_curve_collection_iters.append(loop_iter_function(injectable_collection.observation_iter))
         while True:
@@ -88,9 +93,9 @@ class LightCurveDataset(IterableDataset):
 
     @classmethod
     def new(cls,
-            standard_light_curve_collections: List[LabeledLightCurveCollection] | None = None,
-            injectee_light_curve_collections: List[LabeledLightCurveCollection] | None = None,
-            injectable_light_curve_collections: List[LabeledLightCurveCollection] | None = None,
+            standard_light_curve_collections: list[LabeledLightCurveCollection] | None = None,
+            injectee_light_curve_collections: list[LabeledLightCurveCollection] | None = None,
+            injectable_light_curve_collections: list[LabeledLightCurveCollection] | None = None,
             post_injection_transform: Callable[[Any], Any] | None = None,
             ) -> Self:
         if standard_light_curve_collections is None and injectee_light_curve_collections is None:
@@ -132,7 +137,7 @@ def is_injected_dataset(dataset: LightCurveDataset):
     return len(dataset.injectee_light_curve_collections) > 0
 
 
-def contains_injected_dataset(datasets: List[LightCurveDataset]):
+def contains_injected_dataset(datasets: list[LightCurveDataset]):
     for dataset in datasets:
         if is_injected_dataset(dataset):
             return True
@@ -168,7 +173,7 @@ class LightCurveCollectionType(Enum):
 
 class InterleavedDataset(IterableDataset):
     def __init__(self, *datasets: IterableDataset):
-        self.datasets: Tuple[IterableDataset] = datasets
+        self.datasets: tuple[IterableDataset] = datasets
 
     @classmethod
     def new(cls, *datasets: IterableDataset):
@@ -183,7 +188,7 @@ class InterleavedDataset(IterableDataset):
 
 class ConcatenatedIterableDataset(IterableDataset):
     def __init__(self, *datasets: IterableDataset):
-        self.datasets: Tuple[IterableDataset] = datasets
+        self.datasets: tuple[IterableDataset] = datasets
 
     @classmethod
     def new(cls, *datasets: IterableDataset):
@@ -242,7 +247,7 @@ def normalize_tensor_by_modified_z_score(tensor: Tensor) -> Tensor:
     return modified_z_score
 
 
-def make_fluxes_and_label_array_uniform_length(arrays: Tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]],
+def make_fluxes_and_label_array_uniform_length(arrays: tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]],
                                                length: int, randomize: bool = True) -> (np.ndarray, np.ndarray):
     fluxes, label = arrays
     uniform_length_times = make_uniform_length(fluxes, length=length, randomize=randomize)

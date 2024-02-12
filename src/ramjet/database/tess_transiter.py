@@ -1,7 +1,7 @@
 """
 A model for the database entity of a TESS transiter.
 """
-from peewee import AutoField, ForeignKeyField, FloatField, BooleanField
+from peewee import AutoField, BooleanField, FloatField, ForeignKeyField
 
 from ramjet.database.base_model import BaseModel
 from ramjet.database.tess_target import TessTarget

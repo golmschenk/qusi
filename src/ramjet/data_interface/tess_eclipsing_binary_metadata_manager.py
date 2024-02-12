@@ -1,12 +1,12 @@
 """
 Code for managing the TESS eclipsing binary metadata.
 """
-import pandas as pd
 from pathlib import Path
+
+import pandas as pd
 from peewee import IntegerField, SchemaManager
 
 from ramjet.data_interface.metadatabase import MetadatabaseModel, metadatabase
-
 
 brian_powell_eclipsing_binary_csv_path = Path('data/tess_eclipsing_binaries/TESS_EB_catalog_23Jun.csv')
 
