@@ -3,6 +3,7 @@ from unittest.mock import Mock
 
 import numpy as np
 import pytest
+
 from ramjet.photometric_database.light_curve_collection import (
     LightCurveCollection,
     LightCurveCollectionMethodNotImplementedError,

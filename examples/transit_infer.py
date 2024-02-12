@@ -5,7 +5,7 @@ import torch
 
 from qusi.finite_standard_light_curve_dataset import FiniteStandardLightCurveDataset
 from qusi.hadryss_model import Hadryss
-from qusi.infer_session import infer_session, get_device
+from qusi.infer_session import get_device, infer_session
 from qusi.light_curve_collection import LightCurveCollection
 from ramjet.photometric_database.tess_two_minute_cadence_light_curve import TessMissionLightCurve
 

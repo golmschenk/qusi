@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 import numpy as np
 import pytest
+
 import ramjet.photometric_database.standard_and_injected_light_curve_database as database_module
 from ramjet.photometric_database.light_curve_collection import LightCurveCollection
 from ramjet.photometric_database.light_curve_dataset_manipulations import OutOfBoundsInjectionHandlingMethod

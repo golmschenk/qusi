@@ -2,6 +2,7 @@
 import numpy as np
 import pandas as pd
 import pytest
+
 from ramjet.analysis.transit_vetter import TransitVetter
 from ramjet.photometric_database.tess_target import TessTarget
 

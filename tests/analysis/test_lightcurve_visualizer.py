@@ -1,6 +1,7 @@
 from unittest.mock import patch
 
 import numpy as np
+
 import ramjet
 from ramjet.analysis.light_curve_visualizer import create_dual_light_curve_figure
 

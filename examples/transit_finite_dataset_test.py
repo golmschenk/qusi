@@ -2,10 +2,10 @@ import torch
 from torch.nn import BCELoss
 from torchmetrics.classification import BinaryAccuracy
 
-from transit_dataset import get_transit_finite_test_dataset
 from qusi.finite_test_session import finite_datasets_test_session, get_device
 from qusi.hadryss_model import Hadryss
 
+from transit_dataset import get_transit_finite_test_dataset
 
 def main():
     test_light_curve_dataset = get_transit_finite_test_dataset()

@@ -102,3 +102,9 @@ exclude_lines = [
     "if __name__ == .__main__.:",
     "if TYPE_CHECKING:",
 ]
+
+[tool.ruff]
+extend-exclude = ["examples"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["qusi", "ramjet"]

@@ -1,8 +1,8 @@
-from qusi.train_hyperparameter_configuration import TrainHyperparameterConfiguration
-from transit_dataset import get_transit_train_dataset, get_transit_validation_dataset
 from qusi.hadryss_model import Hadryss
+from qusi.train_hyperparameter_configuration import TrainHyperparameterConfiguration
 from qusi.train_session import train_session
 
+from transit_dataset import get_transit_train_dataset, get_transit_validation_dataset
 
 def main():
     train_light_curve_dataset = get_transit_train_dataset()

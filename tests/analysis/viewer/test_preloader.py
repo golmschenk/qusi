@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pandas as pd
 import pytest
+
 import ramjet.analysis.viewer.preloader as module
 from ramjet.analysis.viewer.preloader import Preloader
 

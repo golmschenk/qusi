@@ -2,6 +2,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pandas as pd
 import pytest
+
 import ramjet.data_interface.tess_toi_data_interface as module
 from ramjet.data_interface.tess_toi_data_interface import TessToiDataInterface
 

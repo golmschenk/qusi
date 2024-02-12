@@ -2,8 +2,10 @@ from pathlib import Path
 
 import numpy as np
 
-from ramjet.data_interface.tess_data_interface import \
-    get_spoc_tic_id_list_from_mast, download_spoc_light_curves_for_tic_ids
+from ramjet.data_interface.tess_data_interface import (
+    download_spoc_light_curves_for_tic_ids,
+    get_spoc_tic_id_list_from_mast,
+)
 from ramjet.data_interface.tess_toi_data_interface import TessToiDataInterface, ToiColumns
 
 

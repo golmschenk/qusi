@@ -1,9 +1,8 @@
 from pathlib import Path
-from typing import List
 
 import numpy as np
 import torch
-from torch.nn import Module, BCELoss
+from torch.nn import BCELoss, Module
 from torch.types import Device
 from torch.utils.data import DataLoader
 from torchmetrics.classification import BinaryAccuracy
@@ -59,9 +58,9 @@ def main():
     return results
 
 
-def infinite_datasets_test_session(test_datasets: List[LightCurveDataset], model: Module,
-                                   metric_functions: List[Module], batch_size: int, device: Device, steps: int):
-    test_dataloaders: List[DataLoader] = []
+def infinite_datasets_test_session(test_datasets: list[LightCurveDataset], model: Module,
+                                   metric_functions: list[Module], batch_size: int, device: Device, steps: int):
+    test_dataloaders: list[DataLoader] = []
     for test_dataset in test_datasets:
         test_dataloaders.append(DataLoader(test_dataset, batch_size=batch_size, pin_memory=True))
     model.eval()
@@ -80,7 +79,7 @@ def get_device():
     return device
 
 
-def infinite_dataset_test_phase(dataloader, model: Module, metric_functions: List[Module], device: Device, steps: int):
+def infinite_dataset_test_phase(dataloader, model: Module, metric_functions: list[Module], device: Device, steps: int):
     batch_count = 0
     metric_totals = torch.zeros(size=[len(metric_functions)])
     model.eval()

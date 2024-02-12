@@ -1,4 +1,5 @@
 import pytest
+
 from ramjet.photometric_database.light_curve_collection import LightCurveCollectionMethodNotImplementedError
 from ramjet.photometric_database.sql_metadata_light_curve_collection import SqlMetadataLightCurveCollection
 

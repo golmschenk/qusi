@@ -1,6 +1,7 @@
 from unittest.mock import Mock, patch
 
 import numpy as np
+
 import ramjet.photometric_database.derived.self_lensing_binary_synthetic_signals_light_curve_collection as module
 from ramjet.photometric_database.derived.self_lensing_binary_synthetic_signals_light_curve_collection import (
     SelfLensingBinarySyntheticSignalsLightCurveCollection,

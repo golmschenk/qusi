@@ -1,4 +1,5 @@
 import pytest
+
 from ramjet.photometric_database.tess_light_curve import MissingTicRow, TessLightCurve
 
 
