@@ -11,7 +11,7 @@ from ramjet.photometric_database.tess_ffi_light_curve import TessFfiColumnName, 
 class TestTessFfiDataInterface:
     @pytest.fixture
     def ffi_pickle_contents(self) -> tuple[int, float, float, float, int, int, np.ndarray, np.ndarray, np.ndarray,
-                                           np.ndarray, np.ndarray, np.ndarray]:
+    np.ndarray, np.ndarray, np.ndarray]:
         """
         Creates a mock content of one of Brian Powell's FFI data files.
 
@@ -119,7 +119,8 @@ class TestTessFfiDataInterface:
         magnitude1 = light_curve.get_floor_magnitude_from_file_path(
             'data/ffi_microlensing_database/light_curves/tesslcs_sector_1/tesslcs_tmag_14_15/tesslc_1234567.pkl')
         assert magnitude1 == 14
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError,
+                           match='tesslc_12345678.pkl does not match a known pattern to extract magnitude from.'):
             light_curve.get_floor_magnitude_from_file_path('tesslc_12345678.pkl')
 
     def test_can_get_floor_magnitude_from_104_ffi_style_file_path(self):
@@ -130,19 +131,21 @@ class TestTessFfiDataInterface:
         magnitude1 = light_curve.get_floor_magnitude_from_file_path(
             'data/ffi_microlensing_database/light_curves/tesslcs_sector_1_104/tesslcs_tmag_14_15/tesslc_1234567.pkl')
         assert magnitude1 == 14
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError,
+                           match='tesslc_12345678.pkl does not match a known pattern to extract magnitude from.'):
             light_curve.get_floor_magnitude_from_file_path('tesslc_12345678.pkl')
 
     def test_all_ffi_column_names_have_matches_in_the_pickle_indexes(self):
-        index_names = list(map(lambda index: index.name, TessFfiPickleIndex))
+        index_names = [index.name for index in TessFfiPickleIndex]
         for column_name in TessFfiColumnName:
             assert column_name.name in index_names
 
     @patch.object(module.pickle, 'load')
-    @patch.object(Path, 'open')
-    def test_from_path_factory_sets_the_tic_id_and_sector_of_the_light_curve(self, mock_open, mock_pickle_load,
+    def test_from_path_factory_sets_the_tic_id_and_sector_of_the_light_curve(self, mock_pickle_load,
                                                                              ffi_pickle_contents):
-        mock_pickle_load.return_value = ffi_pickle_contents
-        light_curve = TessFfiLightCurve.from_path(Path('tesslcs_sector_1_104/tesslcs_tmag_14_15/tesslc_1234567.pkl'))
-        assert light_curve.tic_id == 1234567
-        assert light_curve.sector == 1
+        with patch.object(Path, 'open'):
+            mock_pickle_load.return_value = ffi_pickle_contents
+            light_curve = TessFfiLightCurve.from_path(
+                Path('tesslcs_sector_1_104/tesslcs_tmag_14_15/tesslc_1234567.pkl'))
+            assert light_curve.tic_id == 1234567
+            assert light_curve.sector == 1

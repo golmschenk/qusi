@@ -43,7 +43,8 @@ class TestTessTwoMinuteCadenceFileBasedLightCurve:
         with patch.object(module.fits, 'open') as mock_open:
             mock_open.return_value.__enter__.return_value = fake_hdu_list
             light_curve = TessMissionLightCurve.from_path(Path('TIC 169480782 sector 5.fits'))
-            assert np.array_equal(light_curve.times, fake_hdu_list[1].data[TessMissionLightCurveFitsIndex.TIME__BTJD.value])
+            assert np.array_equal(light_curve.times,
+                                  fake_hdu_list[1].data[TessMissionLightCurveFitsIndex.TIME__BTJD.value])
             assert np.array_equal(light_curve.fluxes,
                                   fake_hdu_list[1].data[TessMissionLightCurveFitsIndex.PDCSAP_FLUX.value])
 
@@ -58,7 +59,8 @@ class TestTessTwoMinuteCadenceFileBasedLightCurve:
         assert sector1 == 5
 
     def test_get_tic_id_and_sector_raises_error_with_unknown_pattern(self):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError,
+                           match='a b c d e f g does not match a known pattern to extract TIC ID and sector from.'):
             TessMissionLightCurve.get_tic_id_and_sector_from_file_path(Path('a b c d e f g'))
 
     def test_can_get_tic_id_and_sector_from_tess_obs_id_style_file_name(self):

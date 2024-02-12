@@ -106,5 +106,6 @@ exclude_lines = [
 [tool.ruff]
 extend-exclude = ["examples"]
 
-[tool.ruff.lint.isort]
-known-first-party = ["qusi", "ramjet"]
+[tool.ruff.lint]
+ignore = ["RET504"]
+isort.known-first-party = ["qusi", "ramjet"]

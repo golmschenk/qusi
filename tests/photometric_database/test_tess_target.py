@@ -31,7 +31,7 @@ class TestTessTarget:
 
         assert gaia_radius == pytest.approx(4.2563343)
 
-    @pytest.mark.parametrize('transit_depth, target_radius, target_contamination_ratio, expected_body_radius',
+    @pytest.mark.parametrize(('transit_depth', 'target_radius', 'target_contamination_ratio', 'expected_body_radius'),
                              [(0.01011, 1.0, 0.0, 0.1005484),
                               (0.02, 1.0, 0.1, 0.1483239),
                               (0.01, 2.0, 0.5, 0.2449489)])
@@ -45,7 +45,7 @@ class TestTessTarget:
 
         assert body_radius == pytest.approx(expected_body_radius)
 
-    @pytest.mark.parametrize('contamination_ratio, allow_unknown_contamination_ratio',
+    @pytest.mark.parametrize(('contamination_ratio', 'allow_unknown_contamination_ratio'),
                              [(np.nan, False),
                               (None, False)])
     def test_not_allowing_estimate_radius_of_transiting_body_with_unknown_contamination(
@@ -56,11 +56,11 @@ class TestTessTarget:
         target.radius = target_radius
         target.contamination_ratio = contamination_ratio
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r'Contamination ratio (None|nan) cannot be used to calculate the radius.'):
             _ = target.calculate_transiting_body_radius(
                 transit_depth=transit_depth, allow_unknown_contamination_ratio=allow_unknown_contamination_ratio)
 
-    @pytest.mark.parametrize('contamination_ratio, allow_unknown_contamination_ratio',
+    @pytest.mark.parametrize(('contamination_ratio', 'allow_unknown_contamination_ratio'),
                              [(np.nan, True),
                               (None, True)])
     def test_allowing_estimate_radius_of_transiting_body_with_unknown_contamination(
