@@ -11,13 +11,13 @@ First, create a directory to hold the project named ``qusi_example_project``, or
 Downloading the dataset
 -----------------------
 
-The next thing we'll do is download a dataset of light curves that include cases both with and without transiting planets. To do this, run the example script at ``examples/download_spoc_transit_light_curves``. For now, don't worry about how each part of the code works. You can run the script with:
+The next thing we'll do is download a dataset of light curves that include cases both with and without transiting planets. To do this, run the example script at ``examples/download_spoc_transit_light_curves``. For now, don't worry about how each part of the code works. You can run the script with
 
 .. code:: sh
 
     python examples/download_spoc_transit_light_curves.py
 
-The main thing to know is that this will create a ``data`` directory within the project directory and within that will be a ``spoc_transit_experiment`` directory, referring to the data for the experiment of finding transiting planets within the TESS SPOC data. This will further contain 3 directories. One for train data, one for validation data, and one for test data. Within each of those, it will create a ``positive`` directory, that will hold the light curves with transits, and a ``negative`` directory, that will hold the light curves without transits. So the project directory tree now looks like:
+The main thing to know is that this will create a ``data`` directory within the project directory and within that will be a ``spoc_transit_experiment`` directory, referring to the data for the experiment of finding transiting planets within the TESS SPOC data. This will further contain 3 directories. One for train data, one for validation data, and one for test data. Within each of those, it will create a ``positive`` directory, that will hold the light curves with transits, and a ``negative`` directory, that will hold the light curves without transits. So the project directory tree now looks like
 
 .. code::
 
@@ -34,7 +34,17 @@ The main thing to know is that this will create a ``data`` directory within the 
                 positive
     examples
 
-Each of these ``positive`` and ``negative`` data directories will now contain a set of light curves. The reason why the code in this script is not very important for you to know, is that it's mostly irrelevant for future uses. When you're working on your own problem, you'll obtain your data some other way. And ``qusi`` is flexible about the data structure, so this directory structure is not required. It's just one way to structure the data. Note, this is a relatively small dataset to make sure it doesn't take very long to get up and running. To get a better result, you'd want to download all known transiting light curves and a much larger collection non-transiting light curves.
+Each of these ``positive`` and ``negative`` data directories will now contain a set of light curves. The reason why the code in this script is not very important for you to know, is that it's mostly irrelevant for future uses. When you're working on your own problem, you'll obtain your data some other way. And ``qusi`` is flexible about the data structure, so this directory structure is not required. It's just one way to structure the data. Note, this is a relatively small dataset to make sure it doesn't take very long to get up and running. To get a better result, you'd want to download all known transiting light curves and a much larger collection non-transiting light curves. To quickly visualize one of these light curves, you can use the script at ``examples/transit_light_curve_visualization.py``. Due to the available light curves on MAST being updated constantly, the random selection of light curves you downloaded might not include the light curve noted in this example file. Be sure to open the ``examples/transit_light_curve_visualization.py`` file and update the path to one of the light curves you downloaded. To see a transit case, be sure to select one from one of the ``positive`` directories. Then run
+
+.. code:: sh
+
+    python examples/transit_light_curve_visualization.py
+
+You should see something like
+
+.. image:: light_curve_example.png
+
+where, in this case, the temporary dips are transiting events.
 
 Preparing for training
 ----------------------
