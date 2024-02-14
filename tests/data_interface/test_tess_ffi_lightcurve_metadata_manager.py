@@ -19,11 +19,10 @@ class TestTessFfiLightCurveMetadataManager:
 
     @patch.object(module, 'dataset_split_from_uuid')
     @patch.object(module, 'metadatabase_uuid')
-    @patch.object(module, 'metadatabase')
     @patch.object(module.TessFfiLightCurve, 'get_magnitude_from_file')
     @patch.object(module.TessFfiLightCurveMetadata, 'insert_many')
     def test_can_insert_multiple_sql_database_rows_from_paths(self, mock_insert_many, mock_get_magnitude_from_file,
-                                                              mock_metadatabase, mock_metadatabase_uuid,
+                                                              mock_metadatabase_uuid,
                                                               mock_dataset_split_generator, metadata_manger):
         light_curve_path0 = Path('tesslcs_sector_1_104/tesslcs_tmag_7_8/tesslc_1111.pkl')
         light_curve_path1 = Path('tesslcs_sector_12_104/tesslcs_tmag_14_15/tesslc_1234567.pkl')
@@ -43,13 +42,12 @@ class TestTessFfiLightCurveMetadataManager:
     def test_can_populate_sql_dataset(self, mock_glob, metadata_manger):
         path_list = [metadata_manger.light_curve_root_directory_path.joinpath(f'{index}.fits') for index in range(20)]
         x = False
-        def mock_glob_side_effect(path):
+        def mock_glob_side_effect(_path):
             nonlocal x
             if not x:
                 x = True
                 return (path for path in path_list)
-            else:
-                return (path for path in [])
+            return (path for path in [])
 
         mock_glob.side_effect = mock_glob_side_effect
         mock_insert = Mock()

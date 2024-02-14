@@ -274,7 +274,8 @@ class TestTessDataInterface:
         assert sector1 == 5
 
     def test_get_tic_id_and_sector_raises_error_with_unknown_pattern(self):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match='a b c d e f g does not match a known pattern to extract '
+                                             'TIC ID and sector from.'):
             tess_data_interface_module.get_tic_id_and_sector_from_file_path('a b c d e f g')
 
     def test_can_get_tic_id_and_sector_from_tess_obs_id_style_file_name(self):

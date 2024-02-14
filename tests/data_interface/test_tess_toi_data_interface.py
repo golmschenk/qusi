@@ -31,6 +31,8 @@ class TestTessToiDataInterface:
         assert 31 not in target_planet_sectors
         assert 32 in target_planet_sectors
 
+    @pytest.mark.slow
+    @pytest.mark.external
     def test_can_get_exofop_planet_disposition_for_tic_id(self, data_interface):
         mock_dispositions = pd.DataFrame({'TIC ID': [231663901, 266980320], 'Disposition': ['KP', 'CP']})
         data_interface.retrieve_toi_dispositions_from_exofop = Mock(return_value=mock_dispositions)

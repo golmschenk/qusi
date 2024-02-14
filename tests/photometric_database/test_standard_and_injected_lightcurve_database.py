@@ -23,27 +23,27 @@ class TestStandardAndInjectedLightCurveDatabase:
         # Setup mock light_curve collections.
         standard_light_curve_collection0 = LightCurveCollection()
         standard_light_curve_collection0.get_paths = lambda: [Path('standard_path0.ext')]
-        standard_light_curve_collection0.load_times_and_fluxes_from_path = lambda path: (np.array([10, 20, 30]),
+        standard_light_curve_collection0.load_times_and_fluxes_from_path = lambda _path: (np.array([10, 20, 30]),
                                                                                          np.array([0, 1, 2]))
         standard_light_curve_collection0.label = 0
         standard_light_curve_collection1 = LightCurveCollection()
         standard_light_curve_collection1.get_paths = lambda: [Path('standard_path1.ext')]
-        standard_light_curve_collection1.load_times_and_fluxes_from_path = lambda path: (np.array([20, 30, 40]),
+        standard_light_curve_collection1.load_times_and_fluxes_from_path = lambda _path: (np.array([20, 30, 40]),
                                                                                          np.array([1, 2, 3]))
         standard_light_curve_collection1.label = 1
         injectee_light_curve_collection = LightCurveCollection()
         injectee_light_curve_collection.get_paths = lambda: [Path('injectee_path.ext')]
-        injectee_light_curve_collection.load_times_and_fluxes_from_path = lambda path: (np.array([30, 40, 50]),
+        injectee_light_curve_collection.load_times_and_fluxes_from_path = lambda _path: (np.array([30, 40, 50]),
                                                                                         np.array([2, 3, 4]))
         injectee_light_curve_collection.label = 0
         injectable_light_curve_collection0 = LightCurveCollection()
         injectable_light_curve_collection0.get_paths = lambda: [Path('injectable_path0.ext')]
-        injectable_light_curve_collection0.load_times_and_magnifications_from_path = lambda path: (
+        injectable_light_curve_collection0.load_times_and_magnifications_from_path = lambda _path: (
             np.array([0, 10, 20]), np.array([0.5, 1, 1.5]))
         injectable_light_curve_collection0.label = 0
         injectable_light_curve_collection1 = LightCurveCollection()
         injectable_light_curve_collection1.get_paths = lambda: [Path('injectable_path1.ext')]
-        injectable_light_curve_collection1.load_times_and_magnifications_from_path = lambda path: (
+        injectable_light_curve_collection1.load_times_and_magnifications_from_path = lambda _path: (
             np.array([0, 10, 20, 30]), np.array([0, 1, 1, 0]))
         injectable_light_curve_collection1.label = 1
         database.training_standard_light_curve_collections = [standard_light_curve_collection0,
@@ -59,7 +59,7 @@ class TestStandardAndInjectedLightCurveDatabase:
         database.time_steps_per_example = 3
         database.number_of_parallel_processes_per_map = 1
 
-        def mock_window(dataset, batch_size, window_shift):
+        def mock_window(dataset, batch_size):
             return dataset.batch(batch_size)
 
         database.window_dataset_for_zipped_example_and_label_dataset = mock_window  # Disable windowing.
@@ -99,7 +99,8 @@ class TestStandardAndInjectedLightCurveDatabase:
         light_curve_times = np.array([10, 20, 30, 40, 50, 60])
         signal_magnifications = np.array([1, 3, 1])
         signal_times = np.array([0, 20, 40])
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r'A value \(-?[0-9]\d*(\.\d+)?\) in x_new is below the interpolation '
+                                             'range\'s minimum value \\(-?[0-9]\\d*(\\.\\d+)?\\)'):
             database_module.inject_signal_into_light_curve(
                 light_curve_times,
                 light_curve_fluxes,
@@ -209,7 +210,8 @@ class TestStandardAndInjectedLightCurveDatabase:
         light_curve_times = np.array([10, 20, 30, 40, 50, 60])
         signal_magnifications = np.array([1, 3, 1])
         signal_times = np.array([0, 20, 40])
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r'A value \(-?[0-9]\d*(\.\d+)?\) in x_new is below the interpolation '
+                                             'range\'s minimum value \\(-?[0-9]\\d*(\\.\\d+)?\\)'):
             database_with_collections.inject_signal_into_light_curve(light_curve_fluxes, light_curve_times,
                                                                      signal_magnifications, signal_times)
 
@@ -289,12 +291,11 @@ class TestStandardAndInjectedLightCurveDatabase:
                                                                                 injectable_times)
             assert np.array_equal(injected, np.array([1, 2, 3, 10, 5]))
 
-    @pytest.mark.parametrize('original_label, expected_label', [(0, np.array([0])),
-                                                                ([0], np.array([0])),
-                                                                (np.array([0]), np.array([0])),
-                                                                ([0, 0], np.array([0, 0]))])
+    @pytest.mark.parametrize(('original_label', 'expected_label'), [(0, np.array([0])),
+                                                                    ([0], np.array([0])),
+                                                                    (np.array([0]), np.array([0])),
+                                                                    ([0, 0], np.array([0, 0]))])
     def test_expand_label_to_training_dimensions(self, original_label, expected_label):
-        database = StandardAndInjectedLightCurveDatabase()
         label = database_module.expand_label_to_training_dimensions(original_label)
         assert type(label) is np.ndarray
         assert np.array_equal(label, expected_label)

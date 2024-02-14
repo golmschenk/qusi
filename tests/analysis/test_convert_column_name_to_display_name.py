@@ -3,7 +3,7 @@ import pytest
 from ramjet.analysis.convert_column_name_to_display_name import convert_column_name_to_display_name
 
 
-@pytest.mark.parametrize('column_name, expected_display_name',
+@pytest.mark.parametrize(('column_name', 'expected_display_name'),
                          [('simple_name', 'Simple name'),
                           ('name_with__units', 'Name with (units)'),
                           ('time__btjd', 'Time (BTJD)'),

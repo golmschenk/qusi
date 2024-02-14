@@ -113,7 +113,7 @@ class TessMissionLightCurve(TessLightCurve):
             raise ValueError(f'{identifier} does not match a known type to infer the light curve identifier from.')
 
     @staticmethod
-    def get_tic_id_and_sector_from_file_path(file_path: Path) -> (int, Union[int, None]):
+    def get_tic_id_and_sector_from_file_path(file_path: Path) -> (int, int | None):
         """
         Gets the TIC ID and sector from commonly encountered file name patterns.
 
@@ -125,7 +125,7 @@ class TessMissionLightCurve(TessLightCurve):
         return tic_id, sector
 
     @staticmethod
-    def get_tic_id_and_sector_from_identifier_string(identifier_string: str) -> (int, Union[int, None]):
+    def get_tic_id_and_sector_from_identifier_string(identifier_string: str) -> (int, int | None):
         """
         Gets the TIC ID and sector from commonly encountered identifier string patterns.
 
@@ -149,7 +149,8 @@ class TessMissionLightCurve(TessLightCurve):
         if match:
             return int(match.group(1)), int(match.group(2))
         # Raise an error if none of the patterns matched.
-        raise ValueError(f'{identifier_string} does not match a known pattern to extract TIC ID and sector from.')
+        error_string = f'{identifier_string} does not match a known pattern to extract TIC ID and sector from.'
+        raise ValueError(error_string)
 
 
 class TessTwoMinuteCadenceLightCurve(TessMissionLightCurve):
@@ -160,5 +161,4 @@ def ensure_native_byte_order(array: np.ndarray) -> np.ndarray:
     native_byte_order = '>' if sys.byteorder == 'big' else '<'
     if array.dtype.byteorder in ['|', '=', native_byte_order]:
         return array
-    else:
-        return array.byteswap().newbyteorder(native_byte_order)
+    return array.byteswap().newbyteorder(native_byte_order)

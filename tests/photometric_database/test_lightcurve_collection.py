@@ -22,7 +22,7 @@ class TestLightCurveCollection:
         light_curve_collection = LightCurveCollection()
         with pytest.raises(LightCurveCollectionMethodNotImplementedError):
             _ = light_curve_collection.load_times_and_fluxes_from_path(Path('path.ext'))
-        light_curve_collection.load_times_and_fluxes_from_path = lambda path: (np.array([]), np.array([]))
+        light_curve_collection.load_times_and_fluxes_from_path = lambda _path: (np.array([]), np.array([]))
         try:
             _ = light_curve_collection.load_times_and_fluxes_from_path(Path('path.ext'))
         except LightCurveCollectionMethodNotImplementedError:
@@ -30,7 +30,7 @@ class TestLightCurveCollection:
 
     def test_load_times_and_fluxes_from_path_can_be_set_by_subclassing(self):
         class SubclassLightCurveCollection(LightCurveCollection):
-            def load_times_and_fluxes_from_path(self, path):
+            def load_times_and_fluxes_from_path(self, _path):
                 return (np.array([]), np.array([]))
         light_curve_collection = SubclassLightCurveCollection()
         try:
@@ -42,7 +42,7 @@ class TestLightCurveCollection:
         light_curve_collection = LightCurveCollection()
         with pytest.raises(LightCurveCollectionMethodNotImplementedError):
             _ = light_curve_collection.load_times_and_magnifications_from_path(Path('path.ext'))
-        light_curve_collection.load_times_and_magnifications_from_path = lambda path: (np.array([]), np.array([]))
+        light_curve_collection.load_times_and_magnifications_from_path = lambda _path: (np.array([]), np.array([]))
         try:
             _ = light_curve_collection.load_times_and_magnifications_from_path(Path('path.ext'))
         except LightCurveCollectionMethodNotImplementedError:
@@ -50,7 +50,7 @@ class TestLightCurveCollection:
 
     def test_load_times_and_magnifications_from_path_can_be_set_by_subclassing(self):
         class SubclassLightCurveCollection(LightCurveCollection):
-            def load_times_and_magnifications_from_path(self, path):
+            def load_times_and_magnifications_from_path(self, _path):
                 return (np.array([]), np.array([]))
 
         light_curve_collection = SubclassLightCurveCollection()
@@ -95,7 +95,7 @@ class TestLightCurveCollection:
 
     def test_load_times_fluxes_and_flux_errors_defaults_to_just_the_times_and_fluxes_loading(self):
         light_curve_collection = LightCurveCollection()
-        light_curve_collection.load_times_and_fluxes_from_path = lambda path: ([0], [1])
+        light_curve_collection.load_times_and_fluxes_from_path = lambda _path: ([0], [1])
         times, fluxes, flux_errors = light_curve_collection.load_times_fluxes_and_flux_errors_from_path(Path('fake'))
         assert np.array_equal(times, [0])
         assert np.array_equal(fluxes, [1])
@@ -103,7 +103,7 @@ class TestLightCurveCollection:
 
     def test_load_times_magnifications_and_magnification_errors_defaults_to_just_the_times_and_fluxes_loading(self):
         light_curve_collection = LightCurveCollection()
-        light_curve_collection.load_times_and_magnifications_from_path = lambda path: ([0], [1])
+        light_curve_collection.load_times_and_magnifications_from_path = lambda _path: ([0], [1])
         times, magnifications, magnification_errors = \
             light_curve_collection.load_times_magnifications_and_magnification_errors_from_path(Path('fake'))
         assert np.array_equal(times, [0])
