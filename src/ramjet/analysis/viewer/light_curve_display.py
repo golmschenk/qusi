@@ -43,7 +43,7 @@ class LightCurveDisplay:
         display.flux_column_names = flux_column_names
         time_axis_label = convert_column_name_to_display_name(time_column_name)
         display.initialize_figure(time_axis_label=time_axis_label, flux_axis_label=flux_axis_label)
-        display.initialize_data_source(column_names=[time_column_name] + flux_column_names)
+        display.initialize_data_source(column_names=[time_column_name, *flux_column_names])
         for flux_column_name, color in zip(display.flux_column_names, light_curve_colors):
             display.add_flux_data_source_line_to_figure(time_column_name=time_column_name, flux_column_name=flux_column_name,
                                                         color=color)
@@ -67,7 +67,7 @@ class LightCurveDisplay:
         :param column_names: The column names to include in the data source.
         """
         self.data_source = ColumnDataSource(data=pd.DataFrame({column_name: [] for column_name in column_names}))
-        js_reset = CustomJS(args=dict(figure=self.figure), code='figure.reset.emit()')
+        js_reset = CustomJS(args={'figure': self.figure}, code='figure.reset.emit()')
         self.data_source.js_on_change('data', js_reset)
 
     def add_flux_data_source_line_to_figure(self, time_column_name: str, flux_column_name: str, color: Color):

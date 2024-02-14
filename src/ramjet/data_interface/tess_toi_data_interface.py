@@ -155,10 +155,7 @@ class TessToiDataInterface:
         :return: True if there are dispositions, False if none.
         """
         existing_dispositions = self.retrieve_exofop_toi_and_ctoi_planet_disposition_for_tic_id(tic_id)
-        if existing_dispositions.shape[0] != 0:
-            return True
-        else:
-            return False
+        return existing_dispositions.shape[0] != 0
 
     def print_exofop_toi_and_ctoi_planet_dispositions_for_tic_target(self, tic_id):
         """
@@ -199,7 +196,7 @@ class TessToiDataInterface:
             suspected_planet_light_curve_data_products, data_directory=self.data_directory)
         print(f'Verifying and moving light curves to {directory}...')
         directory.mkdir(parents=True, exist_ok=True)
-        for row_index, row in suspected_planet_download_manifest.iterrows():
+        for _row_index, row in suspected_planet_download_manifest.iterrows():
             if row['Status'] == 'COMPLETE':
                 file_path = Path(row['Local Path'])
                 file_path.rename(directory.joinpath(file_path.name))

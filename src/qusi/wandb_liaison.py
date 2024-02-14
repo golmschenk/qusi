@@ -1,6 +1,6 @@
 from typing import Any
 
-import wandb as wandb
+import wandb
 
 
 def wandb_log(name: str, value: Any, process_rank: int):

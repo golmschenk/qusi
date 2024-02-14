@@ -5,11 +5,10 @@ import math
 import re
 import shutil
 import socket
-from collections.abc import Iterable, Iterator
 from enum import Enum
 from functools import partial
 from pathlib import Path
-from typing import Any, Callable, TypeVar
+from typing import TYPE_CHECKING, Any, Callable, TypeVar
 
 import numpy as np
 import numpy.typing as npt
@@ -22,7 +21,6 @@ from torch.utils.data import IterableDataset
 from typing_extensions import Self
 
 from qusi.light_curve import LightCurve, randomly_roll_light_curve, remove_nan_flux_data_points_from_light_curve
-from qusi.light_curve_collection import LabeledLightCurveCollection
 from qusi.light_curve_observation import (
     LightCurveObservation,
     randomly_roll_light_curve_observation,
@@ -32,6 +30,11 @@ from qusi.light_curve_transforms import (
     from_light_curve_observation_to_fluxes_array_and_label_array,
     pair_array_to_tensor,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Iterator
+
+    from qusi.light_curve_collection import LabeledLightCurveCollection
 
 
 class LightCurveDataset(IterableDataset):
@@ -49,8 +52,11 @@ class LightCurveDataset(IterableDataset):
         self.injectee_light_curve_collections: list[LabeledLightCurveCollection] = injectee_light_curve_collections
         self.injectable_light_curve_collections: list[LabeledLightCurveCollection] = injectable_light_curve_collections
         if len(self.standard_light_curve_collections) == 0 and len(self.injectee_light_curve_collections) == 0:
-            raise ValueError('Either the standard or injectee light curve collection lists must not be empty. '
-                             'Both were empty.')
+            error_message = (
+                'Either the standard or injectee light curve collection lists must not be empty. '
+                'Both were empty.'
+            )
+            raise ValueError(error_message)
         self.post_injection_transform: Callable[[Any], Any] = post_injection_transform
 
     def __iter__(self):
@@ -99,8 +105,11 @@ class LightCurveDataset(IterableDataset):
             post_injection_transform: Callable[[Any], Any] | None = None,
             ) -> Self:
         if standard_light_curve_collections is None and injectee_light_curve_collections is None:
-            raise ValueError('Either the standard or injectee light curve collection lists must be specified. '
-                             'Both were `None`.')
+            error_message = (
+                'Either the standard or injectee light curve collection lists must be specified. '
+                'Both were `None`.'
+            )
+            raise ValueError(error_message)
         if standard_light_curve_collections is None:
             standard_light_curve_collections = []
         if injectee_light_curve_collections is None:
@@ -138,10 +147,7 @@ def is_injected_dataset(dataset: LightCurveDataset):
 
 
 def contains_injected_dataset(datasets: list[LightCurveDataset]):
-    for dataset in datasets:
-        if is_injected_dataset(dataset):
-            return True
-    return False
+    return any(is_injected_dataset(dataset) for dataset in datasets)
 
 
 def interleave_infinite_iterators(*infinite_iterators: Iterator):
@@ -156,8 +162,7 @@ T = TypeVar('T')
 def loop_iter_function(iter_function: Callable[[], Iterable[T]]) -> Iterator[T]:
     while True:
         iterator = iter_function()
-        for element in iterator:
-            yield element
+        yield from iterator
 
 
 class ObservationType(Enum):
@@ -197,8 +202,7 @@ class ConcatenatedIterableDataset(IterableDataset):
 
     def __iter__(self):
         for dataset in self.datasets:
-            for element in dataset:
-                yield element
+            yield from dataset
 
 
 class LimitedIterableDataset(IterableDataset):
@@ -229,6 +233,7 @@ def default_light_curve_observation_post_injection_transform(x: LightCurveObserv
     x = (normalize_tensor_by_modified_z_score(x[0]), x[1])
     return x
 
+
 def default_light_curve_post_injection_transform(x: LightCurve, length: int) -> (Tensor):
     x = remove_nan_flux_data_points_from_light_curve(x)
     x = randomly_roll_light_curve(x)
@@ -237,6 +242,7 @@ def default_light_curve_post_injection_transform(x: LightCurve, length: int) -> 
     x = torch.tensor(x)
     x = normalize_tensor_by_modified_z_score(x)
     return x
+
 
 def normalize_tensor_by_modified_z_score(tensor: Tensor) -> Tensor:
     median = torch.median(tensor)

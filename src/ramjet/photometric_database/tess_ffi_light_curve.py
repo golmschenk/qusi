@@ -8,10 +8,8 @@ import pickle
 import re
 from enum import Enum
 from pathlib import Path
-from typing import Optional, Union
+from typing import TYPE_CHECKING
 
-import numpy as np
-import pandas as pd
 from astropy import units
 from astropy.coordinates import Angle, SkyCoord
 from astroquery.vizier import Vizier
@@ -23,6 +21,10 @@ except ImportError:
     from backports.strenum import StrEnum
 
 from ramjet.photometric_database.tess_light_curve import TessLightCurve
+
+if TYPE_CHECKING:
+    import numpy as np
+    import pandas as pd
 
 
 class TessFfiColumnName(Enum):
@@ -61,10 +63,12 @@ class AdaptIntermittentException(Exception):
 def adapt_intermittent_error(exception: Exception) -> bool:
     return (isinstance(exception, (OSError, pickle.UnpicklingError)))
 
+
 class TessFfiLightCurve(TessLightCurve):
     """
     A class to for a class to represent a TESS FFI light curve.
     """
+
     def __init__(self):
         super().__init__()
         self.flux_column_names = [TessFfiColumnName.CORRECTED_FLUX.value,
@@ -73,7 +77,7 @@ class TessFfiLightCurve(TessLightCurve):
     @classmethod
     @retry(retry=retry_if_exception_type(AdaptIntermittentException),
            wait=wait_random_exponential(multiplier=0.1, max=20), stop=stop_after_attempt(20), reraise=True)
-    def from_path(cls, path: Path, column_names_to_load: Union[list[TessFfiColumnName], None] = None,
+    def from_path(cls, path: Path, column_names_to_load: list[TessFfiColumnName] | None = None,
                   remove_bad_quality_data: bool = True) -> TessFfiLightCurve:
         """
         Creates an FFI TESS light curve from a path to one of Brian Powell's pickle files.
@@ -103,10 +107,11 @@ class TessFfiLightCurve(TessLightCurve):
             light_curve.tic_id, light_curve.sector = light_curve.get_tic_id_and_sector_from_file_path(path)
             return light_curve
         except (pickle.UnpicklingError, OSError, IsADirectoryError) as error:
-            raise AdaptIntermittentException(f'Errored on path {path}.') from error
+            error_message = f'Errored on path {path}.'
+            raise AdaptIntermittentException(error_message) from error
 
     @staticmethod
-    def get_tic_id_and_sector_from_file_path(path: Union[Path, str]) -> (int, Union[int, None]):
+    def get_tic_id_and_sector_from_file_path(path: Path | str) -> (int, int | None):
         """
         Gets the TIC ID and sector from commonly encountered file name patterns.
 
@@ -119,7 +124,9 @@ class TessFfiLightCurve(TessLightCurve):
             sep_str = '\\\\'
         # Search for Brian Powell's FFI path convention with directory structure sector, magnitude, target.
         # E.g., "tesslcs_sector_12/tesslcs_tmag_1_2/tesslc_290374453"
-        match = re.search(rf'tesslcs_sector_(\d+)(?:_104)?{sep_str}(?:2_min_cadence_targets|tesslcs_tmag_\d+_\d+){sep_str}tesslc_(\d+)', path)
+        match = re.search(
+            rf'tesslcs_sector_(\d+)(?:_104)?{sep_str}(?:2_min_cadence_targets|tesslcs_tmag_\d+_\d+){sep_str}tesslc_(\d+)',
+            path)
         if match:
             return int(match.group(2)), int(match.group(1))
         # Search for Brian Powell's FFI path convention with only the file name containing the target.
@@ -132,10 +139,11 @@ class TessFfiLightCurve(TessLightCurve):
         if match:
             return int(match.group(1)), int(match.group(2))
         # Raise an error if none of the patterns matched.
-        raise ValueError(f'{path} does not match a known pattern to extract TIC ID and sector from.')
+        error_message = f'{path} does not match a known pattern to extract TIC ID and sector from.'
+        raise ValueError(error_message)
 
     @staticmethod
-    def get_floor_magnitude_from_file_path(file_path: Union[Path, str]) -> int:
+    def get_floor_magnitude_from_file_path(file_path: Path | str) -> int:
         """
         Gets the floor magnitude from the FFI file path.
 
@@ -148,13 +156,15 @@ class TessFfiLightCurve(TessLightCurve):
             sep_str = '\\\\'
         # Search for Brian Powell's FFI path convention with directory structure sector, magnitude, target.
         # E.g., "tesslcs_sector_12/tesslcs_tmag_1_2/tesslc_290374453"
-        match = re.search(rf'tesslcs_sector_\d+(?:_104)?{sep_str}tesslcs_tmag_(\d+)_\d+{sep_str}tesslc_\d+', file_path_string)
+        match = re.search(rf'tesslcs_sector_\d+(?:_104)?{sep_str}tesslcs_tmag_(\d+)_\d+{sep_str}tesslc_\d+',
+                          file_path_string)
         if match:
             return int(match.group(1))
-        raise ValueError(f'{file_path_string} does not match a known pattern to extract magnitude from.')
+        error_message = f'{file_path_string} does not match a known pattern to extract magnitude from.'
+        raise ValueError(error_message)
 
     @staticmethod
-    def get_magnitude_from_file(file_path: Union[Path, str]) -> float:
+    def get_magnitude_from_file(file_path: Path | str) -> float:
         """
         Loads the magnitude from the file.
 
@@ -168,7 +178,7 @@ class TessFfiLightCurve(TessLightCurve):
 
     @classmethod
     def load_fluxes_and_times_from_pickle_file(
-            cls, file_path: Union[Path, str], flux_column_name: TessFfiColumnName = TessFfiColumnName.CORRECTED_FLUX,
+            cls, file_path: Path | str, flux_column_name: TessFfiColumnName = TessFfiColumnName.CORRECTED_FLUX,
             remove_bad_quality_data: bool = True
     ) -> (np.ndarray, np.ndarray):
         """
@@ -192,7 +202,7 @@ class TessFfiLightCurve(TessLightCurve):
 
     @classmethod
     def load_fluxes_flux_errors_and_times_from_pickle_file(
-            cls, file_path: Union[Path, str], flux_column_name: TessFfiColumnName = TessFfiColumnName.CORRECTED_FLUX
+            cls, file_path: Path | str, flux_column_name: TessFfiColumnName = TessFfiColumnName.CORRECTED_FLUX
     ) -> (np.ndarray, np.ndarray, np.ndarray):
         """
         Loads the fluxes, flux errors, and times from one of Brian Powell's FFI pickle files.
@@ -222,10 +232,7 @@ class GcvsColumnName(StrEnum):
 def has_gcvs_type(var_type_string: str, labels: list[str]) -> bool:
     var_type_string_without_uncertainty_flags = var_type_string.replace(':', '')
     variable_type_flags = var_type_string_without_uncertainty_flags.split('+')
-    for variable_type_flag in variable_type_flags:
-        if variable_type_flag in labels:
-            return True
-    return False
+    return any(variable_type_flag in labels for variable_type_flag in variable_type_flags)
 
 
 def get_gcvs_catalog_entries_for_labels(labels: list[str]) -> pd.DataFrame:
@@ -241,9 +248,10 @@ def get_gcvs_catalog_entries_for_labels(labels: list[str]) -> pd.DataFrame:
     return data_frame_of_classes
 
 
-def separation_to_nearest_gcvs_rr_lyrae_within_separation(sky_coord: SkyCoord,
-                                                          maximum_separation: Angle(21, unit=units.arcsecond)
-                                                          ) -> Optional[Angle]:
+def separation_to_nearest_gcvs_rr_lyrae_within_separation(
+        sky_coord: SkyCoord,
+        maximum_separation: Angle = Angle(21, unit=units.arcsecond)
+) -> Angle | None:
     gcvs_region_table_list = Vizier(columns=['**'], catalog='B/gcvs/gcvs_cat', row_limit=-1
                                     ).query_region(sky_coord, radius=maximum_separation)
     if len(gcvs_region_table_list) == 0:

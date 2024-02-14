@@ -57,7 +57,7 @@ def train_session(train_datasets: list[LightCurveDataset],
     for metric_function in metric_functions:
         metric_functions_on_device.append(metric_function.to(device, non_blocking=True))
     metric_functions = metric_functions_on_device
-    for cycle_index in range(hyperparameter_configuration.cycles):
+    for _cycle_index in range(hyperparameter_configuration.cycles):
         train_phase(dataloader=train_dataloader, model=model, loss_function=loss_function,
                     metric_functions=metric_functions, optimizer=optimizer,
                     steps=hyperparameter_configuration.train_steps_per_cycle, device=device)

@@ -1,11 +1,10 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from pathlib import Path
 from random import Random
-from typing import Callable
+from typing import TYPE_CHECKING, Callable
 
 import numpy as np
 import numpy.typing as npt
@@ -13,6 +12,9 @@ from typing_extensions import Self
 
 from qusi.light_curve import LightCurve
 from qusi.light_curve_observation import LightCurveObservation
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Iterator
 
 
 class LightCurveCollectionBase(ABC):

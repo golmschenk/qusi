@@ -7,7 +7,7 @@ import re
 import sys
 from enum import Enum
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any
 
 import numpy as np
 from astropy.io import fits
@@ -49,7 +49,7 @@ class TessMissionLightCurve(TessLightCurve):
                                   TessMissionLightCurveColumnName.SAP_FLUX.value]
 
     @classmethod
-    def from_path(cls, path: Path, fits_indexes_to_load: Union[list[TessMissionLightCurveFitsIndex], None] = None
+    def from_path(cls, path: Path, fits_indexes_to_load: list[TessMissionLightCurveFitsIndex] | None = None
                   ) -> TessMissionLightCurve:
         """
         Creates a TESS two minute light curve from a path to the MAST FITS file.
@@ -74,8 +74,8 @@ class TessMissionLightCurve(TessLightCurve):
         return light_curve
 
     @classmethod
-    def from_mast(cls, tic_id: int, sector: Optional[int] = None,
-                  fits_indexes_to_load: Union[list[TessMissionLightCurveFitsIndex], None] = None
+    def from_mast(cls, tic_id: int, sector: int | None = None,
+                  fits_indexes_to_load: list[TessMissionLightCurveFitsIndex] | None = None
                   ) -> TessMissionLightCurve:
         """
         Downloads a FITS file from MAST and creates a TESS two minute light curve from it.
@@ -110,7 +110,8 @@ class TessMissionLightCurve(TessLightCurve):
             tic_id, sector = cls.get_tic_id_and_sector_from_identifier_string(identifier)
             return cls.from_mast(tic_id=tic_id, sector=sector)
         else:
-            raise ValueError(f'{identifier} does not match a known type to infer the light curve identifier from.')
+            error_message = f'{identifier} does not match a known type to infer the light curve identifier from.'
+            raise ValueError(error_message)
 
     @staticmethod
     def get_tic_id_and_sector_from_file_path(file_path: Path) -> (int, int | None):

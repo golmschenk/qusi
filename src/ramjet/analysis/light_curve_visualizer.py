@@ -3,7 +3,7 @@ Code for visualizing light curves.
 """
 
 from pathlib import Path
-from typing import Union
+from typing import Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -15,9 +15,9 @@ from matplotlib.colors import LinearSegmentedColormap
 
 
 def plot_light_curve(times: np.ndarray, fluxes: np.ndarray, labels: np.ndarray = None, predictions: np.ndarray = None,
-                     title: str = None, x_label: str = 'Days', y_label: str = 'Flux',
+                     title: Optional[str] = None, x_label: str = 'Days', y_label: str = 'Flux',
                      x_limits: (float, float) = (None, None), y_limits: (float, float) = (None, None),
-                     save_path: Union[Path, str] = None, exclude_flux_outliers: bool = False,
+                     save_path: Optional[Union[Path, str]] = None, exclude_flux_outliers: bool = False,
                      base_data_point_size: float = 3):
     """
     Plots a light curve with a consistent styling. If true labels and/or predictions are included, these will

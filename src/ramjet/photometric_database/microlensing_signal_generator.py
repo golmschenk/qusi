@@ -95,14 +95,14 @@ class MagnificationSignal:
         """
         Creates the magnification signal
         """
-        lens_params = dict({'u0': self.u0,
-                            'tE': self.tE,
-                            't0': 0.0,
-                            'rho': self.rho,
-                            's': self.s,
-                            'q': self.q,
-                            'alpha': self.alpha
-                            })
+        lens_params = {'u0': self.u0,
+                       'tE': self.tE,
+                       't0': 0.0,
+                       'rho': self.rho,
+                       's': self.s,
+                       'q': self.q,
+                       'alpha': self.alpha
+                       }
 
         # Compute magnification
         self.magnification = self.calculating_magnification_from_vbb(self.timeseries, lens_params)
@@ -173,6 +173,7 @@ class MagnificationSignal:
 
 if __name__ == '__main__':
     import time
+
     start_time = time.time()
     random_signal = MagnificationSignal.generate_randomly_based_on_moa_observations()
     print("--- %s seconds ---" % (time.time() - start_time))

@@ -34,7 +34,7 @@ class TessEclipsingBinaryMetadataManager:
         metadatabase.create_tables([TessEclipsingBinaryMetadata])
         SchemaManager(TessEclipsingBinaryMetadata).drop_indexes()
         rows = []
-        for index, tic_id in enumerate(eclipsing_binary_data_frame['ID'].values):
+        for tic_id in eclipsing_binary_data_frame['ID'].values:
             row = {'tic_id': tic_id}
             rows.append(row)
             row_count += 1

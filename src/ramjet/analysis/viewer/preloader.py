@@ -2,11 +2,12 @@
 Code to load view entities in the background so they show up quickly when displayed.
 """
 import asyncio
+import contextlib
 import warnings
 from asyncio import Task
 from collections import deque
 from pathlib import Path
-from typing import Deque, Union
+from typing import Union
 
 import pandas as pd
 
@@ -23,8 +24,8 @@ class Preloader:
 
     def __init__(self):
         self.current_view_entity: Union[None, ViewEntity] = None
-        self.next_view_entity_deque: Deque[ViewEntity] = deque(maxlen=self.maximum_preloaded)
-        self.previous_view_entity_deque: Deque[ViewEntity] = deque(maxlen=self.maximum_preloaded)
+        self.next_view_entity_deque: deque[ViewEntity] = deque(maxlen=self.maximum_preloaded)
+        self.previous_view_entity_deque: deque[ViewEntity] = deque(maxlen=self.maximum_preloaded)
         self.identifier_data_frame: Union[pd.DataFrame, None] = None
         self.running_loading_task: Union[Task, None] = None
 
@@ -125,10 +126,8 @@ class Preloader:
         """
         if self.running_loading_task is not None:
             self.running_loading_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self.running_loading_task
-            except asyncio.CancelledError:
-                pass
 
     async def reset_deques(self):
         """

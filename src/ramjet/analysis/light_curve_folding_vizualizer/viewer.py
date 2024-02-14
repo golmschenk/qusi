@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-from typing import Optional
+from typing import TYPE_CHECKING
 
 import numpy as np
 from astropy import units
-from bokeh.document import Document
 from bokeh.events import Tap
 from bokeh.palettes import Turbo256
 from lightkurve.periodogram import LombScarglePeriodogram, Periodogram
@@ -17,7 +16,10 @@ except ImportError:
 from bokeh.models import ColumnDataSource, Div, LinearAxis, LinearColorMapper, Range1d, Span, Spinner, TapTool
 from bokeh.plotting import figure as Figure
 
-from ramjet.photometric_database.light_curve import LightCurve
+if TYPE_CHECKING:
+    from bokeh.document import Document
+
+    from ramjet.photometric_database.light_curve import LightCurve
 
 
 class FoldedLightCurveColumnName(StrEnum):
@@ -32,7 +34,7 @@ class PeriodogramColumnName(StrEnum):
 
 
 class Viewer:
-    def __init__(self, bokeh_document: Document, light_curve: LightCurve, title: Optional[str] = None):
+    def __init__(self, bokeh_document: Document, light_curve: LightCurve, title: str | None = None):
         self.bokeh_document: Document = bokeh_document
         tool_tips = [
             ("Time", f"@{FoldedLightCurveColumnName.TIME}{{0.0000000}}"),

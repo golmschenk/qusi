@@ -23,7 +23,6 @@ import sys
 import tempfile
 from enum import Enum
 from pathlib import Path
-from typing import Union
 
 import numpy as np
 import pandas as pd
@@ -152,7 +151,7 @@ def get_product_list(observations: pd.DataFrame,
     return product_list
 
 
-def get_all_tess_time_series_observations(tic_id: Union[int, list[int]] = None,
+def get_all_tess_time_series_observations(tic_id: int | list[int] | None = None,
                                           mast_input_query_chunk_size: int = 1000) -> pd.DataFrame:
     """
     Gets all TESS time-series observations, limited to science data product level. Breaks large queries up to make
@@ -173,8 +172,8 @@ def get_all_tess_time_series_observations(tic_id: Union[int, list[int]] = None,
     return observations
 
 
-def download_two_minute_cadence_light_curve(tic_id: int, sector: int = None,
-                                            save_directory: Union[Path, str] = None) -> Path:
+def download_two_minute_cadence_light_curve(tic_id: int, sector: int | None = None,
+                                            save_directory: Path | str | None = None) -> Path:
     """
     Downloads a light curve from MAST.
 
@@ -220,7 +219,7 @@ def get_sectors_target_appears_in(tic_id: int) -> list:
     return sorted(single_sector_observations[ColumnName.SECTOR].unique())
 
 
-def get_all_two_minute_single_sector_observations(tic_ids: list[int] = None) -> pd.DataFrame:
+def get_all_two_minute_single_sector_observations(tic_ids: list[int] | None = None) -> pd.DataFrame:
     """
     Gets the data frame containing all the single sector observations, with TIC ID and sector columns.
 
@@ -254,7 +253,7 @@ def verify_light_curve(light_curve_path: Path):
         download_two_minute_cadence_light_curve(tic_id, sector, save_directory=light_curve_path.parent)
 
 
-def download_two_minute_cadence_light_curves(save_directory: Path, limit: Union[None, int] = None):
+def download_two_minute_cadence_light_curves(save_directory: Path, limit: None | int = None):
     """
     Downloads all two minute cadence light curves from TESS.
 
@@ -280,7 +279,7 @@ def download_two_minute_cadence_light_curves(save_directory: Path, limit: Union[
     print('Database ready.')
 
 
-def load_light_curve_from_fits_file(light_curve_path: Union[str, Path]) -> dict[str, np.ndarray]:
+def load_light_curve_from_fits_file(light_curve_path: str | Path) -> dict[str, np.ndarray]:
     """
     Loads a light_curve from a FITS file in a dictionary form with the structure of the FITS arrays.
 
@@ -301,7 +300,7 @@ def load_light_curve_from_fits_file(light_curve_path: Union[str, Path]) -> dict[
     return light_curve
 
 
-def load_fluxes_and_times_from_fits_file(light_curve_path: Union[str, Path],
+def load_fluxes_and_times_from_fits_file(light_curve_path: str | Path,
                                          flux_type: TessFluxType = TessFluxType.PDCSAP,
                                          remove_nans: bool = True) -> (np.ndarray, np.ndarray):
     """
@@ -324,7 +323,7 @@ def load_fluxes_and_times_from_fits_file(light_curve_path: Union[str, Path],
     return fluxes, times
 
 
-def load_fluxes_flux_errors_and_times_from_fits_file(light_curve_path: Union[str, Path],
+def load_fluxes_flux_errors_and_times_from_fits_file(light_curve_path: str | Path,
                                                      flux_type: TessFluxType = TessFluxType.PDCSAP,
                                                      remove_nans: bool = True
                                                      ) -> (np.ndarray, np.ndarray, np.ndarray):
@@ -351,7 +350,7 @@ def load_fluxes_flux_errors_and_times_from_fits_file(light_curve_path: Union[str
     return fluxes, flux_errors, times
 
 
-def plot_light_curve_from_mast(tic_id: int, sector: int = None, exclude_flux_outliers: bool = False,
+def plot_light_curve_from_mast(tic_id: int, sector: int | None = None, exclude_flux_outliers: bool = False,
                                base_data_point_size=3):
     """
     Downloads and plots a light curve from MAST.
@@ -372,7 +371,7 @@ def plot_light_curve_from_mast(tic_id: int, sector: int = None, exclude_flux_out
                      base_data_point_size=base_data_point_size)
 
 
-def create_pdcsap_and_sap_comparison_figure_from_mast(tic_id: int, sector: int = None) -> Figure:
+def create_pdcsap_and_sap_comparison_figure_from_mast(tic_id: int, sector: int | None = None) -> Figure:
     """
     Creates a comparison figure containing both the PDCSAP and SAP signals.
 
@@ -394,7 +393,7 @@ def create_pdcsap_and_sap_comparison_figure_from_mast(tic_id: int, sector: int =
     return figure
 
 
-def show_pdcsap_and_sap_comparison_from_mast(tic_id: int, sector: int = None):
+def show_pdcsap_and_sap_comparison_from_mast(tic_id: int, sector: int | None = None):
     """
     Shows a comparison figure containing both the PDCSAP and SAP signals.
 
@@ -421,7 +420,7 @@ def show_light_curve(light_curve_path: Path):
     show(figure)
 
 
-def get_tic_id_and_sector_from_file_path(file_path: Union[Path, str]):
+def get_tic_id_and_sector_from_file_path(file_path: Path | str):
     """
     Gets the TIC ID and sector from commonly encountered file name patterns.
 
@@ -440,7 +439,8 @@ def get_tic_id_and_sector_from_file_path(file_path: Union[Path, str]):
     if match:
         return int(match.group(2)), int(match.group(1))
     # Raise an error if none of the patterns matched.
-    raise ValueError(f'{file_name} does not match a known pattern to extract TIC ID and sector from.')
+    error_message = f'{file_name} does not match a known pattern to extract TIC ID and sector from.'
+    raise ValueError(error_message)
 
 
 def get_variable_data_frame_for_coordinates(coordinates, radius='21s') -> pd.DataFrame:
@@ -472,7 +472,7 @@ def get_tess_input_catalog_row(tic_id: int) -> pd.Series:
 
 
 @retry(retry_on_exception=is_common_mast_connection_error, stop_max_attempt_number=10)
-def get_all_tess_time_series_observations_chunk(tic_id: Union[int, list[int]] = None) -> pd.DataFrame:
+def get_all_tess_time_series_observations_chunk(tic_id: int | list[int] | None = None) -> pd.DataFrame:
     """
     Gets all TESS time-series observations, limited to science data product level. Repeats download attempt on
     error.
@@ -489,7 +489,7 @@ def get_all_tess_time_series_observations_chunk(tic_id: Union[int, list[int]] = 
     return tess_observations.to_pandas()
 
 
-def get_all_tess_spoc_light_curve_observations(tic_id: Union[int, list[int]],
+def get_all_tess_spoc_light_curve_observations(tic_id: int | list[int],
                                                mast_input_query_chunk_size: int = 1000) -> pd.DataFrame:
     """
     Gets all TESS SPOC light curves. Breaks large queries up to make the communication with MAST smoother.
@@ -510,7 +510,7 @@ def get_all_tess_spoc_light_curve_observations(tic_id: Union[int, list[int]],
 
 
 @retry(retry_on_exception=is_common_mast_connection_error, stop_max_attempt_number=10)
-def get_all_tess_spoc_light_curve_observations_chunk(tic_id: Union[int, list[int]]) -> pd.DataFrame:
+def get_all_tess_spoc_light_curve_observations_chunk(tic_id: int | list[int]) -> pd.DataFrame:
     """
     Gets all TESS time-series observations, limited to science data product level. Repeats download attempt on
     error.
@@ -537,7 +537,8 @@ def get_spoc_tic_id_list_from_mast() -> list[int]:
         sector_data_frame = pl.read_csv(StringIO(csv_string))
         sector_data_frames.append(sector_data_frame)
     if len(sector_data_frames) == 0:
-        raise ValueError('No SPOC target lists found. Check network connection.')
+        error_message = 'No SPOC target lists found. Check network connection.'
+        raise ValueError(error_message)
     target_list_data_frame = pl.concat(sector_data_frames)
     tic_ids = target_list_data_frame['TIC_ID'].to_list()
     return tic_ids
@@ -563,10 +564,11 @@ def download_spoc_light_curves_for_tic_ids(tic_ids: list[int], download_director
     return paths
 
 
-def get_sector_from_spoc_obs_id(obs_id: str) -> int:
+def get_sector_from_spoc_obs_id(obs_id: str) -> int | None:
     match = re.search(r'hlsp_tess-spoc_tess_phot_\d+-s(\d+)_tess_v1', obs_id)
     if match:
         return int(match.group(1))
+    return None
 
 
 def download_spoc_light_curves_for_tic_ids_chunk(tic_ids: list[int], download_directory: Path,
@@ -592,8 +594,9 @@ def download_spoc_light_curves_for_tic_ids_chunk(tic_ids: list[int], download_di
             original_file_path.rename(updated_file_path)
             light_curve_paths.append(updated_file_path)
         else:
-            raise ValueError(
-                f'{manifest_row["Local Path"]} was found to not have been completed in the download manifest.')
+            error_message = (f'{manifest_row["Local Path"]} was found to not have been completed '
+                             f'in the download manifest.')
+            raise ValueError(error_message)
     return light_curve_paths
 
 

@@ -4,7 +4,6 @@ Code for a class to represent a light curve. See the contained class docstring f
 from __future__ import annotations
 
 from abc import ABC
-from typing import Optional, Union
 
 import lightkurve.lightcurve
 import numpy as np
@@ -20,9 +19,9 @@ class LightCurve(ABC):
     def __init__(self):
         self.data_frame: pd.DataFrame = pd.DataFrame()
         self.flux_column_names: list[str] = []
-        self.time_column_name: Union[str, None] = None
-        self._variability_period: Optional[float] = None
-        self._variability_period_epoch: Optional[float] = None
+        self.time_column_name: str | None = None
+        self._variability_period: float | None = None
+        self._variability_period_epoch: float | None = None
         self.folded_times_column_name = '_folded_times'
 
     @property
@@ -59,7 +58,8 @@ class LightCurve(ABC):
     @property
     def folded_times(self):
         if self.folded_times_column_name not in self.data_frame.columns:
-            raise MissingFoldedTimes('Light curve has not been folded.')
+            error_message = 'Light curve has not been folded.'
+            raise MissingFoldedTimes(error_message)
         return self.data_frame[self.folded_times_column_name].values
 
     @folded_times.setter
@@ -112,7 +112,7 @@ class LightCurve(ABC):
         return lightkurve.lightcurve.LightCurve(time=self.times, flux=self.fluxes)
 
     def get_variability_phase_folding_parameters(
-            self, minimum_period: Optional[float] = None, maximum_period: Optional[float] = None
+            self, minimum_period: float | None = None, maximum_period: float | None = None
     ) -> (float, float, float, float, float):
         fold_period, fold_epoch, time_bin_size, minimum_bin_phase, maximum_bin_phase, inlier_lightkurve_light_curve, periodogram, folded_lightkurve_light_curve = self.get_variability_phase_folding_parameters_and_folding_lightkurve_light_curves(minimum_period=minimum_period, maximum_period=maximum_period)
         self._variability_period = fold_period
@@ -120,8 +120,8 @@ class LightCurve(ABC):
         return fold_period, fold_epoch, time_bin_size, minimum_bin_phase, maximum_bin_phase
 
     def get_variability_phase_folding_parameters_and_folding_lightkurve_light_curves(
-            self, minimum_period: Optional[float] = None, maximum_period: Optional[float] = None):
-        median_time_step = np.median(np.diff(self.times[~np.isnan(self.times)]))
+            self, minimum_period: float | None = None, maximum_period: float | None = None):
+        np.median(np.diff(self.times[~np.isnan(self.times)]))
         lightkurve_light_curve = self.to_lightkurve()
         inlier_lightkurve_light_curve = lightkurve_light_curve.remove_outliers(sigma=3)
         periodogram = LombScarglePeriodogram.from_lightcurve(inlier_lightkurve_light_curve, oversample_factor=100,

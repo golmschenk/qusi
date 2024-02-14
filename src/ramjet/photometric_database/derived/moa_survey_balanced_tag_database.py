@@ -30,7 +30,7 @@ class MoaSurveyBalancedTagDatabase(StandardAndInjectedLightCurveDatabase):
         :return: The list of collections.
         """
         collections = []
-        for tag in self.moa_data_interface.survey_tag_to_path_list_dictionary.keys():
+        for tag in self.moa_data_interface.survey_tag_to_path_list_dictionary:
             if tag == 'i':
                 continue  # There is a single `i` tag, which seems to be a typo.
             collection = MoaSurveyLightCurveCollection(survey_tags=[tag], dataset_splits=dataset_splits)

@@ -4,20 +4,22 @@ Code to represent a TESS light curve.
 from __future__ import annotations
 
 import copy
-from typing import Optional, Union
+from typing import TYPE_CHECKING
 
 import lightkurve
 import numpy as np
-import pandas as pd
 from astropy import units
 from astropy.coordinates import Angle, SkyCoord
 from astroquery.mast import Catalogs
 from lightkurve import SearchResult
-from lightkurve.targetpixelfile import TargetPixelFile
 from retrying import retry
 
 from ramjet.data_interface.tess_data_interface import is_common_mast_connection_error
 from ramjet.photometric_database.light_curve import LightCurve
+
+if TYPE_CHECKING:
+    import pandas as pd
+    from lightkurve.targetpixelfile import TargetPixelFile
 
 
 class TessLightCurve(LightCurve):
@@ -27,9 +29,9 @@ class TessLightCurve(LightCurve):
 
     def __init__(self):
         super().__init__()
-        self.tic_id: Union[int, None] = None
-        self.sector: Union[int, None] = None
-        self._tic_row: Union[None, pd.Series, MissingTicRow] = None
+        self.tic_id: int | None = None
+        self.sector: int | None = None
+        self._tic_row: None | pd.Series | MissingTicRow = None
 
     @retry(retry_on_exception=is_common_mast_connection_error, stop_max_attempt_number=10)
     def get_tic_row(self):
@@ -54,8 +56,8 @@ class TessLightCurve(LightCurve):
         target_pixel_file = search_result.download(cutout_size=10)
         return target_pixel_file
 
-    def estimate_photometric_centroid_of_variability_from_tess_ffi(self, minimum_period: Optional[float] = None,
-                                                                   maximum_period: Optional[float] = None) -> SkyCoord:
+    def estimate_photometric_centroid_of_variability_from_tess_ffi(self, minimum_period: float | None = None,
+                                                                   maximum_period: float | None = None) -> SkyCoord:
         fold_period, fold_epoch, time_bin_size, minimum_bin_phase, maximum_bin_phase = \
             self.get_variability_phase_folding_parameters(minimum_period=minimum_period, maximum_period=maximum_period)
         variability_centroid_and_frames = \
@@ -108,7 +110,7 @@ class TessLightCurve(LightCurve):
                 median_minimum_target_pixel_frame)
 
     def estimate_angular_distance_to_variability_photometric_centroid_from_ffi(
-            self, minimum_period: Optional[float] = None, maximum_period: Optional[float] = None) -> Angle:
+            self, minimum_period: float | None = None, maximum_period: float | None = None) -> Angle:
         centroid_sky_coord = self.estimate_photometric_centroid_of_variability_from_tess_ffi(
             minimum_period=minimum_period,
             maximum_period=maximum_period)

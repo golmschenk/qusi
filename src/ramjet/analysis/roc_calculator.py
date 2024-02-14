@@ -2,7 +2,7 @@
 Code for a class to calculate receiver operating characteristic (ROC) curves.
 """
 from pathlib import Path
-from typing import Union
+from typing import Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -82,7 +82,7 @@ class RocCalculator:
         self.true_negative_counts += true_negatives
         self.false_negative_counts += false_negatives
 
-    def generate_roc_plot(self, output_path: Union[str, Path] = 'roc_curve.svg', title: str = None):
+    def generate_roc_plot(self, output_path: Union[str, Path] = 'roc_curve.svg', title: Optional[str] = None):
         """
         Generates a ROC curve plot from the confusion matrix totals which have been accumulated.
 

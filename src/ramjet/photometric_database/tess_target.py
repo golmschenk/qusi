@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import io
 import math
-from typing import Union
 
 import numpy as np
 import pandas as pd
@@ -20,11 +19,11 @@ class TessTarget:
     A class to represent an TESS target. Usually a star or star system.
     """
     def __init__(self):
-        self.tic_id: Union[int, None] = None
-        self.radius: Union[float, None] = None
-        self.mass: Union[float, None] = None
-        self.magnitude: Union[float, None] = None
-        self.contamination_ratio: Union[float, None] = None
+        self.tic_id: int | None = None
+        self.radius: float | None = None
+        self.mass: float | None = None
+        self.magnitude: float | None = None
+        self.contamination_ratio: float | None = None
 
     @classmethod
     def from_tic_id(cls, tic_id: int) -> TessTarget:
@@ -77,7 +76,8 @@ class TessTarget:
             if allow_unknown_contamination_ratio:
                 contamination_ratio = 0
             else:
-                raise ValueError(f'Contamination ratio {contamination_ratio} cannot be used to calculate the radius.')
+                error_message = f'Contamination ratio {contamination_ratio} cannot be used to calculate the radius.'
+                raise ValueError(error_message)
         return self.radius * math.sqrt(transit_depth * (1 + contamination_ratio))
 
     def retrieve_nearby_tic_targets(self) -> pd.DataFrame:

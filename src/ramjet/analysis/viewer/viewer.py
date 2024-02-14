@@ -6,11 +6,10 @@ from __future__ import annotations
 import asyncio
 from functools import partial
 from pathlib import Path
-from typing import Union
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
-from bokeh.document import Document
 from bokeh.io import curdoc
 from bokeh.models import BoxAnnotation, Button, Div
 from bokeh.server.server import Server
@@ -18,8 +17,12 @@ from bokeh.server.server import Server
 from ramjet.analysis.transit_vetter import TransitVetter
 from ramjet.analysis.viewer.light_curve_display import LightCurveDisplay
 from ramjet.analysis.viewer.preloader import Preloader
-from ramjet.analysis.viewer.view_entity import ViewEntity
 from ramjet.photometric_database.tess_ffi_light_curve import TessFfiColumnName, TessFfiLightCurve
+
+if TYPE_CHECKING:
+    from bokeh.document import Document
+
+    from ramjet.analysis.viewer.view_entity import ViewEntity
 
 
 class Viewer:
@@ -29,15 +32,15 @@ class Viewer:
     vetter = TransitVetter()
 
     def __init__(self):
-        self.light_curve_display: Union[LightCurveDisplay, None] = None
-        self.preloader: Union[Preloader, None] = None
-        self.add_to_positives_button: Union[Button, None] = None
-        self.previous_button: Union[Button, None] = None
-        self.next_button: Union[Button, None] = None
-        self.information_div: Union[Div, None] = None
-        self.document: Union[Document, None] = None
-        self.maximum_physical_depth_box: Union[BoxAnnotation, None] = None
-        self.view_entity: Union[ViewEntity, None] = None
+        self.light_curve_display: LightCurveDisplay | None = None
+        self.preloader: Preloader | None = None
+        self.add_to_positives_button: Button | None = None
+        self.previous_button: Button | None = None
+        self.next_button: Button | None = None
+        self.information_div: Div | None = None
+        self.document: Document | None = None
+        self.maximum_physical_depth_box: BoxAnnotation | None = None
+        self.view_entity: ViewEntity | None = None
 
     async def update_view_entity_with_document_lock(self, view_entity: ViewEntity):
         """

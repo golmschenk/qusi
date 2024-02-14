@@ -23,10 +23,7 @@ class TransitVetter:
         """
         transiting_body_radius = target.calculate_transiting_body_radius(transit_depth)
         planet_radius_threshold = 1.8 * self.radius_of_jupiter__solar_radii
-        if transiting_body_radius < planet_radius_threshold:
-            return True
-        else:
-            return False
+        return transiting_body_radius < planet_radius_threshold
 
     @staticmethod
     def has_no_nearby_likely_eclipsing_binary_background_targets(target: TessTarget) -> bool:
@@ -43,10 +40,7 @@ class TransitVetter:
             (nearby_target_data_frame['TESS Mag'] < target.magnitude + magnitude_difference_threshold) &
             (nearby_target_data_frame['Separation (arcsec)'] < nearby_threshold_arcseconds)
         ]
-        if problematic_nearby_target_data_frame.shape[0] == 0:
-            return True
-        else:
-            return False
+        return problematic_nearby_target_data_frame.shape[0] == 0
 
     @staticmethod
     def has_nearby_toi_targets(target: TessTarget) -> bool:
@@ -62,10 +56,7 @@ class TransitVetter:
             (pd.notnull(nearby_target_data_frame['TOI'])) &
             (nearby_target_data_frame['Separation (arcsec)'] < nearby_threshold_arcseconds)
         ]
-        if problematic_nearby_target_data_frame.shape[0] != 0:
-            return True
-        else:
-            return False
+        return problematic_nearby_target_data_frame.shape[0] != 0
 
     def get_maximum_physical_depth_for_planet_for_target(self, target: TessTarget,
                                                          allow_missing_contamination_ratio: bool = False) -> float:
@@ -82,7 +73,8 @@ class TransitVetter:
             if allow_missing_contamination_ratio:
                 contamination_ratio = 0
             else:
-                raise ValueError(f'Contamination ratio {contamination_ratio} is not a number.')
+                error_message = f'Contamination ratio {contamination_ratio} is not a number.'
+                raise ValueError(error_message)
         maximum_physical_depth = (maximum_planet_radius ** 2) / (
             (target.radius ** 2) * (1 + contamination_ratio))
         return maximum_physical_depth

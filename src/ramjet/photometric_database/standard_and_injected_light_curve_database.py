@@ -2,20 +2,22 @@
 An abstract class allowing for any number and combination of standard and injectable/injectee light curve collections.
 """
 from functools import partial
-from typing import Callable, Optional, Union
+from typing import TYPE_CHECKING, Callable, Optional, Union
 
 import numpy as np
 import numpy.typing as npt
 
 from ramjet.logging.wandb_logger import WandbLoggableInjection, WandbLogger
 from ramjet.photometric_database.light_curve import LightCurve
-from ramjet.photometric_database.light_curve_collection import LightCurveCollection
 from ramjet.photometric_database.light_curve_database import LightCurveDatabase
 from ramjet.photometric_database.light_curve_dataset_manipulations import (
     BaselineFluxEstimationMethod,
     OutOfBoundsInjectionHandlingMethod,
     inject_signal_into_light_curve_with_intermediates,
 )
+
+if TYPE_CHECKING:
+    from ramjet.photometric_database.light_curve_collection import LightCurveCollection
 
 
 def inject_signal_into_light_curve(

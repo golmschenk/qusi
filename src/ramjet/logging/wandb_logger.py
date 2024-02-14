@@ -6,11 +6,11 @@ from __future__ import annotations
 import math
 import queue
 from abc import ABC, abstractmethod
-from typing import Optional
 
 import plotly
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+import multiprocessing
 
 import wandb
 from ramjet.photometric_database.light_curve import LightCurve
@@ -80,16 +80,16 @@ class WandbLoggableInjection(WandbLoggable):
     """
     def __init__(self):
         super().__init__()
-        self.injectee_name: Optional[str] = None
-        self.injectee_light_curve: Optional[LightCurve] = None
-        self.injectable_name: Optional[str] = None
-        self.injectable_light_curve: Optional[LightCurve] = None
-        self.injected_light_curve: Optional[LightCurve] = None
-        self.injectable_light_curve: Optional[LightCurve] = None
-        self.injected_light_curve: Optional[LightCurve] = None
-        self.aligned_injectable_light_curve: Optional[LightCurve] = None
-        self.aligned_injectee_light_curve: Optional[LightCurve] = None
-        self.aligned_injected_light_curve: Optional[LightCurve] = None
+        self.injectee_name: str | None = None
+        self.injectee_light_curve: LightCurve | None = None
+        self.injectable_name: str | None = None
+        self.injectable_light_curve: LightCurve | None = None
+        self.injected_light_curve: LightCurve | None = None
+        self.injectable_light_curve: LightCurve | None = None
+        self.injected_light_curve: LightCurve | None = None
+        self.aligned_injectable_light_curve: LightCurve | None = None
+        self.aligned_injectee_light_curve: LightCurve | None = None
+        self.aligned_injected_light_curve: LightCurve | None = None
 
     def log(self, summary_name: str, epoch: int):
         """
@@ -136,13 +136,13 @@ class WandbLogger:
     loggable_types = [LightCurve]
 
     def __init__(self):
-        manager = multiprocess.Manager()
+        manager = multiprocessing.Manager()
         self.lock = manager.Lock()
-        self.request_queues: dict[str, multiprocess.Queue] = {}
-        self.example_queues: dict[str, multiprocess.Queue] = {}
+        self.request_queues: dict[str, multiprocessing.Queue] = {}
+        self.example_queues: dict[str, multiprocessing.Queue] = {}
 
     @classmethod
-    def new(cls, entity: Optional[str] = None, project: Optional[str] = None) -> WandbLogger:
+    def new(cls, entity: str | None = None, project: str | None = None) -> WandbLogger:
         """
         Creates a new logger.
 
@@ -162,7 +162,8 @@ class WandbLogger:
                     if isinstance(queue_item, WandbLoggable):
                         queue_item.log(example_queue_name, epoch)
                     else:
-                        raise ValueError(f"{queue_item} is not a handled logger type.")
+                        msg = f"{queue_item} is not a handled logger type."
+                        raise ValueError(msg)
                 except queue.Empty:
                     break
 
@@ -170,37 +171,37 @@ class WandbLogger:
         """
         Sends requests for examples to the other processes.
         """
-        for request_queue_name, request_queue in self.request_queues.items():
+        for request_queue in self.request_queues.values():
             request_queue.put(ExampleRequest())
 
-    def create_request_queue_for_collection(self, name: str) -> multiprocess.Queue:
+    def create_request_queue_for_collection(self, name: str) -> multiprocessing.Queue:
         """
         Creates a queue to send requests for examples on.
 
         :param name: The name of the queue.
         :return: The queue.
         """
-        assert name not in self.request_queues.keys()
-        manager = multiprocess.Manager()
+        assert name not in self.request_queues
+        manager = multiprocessing.Manager()
         queue_ = manager.Queue()
         self.request_queues[name] = queue_
         return queue_
 
-    def create_example_queue_for_collection(self, name: str) -> multiprocess.Queue:
+    def create_example_queue_for_collection(self, name: str) -> multiprocessing.Queue:
         """
         Creates a queue to receive examples on.
 
         :param name: The name of the queue.
         :return: The queue.
         """
-        assert name not in self.example_queues.keys()
-        manager = multiprocess.Manager()
+        assert name not in self.example_queues
+        manager = multiprocessing.Manager()
         queue_ = manager.Queue()
         self.example_queues[name] = queue_
         return queue_
 
     @staticmethod
-    def should_produce_example(request_queue: multiprocess.Queue) -> bool:
+    def should_produce_example(request_queue: multiprocessing.Queue) -> bool:
         """
         Checks a request queue to see if an example has been requested.
 
@@ -214,7 +215,7 @@ class WandbLogger:
             return False
 
     @staticmethod
-    def submit_loggable(example_queue: multiprocess.Queue, loggable: WandbLoggable) -> None:
+    def submit_loggable(example_queue: multiprocessing.Queue, loggable: WandbLoggable) -> None:
         """
         Submits a loggable to a request queue to be logged by the main process.
 

@@ -107,5 +107,8 @@ exclude_lines = [
 extend-exclude = ["examples"]
 
 [tool.ruff.lint]
-ignore = ["RET504"]
+ignore = [
+    "RET504",  # Subjective but, naming the returned value often seems to help readability.
+    "SIM108",  # Subjective but, ternary operators are often too confusing.
+]
 isort.known-first-party = ["qusi", "ramjet"]

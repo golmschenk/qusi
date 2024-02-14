@@ -26,6 +26,7 @@ def get_latest_log_directory(logs_directory: Union[Path, str]) -> Path:
                 latest_log_directory = log_directory
                 latest_log_datetime = log_datetime
     if latest_log_directory is None:
-        raise FileNotFoundError(f'No logs with datetime names found in {logs_directory}')
+        error_message = f'No logs with datetime names found in {logs_directory}'
+        raise FileNotFoundError(error_message)
     else:
         return latest_log_directory

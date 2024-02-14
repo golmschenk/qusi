@@ -71,7 +71,7 @@ class Hadryss(Module):
         number_of_pooling_blocks = 9
         pooling_sizes = [1] * number_of_pooling_blocks
         while True:
-            for pooling_size_index, pooling_size in enumerate(pooling_sizes):
+            for pooling_size_index, _pooling_size in enumerate(pooling_sizes):
                 current_size = self.input_length
                 for current_pooling_size in pooling_sizes:
                     current_size -= 2
