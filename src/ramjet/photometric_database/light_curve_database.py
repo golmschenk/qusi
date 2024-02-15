@@ -1,8 +1,8 @@
 """Code for a base generalized database for photometric data to be subclassed."""
+from __future__ import annotations
+
 import shutil
-from abc import ABC
 from pathlib import Path
-from typing import Union
 
 import numpy as np
 import numpy.typing as npt
@@ -19,22 +19,27 @@ def preprocess_times(light_curve_array: np.ndarray) -> None:
     light_curve_array[:, 0] = calculate_time_differences(times)
 
 
-def make_times_and_fluxes_array_uniform_length(arrays: tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]], length: int, randomize: bool = True) -> (np.ndarray, np.ndarray):
+def make_times_and_fluxes_array_uniform_length(arrays: tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]],
+                                               length: int, *, randomize: bool = True) -> (np.ndarray, np.ndarray):
     times, fluxes = arrays
     light_curve_array = np.stack([times, fluxes], axis=-1)
     uniform_length_light_curve_array = make_uniform_length(light_curve_array, length=length, randomize=randomize)
     return uniform_length_light_curve_array[:, 0], uniform_length_light_curve_array[:, 1]
 
 
-def make_fluxes_and_label_array_uniform_length(arrays: tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]], length: int, randomize: bool = True) -> (np.ndarray, np.ndarray):
+def make_fluxes_and_label_array_uniform_length(arrays: tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]],
+                                               length: int, *, randomize: bool = True) -> (np.ndarray, np.ndarray):
     times, label = arrays
     uniform_length_times = make_uniform_length(times, length=length, randomize=randomize)
     return uniform_length_times, label
 
 
-def make_uniform_length(example: np.ndarray, length: int, randomize: bool = True) -> np.ndarray:
+def make_uniform_length(example: np.ndarray, length: int, *, randomize: bool = True) -> np.ndarray:
     """Makes the example a specific length, by clipping those too large and repeating those too small."""
-    assert len(example.shape) in [1, 2]  # Only tested for 1D and 2D cases.
+    allowed_channels_dimension = [1, 2]
+    if len(example.shape) not in allowed_channels_dimension:  # Only tested for 1D and 2D cases.
+        msg = f'Expected one of {allowed_channels_dimension}, but got {len(example.shape)}.'
+        raise ValueError(msg)
     if randomize:
         example = randomly_roll_elements(example)
     if example.shape[0] == length:
@@ -50,7 +55,7 @@ def make_uniform_length(example: np.ndarray, length: int, randomize: bool = True
     return example
 
 
-class LightCurveDatabase(ABC):
+class LightCurveDatabase:
     """A base generalized database for photometric data to be subclassed."""
 
     def __init__(self, data_directory='data'):
@@ -95,18 +100,27 @@ class LightCurveDatabase(ABC):
         """
         if self.include_time_as_channel:
             if self.include_flux_errors_as_channel:
-                assert light_curve.shape[1] == 3
+                expected_channels = 3
+                if light_curve.shape[1] != expected_channels:
+                    msg = f'Expected light curve channels shape of 3, found {light_curve.shape[1]}.'
+                    raise ValueError(msg)
                 light_curve[:, 1], light_curve[:, 2] = normalize_on_percentiles_with_errors(
                     light_curve[:, 1], light_curve[:, 2])
             else:
-                assert light_curve.shape[1] == 2
+                expected_channels = 2
+                if light_curve.shape[1] != expected_channels:
+                    msg = f'Expected light curve channels shape of 2, found {light_curve.shape[1]}.'
+                    raise ValueError(msg)
                 light_curve[:, 1] = normalize_on_percentiles(light_curve[:, 1])
         else:
-            assert light_curve.shape[1] == 1
+            expected_channels = 1
+            if light_curve.shape[1] != expected_channels:
+                msg = f'Expected light curve channels shape of 1, found {light_curve.shape[1]}.'
+                raise ValueError(msg)
             light_curve[:, 0] = normalize_on_percentiles(light_curve[:, 0])
 
-    def build_light_curve_array(self, fluxes: np.ndarray, times: Union[np.ndarray, None] = None,
-                                flux_errors: Union[np.ndarray, None] = None):
+    def build_light_curve_array(self, fluxes: np.ndarray, times: np.ndarray | None = None,
+                                flux_errors: np.ndarray | None = None):
         """
         Builds the light curve array based on the components required for the specific database setup.
 
@@ -125,7 +139,7 @@ class LightCurveDatabase(ABC):
             light_curve = np.expand_dims(fluxes, axis=-1)
         return light_curve
 
-    def preprocess_light_curve(self, light_curve: np.ndarray, evaluation_mode: bool = False) -> np.ndarray:
+    def preprocess_light_curve(self, light_curve: np.ndarray, *, evaluation_mode: bool = False) -> np.ndarray:
         """
         Preprocessing for the light curve.
 
@@ -213,7 +227,7 @@ def randomly_roll_elements(example: np.ndarray) -> np.ndarray:
     return example
 
 
-def extract_shuffled_chunk_and_remainder(array_to_extract_from: Union[list, np.ndarray], chunk_ratio: float,
+def extract_shuffled_chunk_and_remainder(array_to_extract_from: list | np.ndarray, chunk_ratio: float,
                                          chunk_to_extract_index: int = 0) -> (np.ndarray, np.ndarray):
     """
     Shuffles an array, extracts a chunk of the data, and returns the chunk and remainder of the array.

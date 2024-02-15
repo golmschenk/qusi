@@ -62,7 +62,7 @@ class TessTarget:
         radius = query_results_data_frame['radius_val'].iloc[0]
         return radius
 
-    def calculate_transiting_body_radius(self, transit_depth: float, allow_unknown_contamination_ratio: bool = False
+    def calculate_transiting_body_radius(self, transit_depth: float, *, allow_unknown_contamination_ratio: bool = False
                                          ) -> float:
         """
         Calculates the radius of a transiting body based on the target parameters and the transit depth.
@@ -87,7 +87,7 @@ class TessTarget:
         :return: The data frame of nearby targets.
         """
         csv_url = f'https://exofop.ipac.caltech.edu/tess/download_nearbytarget.php?id={self.tic_id}&output=csv'
-        csv_string = requests.get(csv_url).content.decode('utf-8')
+        csv_string = requests.get(csv_url, timeout=600).content.decode('utf-8')
         if 'Distance Err' not in csv_string:  # Correct ExoFOP bug where distance error column header is missing.
             csv_string = csv_string.replace('Distance(pc)', 'Distance (pc),Distance Err (pc)')
         data_frame = pd.read_csv(io.StringIO(csv_string), index_col=False)

@@ -3,19 +3,18 @@ Code for a class to represent a light curve. See the contained class docstring f
 """
 from __future__ import annotations
 
-from abc import ABC
-
 import lightkurve.lightcurve
 import numpy as np
 import pandas as pd
 from lightkurve.periodogram import LombScarglePeriodogram
 
 
-class LightCurve(ABC):
+class LightCurve:
     """
     A class to represent a light curve. A light curve is a collection of data which may includes times, fluxes,
     flux errors, and related values.
     """
+
     def __init__(self):
         self.data_frame: pd.DataFrame = pd.DataFrame()
         self.flux_column_names: list[str] = []
@@ -59,7 +58,7 @@ class LightCurve(ABC):
     def folded_times(self):
         if self.folded_times_column_name not in self.data_frame.columns:
             error_message = 'Light curve has not been folded.'
-            raise MissingFoldedTimes(error_message)
+            raise MissingFoldedTimesError(error_message)
         return self.data_frame[self.folded_times_column_name].values
 
     @folded_times.setter
@@ -114,7 +113,11 @@ class LightCurve(ABC):
     def get_variability_phase_folding_parameters(
             self, minimum_period: float | None = None, maximum_period: float | None = None
     ) -> (float, float, float, float, float):
-        fold_period, fold_epoch, time_bin_size, minimum_bin_phase, maximum_bin_phase, inlier_lightkurve_light_curve, periodogram, folded_lightkurve_light_curve = self.get_variability_phase_folding_parameters_and_folding_lightkurve_light_curves(minimum_period=minimum_period, maximum_period=maximum_period)
+        (
+            fold_period, fold_epoch, time_bin_size, minimum_bin_phase, maximum_bin_phase, inlier_lightkurve_light_curve,
+            periodogram, folded_lightkurve_light_curve
+        ) = self.get_variability_phase_folding_parameters_and_folding_lightkurve_light_curves(
+            minimum_period=minimum_period, maximum_period=maximum_period)
         self._variability_period = fold_period
         self._variability_period_epoch = fold_epoch
         return fold_period, fold_epoch, time_bin_size, minimum_bin_phase, maximum_bin_phase
@@ -138,11 +141,14 @@ class LightCurve(ABC):
         minimum_bin_phase = binned_folded_lightkurve_light_curve.phase.value[minimum_bin_index]
         maximum_bin_phase = binned_folded_lightkurve_light_curve.phase.value[maximum_bin_index]
         fold_epoch = inlier_lightkurve_light_curve.time.value[0]
-        return fold_period, fold_epoch, time_bin_size, minimum_bin_phase, maximum_bin_phase, inlier_lightkurve_light_curve, periodogram, folded_lightkurve_light_curve
+        return (
+            fold_period, fold_epoch, time_bin_size, minimum_bin_phase, maximum_bin_phase, inlier_lightkurve_light_curve,
+            periodogram, folded_lightkurve_light_curve
+        )
 
     def fold(self, period: float, epoch: float) -> None:
         self.folded_times = (self.times - epoch) % period
 
 
-class MissingFoldedTimes(Exception):
+class MissingFoldedTimesError(Exception):
     pass

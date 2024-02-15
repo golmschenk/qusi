@@ -1,11 +1,15 @@
 """
 Code for representing a collection of light curves.
 """
-from collections.abc import Iterable
+from __future__ import annotations
+
 from pathlib import Path
-from typing import Union
+from typing import TYPE_CHECKING
 
 import numpy as np
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 
 class LightCurveCollectionMethodNotImplementedError(RuntimeError):
@@ -25,8 +29,8 @@ class LightCurveCollection:
     :ivar paths: The default list of paths to be used if the `get_paths` method is not overridden.
     """
     def __init__(self):
-        self.label: Union[float, list[float], np.ndarray, None] = None
-        self.paths: Union[list[Path], None] = None
+        self.label: float | list[float] | np.ndarray | None = None
+        self.paths: list[Path] | None = None
 
     def get_paths(self) -> Iterable[Path]:
         """
@@ -36,7 +40,7 @@ class LightCurveCollection:
         """
         return self.paths
 
-    def load_times_and_fluxes_from_path(self, path: Path) -> (np.ndarray, np.ndarray):
+    def load_times_and_fluxes_from_path(self, path: Path) -> (np.ndarray, np.ndarray):  # noqa ARG002
         """
         Loads the times and fluxes from a given light curve path.
 
@@ -45,7 +49,7 @@ class LightCurveCollection:
         """
         raise LightCurveCollectionMethodNotImplementedError
 
-    def load_times_and_magnifications_from_path(self, path: Path) -> (np.ndarray, np.ndarray):
+    def load_times_and_magnifications_from_path(self, path: Path) -> (np.ndarray, np.ndarray):  # noqa ARG002
         """
         Loads the times and magnifications from a given path as an injectable signal.
 
@@ -69,7 +73,7 @@ class LightCurveCollection:
         relative_times = times - np.min(times)
         return normalized_fluxes, relative_times
 
-    def load_label_from_path(self, path: Path) -> Union[float, np.ndarray]:
+    def load_label_from_path(self, path: Path) -> float | np.ndarray:  # noqa ARG002
         """
         Loads the label of an example from a corresponding path.
 
@@ -101,7 +105,7 @@ class LightCurveCollection:
         return dataset_split_paths
 
     def load_times_fluxes_and_flux_errors_from_path(self, path: Path
-                                                    ) -> (np.ndarray, np.ndarray, Union[np.ndarray, None]):
+                                                    ) -> (np.ndarray, np.ndarray, np.ndarray | None):
         """
         Loads the times, fluxes, and flux errors of a light curve from a path to the data.
         Unless overridden, defaults to using the method to load only the times and fluxes, and returns None for errors.
@@ -114,7 +118,7 @@ class LightCurveCollection:
         return times, fluxes, flux_errors
 
     def load_times_magnifications_and_magnification_errors_from_path(
-            self, path: Path) -> (np.ndarray, np.ndarray, Union[np.ndarray, None]):
+            self, path: Path) -> (np.ndarray, np.ndarray, np.ndarray | None):
         """
         Loads the times, magnifications, and magnification_errors of a light curve from a path to the data.
         Unless overridden, defaults to using the method to load only the times and magnifications,
@@ -127,7 +131,7 @@ class LightCurveCollection:
         flux_errors = None
         return times, fluxes, flux_errors
 
-    def load_auxiliary_information_for_path(self, path: Path) -> np.ndarray:
+    def load_auxiliary_information_for_path(self, path: Path) -> np.ndarray:  # noqa ARG002
         """
         Loads auxiliary information for the given path.
 

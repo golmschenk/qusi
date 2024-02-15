@@ -101,17 +101,16 @@ class TessMissionLightCurve(TessLightCurve):
         integer_types = (int, np.integer)
         if isinstance(identifier, Path):
             return cls.from_path(path=identifier)
-        elif isinstance(identifier, tuple) and (isinstance(identifier[0], integer_types) and
+        if isinstance(identifier, tuple) and (isinstance(identifier[0], integer_types) and
                                                 isinstance(identifier[1], integer_types)):
             tic_id = identifier[0]
             sector = identifier[1]
             return cls.from_mast(tic_id=tic_id, sector=sector)
-        elif isinstance(identifier, str):
+        if isinstance(identifier, str):
             tic_id, sector = cls.get_tic_id_and_sector_from_identifier_string(identifier)
             return cls.from_mast(tic_id=tic_id, sector=sector)
-        else:
-            error_message = f'{identifier} does not match a known type to infer the light curve identifier from.'
-            raise ValueError(error_message)
+        error_message = f'{identifier} does not match a known type to infer the light curve identifier from.'
+        raise TypeError(error_message)
 
     @staticmethod
     def get_tic_id_and_sector_from_file_path(file_path: Path) -> (int, int | None):

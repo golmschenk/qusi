@@ -1,13 +1,14 @@
 """
 An abstract class allowing for any number and combination of standard and injectable/injectee light curve collections.
 """
+from __future__ import annotations
+
 from functools import partial
-from typing import TYPE_CHECKING, Callable, Optional, Union
+from typing import TYPE_CHECKING, Callable
 
 import numpy as np
 import numpy.typing as npt
 
-from ramjet.logging.wandb_logger import WandbLoggableInjection, WandbLogger
 from ramjet.photometric_database.light_curve import LightCurve
 from ramjet.photometric_database.light_curve_database import LightCurveDatabase
 from ramjet.photometric_database.light_curve_dataset_manipulations import (
@@ -17,6 +18,7 @@ from ramjet.photometric_database.light_curve_dataset_manipulations import (
 )
 
 if TYPE_CHECKING:
+    from ramjet.logging.wandb_logger import WandbLoggableInjection, WandbLogger
     from ramjet.photometric_database.light_curve_collection import LightCurveCollection
 
 
@@ -54,17 +56,17 @@ def inject_signal_into_light_curve(
 
 class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
     """
-    An abstract class allowing for any number and combination of standard and injectable/injectee light curve collections
-    to be used for training.
+    An abstract class allowing for any number and combination of standard and injectable/injectee light curve
+    collections to be used for training.
     """
 
     def __init__(self):
         super().__init__()
         self.training_standard_light_curve_collections: list[LightCurveCollection] = []
-        self.training_injectee_light_curve_collection: Union[LightCurveCollection, None] = None
+        self.training_injectee_light_curve_collection: LightCurveCollection | None = None
         self.training_injectable_light_curve_collections: list[LightCurveCollection] = []
         self.validation_standard_light_curve_collections: list[LightCurveCollection] = []
-        self.validation_injectee_light_curve_collection: Union[LightCurveCollection, None] = None
+        self.validation_injectee_light_curve_collection: LightCurveCollection | None = None
         self.validation_injectable_light_curve_collections: list[LightCurveCollection] = []
         self.inference_light_curve_collections: list[LightCurveCollection] = []
         self.shuffle_buffer_size = 10000
@@ -73,7 +75,7 @@ class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
         self.out_of_bounds_injection_handling: OutOfBoundsInjectionHandlingMethod = \
             OutOfBoundsInjectionHandlingMethod.ERROR
         self.baseline_flux_estimation_method = BaselineFluxEstimationMethod.MEDIAN
-        self.logger: Optional[WandbLogger] = None
+        self.logger: WandbLogger | None = None
 
     @property
     def number_of_input_channels(self) -> int:
@@ -89,7 +91,7 @@ class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
             channels += 1
         return channels
 
-    def add_logging_queues_to_map_function(self, preprocess_map_function: Callable, name: Optional[str]) -> Callable:
+    def add_logging_queues_to_map_function(self, preprocess_map_function: Callable, name: str | None) -> Callable:
         """
         Adds logging queues to the map functions.
 
@@ -105,7 +107,7 @@ class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
 
     def inject_signal_into_light_curve(self, light_curve_fluxes: np.ndarray, light_curve_times: np.ndarray,
                                        signal_magnifications: np.ndarray, signal_times: np.ndarray,
-                                       wandb_loggable_injection: Optional[WandbLoggableInjection] = None) -> np.ndarray:
+                                       wandb_loggable_injection: WandbLoggableInjection | None = None) -> np.ndarray:
         """
         Injects a synthetic magnification signal into real light curve fluxes.
 
@@ -118,9 +120,11 @@ class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
         """
         out_of_bounds_injection_handling_method = self.out_of_bounds_injection_handling
         baseline_flux_estimation_method = self.baseline_flux_estimation_method
-        fluxes_with_injected_signal, offset_signal_times, signal_fluxes = inject_signal_into_light_curve_with_intermediates(
-            light_curve_times, light_curve_fluxes, signal_times, signal_magnifications,
-            out_of_bounds_injection_handling_method, baseline_flux_estimation_method)
+        fluxes_with_injected_signal, offset_signal_times, signal_fluxes = (
+            inject_signal_into_light_curve_with_intermediates(
+                light_curve_times, light_curve_fluxes, signal_times, signal_magnifications,
+                out_of_bounds_injection_handling_method, baseline_flux_estimation_method)
+        )
         if wandb_loggable_injection is not None:
             wandb_loggable_injection.aligned_injectee_light_curve = LightCurve.from_times_and_fluxes(
                 light_curve_times, light_curve_fluxes)
@@ -131,7 +135,7 @@ class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
         return fluxes_with_injected_signal
 
 
-def expand_label_to_training_dimensions(label: Union[int, list[int], tuple[int], np.ndarray]) -> np.ndarray:
+def expand_label_to_training_dimensions(label: int | list[int] | tuple[int] | np.ndarray) -> np.ndarray:
     """
     Expand the label to the appropriate dimensions for training.
 

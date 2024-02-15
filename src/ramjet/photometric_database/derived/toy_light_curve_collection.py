@@ -1,11 +1,15 @@
-from collections.abc import Iterable
+from __future__ import annotations
+
 from pathlib import Path
-from typing import Union
+from typing import TYPE_CHECKING
 
 import numpy as np
 
 from ramjet.photometric_database.light_curve import LightCurve
 from ramjet.photometric_database.light_curve_collection import LightCurveCollection
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 
 class ToyLightCurveCollection(LightCurveCollection):
@@ -26,7 +30,7 @@ class ToyFlatLightCurveCollection(ToyLightCurveCollection):
         super().__init__()
         self.label = 0
 
-    def load_times_and_fluxes_from_path(self, path: Path) -> (np.ndarray, np.ndarray):
+    def load_times_and_fluxes_from_path(self, path: Path) -> (np.ndarray, np.ndarray):  # noqa ARG002
         light_curve = ToyLightCurve.flat()
         return light_curve.times, light_curve.fluxes
 
@@ -43,7 +47,7 @@ class ToyFlatAtValueLightCurveCollection(ToyLightCurveCollection):
         light_curve = ToyLightCurve.flat(float(path.name))
         return light_curve.times, light_curve.fluxes
 
-    def load_label_from_path(self, path: Path) -> Union[float, np.ndarray]:
+    def load_label_from_path(self, path: Path) -> float | np.ndarray:
         label = float(path.name)
         return label
 
@@ -53,7 +57,7 @@ class ToySineWaveLightCurveCollection(ToyLightCurveCollection):
         super().__init__()
         self.label = 1
 
-    def load_times_and_fluxes_from_path(self, path: Path) -> (np.ndarray, np.ndarray):
+    def load_times_and_fluxes_from_path(self, path: Path) -> (np.ndarray, np.ndarray):  # noqa ARG002
         light_curve = ToyLightCurve.sine_wave()
         return light_curve.times, light_curve.fluxes
 

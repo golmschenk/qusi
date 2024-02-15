@@ -110,5 +110,9 @@ extend-exclude = ["examples"]
 ignore = [
     "RET504",  # Subjective but, naming the returned value often seems to help readability.
     "SIM108",  # Subjective but, ternary operators are often too confusing.
+    # We don't expect use cases of the frame to need to worry about security issues.
+    "S608",
+    "S301",
+    "S311",
 ]
 isort.known-first-party = ["qusi", "ramjet"]

@@ -1,20 +1,29 @@
 """
 Code for a light curve collection of the TESS two minute cadence data.
 """
+from __future__ import annotations
+
 from pathlib import Path
-from typing import Union
+from typing import TYPE_CHECKING
 
-import numpy as np
-from peewee import Select
-
-from ramjet.data_interface.metadatabase import MetadatabaseModel
-from ramjet.data_interface.tess_data_interface import TessDataInterface, TessFluxType
+from ramjet.data_interface.tess_data_interface import (
+    TessDataInterface,
+    TessFluxType,
+    download_two_minute_cadence_light_curves,
+    load_fluxes_and_times_from_fits_file,
+)
 from ramjet.data_interface.tess_target_metadata_manager import TessTargetMetadata
 from ramjet.data_interface.tess_two_minute_cadence_light_curve_metadata_manager import (
     TessTwoMinuteCadenceLightCurveMetadata,
     TessTwoMinuteCadenceLightCurveMetadataManger,
 )
 from ramjet.photometric_database.sql_metadata_light_curve_collection import SqlMetadataLightCurveCollection
+
+if TYPE_CHECKING:
+    import numpy as np
+    from peewee import Select
+
+    from ramjet.data_interface.metadatabase import MetadatabaseModel
 
 
 class TessTwoMinuteCadenceLightCurveCollection(SqlMetadataLightCurveCollection):
@@ -24,11 +33,11 @@ class TessTwoMinuteCadenceLightCurveCollection(SqlMetadataLightCurveCollection):
     tess_data_interface = TessDataInterface()
     tess_two_minute_cadence_light_curve_metadata_manger = TessTwoMinuteCadenceLightCurveMetadataManger()
 
-    def __init__(self, dataset_splits: Union[list[int], None] = None, flux_type: TessFluxType = TessFluxType.PDCSAP):
+    def __init__(self, dataset_splits: list[int] | None = None, flux_type: TessFluxType = TessFluxType.PDCSAP):
         super().__init__()
         self.data_directory: Path = Path('data/tess_two_minute_cadence_light_curves')
         self.label = 0
-        self.dataset_splits: Union[list[int], None] = dataset_splits
+        self.dataset_splits: list[int] | None = dataset_splits
         self.flux_type: TessFluxType = flux_type
 
     def get_sql_query(self) -> Select:

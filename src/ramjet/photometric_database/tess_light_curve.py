@@ -123,9 +123,9 @@ class TessLightCurve(LightCurve):
         for light_curve in light_curves:
             light_curve_tic_row_data_frame = tic_row_data_frame[tic_row_data_frame['ID'] == str(light_curve.tic_id)]
             if light_curve_tic_row_data_frame.shape[0] == 0:
-                light_curve._tic_row = MissingTicRow
+                light_curve._tic_row = MissingTicRow  # noqa SLF001
             else:
-                light_curve._tic_row = light_curve_tic_row_data_frame.iloc[0]
+                light_curve._tic_row = light_curve_tic_row_data_frame.iloc[0]  # noqa SLF001
 
 
 class MissingTicRow:

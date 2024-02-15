@@ -14,7 +14,8 @@ import requests
 try:
     from muLAn.models.vbb.vbb import vbbmagU
 except ModuleNotFoundError:
-    vbbmagU = None
+    def vbbmagU(_s, _q, _rho, _xi, _yi, _accuracy):  # noqa
+        raise ModuleNotFoundError
 
 
 class MagnificationSignal:
@@ -29,7 +30,7 @@ class MagnificationSignal:
     > The distribution for tE and rho are based on the MOA observations
     > No parallax effect is considered
     """
-    tE_list: np.ndarray = None
+    einstein_crossing_time_list: np.ndarray = None
     rho_list: np.ndarray = None
 
     def __init__(self):
@@ -49,21 +50,22 @@ class MagnificationSignal:
         """
         Loads the MOA meta data defining microlensing to class attributes. If already loaded, does nothing.
         """
-        if self.tE_list is None:
+        if self.einstein_crossing_time_list is None:
             microlensing_meta_data_path = Path(__file__).parent.joinpath(
                 'microlensing_signal_meta_data/candlist_RADec.dat.txt')
             microlensing_meta_data_path.parent.mkdir(parents=True, exist_ok=True)
             if not microlensing_meta_data_path.exists():
                 candidate_list_csv_url = 'https://exoplanetarchive.ipac.caltech.edu/data/ExoData/MOA/candlist_RADec.dat'
-                response = requests.get(candidate_list_csv_url)
+                response = requests.get(candidate_list_csv_url, timeout=600)
                 with open(microlensing_meta_data_path, 'wb') as csv_file:
                     csv_file.write(response.content)
             data = pd.read_csv(microlensing_meta_data_path, header=None, delim_whitespace=True, comment='#',
                                usecols=[19, 36], names=['tE', 'rho'])
-            self.tE_list: np.ndarray = data['tE'].values
+            self.einstein_crossing_time_list: np.ndarray = data['tE'].values
             self.rho_list: np.ndarray = data['rho'].values
-            bad_indexes = np.argwhere(self.tE_list > 6000)
-            self.tE_list = np.delete(self.tE_list, bad_indexes)
+            bad_einstein_crossing_time = 6000
+            bad_indexes = np.argwhere(self.einstein_crossing_time_list > bad_einstein_crossing_time)
+            self.einstein_crossing_time_list = np.delete(self.einstein_crossing_time_list, bad_indexes)
             self.rho_list = np.delete(self.rho_list, bad_indexes)
 
     def getting_random_values(self):
@@ -76,8 +78,8 @@ class MagnificationSignal:
         u0_list = np.linspace(-0.1, 0, 1000)
         self.u0 = np.random.choice(u0_list)
 
-        index = np.random.choice(np.arange(self.tE_list.shape[0]))
-        self.tE = float(self.tE_list[index])
+        index = np.random.choice(np.arange(self.einstein_crossing_time_list.shape[0]))
+        self.tE = float(self.einstein_crossing_time_list[index])
         self.rho = float(self.rho_list[index])
 
         s_list = np.linspace(0.7, 1.3, 100)
@@ -149,13 +151,13 @@ class MagnificationSignal:
         # Get parameters
         t0 = lens_params['t0']
         u0 = lens_params['u0']
-        tE = lens_params['tE']
+        einstein_crossing_time = lens_params['tE']
         rho = lens_params['rho']
         q = lens_params['q']
         alpha = lens_params['alpha']
         s = lens_params['s']
 
-        tau = (timeseries - t0) / tE
+        tau = (timeseries - t0) / einstein_crossing_time
 
         cos_alpha = np.cos(alpha)
         sin_alpha = np.sin(alpha)
@@ -169,13 +171,3 @@ class MagnificationSignal:
         accuracy = 1.e-3  # Absolute mag accuracy (mag+/-accuracy)
         magnification = np.array([vbbmagU(s, q, rho, x[i], y[i], accuracy) for i in range(len(x))])
         return magnification
-
-
-if __name__ == '__main__':
-    import time
-
-    start_time = time.time()
-    random_signal = MagnificationSignal.generate_randomly_based_on_moa_observations()
-    print("--- %s seconds ---" % (time.time() - start_time))
-    random_signal.plot_magnification()
-    print("Done")

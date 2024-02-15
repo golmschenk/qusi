@@ -4,13 +4,13 @@ Code for a logging agent to wandb.
 from __future__ import annotations
 
 import math
+import multiprocessing
 import queue
 from abc import ABC, abstractmethod
 
 import plotly
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-import multiprocessing
 
 import wandb
 from ramjet.photometric_database.light_curve import LightCurve

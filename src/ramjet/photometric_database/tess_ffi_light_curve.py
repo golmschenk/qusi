@@ -56,7 +56,7 @@ class TessFfiPickleIndex(Enum):
     QUALITY_FLAG = 11
 
 
-class AdaptIntermittentException(Exception):
+class AdaptIntermittentError(Exception):
     pass
 
 
@@ -75,10 +75,10 @@ class TessFfiLightCurve(TessLightCurve):
                                   TessFfiColumnName.RAW_FLUX.value]
 
     @classmethod
-    @retry(retry=retry_if_exception_type(AdaptIntermittentException),
+    @retry(retry=retry_if_exception_type(AdaptIntermittentError),
            wait=wait_random_exponential(multiplier=0.1, max=20), stop=stop_after_attempt(20), reraise=True)
     def from_path(cls, path: Path, column_names_to_load: list[TessFfiColumnName] | None = None,
-                  remove_bad_quality_data: bool = True) -> TessFfiLightCurve:
+                  *, remove_bad_quality_data: bool = True) -> TessFfiLightCurve:
         """
         Creates an FFI TESS light curve from a path to one of Brian Powell's pickle files.
 
@@ -89,26 +89,26 @@ class TessFfiLightCurve(TessLightCurve):
         :param remove_bad_quality_data: Removes data with quality problem flags (e.g., non-zero quality flags).
         :return: The light curve.
         """
+        light_curve = cls()
+        light_curve.time_column_name = TessFfiColumnName.TIME__BTJD.value
+        if column_names_to_load is None:
+            column_names_to_load = list(TessFfiColumnName)
         try:
-            light_curve = cls()
-            light_curve.time_column_name = TessFfiColumnName.TIME__BTJD.value
-            if column_names_to_load is None:
-                column_names_to_load = list(TessFfiColumnName)
             with path.open('rb') as pickle_file:
                 light_curve_data_dictionary = pickle.load(pickle_file)
-                if remove_bad_quality_data:
-                    quality_flag_values = light_curve_data_dictionary[TessFfiPickleIndex.QUALITY_FLAG.value]
-                for column_name in column_names_to_load:
-                    pickle_index = TessFfiPickleIndex[column_name.name]
-                    column_values = light_curve_data_dictionary[pickle_index.value]
-                    if remove_bad_quality_data:
-                        column_values = column_values[quality_flag_values == 0]
-                    light_curve.data_frame[column_name.value] = column_values
-            light_curve.tic_id, light_curve.sector = light_curve.get_tic_id_and_sector_from_file_path(path)
-            return light_curve
         except (pickle.UnpicklingError, OSError, IsADirectoryError) as error:
             error_message = f'Errored on path {path}.'
-            raise AdaptIntermittentException(error_message) from error
+            raise AdaptIntermittentError(error_message) from error
+        if remove_bad_quality_data:
+            quality_flag_values = light_curve_data_dictionary[TessFfiPickleIndex.QUALITY_FLAG.value]
+            for column_name in column_names_to_load:
+                pickle_index = TessFfiPickleIndex[column_name.name]
+                column_values = light_curve_data_dictionary[pickle_index.value]
+                if remove_bad_quality_data:
+                    column_values = column_values[quality_flag_values == 0]
+                light_curve.data_frame[column_name.value] = column_values
+        light_curve.tic_id, light_curve.sector = light_curve.get_tic_id_and_sector_from_file_path(path)
+        return light_curve
 
     @staticmethod
     def get_tic_id_and_sector_from_file_path(path: Path | str) -> (int, int | None):
@@ -179,7 +179,7 @@ class TessFfiLightCurve(TessLightCurve):
     @classmethod
     def load_fluxes_and_times_from_pickle_file(
             cls, file_path: Path | str, flux_column_name: TessFfiColumnName = TessFfiColumnName.CORRECTED_FLUX,
-            remove_bad_quality_data: bool = True
+            *, remove_bad_quality_data: bool = True
     ) -> (np.ndarray, np.ndarray):
         """
         Loads the fluxes and times from one of Brian Powell's FFI pickle files.
@@ -197,7 +197,10 @@ class TessFfiLightCurve(TessLightCurve):
                                     remove_bad_quality_data=remove_bad_quality_data)
         fluxes = light_curve.data_frame[flux_column_name.value]
         times = light_curve.data_frame[TessFfiColumnName.TIME__BTJD.value]
-        assert times.shape == fluxes.shape
+        if times.shape != fluxes.shape:
+            error_message = f'Times and fluxes arrays must have the same shape, but have shapes ' \
+                            f'{times.shape} and {fluxes.shape}.'
+            raise ValueError(error_message)
         return fluxes, times
 
     @classmethod
@@ -219,7 +222,10 @@ class TessFfiLightCurve(TessLightCurve):
         fluxes = light_curve.data_frame[flux_column_name.value]
         flux_errors = light_curve.data_frame[TessFfiColumnName.FLUX_ERROR.value]
         times = light_curve.data_frame[TessFfiColumnName.TIME__BTJD.value]
-        assert times.shape == fluxes.shape
+        if times.shape != fluxes.shape:
+            error_message = f'Times and fluxes arrays must have the same shape, but have shapes ' \
+                            f'{times.shape} and {fluxes.shape}.'
+            raise ValueError(error_message)
         return fluxes, flux_errors, times
 
 
@@ -250,8 +256,10 @@ def get_gcvs_catalog_entries_for_labels(labels: list[str]) -> pd.DataFrame:
 
 def separation_to_nearest_gcvs_rr_lyrae_within_separation(
         sky_coord: SkyCoord,
-        maximum_separation: Angle = Angle(21, unit=units.arcsecond)
+        maximum_separation: Angle | None = None
 ) -> Angle | None:
+    if maximum_separation is None:
+        maximum_separation = Angle(21, unit=units.arcsecond)
     gcvs_region_table_list = Vizier(columns=['**'], catalog='B/gcvs/gcvs_cat', row_limit=-1
                                     ).query_region(sky_coord, radius=maximum_separation)
     if len(gcvs_region_table_list) == 0:
