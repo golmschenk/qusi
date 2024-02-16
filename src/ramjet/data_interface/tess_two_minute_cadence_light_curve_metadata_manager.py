@@ -1,6 +1,7 @@
 """
 Code for managing the meta data of the two minute cadence TESS light curves.
 """
+import logging
 from pathlib import Path
 
 from peewee import CharField, IntegerField, SchemaManager
@@ -13,6 +14,8 @@ from ramjet.data_interface.metadatabase import (
     metadatabase_uuid,
 )
 from ramjet.data_interface.tess_data_interface import get_tic_id_and_sector_from_file_path
+
+logger = logging.getLogger(__name__)
 
 
 class TessTwoMinuteCadenceLightCurveMetadata(MetadatabaseModel):
@@ -62,7 +65,7 @@ class TessTwoMinuteCadenceLightCurveMetadataManger:
         """
         Populates the SQL database based on the light curve files.
         """
-        print('Populating the TESS two minute cadence light curve meta data table...')
+        logger.info('Populating the TESS two minute cadence light curve meta data table...')
         path_glob = self.light_curve_root_directory_path.glob('**/*.fits')
         row_count = 0
         batch_paths = []
@@ -73,10 +76,10 @@ class TessTwoMinuteCadenceLightCurveMetadataManger:
                 if index % 1000 == 0 and index != 0:
                     self.insert_multiple_rows_from_paths_into_database(batch_paths)
                     batch_paths = []
-                    print(f'{index} rows inserted...', end='\r')
+                    logger.info(f'{index} rows inserted...')
             if len(batch_paths) > 0:
                 self.insert_multiple_rows_from_paths_into_database(batch_paths)
-        print(f'TESS two minute cadence light curve meta data table populated. {row_count} rows added.')
+        logger.info(f'TESS two minute cadence light curve meta data table populated. {row_count} rows added.')
 
     def build_table(self):
         """
@@ -86,7 +89,7 @@ class TessTwoMinuteCadenceLightCurveMetadataManger:
         TessTwoMinuteCadenceLightCurveMetadata.create_table()
         SchemaManager(TessTwoMinuteCadenceLightCurveMetadata).drop_indexes()  # To allow for fast insert.
         self.populate_sql_database()
-        print('Building indexes...')
+        logger.info('Building indexes...')
         SchemaManager(TessTwoMinuteCadenceLightCurveMetadata).create_indexes()  # Since we dropped them before.
 
 

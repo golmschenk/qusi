@@ -1,17 +1,22 @@
+from __future__ import annotations
+
 import re
 import shutil
 import socket
-from collections.abc import Iterable
 from pathlib import Path
-from typing import Union
+from typing import TYPE_CHECKING
 
-import numpy as np
 import pandas as pd
 import scipy.stats
 from filelock import FileLock
 
 from ramjet.data_interface.moa_data_interface import MoaDataInterface
 from ramjet.photometric_database.light_curve_collection import LightCurveCollection
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    import numpy as np
 
 
 class MoaSurveyLightCurveCollection(LightCurveCollection):
@@ -20,12 +25,12 @@ class MoaSurveyLightCurveCollection(LightCurveCollection):
     """
     moa_data_interface = MoaDataInterface()
 
-    def __init__(self, survey_tags: list[str], dataset_splits: Union[list[int], None] = None,
-                 label: Union[float, list[float], np.ndarray, None] = None):
+    def __init__(self, survey_tags: list[str], dataset_splits: list[int] | None = None,
+                 label: float | list[float] | np.ndarray | None = None):
         super().__init__()
         self.label = label
         self.survey_tags: list[str] = survey_tags
-        self.dataset_splits: Union[list[int], None] = dataset_splits
+        self.dataset_splits: list[int] | None = dataset_splits
 
     def get_paths(self) -> Iterable[Path]:
         """
@@ -56,8 +61,7 @@ class MoaSurveyLightCurveCollection(LightCurveCollection):
                         shutil.copy(path, nvme_tmp_path)
                         nvme_tmp_path.rename(nvme_path)
             return nvme_path
-        else:
-            return path
+        return path
 
 
     def load_times_and_fluxes_from_path(self, path: Path) -> (np.ndarray, np.ndarray):

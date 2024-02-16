@@ -1,6 +1,7 @@
 """
 Code for managing the TESS eclipsing binary metadata.
 """
+import logging
 from pathlib import Path
 
 import pandas as pd
@@ -9,6 +10,8 @@ from peewee import IntegerField, SchemaManager
 from ramjet.data_interface.metadatabase import MetadatabaseModel, metadatabase
 
 brian_powell_eclipsing_binary_csv_path = Path('data/tess_eclipsing_binaries/TESS_EB_catalog_23Jun.csv')
+
+logger = logging.getLogger(__name__)
 
 
 class TessEclipsingBinaryMetadata(MetadatabaseModel):
@@ -27,7 +30,7 @@ class TessEclipsingBinaryMetadataManager:
         """
         Builds the TESS eclipsing binary metadata table.
         """
-        print('Building TESS eclipsing binary metadata table...')
+        logger.info('Building TESS eclipsing binary metadata table...')
         eclipsing_binary_data_frame = pd.read_csv(brian_powell_eclipsing_binary_csv_path, usecols=['ID'])
         row_count = 0
         metadatabase.drop_tables([TessEclipsingBinaryMetadata])
@@ -45,7 +48,7 @@ class TessEclipsingBinaryMetadataManager:
         with metadatabase.atomic():
             TessEclipsingBinaryMetadata.insert_many(rows).execute()
         SchemaManager(TessEclipsingBinaryMetadata).create_indexes()
-        print(f'Table built. {row_count} rows added.')
+        logger.info(f'Table built. {row_count} rows added.')
 
 
 if __name__ == '__main__':

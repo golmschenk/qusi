@@ -68,7 +68,10 @@ def is_common_mast_connection_error(exception: Exception) -> bool:
     """
     print(f'Retrying on {exception}...', flush=True)
     # TODO: Rename function, as it includes more than just MAST now.
-    return (isinstance(exception, (AstroQueryTimeoutError, ConnectionResetError, TimeoutError, astroquery.exceptions.RemoteServiceError, lightkurve.search.SearchError, requests.exceptions.ChunkedEncodingError, requests.exceptions.ConnectionError, requests.exceptions.HTTPError, requests.exceptions.ReadTimeout)))
+    return (isinstance(exception, (
+    AstroQueryTimeoutError, ConnectionResetError, TimeoutError, astroquery.exceptions.RemoteServiceError,
+    lightkurve.search.SearchError, requests.exceptions.ChunkedEncodingError, requests.exceptions.ConnectionError,
+    requests.exceptions.HTTPError, requests.exceptions.ReadTimeout)))
 
 
 class NoDataProductsFoundException(Exception):
@@ -314,7 +317,10 @@ def load_fluxes_and_times_from_fits_file(light_curve_path: str | Path,
     light_curve = load_light_curve_from_fits_file(light_curve_path)
     fluxes = light_curve[flux_type.value]
     times = light_curve['TIME']
-    assert times.shape == fluxes.shape
+    if times.shape != fluxes.shape:
+        error_message = f'Times and fluxes arrays must have the same shape, but have shapes ' \
+                        f'{times.shape} and {fluxes.shape}.'
+        raise ValueError(error_message)
     if remove_nans:
         # noinspection PyUnresolvedReferences
         nan_indexes = np.union1d(np.argwhere(np.isnan(fluxes)), np.argwhere(np.isnan(times)))
@@ -325,21 +331,24 @@ def load_fluxes_and_times_from_fits_file(light_curve_path: str | Path,
 
 def load_fluxes_flux_errors_and_times_from_fits_file(light_curve_path: str | Path,
                                                      flux_type: TessFluxType = TessFluxType.PDCSAP,
-                                                     remove_nans: bool = True
+                                                     *, remove_nans: bool = True
                                                      ) -> (np.ndarray, np.ndarray, np.ndarray):
     """
     Extract the flux and time values from a TESS FITS file.
 
     :param light_curve_path: The path to the FITS file.
     :param flux_type: The flux type to extract from the FITS file.
-    :param remove_nans: Whether or not to remove nans.
+    :param remove_nans: Whether to remove nans.
     :return: The flux and times values from the FITS file.
     """
     light_curve = load_light_curve_from_fits_file(light_curve_path)
     fluxes = light_curve[flux_type.value]
     flux_errors = light_curve[flux_type.value + '_ERR']
     times = light_curve['TIME']
-    assert times.shape == fluxes.shape
+    if times.shape != fluxes.shape:
+        error_message = f'Times and fluxes arrays must have the same shape, but have shapes ' \
+                        f'{times.shape} and {fluxes.shape}.'
+        raise ValueError(error_message)
     if remove_nans:
         # noinspection PyUnresolvedReferences
         nan_indexes = np.union1d(np.argwhere(np.isnan(fluxes)), np.union1d(np.argwhere(np.isnan(times)),
@@ -350,7 +359,7 @@ def load_fluxes_flux_errors_and_times_from_fits_file(light_curve_path: str | Pat
     return fluxes, flux_errors, times
 
 
-def plot_light_curve_from_mast(tic_id: int, sector: int | None = None, exclude_flux_outliers: bool = False,
+def plot_light_curve_from_mast(tic_id: int, sector: int | None = None, *, exclude_flux_outliers: bool = False,
                                base_data_point_size=3):
     """
     Downloads and plots a light curve from MAST.
@@ -454,8 +463,7 @@ def get_variable_data_frame_for_coordinates(coordinates, radius='21s') -> pd.Dat
     variable_table_list = Vizier.query_region(coordinates, radius=radius, catalog='B/gcvs/gcvs_cat')
     if len(variable_table_list) > 0:
         return variable_table_list[0].to_pandas()
-    else:
-        return pd.DataFrame()
+    return pd.DataFrame()
 
 
 @retry(retry_on_exception=is_common_mast_connection_error, stop_max_attempt_number=10)
@@ -530,8 +538,10 @@ def get_all_tess_spoc_light_curve_observations_chunk(tic_id: int | list[int]) ->
 def get_spoc_tic_id_list_from_mast() -> list[int]:
     sector_data_frames: list[pl.DataFrame] = []
     for sector_index in itertools.count(1):
-        response = requests.get(f'https://archive.stsci.edu/hlsps/tess-spoc/target_lists/s{sector_index:04d}.csv')
-        if response.status_code != 200:
+        response = requests.get(f'https://archive.stsci.edu/hlsps/tess-spoc/target_lists/s{sector_index:04d}.csv',
+                                timeout=600)
+        success_code = 200
+        if response.status_code != success_code:
             break
         csv_string = response.text[1:]  # Remove hashtag from header.
         sector_data_frame = pl.read_csv(StringIO(csv_string))
@@ -606,10 +616,10 @@ def initialize_astroquery():
     Catalogs.TIMEOUT = 2000
     Catalogs.PAGESIZE = 3000
     try:  # Temporary fix for astroquery's update of timeout and pagesize locations.
-        Observations._portal_api_connection.TIMEOUT = 2000
-        Observations._portal_api_connection.PAGESIZE = 3000
-        Catalogs._portal_api_connection.TIMEOUT = 2000
-        Catalogs._portal_api_connection.PAGESIZE = 3000
+        Observations._portal_api_connection.TIMEOUT = 2000  # noqa SLF001
+        Observations._portal_api_connection.PAGESIZE = 3000  # noqa SLF001
+        Catalogs._portal_api_connection.TIMEOUT = 2000  # noqa SLF001
+        Catalogs._portal_api_connection.PAGESIZE = 3000  # noqa SLF001
     except AttributeError:
         pass
 

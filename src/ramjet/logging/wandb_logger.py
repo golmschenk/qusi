@@ -7,13 +7,16 @@ import math
 import multiprocessing
 import queue
 from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING
 
 import plotly
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 import wandb
-from ramjet.photometric_database.light_curve import LightCurve
+
+if TYPE_CHECKING:
+    from ramjet.photometric_database.light_curve import LightCurve
 
 
 class ExampleRequest:
@@ -53,6 +56,7 @@ class WandbLoggableLightCurve(WandbLoggable):
     """
     A wandb loggable light curve.
     """
+
     def __init__(self, light_curve_name: str, light_curve: LightCurve):
         super().__init__()
         self.light_curve_name: str = light_curve_name
@@ -78,6 +82,7 @@ class WandbLoggableInjection(WandbLoggable):
     """
     A wandb loggable containing logging data for injecting a signal into a light curve.
     """
+
     def __init__(self):
         super().__init__()
         self.injectee_name: str | None = None
@@ -133,8 +138,6 @@ class WandbLogger:
     """
     A class to log to wandb.
     """
-    loggable_types = [LightCurve]
-
     def __init__(self):
         manager = multiprocessing.Manager()
         self.lock = manager.Lock()
@@ -162,8 +165,7 @@ class WandbLogger:
                     if isinstance(queue_item, WandbLoggable):
                         queue_item.log(example_queue_name, epoch)
                     else:
-                        msg = f"{queue_item} is not a handled logger type."
-                        raise ValueError(msg)
+                        raise TypeError(f"{queue_item} is not a handled logger type.")
                 except queue.Empty:
                     break
 
@@ -181,7 +183,9 @@ class WandbLogger:
         :param name: The name of the queue.
         :return: The queue.
         """
-        assert name not in self.request_queues
+        if name in self.request_queues:
+            error_message = f'Trying to create queue {name}, but is already exists in the request queues.'
+            raise ValueError(error_message)
         manager = multiprocessing.Manager()
         queue_ = manager.Queue()
         self.request_queues[name] = queue_
@@ -194,7 +198,9 @@ class WandbLogger:
         :param name: The name of the queue.
         :return: The queue.
         """
-        assert name not in self.example_queues
+        if name in self.example_queues:
+            error_message = f'Trying to create queue {name}, but is already exists in the example queues.'
+            raise ValueError(error_message)
         manager = multiprocessing.Manager()
         queue_ = manager.Queue()
         self.example_queues[name] = queue_
@@ -210,9 +216,9 @@ class WandbLogger:
         """
         try:
             request_queue.get(block=False)
-            return True
         except queue.Empty:
             return False
+        return True
 
     @staticmethod
     def submit_loggable(example_queue: multiprocessing.Queue, loggable: WandbLoggable) -> None:

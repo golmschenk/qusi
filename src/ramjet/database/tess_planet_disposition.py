@@ -14,7 +14,7 @@ class Disposition(Enum):
     """
     An enum to represent the possible planet dispositions.
     """
-    PASS = 'Pass'
+    PASS = 'Pass'  # noqa S105 : False positive assuming field is a password field.
     CONDITIONAL = 'Conditional'
     AMBIGUOUS = 'Ambiguous'
     UNLIKELY = 'Unlikely'
@@ -35,7 +35,7 @@ class TessPlanetDisposition(BaseModel):
     """
     A database model for the database entity of a TESS planet disposition.
     """
-    id = AutoField()
+    id = AutoField()  # noqa A003
     transiter: TessTransiter = ForeignKeyField(TessTransiter)
     disposition = CharField(choices=Disposition)
     source = CharField(choices=Source)

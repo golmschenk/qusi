@@ -11,5 +11,5 @@ class TessTarget(BaseModel):
     """
     A model for the TESS target database table.
     """
-    id = AutoField()
+    id = AutoField()  # noqa A003
     tic_id = IntegerField(index=True, unique=True)

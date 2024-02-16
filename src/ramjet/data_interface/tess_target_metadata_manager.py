@@ -1,6 +1,7 @@
 """
 Code for managing the metadata of the TESS targets.
 """
+import logging
 from pathlib import Path
 
 from peewee import IntegerField
@@ -12,7 +13,9 @@ from ramjet.data_interface.metadatabase import (
     metadatabase,
     metadatabase_uuid,
 )
-from ramjet.data_interface.tess_data_interface import TessDataInterface
+from ramjet.data_interface.tess_data_interface import get_tic_id_and_sector_from_file_path
+
+logger = logging.getLogger(__name__)
 
 
 class TessTargetMetadata(MetadatabaseModel):
@@ -27,8 +30,6 @@ class TessTargetMetadataManger:
     """
     A class for managing the metadata of TESS targets.
     """
-    tess_data_interface = TessDataInterface()
-
     def __init__(self):
         self.light_curve_root_directory_path = Path('data/tess_two_minute_cadence_light_curves')
 
@@ -56,7 +57,7 @@ class TessTargetMetadataManger:
         """
         Populates the SQL database based on the light curve files.
         """
-        print('Populating the TESS target light curve metadata table...')
+        logger.info('Populating the TESS target light curve metadata table...')
         path_glob = self.light_curve_root_directory_path.glob('**/*.fits')
         row_count = 0
         batch_paths = []
@@ -69,10 +70,10 @@ class TessTargetMetadataManger:
                     row_count += self.insert_multiple_rows_from_paths_into_database(batch_paths)
                     batch_paths = []
                     batch_dataset_splits = []
-                    print(f'{row_count} rows inserted...', end='\r')
+                    logger.info(f'{row_count} rows inserted...')
             if len(batch_paths) > 0:
                 row_count += self.insert_multiple_rows_from_paths_into_database(batch_paths)
-        print(f'TESS target metadata table populated. {row_count} rows added.')
+        logger.info(f'TESS target metadata table populated. {row_count} rows added.')
 
     def build_table(self):
         """

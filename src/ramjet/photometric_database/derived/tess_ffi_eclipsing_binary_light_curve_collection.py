@@ -1,9 +1,9 @@
 """
 Code representing the collection of TESS two minute cadence light curves containing eclipsing binaries.
 """
-from typing import Union
+from __future__ import annotations
 
-from peewee import Select
+from typing import TYPE_CHECKING
 
 from ramjet.data_interface.tess_eclipsing_binary_metadata_manager import TessEclipsingBinaryMetadata
 from ramjet.data_interface.tess_ffi_light_curve_metadata_manager import TessFfiLightCurveMetadata
@@ -11,13 +11,16 @@ from ramjet.data_interface.tess_transit_metadata_manager import Disposition as T
 from ramjet.data_interface.tess_transit_metadata_manager import TessTransitMetadata
 from ramjet.photometric_database.derived.tess_ffi_light_curve_collection import TessFfiLightCurveCollection
 
+if TYPE_CHECKING:
+    from peewee import Select
+
 
 class TessFfiEclipsingBinaryLightCurveCollection(TessFfiLightCurveCollection):
     """
     A class representing the collection of TESS two minute cadence light curves containing eclipsing binaries.
     """
-    def __init__(self, dataset_splits: Union[list[int], None] = None,
-                 magnitude_range: (Union[float, None], Union[float, None]) = (None, None)):
+    def __init__(self, dataset_splits: list[int] | None = None,
+                 magnitude_range: (float | None, float | None) = (None, None)):
         super().__init__(dataset_splits=dataset_splits, magnitude_range=magnitude_range)
         self.label = 1
 
@@ -38,8 +41,8 @@ class TessFfiAntiEclipsingBinaryForTransitLightCurveCollection(TessFfiLightCurve
     A class representing the collection of TESS two minute cadence light curves flagged as eclipsing binaries which are
     not a suspected transit.
     """
-    def __init__(self, dataset_splits: Union[list[int], None] = None,
-                 magnitude_range: (Union[float, None], Union[float, None]) = (None, None)):
+    def __init__(self, dataset_splits: list[int] | None = None,
+                 magnitude_range: (float | None, float | None) = (None, None)):
         super().__init__(dataset_splits=dataset_splits, magnitude_range=magnitude_range)
         self.label = 0
 

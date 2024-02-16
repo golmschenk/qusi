@@ -2,8 +2,8 @@
 Code for managing the TESS transit metadata.
 """
 import contextlib
+import logging
 import sqlite3
-import warnings
 from enum import Enum
 
 import pandas as pd
@@ -12,6 +12,8 @@ from peewee import CharField, IntegerField
 from ramjet.data_interface.metadatabase import MetadatabaseModel, metadatabase
 from ramjet.data_interface.tess_toi_data_interface import TessToiDataInterface, ToiColumns
 from ramjet.database.tess_planet_disposition import TessPlanetDisposition
+
+logger = logging.getLogger(__name__)
 
 
 class Disposition(Enum):
@@ -41,12 +43,13 @@ class TessTransitMetadataManager:
     """
     A class for managing the TESS transit metadata.
     """
+
     @staticmethod
     def build_table():
         """
         Builds the TESS transit metadata table.
         """
-        print('Building TESS transit metadata table...')
+        logger.info('Building TESS transit metadata table...')
         tess_toi_data_interface = TessToiDataInterface()
         toi_dispositions = tess_toi_data_interface.toi_dispositions
         ctoi_dispositions = tess_toi_data_interface.ctoi_dispositions
@@ -54,7 +57,7 @@ class TessTransitMetadataManager:
         ctoi_filtered_dispositions = ctoi_dispositions.filter([ToiColumns.tic_id.value, ToiColumns.disposition.value])
         all_dispositions = pd.concat([toi_filtered_dispositions, ctoi_filtered_dispositions], ignore_index=True)
         target_grouped_dispositions = all_dispositions.groupby(ToiColumns.tic_id.value)[ToiColumns.disposition.value
-                                                                                        ].apply(set)
+        ].apply(set)
         row_count = 0
         metadatabase.drop_tables([TessTransitMetadata])
         metadatabase.create_tables([TessTransitMetadata])
@@ -68,13 +71,13 @@ class TessTransitMetadataManager:
                 elif 'FP' in disposition_set or 'FA' in disposition_set:
                     database_disposition = Disposition.FALSE_POSITIVE.value
                 else:
-                    warnings.warn(f'Dispositions for TIC {tic_id} are {disposition_set}, which does not contain a known'
-                                  f'disposition.')
+                    logger.warning(f'Dispositions for TIC {tic_id} are {disposition_set}, which does not contain'
+                                   f' a known disposition.')
                     continue
                 row = TessTransitMetadata(tic_id=tic_id, disposition=database_disposition)
                 row.save()
                 row_count += 1
-        print(f'Table built. {row_count} rows added.')
+        logger.info(f'Table built. {row_count} rows added.')
 
     @staticmethod
     def add_tic_ids_as_confirmed(tic_ids: list[int]):
@@ -94,7 +97,7 @@ class TessTransitMetadataManager:
                 transit.disposition = Disposition.CONFIRMED.value
                 transit.save()
                 rows_added += 1
-        print(f'{rows_added} rows added.')
+        logger.info(f'{rows_added} rows added.')
 
 
 if __name__ == '__main__':

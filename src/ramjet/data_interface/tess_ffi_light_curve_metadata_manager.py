@@ -2,6 +2,7 @@
 Code for managing the TESS FFI metadata SQL table.
 """
 import itertools
+import logging
 from pathlib import Path
 
 from peewee import CharField, FloatField, IntegerField, SchemaManager
@@ -14,6 +15,8 @@ from ramjet.data_interface.metadatabase import (
     metadatabase_uuid,
 )
 from ramjet.photometric_database.tess_ffi_light_curve import TessFfiLightCurve
+
+logger = logging.getLogger(__name__)
 
 
 class TessFfiLightCurveMetadata(MetadatabaseModel):
@@ -72,7 +75,7 @@ class TessFfiLightCurveMetadataManager:
         """
         Populates the SQL database based on the light curve files.
         """
-        print('Populating the TESS FFI light curve meta data table...', flush=True)
+        logger.info('Populating the TESS FFI light curve meta data table...')
         single_sector_path_globs = []
         for sector in range(1, 27):
             single_sector_path_glob = self.light_curve_root_directory_path.glob(
@@ -91,10 +94,10 @@ class TessFfiLightCurveMetadataManager:
                 if index % 1000 == 0 and index != 0:
                     self.insert_multiple_rows_from_paths_into_database(batch_paths)
                     batch_paths = []
-                    print(f'{index} rows inserted...', end='\r', flush=True)
+                    logger.info(f'{index} rows inserted...')
             if len(batch_paths) > 0:
                 self.insert_multiple_rows_from_paths_into_database(batch_paths)
-        print(f'TESS FFI light curve meta data table populated. {row_count} rows added.', flush=True)
+        logger.info(f'TESS FFI light curve meta data table populated. {row_count} rows added.')
 
     def build_table(self):
         """

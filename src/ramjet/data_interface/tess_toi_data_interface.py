@@ -1,7 +1,8 @@
-import warnings
+from __future__ import annotations
+
+import logging
 from enum import Enum
 from pathlib import Path
-from typing import Union
 
 import pandas as pd
 import requests
@@ -12,6 +13,7 @@ from ramjet.data_interface.tess_data_interface import (
     get_product_list,
 )
 
+logger = logging.getLogger(__name__)
 
 class ToiColumns(Enum):
     """
@@ -45,8 +47,8 @@ class TessToiDataInterface:
         self.toi_dispositions_path = self.data_directory.joinpath('toi_dispositions.csv')
         self.ctoi_dispositions_path = self.data_directory.joinpath('ctoi_dispositions.csv')
         self.light_curves_directory = self.data_directory.joinpath('light_curves')
-        self.toi_dispositions_: Union[pd.DataFrame, None] = None
-        self.ctoi_dispositions_: Union[pd.DataFrame, None] = None
+        self.toi_dispositions_: pd.DataFrame | None = None
+        self.ctoi_dispositions_: pd.DataFrame | None = None
 
     @property
     def toi_dispositions(self):
@@ -60,7 +62,7 @@ class TessToiDataInterface:
             try:
                 self.update_toi_dispositions_file()
             except requests.exceptions.ConnectionError:
-                warnings.warn('Unable to connect to update TOI file. Attempting to use existing file...')
+                logger.warning('Unable to connect to update TOI file. Attempting to use existing file...')
             self.toi_dispositions_ = self.load_toi_dispositions_in_project_format()
         return self.toi_dispositions_
 
@@ -69,7 +71,7 @@ class TessToiDataInterface:
         Downloads the latest TOI dispositions file.
         """
         toi_csv_url = 'https://exofop.ipac.caltech.edu/tess/download_toi.php?sort=toi&output=csv'
-        response = requests.get(toi_csv_url)
+        response = requests.get(toi_csv_url, timeout=600)
         with self.toi_dispositions_path.open('wb') as csv_file:
             csv_file.write(response.content)
 
@@ -85,7 +87,7 @@ class TessToiDataInterface:
             try:
                 self.update_ctoi_dispositions_file()
             except requests.exceptions.ConnectionError:
-                warnings.warn('Unable to connect to update TOI file. Attempting to use existing file...')
+                logger.warning('Unable to connect to update TOI file. Attempting to use existing file...')
             self.ctoi_dispositions_ = self.load_ctoi_dispositions_in_project_format()
         return self.ctoi_dispositions_
 
@@ -94,7 +96,7 @@ class TessToiDataInterface:
         Downloads the latest CTOI dispositions file.
         """
         ctoi_csv_url = 'https://exofop.ipac.caltech.edu/tess/download_ctoi.php?sort=ctoi&output=csv'
-        response = requests.get(ctoi_csv_url)
+        response = requests.get(ctoi_csv_url, timeout=600)
         with self.ctoi_dispositions_path.open('wb') as csv_file:
             csv_file.write(response.content)
 
@@ -165,11 +167,11 @@ class TessToiDataInterface:
         """
         dispositions_data_frame = self.retrieve_exofop_toi_and_ctoi_planet_disposition_for_tic_id(tic_id)
         if dispositions_data_frame.shape[0] == 0:
-            print('No known ExoFOP dispositions found.')
+            logger.info('No known ExoFOP dispositions found.')
             return
         # Use context options to not truncate printed data.
         with pd.option_context('display.max_rows', None, 'display.max_columns', None, 'display.width', None):
-            print(dispositions_data_frame)
+            logger.info(dispositions_data_frame)
 
     def download_exofop_toi_light_curves_to_directory(self, directory: Path):
         """
@@ -178,13 +180,13 @@ class TessToiDataInterface:
 
         :param directory: The directory to download the light curves to. Defaults to the data interface directory.
         """
-        print("Downloading ExoFOP TOI disposition CSV...")
+        logger.info("Downloading ExoFOP TOI disposition CSV...")
         if isinstance(directory, str):
             directory = Path(directory)
         tic_ids = self.toi_dispositions[ToiColumns.tic_id.value].unique()
-        print('Downloading TESS observation list...')
+        logger.info('Downloading TESS observation list...')
         single_sector_observations = get_all_two_minute_single_sector_observations(tic_ids)
-        print("Downloading light curves which are confirmed or suspected planets in TOI dispositions...")
+        logger.info("Downloading light curves which are confirmed or suspected planets in TOI dispositions...")
         suspected_planet_dispositions = self.toi_dispositions[
             self.toi_dispositions[ToiColumns.disposition.value] != 'FP']
         suspected_planet_observations = pd.merge(single_sector_observations, suspected_planet_dispositions, how='inner',
@@ -194,7 +196,7 @@ class TessToiDataInterface:
             suspected_planet_data_products['productFilename'].str.endswith('lc.fits')]
         suspected_planet_download_manifest = download_products(
             suspected_planet_light_curve_data_products, data_directory=self.data_directory)
-        print(f'Verifying and moving light curves to {directory}...')
+        logger.info(f'Verifying and moving light curves to {directory}...')
         directory.mkdir(parents=True, exist_ok=True)
         for _row_index, row in suspected_planet_download_manifest.iterrows():
             if row['Status'] == 'COMPLETE':

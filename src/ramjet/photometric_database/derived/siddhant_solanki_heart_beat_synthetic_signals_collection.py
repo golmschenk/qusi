@@ -1,6 +1,6 @@
-import re
+from __future__ import annotations
 
-from peewee import Select
+import re
 
 from ramjet.data_interface.tess_ffi_light_curve_metadata_manager import TessFfiLightCurveMetadata
 from ramjet.photometric_database.derived.tess_ffi_light_curve_collection import TessFfiLightCurveCollection
@@ -10,14 +10,18 @@ try:
     from enum import StrEnum
 except ImportError:
     from backports.strenum import StrEnum
-from collections.abc import Iterable
 from pathlib import Path
-from typing import Union
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
 
 from ramjet.photometric_database.light_curve_collection import LightCurveCollection
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from peewee import Select
 
 
 class ColumnName(StrEnum):
@@ -34,7 +38,7 @@ class SiddhantSolankiHeartBeatSyntheticSignalsCollection(LightCurveCollection):
     def get_paths(self) -> Iterable[Path]:
         all_synthetic_signal_paths = self.data_directory.glob('*.txt')
         heart_beat_synthetic_signals = [path for path in all_synthetic_signal_paths
-                                            if re.match(r'generated_lc_\d+.txt', path.name) is not None]
+                                        if re.match(r'generated_lc_\d+.txt', path.name) is not None]
         return heart_beat_synthetic_signals
 
     def load_times_and_magnifications_from_path(self, path: Path) -> (np.ndarray, np.ndarray):
@@ -44,7 +48,10 @@ class SiddhantSolankiHeartBeatSyntheticSignalsCollection(LightCurveCollection):
         magnifications = synthetic_signal_data_frame[ColumnName.MAGNIFICATION].values
         step_size__days = 0.0069444444
         times = np.arange(0, magnifications.shape[0] * step_size__days, step_size__days)
-        assert times.shape[0] == magnifications.shape[0]
+        if times.shape != magnifications.shape:
+            error_message = f'Times and magnifications arrays must have the same shape, but have shapes ' \
+                            f'{times.shape} and {magnifications.shape}.'
+            raise ValueError(error_message)
         return times, magnifications
 
 
@@ -67,18 +74,23 @@ class SiddhantSolankiNonHeartBeatSyntheticSignalsCollection(LightCurveCollection
         magnifications = synthetic_signal_data_frame[ColumnName.MAGNIFICATION].values
         step_size__days = 0.0069444444
         times = np.arange(0, magnifications.shape[0] * step_size__days, step_size__days)
-        assert times.shape[0] == magnifications.shape[0]
+        if times.shape != magnifications.shape:
+            error_message = f'Times and magnifications arrays must have the same shape, but have shapes ' \
+                            f'{times.shape} and {magnifications.shape}.'
+            raise ValueError(error_message)
         return times, magnifications
+
 
 class TessFfiHeartBeatHardNegativeLightcurveCollection(TessFfiLightCurveCollection):
     """
     A class representing the collection of TESS two minute cadence lightcurves containing eclipsing binaries.
     """
-    def __init__(self, dataset_splits: Union[list[int], None] = None,
-                 magnitude_range: (Union[float, None], Union[float, None]) = (None, None)):
+
+    def __init__(self, dataset_splits: list[int] | None = None,
+                 magnitude_range: (float | None, float | None) = (None, None)):
         super().__init__(dataset_splits=dataset_splits, magnitude_range=magnitude_range)
         self.label = 0
-        self.hard_negative_ids = list(pd.read_csv('data/heart_beat_hard_negatives.csv')['tic_id'].values)
+        self.hard_negative_ids = pd.read_csv('data/heart_beat_hard_negatives.csv')['tic_id'].values.tolist()
 
     def get_sql_query(self) -> Select:
         """

@@ -149,7 +149,7 @@ class MicrolensingSyntheticGeneratedDuringRunningSignalCollection(LightCurveColl
 
         return [Path('')]
 
-    def load_times_and_magnifications_from_path(self, path: Path) -> (np.ndarray, np.ndarray):
+    def load_times_and_magnifications_from_path(self, path: Path) -> (np.ndarray, np.ndarray):  # noqa ARG002
         """
         Loads the times and magnifications from a random generated signal.
 

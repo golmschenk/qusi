@@ -1,4 +1,4 @@
-from typing import Union
+from __future__ import annotations
 
 from ramjet.data_interface.moa_data_interface import MoaDataInterface
 from ramjet.photometric_database.derived.moa_survey_light_curve_collection import MoaSurveyLightCurveCollection
@@ -21,7 +21,7 @@ class MoaSurveyBalancedTagDatabase(StandardAndInjectedLightCurveDatabase):
         self.validation_standard_light_curve_collections = self.create_collection_for_each_tag(dataset_splits=[8])
         self.inference_light_curve_collections = self.create_collection_for_each_tag(dataset_splits=[9])
 
-    def create_collection_for_each_tag(self, dataset_splits: Union[list[int], None]
+    def create_collection_for_each_tag(self, dataset_splits: list[int] | None
                                        ) -> list[MoaSurveyLightCurveCollection]:
         """
         Creates a light curve collection for each tag in the survey and assigns the appropriate labels.

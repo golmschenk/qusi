@@ -114,5 +114,8 @@ ignore = [
     "S608",
     "S301",
     "S311",
+    "EM102",  # The improved source readability is worth the loss in readibility of the traceback in my opinion.
+    "TRY003",  # Disabling EM102 makes this rule trigger in areas it shouldn't.
+    "G004",  # The improved source readability is worth the extra string evaluation cost in my opinion.
 ]
 isort.known-first-party = ["qusi", "ramjet"]

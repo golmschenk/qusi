@@ -11,7 +11,7 @@ class TessTransiter(BaseModel):
     """
     A database model for the database entity of a TESS transiter.
     """
-    id = AutoField()
+    id = AutoField()  # noqa A003
     target: TessTarget = ForeignKeyField(TessTarget)
     radius__solar_radii = FloatField(null=True)
     has_known_contamination_ratio = BooleanField(default=True)
