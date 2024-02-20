@@ -23,10 +23,15 @@ class MoaSurveyLightCurveCollection(LightCurveCollection):
     """
     A collection of light curves based on the MOA 9-year survey.
     """
+
     moa_data_interface = MoaDataInterface()
 
-    def __init__(self, survey_tags: list[str], dataset_splits: list[int] | None = None,
-                 label: float | list[float] | np.ndarray | None = None):
+    def __init__(
+        self,
+        survey_tags: list[str],
+        dataset_splits: list[int] | None = None,
+        label: float | list[float] | np.ndarray | None = None,
+    ):
         super().__init__()
         self.label = label
         self.survey_tags: list[str] = survey_tags
@@ -53,16 +58,15 @@ class MoaSurveyLightCurveCollection(LightCurveCollection):
             nvme_path = Path("/lscratch/golmsche").joinpath(path)
             if not nvme_path.exists():
                 nvme_path.parent.mkdir(exist_ok=True, parents=True)
-                nvme_lock_path = nvme_path.parent.joinpath(nvme_path.name + '.lock')
+                nvme_lock_path = nvme_path.parent.joinpath(nvme_path.name + ".lock")
                 lock = FileLock(str(nvme_lock_path))
                 with lock.acquire():
                     if not nvme_path.exists():
-                        nvme_tmp_path = nvme_path.parent.joinpath(nvme_path.name + '.tmp')
+                        nvme_tmp_path = nvme_path.parent.joinpath(nvme_path.name + ".tmp")
                         shutil.copy(path, nvme_tmp_path)
                         nvme_tmp_path.rename(nvme_path)
             return nvme_path
         return path
-
 
     def load_times_and_fluxes_from_path(self, path: Path) -> (np.ndarray, np.ndarray):
         """
@@ -73,8 +77,8 @@ class MoaSurveyLightCurveCollection(LightCurveCollection):
         """
         path = self.move_path_to_nvme(path)
         light_curve_dataframe = pd.read_feather(path)
-        times = light_curve_dataframe['HJD'].values
-        fluxes = light_curve_dataframe['flux'].values
+        times = light_curve_dataframe["HJD"].values
+        fluxes = light_curve_dataframe["flux"].values
         return times, fluxes
 
     def load_times_and_magnifications_from_path(self, path: Path) -> (np.ndarray, np.ndarray):

@@ -19,16 +19,18 @@ def preprocess_times(light_curve_array: np.ndarray) -> None:
     light_curve_array[:, 0] = calculate_time_differences(times)
 
 
-def make_times_and_fluxes_array_uniform_length(arrays: tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]],
-                                               length: int, *, randomize: bool = True) -> (np.ndarray, np.ndarray):
+def make_times_and_fluxes_array_uniform_length(
+    arrays: tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]], length: int, *, randomize: bool = True
+) -> (np.ndarray, np.ndarray):
     times, fluxes = arrays
     light_curve_array = np.stack([times, fluxes], axis=-1)
     uniform_length_light_curve_array = make_uniform_length(light_curve_array, length=length, randomize=randomize)
     return uniform_length_light_curve_array[:, 0], uniform_length_light_curve_array[:, 1]
 
 
-def make_fluxes_and_label_array_uniform_length(arrays: tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]],
-                                               length: int, *, randomize: bool = True) -> (np.ndarray, np.ndarray):
+def make_fluxes_and_label_array_uniform_length(
+    arrays: tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]], length: int, *, randomize: bool = True
+) -> (np.ndarray, np.ndarray):
     times, label = arrays
     uniform_length_times = make_uniform_length(times, length=length, randomize=randomize)
     return uniform_length_times, label
@@ -38,7 +40,7 @@ def make_uniform_length(example: np.ndarray, length: int, *, randomize: bool = T
     """Makes the example a specific length, by clipping those too large and repeating those too small."""
     allowed_channels_dimension = [1, 2]
     if len(example.shape) not in allowed_channels_dimension:  # Only tested for 1D and 2D cases.
-        msg = f'Expected one of {allowed_channels_dimension}, but got {len(example.shape)}.'
+        msg = f"Expected one of {allowed_channels_dimension}, but got {len(example.shape)}."
         raise ValueError(msg)
     if randomize:
         example = randomly_roll_elements(example)
@@ -49,16 +51,16 @@ def make_uniform_length(example: np.ndarray, length: int, *, randomize: bool = T
     else:
         elements_to_repeat = length - example.shape[0]
         if len(example.shape) == 1:
-            example = np.pad(example, (0, elements_to_repeat), mode='wrap')
+            example = np.pad(example, (0, elements_to_repeat), mode="wrap")
         else:
-            example = np.pad(example, ((0, elements_to_repeat), (0, 0)), mode='wrap')
+            example = np.pad(example, ((0, elements_to_repeat), (0, 0)), mode="wrap")
     return example
 
 
 class LightCurveDatabase:
     """A base generalized database for photometric data to be subclassed."""
 
-    def __init__(self, data_directory='data'):
+    def __init__(self, data_directory="data"):
         self.time_steps_per_example = 16000
         self.data_directory: Path = Path(data_directory)
         self.validation_ratio: float = 0.2
@@ -102,25 +104,27 @@ class LightCurveDatabase:
             if self.include_flux_errors_as_channel:
                 expected_channels = 3
                 if light_curve.shape[1] != expected_channels:
-                    msg = f'Expected light curve channels shape of 3, found {light_curve.shape[1]}.'
+                    msg = f"Expected light curve channels shape of 3, found {light_curve.shape[1]}."
                     raise ValueError(msg)
                 light_curve[:, 1], light_curve[:, 2] = normalize_on_percentiles_with_errors(
-                    light_curve[:, 1], light_curve[:, 2])
+                    light_curve[:, 1], light_curve[:, 2]
+                )
             else:
                 expected_channels = 2
                 if light_curve.shape[1] != expected_channels:
-                    msg = f'Expected light curve channels shape of 2, found {light_curve.shape[1]}.'
+                    msg = f"Expected light curve channels shape of 2, found {light_curve.shape[1]}."
                     raise ValueError(msg)
                 light_curve[:, 1] = normalize_on_percentiles(light_curve[:, 1])
         else:
             expected_channels = 1
             if light_curve.shape[1] != expected_channels:
-                msg = f'Expected light curve channels shape of 1, found {light_curve.shape[1]}.'
+                msg = f"Expected light curve channels shape of 1, found {light_curve.shape[1]}."
                 raise ValueError(msg)
             light_curve[:, 0] = normalize_on_percentiles(light_curve[:, 0])
 
-    def build_light_curve_array(self, fluxes: np.ndarray, times: np.ndarray | None = None,
-                                flux_errors: np.ndarray | None = None):
+    def build_light_curve_array(
+        self, fluxes: np.ndarray, times: np.ndarray | None = None, flux_errors: np.ndarray | None = None
+    ):
         """
         Builds the light curve array based on the components required for the specific database setup.
 
@@ -149,8 +153,7 @@ class LightCurveDatabase:
         """
         if not evaluation_mode:
             light_curve = remove_random_elements(light_curve)
-        light_curve = make_uniform_length(light_curve, self.time_steps_per_example,
-                                          randomize=not evaluation_mode)
+        light_curve = make_uniform_length(light_curve, self.time_steps_per_example, randomize=not evaluation_mode)
         self.normalize_fluxes(light_curve)
         if self.include_time_as_channel:
             preprocess_times(light_curve)
@@ -227,8 +230,9 @@ def randomly_roll_elements(example: np.ndarray) -> np.ndarray:
     return example
 
 
-def extract_shuffled_chunk_and_remainder(array_to_extract_from: list | np.ndarray, chunk_ratio: float,
-                                         chunk_to_extract_index: int = 0) -> (np.ndarray, np.ndarray):
+def extract_shuffled_chunk_and_remainder(
+    array_to_extract_from: list | np.ndarray, chunk_ratio: float, chunk_to_extract_index: int = 0
+) -> (np.ndarray, np.ndarray):
     """
     Shuffles an array, extracts a chunk of the data, and returns the chunk and remainder of the array.
 

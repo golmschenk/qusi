@@ -18,10 +18,12 @@ if TYPE_CHECKING:
 
 
 class TessTwoMinuteCadenceConfirmedTransitLightCurveCollection(
-    TessTwoMinuteCadenceTargetDatasetSplitLightCurveCollection):
+    TessTwoMinuteCadenceTargetDatasetSplitLightCurveCollection
+):
     """
     A class representing the collection of TESS two minute cadence light curves containing transits.
     """
+
     def __init__(self, dataset_splits: list[int] | None = None):
         super().__init__(dataset_splits=dataset_splits)
         self.label = 1
@@ -34,16 +36,19 @@ class TessTwoMinuteCadenceConfirmedTransitLightCurveCollection(
         """
         query = super().get_sql_query()
         transit_tic_id_query = TessTransitMetadata.select(TessTransitMetadata.tic_id).where(
-            TessTransitMetadata.disposition == Disposition.CONFIRMED.value)
+            TessTransitMetadata.disposition == Disposition.CONFIRMED.value
+        )
         query = query.where(TessTwoMinuteCadenceLightCurveMetadata.tic_id.in_(transit_tic_id_query))
         return query
 
 
 class TessTwoMinuteCadenceConfirmedAndCandidateTransitLightCurveCollection(
-    TessTwoMinuteCadenceTargetDatasetSplitLightCurveCollection):
+    TessTwoMinuteCadenceTargetDatasetSplitLightCurveCollection
+):
     """
     A class representing the collection of TESS two minute cadence light curves containing transits.
     """
+
     def __init__(self, dataset_splits: list[int] | None = None):
         super().__init__(dataset_splits=dataset_splits)
         self.label = 1
@@ -56,8 +61,9 @@ class TessTwoMinuteCadenceConfirmedAndCandidateTransitLightCurveCollection(
         """
         query = super().get_sql_query()
         transit_tic_id_query = TessTransitMetadata.select(TessTransitMetadata.tic_id).where(
-            (TessTransitMetadata.disposition == Disposition.CONFIRMED.value) |
-            (TessTransitMetadata.disposition == Disposition.CANDIDATE.value))
+            (TessTransitMetadata.disposition == Disposition.CONFIRMED.value)
+            | (TessTransitMetadata.disposition == Disposition.CANDIDATE.value)
+        )
         query = query.where(TessTwoMinuteCadenceLightCurveMetadata.tic_id.in_(transit_tic_id_query))
         return query
 
@@ -66,6 +72,7 @@ class TessTwoMinuteCadenceNonTransitLightCurveCollection(TessTwoMinuteCadenceTar
     """
     A class representing the collection of TESS two minute cadence light curves containing transits.
     """
+
     def __init__(self, dataset_splits: list[int] | None = None):
         super().__init__(dataset_splits=dataset_splits)
         self.label = 0
@@ -78,7 +85,8 @@ class TessTwoMinuteCadenceNonTransitLightCurveCollection(TessTwoMinuteCadenceTar
         """
         query = super().get_sql_query()
         transit_candidate_tic_id_query = TessTransitMetadata.select(TessTransitMetadata.tic_id).where(
-            (TessTransitMetadata.disposition == Disposition.CONFIRMED.value) |
-            (TessTransitMetadata.disposition == Disposition.CANDIDATE.value))
+            (TessTransitMetadata.disposition == Disposition.CONFIRMED.value)
+            | (TessTransitMetadata.disposition == Disposition.CANDIDATE.value)
+        )
         query = query.where(TessTwoMinuteCadenceLightCurveMetadata.tic_id.not_in(transit_candidate_tic_id_query))
         return query

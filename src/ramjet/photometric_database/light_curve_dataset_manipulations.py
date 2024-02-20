@@ -11,27 +11,30 @@ class OutOfBoundsInjectionHandlingMethod(Enum):
     """
     An enum of approaches for handling cases where the injectable signal is shorter than the injectee signal.
     """
-    ERROR = 'error'
-    REPEAT_SIGNAL = 'repeat_signal'
-    RANDOM_INJECTION_LOCATION = 'random_inject_location'
+
+    ERROR = "error"
+    REPEAT_SIGNAL = "repeat_signal"
+    RANDOM_INJECTION_LOCATION = "random_inject_location"
 
 
 class BaselineFluxEstimationMethod(Enum):
     """
     An enum of to designate the type of baseline flux estimation method to use during training.
     """
-    MEDIAN = 'median'
-    MEDIAN_ABSOLUTE_DEVIATION = 'median_absolute_deviation'
+
+    MEDIAN = "median"
+    MEDIAN_ABSOLUTE_DEVIATION = "median_absolute_deviation"
 
 
 def inject_signal_into_light_curve_with_intermediates(
-        light_curve_times: npt.NDArray[np.float64],
-        light_curve_fluxes: npt.NDArray[np.float64],
-        signal_times: npt.NDArray[np.float64],
-        signal_magnifications: npt.NDArray[np.float64],
-        out_of_bounds_injection_handling_method: OutOfBoundsInjectionHandlingMethod =
-        OutOfBoundsInjectionHandlingMethod.ERROR,
-        baseline_flux_estimation_method: BaselineFluxEstimationMethod = BaselineFluxEstimationMethod.MEDIAN
+    light_curve_times: npt.NDArray[np.float64],
+    light_curve_fluxes: npt.NDArray[np.float64],
+    signal_times: npt.NDArray[np.float64],
+    signal_magnifications: npt.NDArray[np.float64],
+    out_of_bounds_injection_handling_method: OutOfBoundsInjectionHandlingMethod = (
+        OutOfBoundsInjectionHandlingMethod.ERROR
+    ),
+    baseline_flux_estimation_method: BaselineFluxEstimationMethod = BaselineFluxEstimationMethod.MEDIAN,
 ) -> (npt.NDArray[np.float64], npt.NDArray[np.float64], npt.NDArray[np.float64]):
     """
     Injects a synthetic magnification signal into real light curve fluxes.
@@ -62,8 +65,10 @@ def inject_signal_into_light_curve_with_intermediates(
     signal_fluxes = (signal_magnifications * baseline_flux) - baseline_flux
     if out_of_bounds_injection_handling_method is OutOfBoundsInjectionHandlingMethod.RANDOM_INJECTION_LOCATION:
         signal_flux_interpolator = interp1d(offset_signal_times, signal_fluxes, bounds_error=False, fill_value=0)
-    elif (out_of_bounds_injection_handling_method is OutOfBoundsInjectionHandlingMethod.REPEAT_SIGNAL and
-          time_length_difference > 0):
+    elif (
+        out_of_bounds_injection_handling_method is OutOfBoundsInjectionHandlingMethod.REPEAT_SIGNAL
+        and time_length_difference > 0
+    ):
         before_signal_gap = signal_start_offset - minimum_light_curve_time
         after_signal_gap = time_length_difference - before_signal_gap
         minimum_signal_time_step = np.min(np.diff(offset_signal_times))

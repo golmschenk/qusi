@@ -70,11 +70,8 @@ class WandbLoggableLightCurve(WandbLoggable):
         :param epoch: The current epoch to log with.
         """
         figure = go.Figure()
-        figure.add_trace(go.Scatter(x=self.light_curve.times,
-                                    y=self.light_curve.fluxes,
-                                    mode='lines+markers'))
-        figure.update_layout(title=self.light_curve_name,
-                             margin={'l': 0, 'r': 0, 'b': 0, 't': 0})
+        figure.add_trace(go.Scatter(x=self.light_curve.times, y=self.light_curve.fluxes, mode="lines+markers"))
+        figure.update_layout(title=self.light_curve_name, margin={"l": 0, "r": 0, "b": 0, "t": 0})
         self.log_figure(summary_name, figure, epoch)
 
 
@@ -104,33 +101,77 @@ class WandbLoggableInjection(WandbLoggable):
         :param epoch: The current epoch to log with.
         """
         figure = make_subplots(rows=3, cols=1)
-        figure.add_trace(go.Scatter(x=self.injectee_light_curve.times,
-                                    y=self.injectee_light_curve.fluxes,
-                                    mode='lines+markers', name="injectee"), row=1, col=1)
-        figure.add_trace(go.Scatter(x=self.injectable_light_curve.times,
-                                    y=self.injectable_light_curve.fluxes,
-                                    mode='lines+markers', name="injectable"), row=2, col=1)
-        figure.add_trace(go.Scatter(x=self.injected_light_curve.times,
-                                    y=self.injected_light_curve.fluxes,
-                                    mode='lines+markers', name="injected"), row=3, col=1)
-        figure.update_layout(title_text=f"{self.injectable_name} injected into "
-                                        f"{self.injectee_name}",
-                             margin={'l': 0, 'r': 0, 'b': 0, 't': 0})
+        figure.add_trace(
+            go.Scatter(
+                x=self.injectee_light_curve.times,
+                y=self.injectee_light_curve.fluxes,
+                mode="lines+markers",
+                name="injectee",
+            ),
+            row=1,
+            col=1,
+        )
+        figure.add_trace(
+            go.Scatter(
+                x=self.injectable_light_curve.times,
+                y=self.injectable_light_curve.fluxes,
+                mode="lines+markers",
+                name="injectable",
+            ),
+            row=2,
+            col=1,
+        )
+        figure.add_trace(
+            go.Scatter(
+                x=self.injected_light_curve.times,
+                y=self.injected_light_curve.fluxes,
+                mode="lines+markers",
+                name="injected",
+            ),
+            row=3,
+            col=1,
+        )
+        figure.update_layout(
+            title_text=f"{self.injectable_name} injected into " f"{self.injectee_name}",
+            margin={"l": 0, "r": 0, "b": 0, "t": 0},
+        )
         self.log_figure(summary_name, figure, epoch)
         aligned_figure = make_subplots(rows=2, cols=1, shared_xaxes=True)
-        aligned_figure.add_trace(go.Scatter(x=self.aligned_injectee_light_curve.times,
-                                            y=self.aligned_injectee_light_curve.fluxes,
-                                            mode='lines+markers', name="injectee"), row=1, col=1)
-        aligned_figure.add_trace(go.Scatter(x=self.aligned_injectable_light_curve.times,
-                                            y=self.aligned_injectable_light_curve.fluxes,
-                                            mode='lines+markers', name="injectable"), row=2, col=1)
-        aligned_figure.add_trace(go.Scatter(x=self.aligned_injected_light_curve.times,
-                                            y=self.aligned_injected_light_curve.fluxes,
-                                            mode='lines+markers', name="injected"), row=1, col=1)
-        aligned_figure.update_layout(title_text=f"Aligned {self.injectable_name} injected into "
-                                                f"{self.injectee_name}",
-                                     margin={'l': 0, 'r': 0, 'b': 0, 't': 0})
-        aligned_summary_name = summary_name + 'aligned'
+        aligned_figure.add_trace(
+            go.Scatter(
+                x=self.aligned_injectee_light_curve.times,
+                y=self.aligned_injectee_light_curve.fluxes,
+                mode="lines+markers",
+                name="injectee",
+            ),
+            row=1,
+            col=1,
+        )
+        aligned_figure.add_trace(
+            go.Scatter(
+                x=self.aligned_injectable_light_curve.times,
+                y=self.aligned_injectable_light_curve.fluxes,
+                mode="lines+markers",
+                name="injectable",
+            ),
+            row=2,
+            col=1,
+        )
+        aligned_figure.add_trace(
+            go.Scatter(
+                x=self.aligned_injected_light_curve.times,
+                y=self.aligned_injected_light_curve.fluxes,
+                mode="lines+markers",
+                name="injected",
+            ),
+            row=1,
+            col=1,
+        )
+        aligned_figure.update_layout(
+            title_text=f"Aligned {self.injectable_name} injected into " f"{self.injectee_name}",
+            margin={"l": 0, "r": 0, "b": 0, "t": 0},
+        )
+        aligned_summary_name = summary_name + "aligned"
         self.log_figure(aligned_summary_name, aligned_figure, epoch)
 
 
@@ -138,6 +179,7 @@ class WandbLogger:
     """
     A class to log to wandb.
     """
+
     def __init__(self):
         manager = multiprocessing.Manager()
         self.lock = manager.Lock()
@@ -151,7 +193,7 @@ class WandbLogger:
 
         :return: The logger.
         """
-        wandb.init(entity=entity, project=project, settings=wandb.Settings(start_method='fork'))
+        wandb.init(entity=entity, project=project, settings=wandb.Settings(start_method="fork"))
         return cls()
 
     def process_py_mapper_example_queues(self, epoch: int) -> None:
@@ -184,7 +226,7 @@ class WandbLogger:
         :return: The queue.
         """
         if name in self.request_queues:
-            error_message = f'Trying to create queue {name}, but is already exists in the request queues.'
+            error_message = f"Trying to create queue {name}, but is already exists in the request queues."
             raise ValueError(error_message)
         manager = multiprocessing.Manager()
         queue_ = manager.Queue()
@@ -199,7 +241,7 @@ class WandbLogger:
         :return: The queue.
         """
         if name in self.example_queues:
-            error_message = f'Trying to create queue {name}, but is already exists in the example queues.'
+            error_message = f"Trying to create queue {name}, but is already exists in the example queues."
             raise ValueError(error_message)
         manager = multiprocessing.Manager()
         queue_ = manager.Queue()
@@ -247,4 +289,4 @@ class WandbLogger:
         if base in {0, 1}:
             return number == base
         power = int(math.log(number, base) + 0.5)
-        return base ** power == number
+        return base**power == number

@@ -10,7 +10,8 @@ class SimpleLightCurveCollection(LightCurveCollection):
     """
     A simple positive and negative directory based light curve collection.
     """
-    def __init__(self, collection_directory: Path = Path('data/simple_test_dataset')):
+
+    def __init__(self, collection_directory: Path = Path("data/simple_test_dataset")):
         super().__init__()
         self.collection_directory = collection_directory
 
@@ -20,7 +21,7 @@ class SimpleLightCurveCollection(LightCurveCollection):
 
         :return: An iterable of the light curve paths.
         """
-        return self.collection_directory.glob('**/*.npz')
+        return self.collection_directory.glob("**/*.npz")
 
     def load_times_and_fluxes_from_path(self, path: Path) -> (np.ndarray, np.ndarray):
         """
@@ -30,6 +31,6 @@ class SimpleLightCurveCollection(LightCurveCollection):
         :return: The times and the fluxes of the light curve.
         """
         contents = np.load(str(path))
-        times = contents['times']
-        fluxes = contents['fluxes']
+        times = contents["times"]
+        fluxes = contents["fluxes"]
         return times, fluxes

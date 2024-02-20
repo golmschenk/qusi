@@ -18,14 +18,15 @@ class MoaMicrolensingDatabase(StandardAndInjectedLightCurveDatabase):
         super().__init__()
         self.training_standard_light_curve_collections = [
             MOAPositiveMicrolensingLightCurveCollection(dataset_splits=[0, 2, 3, 4], split_pieces=5),
-            MOANegativeMicrolensingLightCurveCollection(dataset_splits=[0, 2, 3, 4], split_pieces=5)
+            MOANegativeMicrolensingLightCurveCollection(dataset_splits=[0, 2, 3, 4], split_pieces=5),
         ]
         self.validation_standard_light_curve_collections = [
             MOAPositiveMicrolensingLightCurveCollection(dataset_splits=[1], split_pieces=5),
-            MOANegativeMicrolensingLightCurveCollection(dataset_splits=[1], split_pieces=5)
+            MOANegativeMicrolensingLightCurveCollection(dataset_splits=[1], split_pieces=5),
         ]
-        self.inference_light_curve_collections = MOANegativeMicrolensingLightCurveCollection(dataset_splits=[1],
-                                                                                             split_pieces=5)
+        self.inference_light_curve_collections = MOANegativeMicrolensingLightCurveCollection(
+            dataset_splits=[1], split_pieces=5
+        )
 
 
 class MoaMicrolensingWithSyntheticDatabase(StandardAndInjectedLightCurveDatabase):
@@ -39,7 +40,7 @@ class MoaMicrolensingWithSyntheticDatabase(StandardAndInjectedLightCurveDatabase
         self.allow_out_of_bounds_injection = True
         self.training_standard_light_curve_collections = [
             MOAPositiveMicrolensingLightCurveCollection(),
-            MOANegativeMicrolensingLightCurveCollection()
+            MOANegativeMicrolensingLightCurveCollection(),
         ]
         self.training_injectee_light_curve_collection = MOANegativeMicrolensingLightCurveCollection()
         self.training_injectable_light_curve_collections = MicrolensingSyntheticGeneratedDuringRunningSignalCollection()

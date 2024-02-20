@@ -16,13 +16,14 @@ class ToyLightCurveCollection(LightCurveCollection):
     """
     A collection of simple toy light curves.
     """
+
     def get_paths(self) -> Iterable[Path]:
         """
         Gets the paths for the light curves in the collection.
 
         :return: An iterable of the light curve paths.
         """
-        return [Path('')]
+        return [Path("")]
 
 
 class ToyFlatLightCurveCollection(ToyLightCurveCollection):
@@ -40,7 +41,7 @@ class ToyFlatAtValueLightCurveCollection(ToyLightCurveCollection):
         super().__init__()
 
     def get_paths(self) -> Iterable[Path]:
-        paths = [Path(f'{index}') for index in range(10)]
+        paths = [Path(f"{index}") for index in range(10)]
         return paths
 
     def load_times_and_fluxes_from_path(self, path: Path) -> (np.ndarray, np.ndarray):

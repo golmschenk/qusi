@@ -23,13 +23,14 @@ if TYPE_CHECKING:
 
 
 def inject_signal_into_light_curve(
-        light_curve_times: npt.NDArray[np.float64],
-        light_curve_fluxes: npt.NDArray[np.float64],
-        signal_times: npt.NDArray[np.float64],
-        signal_magnifications: npt.NDArray[np.float64],
-        out_of_bounds_injection_handling_method: OutOfBoundsInjectionHandlingMethod =
-        OutOfBoundsInjectionHandlingMethod.ERROR,
-        baseline_flux_estimation_method: BaselineFluxEstimationMethod = BaselineFluxEstimationMethod.MEDIAN
+    light_curve_times: npt.NDArray[np.float64],
+    light_curve_fluxes: npt.NDArray[np.float64],
+    signal_times: npt.NDArray[np.float64],
+    signal_magnifications: npt.NDArray[np.float64],
+    out_of_bounds_injection_handling_method: OutOfBoundsInjectionHandlingMethod = (
+        OutOfBoundsInjectionHandlingMethod.ERROR
+    ),
+    baseline_flux_estimation_method: BaselineFluxEstimationMethod = BaselineFluxEstimationMethod.MEDIAN,
 ) -> npt.NDArray[np.float64]:
     """
     Injects a synthetic magnification signal into real light curve fluxes.
@@ -49,7 +50,7 @@ def inject_signal_into_light_curve(
         signal_times=signal_times,
         signal_magnifications=signal_magnifications,
         out_of_bounds_injection_handling_method=out_of_bounds_injection_handling_method,
-        baseline_flux_estimation_method=baseline_flux_estimation_method
+        baseline_flux_estimation_method=baseline_flux_estimation_method,
     )
     return fluxes_with_injected_signal
 
@@ -72,8 +73,9 @@ class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
         self.shuffle_buffer_size = 10000
         self.number_of_label_values = 1
         self.number_of_auxiliary_values: int = 0
-        self.out_of_bounds_injection_handling: OutOfBoundsInjectionHandlingMethod = \
+        self.out_of_bounds_injection_handling: OutOfBoundsInjectionHandlingMethod = (
             OutOfBoundsInjectionHandlingMethod.ERROR
+        )
         self.baseline_flux_estimation_method = BaselineFluxEstimationMethod.MEDIAN
         self.logger: WandbLogger | None = None
 
@@ -100,14 +102,21 @@ class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
         :return: The updated map function.
         """
         if self.logger is not None:
-            preprocess_map_function = partial(preprocess_map_function,
-                                              request_queue=self.logger.create_request_queue_for_collection(name),
-                                              example_queue=self.logger.create_example_queue_for_collection(name))
+            preprocess_map_function = partial(
+                preprocess_map_function,
+                request_queue=self.logger.create_request_queue_for_collection(name),
+                example_queue=self.logger.create_example_queue_for_collection(name),
+            )
         return preprocess_map_function
 
-    def inject_signal_into_light_curve(self, light_curve_fluxes: np.ndarray, light_curve_times: np.ndarray,
-                                       signal_magnifications: np.ndarray, signal_times: np.ndarray,
-                                       wandb_loggable_injection: WandbLoggableInjection | None = None) -> np.ndarray:
+    def inject_signal_into_light_curve(
+        self,
+        light_curve_fluxes: np.ndarray,
+        light_curve_times: np.ndarray,
+        signal_magnifications: np.ndarray,
+        signal_times: np.ndarray,
+        wandb_loggable_injection: WandbLoggableInjection | None = None,
+    ) -> np.ndarray:
         """
         Injects a synthetic magnification signal into real light curve fluxes.
 
@@ -120,18 +129,28 @@ class StandardAndInjectedLightCurveDatabase(LightCurveDatabase):
         """
         out_of_bounds_injection_handling_method = self.out_of_bounds_injection_handling
         baseline_flux_estimation_method = self.baseline_flux_estimation_method
-        fluxes_with_injected_signal, offset_signal_times, signal_fluxes = (
-            inject_signal_into_light_curve_with_intermediates(
-                light_curve_times, light_curve_fluxes, signal_times, signal_magnifications,
-                out_of_bounds_injection_handling_method, baseline_flux_estimation_method)
+        (
+            fluxes_with_injected_signal,
+            offset_signal_times,
+            signal_fluxes,
+        ) = inject_signal_into_light_curve_with_intermediates(
+            light_curve_times,
+            light_curve_fluxes,
+            signal_times,
+            signal_magnifications,
+            out_of_bounds_injection_handling_method,
+            baseline_flux_estimation_method,
         )
         if wandb_loggable_injection is not None:
             wandb_loggable_injection.aligned_injectee_light_curve = LightCurve.from_times_and_fluxes(
-                light_curve_times, light_curve_fluxes)
+                light_curve_times, light_curve_fluxes
+            )
             wandb_loggable_injection.aligned_injectable_light_curve = LightCurve.from_times_and_fluxes(
-                offset_signal_times, signal_fluxes)
+                offset_signal_times, signal_fluxes
+            )
             wandb_loggable_injection.aligned_injected_light_curve = LightCurve.from_times_and_fluxes(
-                light_curve_times, fluxes_with_injected_signal)
+                light_curve_times, fluxes_with_injected_signal
+            )
         return fluxes_with_injected_signal
 
 

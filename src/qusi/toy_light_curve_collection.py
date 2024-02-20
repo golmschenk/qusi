@@ -39,7 +39,7 @@ def toy_light_curve_get_paths_function() -> list[Path]:
     """
     A fake function to fulfill the need of returning a list of paths.
     """
-    return [Path('')]
+    return [Path("")]
 
 
 def toy_flat_light_curve_load_times_and_fluxes(_path: Path) -> (np.ndarray, np.ndarray):
@@ -61,11 +61,11 @@ def toy_sine_wave_light_curve_load_times_and_fluxes(_path: Path) -> (np.ndarray,
 toy_flat_light_curve_collection = LabeledLightCurveCollection.new(
     get_paths_function=toy_light_curve_get_paths_function,
     load_times_and_fluxes_from_path_function=toy_flat_light_curve_load_times_and_fluxes,
-    load_label_from_path_function=create_constant_label_for_path_function(0)
+    load_label_from_path_function=create_constant_label_for_path_function(0),
 )
 
 toy_sine_wave_light_curve_collection = LabeledLightCurveCollection.new(
     get_paths_function=toy_light_curve_get_paths_function,
     load_times_and_fluxes_from_path_function=toy_sine_wave_light_curve_load_times_and_fluxes,
-    load_label_from_path_function=create_constant_label_for_path_function(1)
+    load_label_from_path_function=create_constant_label_for_path_function(1),
 )

@@ -13,17 +13,20 @@ class TrainLoggingConfiguration:
     :ivar wandb_entity: The wandb entity to log to.
     :ivar additional_log_dictionary: The dictionary of additional values to log.
     """
+
     wandb_project: str | None
     wandb_entity: str | None
     additional_log_dictionary: dict[str, Any]
 
     @classmethod
-    def new(cls,
-            wandb_project: str | None = None,
-            wandb_entity: str | None = None,
-            additional_log_dictionary: dict[str, Any] | None = None):
+    def new(
+        cls,
+        wandb_project: str | None = None,
+        wandb_entity: str | None = None,
+        additional_log_dictionary: dict[str, Any] | None = None,
+    ):
         if additional_log_dictionary is None:
             additional_log_dictionary = {}
-        return cls(wandb_project=wandb_project,
-                   wandb_entity=wandb_entity,
-                   additional_log_dictionary=additional_log_dictionary)
+        return cls(
+            wandb_project=wandb_project, wandb_entity=wandb_entity, additional_log_dictionary=additional_log_dictionary
+        )

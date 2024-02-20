@@ -15,6 +15,7 @@ class MoaSurveyNoneSingleAndBinaryDatabase(StandardAndInjectedLightCurveDatabase
     A class for a database of MOA light curves including non-microlensing, single lensing, and binary lensing
     collections.
     """
+
     moa_data_interface = MoaDataInterface()
 
     def __init__(self):
@@ -28,28 +29,32 @@ class MoaSurveyNoneSingleAndBinaryDatabase(StandardAndInjectedLightCurveDatabase
         # self.include_time_as_channel = True
         # self.include_flux_errors_as_channel = True
         negative_training = MoaSurveyLightCurveCollection(
-            survey_tags=['v', 'n', 'nr', 'm', 'j', self.moa_data_interface.no_tag_string], label=[0, 0],
-            dataset_splits=list(range(8)))
+            survey_tags=["v", "n", "nr", "m", "j", self.moa_data_interface.no_tag_string],
+            label=[0, 0],
+            dataset_splits=list(range(8)),
+        )
         self.training_standard_light_curve_collections = [
             negative_training,
-            MoaSurveyLightCurveCollection(survey_tags=['c', 'cf', 'cp', 'cw', 'cs'], label=[1, 0],
-                                          dataset_splits=list(range(8))),
-            MoaSurveyLightCurveCollection(survey_tags=['cb'], label=[1, 1],
-                                          dataset_splits=list(range(8)))
+            MoaSurveyLightCurveCollection(
+                survey_tags=["c", "cf", "cp", "cw", "cs"], label=[1, 0], dataset_splits=list(range(8))
+            ),
+            MoaSurveyLightCurveCollection(survey_tags=["cb"], label=[1, 1], dataset_splits=list(range(8))),
         ]
         self.validation_standard_light_curve_collections = [
-            MoaSurveyLightCurveCollection(survey_tags=['v', 'n', 'nr', 'm', 'j', self.moa_data_interface.no_tag_string],
-                                          label=[0, 0], dataset_splits=[8]),
-            MoaSurveyLightCurveCollection(survey_tags=['c', 'cf', 'cp', 'cw', 'cs'], label=[1, 0],
-                                          dataset_splits=[8]),
-            MoaSurveyLightCurveCollection(survey_tags=['cb'], label=[1, 1],
-                                          dataset_splits=[8])
+            MoaSurveyLightCurveCollection(
+                survey_tags=["v", "n", "nr", "m", "j", self.moa_data_interface.no_tag_string],
+                label=[0, 0],
+                dataset_splits=[8],
+            ),
+            MoaSurveyLightCurveCollection(survey_tags=["c", "cf", "cp", "cw", "cs"], label=[1, 0], dataset_splits=[8]),
+            MoaSurveyLightCurveCollection(survey_tags=["cb"], label=[1, 1], dataset_splits=[8]),
         ]
         self.inference_light_curve_collections = [
-            MoaSurveyLightCurveCollection(survey_tags=['v', 'n', 'nr', 'm', 'j', self.moa_data_interface.no_tag_string],
-                                          label=[0, 0], dataset_splits=[9]),
-            MoaSurveyLightCurveCollection(survey_tags=['c', 'cf', 'cp', 'cw', 'cs'], label=[1, 0],
-                                          dataset_splits=[9]),
-            MoaSurveyLightCurveCollection(survey_tags=['cb'], label=[1, 1],
-                                          dataset_splits=[9])
+            MoaSurveyLightCurveCollection(
+                survey_tags=["v", "n", "nr", "m", "j", self.moa_data_interface.no_tag_string],
+                label=[0, 0],
+                dataset_splits=[9],
+            ),
+            MoaSurveyLightCurveCollection(survey_tags=["c", "cf", "cp", "cw", "cs"], label=[1, 0], dataset_splits=[9]),
+            MoaSurveyLightCurveCollection(survey_tags=["cb"], label=[1, 1], dataset_splits=[9]),
         ]

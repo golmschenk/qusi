@@ -31,7 +31,7 @@ class MOAPositiveMicrolensingLightCurveCollection(LightCurveCollection):
 
         :return: An iterable of the light curve paths.
         """
-        paths = Path('/local/data/fugu3/sishitan/ramjet/data/moa_microlensing/positive').glob('*.feather')
+        paths = Path("/local/data/fugu3/sishitan/ramjet/data/moa_microlensing/positive").glob("*.feather")
         path_list = list(paths)
         random.seed(42)
         random.shuffle(path_list)
@@ -40,11 +40,11 @@ class MOAPositiveMicrolensingLightCurveCollection(LightCurveCollection):
         dataset_paths = []
         for block in self.dataset_splits:
             if block == (self.split_pieces - 1):
-                dataset_paths += path_list[
-                                 block * number_of_samples_per_block:]
+                dataset_paths += path_list[block * number_of_samples_per_block :]
             else:
                 dataset_paths += path_list[
-                                 block * number_of_samples_per_block:(block + 1) * number_of_samples_per_block]
+                    block * number_of_samples_per_block : (block + 1) * number_of_samples_per_block
+                ]
         return dataset_paths
 
     def load_times_and_fluxes_from_path(self, path: Path) -> (np.ndarray, np.ndarray):
@@ -55,8 +55,8 @@ class MOAPositiveMicrolensingLightCurveCollection(LightCurveCollection):
         :return: The times and the fluxes of the light curve.
         """
         light_curve_dataframe = pd.read_feather(path)
-        times = light_curve_dataframe['HJD'].values
-        fluxes = light_curve_dataframe['flux'].values
+        times = light_curve_dataframe["HJD"].values
+        fluxes = light_curve_dataframe["flux"].values
         return times, fluxes
 
 
@@ -79,7 +79,7 @@ class MOANegativeMicrolensingLightCurveCollection(LightCurveCollection):
 
         :return: An iterable of the light curve paths.
         """
-        paths = Path('/local/data/fugu3/sishitan/ramjet/data/moa_microlensing/negative').glob('*.feather')
+        paths = Path("/local/data/fugu3/sishitan/ramjet/data/moa_microlensing/negative").glob("*.feather")
         path_list = list(paths)
         random.seed(42)
         random.shuffle(path_list)
@@ -88,11 +88,11 @@ class MOANegativeMicrolensingLightCurveCollection(LightCurveCollection):
         dataset_paths = []
         for block in self.dataset_splits:
             if block == (self.split_pieces - 1):
-                dataset_paths += path_list[
-                                 block * number_of_samples_per_block:]
+                dataset_paths += path_list[block * number_of_samples_per_block :]
             else:
                 dataset_paths += path_list[
-                                 block * number_of_samples_per_block:(block + 1) * number_of_samples_per_block]
+                    block * number_of_samples_per_block : (block + 1) * number_of_samples_per_block
+                ]
         return dataset_paths
 
     def load_times_and_fluxes_from_path(self, path: Path) -> (np.ndarray, np.ndarray):
@@ -103,8 +103,8 @@ class MOANegativeMicrolensingLightCurveCollection(LightCurveCollection):
         :return: The times and the fluxes of the light curve.
         """
         light_curve_dataframe = pd.read_feather(path)
-        times = light_curve_dataframe['HJD'].values
-        fluxes = light_curve_dataframe['flux'].values
+        times = light_curve_dataframe["HJD"].values
+        fluxes = light_curve_dataframe["flux"].values
         return times, fluxes
 
 
@@ -119,7 +119,7 @@ class MicrolensingSyntheticPSPLSignalCollection(LightCurveCollection):
 
         :return: An iterable of the light curve paths.
         """
-        paths = Path('/local/data/fugu3/sishitan/muLAn_project/PSPL').glob('*.feather')
+        paths = Path("/local/data/fugu3/sishitan/muLAn_project/PSPL").glob("*.feather")
         return paths
 
     def load_times_and_magnifications_from_path(self, path: Path) -> (np.ndarray, np.ndarray):
@@ -130,8 +130,8 @@ class MicrolensingSyntheticPSPLSignalCollection(LightCurveCollection):
         :return: The times and the magnifications of the light curve/signal.
         """
         signal_dataframe = pd.read_feather(path)
-        times = signal_dataframe['Time'].values
-        magnifications = signal_dataframe['Magnification'].values
+        times = signal_dataframe["Time"].values
+        magnifications = signal_dataframe["Magnification"].values
         return times, magnifications
 
 
@@ -147,7 +147,7 @@ class MicrolensingSyntheticGeneratedDuringRunningSignalCollection(LightCurveColl
         :return: empty generator.
         """
 
-        return [Path('')]
+        return [Path("")]
 
     def load_times_and_magnifications_from_path(self, path: Path) -> (np.ndarray, np.ndarray):  # noqa ARG002
         """

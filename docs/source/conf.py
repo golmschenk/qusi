@@ -11,22 +11,22 @@ sys.path.insert(0, str(Path("../../src/qusi").absolute()))
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'qusi'
-copyright = '2023, Greg Olmschenk'
-author = 'Greg Olmschenk'
+project = "qusi"
+project_copyright = "2023, Greg Olmschenk"
+author = "Greg Olmschenk"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
-    'sphinx.ext.autodoc',
+    "sphinx.ext.autodoc",
 ]
 
-templates_path = ['_templates']
+templates_path = ["_templates"]
 exclude_patterns = []
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = 'furo'
-html_static_path = ['_static']
+html_theme = "furo"
+html_static_path = ["_static"]

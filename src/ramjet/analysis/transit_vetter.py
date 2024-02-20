@@ -10,6 +10,7 @@ class TransitVetter:
     """
     A class for vetting transit candidates.
     """
+
     radius_of_jupiter__solar_radii = 0.1028
 
     def is_transit_depth_for_target_physical_for_planet(self, target: TessTarget, transit_depth: float) -> bool:
@@ -37,8 +38,8 @@ class TransitVetter:
         magnitude_difference_threshold = 5
         nearby_target_data_frame = target.retrieve_nearby_tic_targets()
         problematic_nearby_target_data_frame = nearby_target_data_frame.loc[
-            (nearby_target_data_frame['TESS Mag'] < target.magnitude + magnitude_difference_threshold) &
-            (nearby_target_data_frame['Separation (arcsec)'] < nearby_threshold_arcseconds)
+            (nearby_target_data_frame["TESS Mag"] < target.magnitude + magnitude_difference_threshold)
+            & (nearby_target_data_frame["Separation (arcsec)"] < nearby_threshold_arcseconds)
         ]
         return problematic_nearby_target_data_frame.shape[0] == 0
 
@@ -53,13 +54,14 @@ class TransitVetter:
         nearby_threshold_arcseconds = 31.5  # 1.5 TESS pixels.
         nearby_target_data_frame = target.retrieve_nearby_tic_targets()
         problematic_nearby_target_data_frame = nearby_target_data_frame.loc[
-            (pd.notnull(nearby_target_data_frame['TOI'])) &
-            (nearby_target_data_frame['Separation (arcsec)'] < nearby_threshold_arcseconds)
+            (pd.notnull(nearby_target_data_frame["TOI"]))
+            & (nearby_target_data_frame["Separation (arcsec)"] < nearby_threshold_arcseconds)
         ]
         return problematic_nearby_target_data_frame.shape[0] != 0
 
-    def get_maximum_physical_depth_for_planet_for_target(self, target: TessTarget,
-                                                         allow_missing_contamination_ratio: bool = False) -> float:
+    def get_maximum_physical_depth_for_planet_for_target(
+        self, target: TessTarget, *, allow_missing_contamination_ratio: bool = False
+    ) -> float:
         """
         Determines the maximum depth allowable for a given target for a transit to be caused by a planet.
 
@@ -73,8 +75,7 @@ class TransitVetter:
             if allow_missing_contamination_ratio:
                 contamination_ratio = 0
             else:
-                error_message = f'Contamination ratio {contamination_ratio} is not a number.'
+                error_message = f"Contamination ratio {contamination_ratio} is not a number."
                 raise ValueError(error_message)
-        maximum_physical_depth = (maximum_planet_radius ** 2) / (
-            (target.radius ** 2) * (1 + contamination_ratio))
+        maximum_physical_depth = (maximum_planet_radius**2) / ((target.radius**2) * (1 + contamination_ratio))
         return maximum_physical_depth

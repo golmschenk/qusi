@@ -20,12 +20,14 @@ class TestLightCurveDatabase:
     @pytest.fixture
     def database_module(self) -> Any:
         import ramjet.photometric_database.light_curve_database as database_module
+
         return database_module
 
     @pytest.fixture
     def module(self) -> Any:
         """Fixture of the module under test."""
         import ramjet.photometric_database.light_curve_database as light_curve_database_module
+
         return light_curve_database_module
 
     def test_extraction_of_chunk_and_remainder_from_array(self, module):
@@ -33,20 +35,23 @@ class TestLightCurveDatabase:
         array_to_chunk = np.array([[1, 1], [2, 2], [3, 3], [4, 4], [5, 5], [6, 6]])
         expected_chunk = np.array([[3, 3], [4, 4]])
         expected_remainder = np.array([[1, 1], [2, 2], [5, 5], [6, 6]])
-        chunk, remainder = module.extract_shuffled_chunk_and_remainder(array_to_chunk, chunk_ratio=1 / 3,
-                                                                       chunk_to_extract_index=1)
+        chunk, remainder = module.extract_shuffled_chunk_and_remainder(
+            array_to_chunk, chunk_ratio=1 / 3, chunk_to_extract_index=1
+        )
         assert np.array_equal(chunk, expected_chunk)
         assert np.array_equal(remainder, expected_remainder)
 
     def test_normalization_does_not_invert_light_curve_shape_when_there_are_negative_values(self):
         unnormalized_positive_light_curve_fluxes = np.array([10, 20, 30, 25, 15], dtype=np.float32)
         normalized_positive_light_curve_fluxes = module.normalize_on_percentiles(
-            unnormalized_positive_light_curve_fluxes)
+            unnormalized_positive_light_curve_fluxes
+        )
         assert normalized_positive_light_curve_fluxes.argmax() == 2
         assert normalized_positive_light_curve_fluxes.argmin() == 0
         unnormalized_negative_light_curve_fluxes = np.array([-30, -20, -10, -15, -25], dtype=np.float32)
         normalized_negative_light_curve_fluxes = module.normalize_on_percentiles(
-            unnormalized_negative_light_curve_fluxes)
+            unnormalized_negative_light_curve_fluxes
+        )
         assert normalized_negative_light_curve_fluxes.argmax() == 2
         assert normalized_negative_light_curve_fluxes.argmin() == 0
 
@@ -54,14 +59,16 @@ class TestLightCurveDatabase:
         epsilon = 0.6
         unnormalized_positive_light_curve_fluxes = np.array([10, 20, 30, 20, 10], dtype=np.float32)
         normalized_positive_light_curve_fluxes = module.normalize_on_percentiles(
-            unnormalized_positive_light_curve_fluxes)
+            unnormalized_positive_light_curve_fluxes
+        )
         assert (normalized_positive_light_curve_fluxes > (-1 - epsilon)).all()
         assert (normalized_positive_light_curve_fluxes < (1 + epsilon)).all()
         assert np.min(normalized_positive_light_curve_fluxes) < (-1 + epsilon)
         assert np.max(normalized_positive_light_curve_fluxes) > (1 - epsilon)
         unnormalized_negative_light_curve_fluxes = np.array([-30, -20, -10, -20, -30], dtype=np.float32)
         normalized_negative_light_curve_fluxes = module.normalize_on_percentiles(
-            unnormalized_negative_light_curve_fluxes)
+            unnormalized_negative_light_curve_fluxes
+        )
         assert (normalized_negative_light_curve_fluxes > (-1 - epsilon)).all()
         assert (normalized_negative_light_curve_fluxes < (1 + epsilon)).all()
         assert np.min(normalized_negative_light_curve_fluxes) < (-1 + epsilon)
@@ -83,7 +90,8 @@ class TestLightCurveDatabase:
         unnormalized_fluxes = np.linspace(0, 100, num=101, dtype=np.float32)
         unnormalized_flux_errors = np.linspace(0, 10, num=101, dtype=np.float32)
         normalized_fluxes, normalized_flux_errors = module.normalize_on_percentiles_with_errors(
-            array=unnormalized_fluxes, array_errors=unnormalized_flux_errors)
+            array=unnormalized_fluxes, array_errors=unnormalized_flux_errors
+        )
         assert normalized_fluxes[10] == -1
         assert normalized_fluxes[90] == 1
         assert normalized_flux_errors[10] == pytest.approx(0.025)
@@ -93,7 +101,8 @@ class TestLightCurveDatabase:
         unnormalized_fluxes = np.full(shape=[100], fill_value=50)
         unnormalized_flux_errors = np.linspace(0, 10, num=101, dtype=np.float32)
         normalized_fluxes, normalized_flux_errors = module.normalize_on_percentiles_with_errors(
-            array=unnormalized_fluxes, array_errors=unnormalized_flux_errors)
+            array=unnormalized_fluxes, array_errors=unnormalized_flux_errors
+        )
         assert normalized_fluxes[10] == 0
         assert normalized_fluxes[90] == 0
         assert normalized_flux_errors[10] == 0
@@ -106,7 +115,7 @@ class TestLightCurveDatabase:
 
     def test_make_uniform_length_with_random_rolls_input_that_is_already_the_correct_size(self):
         fluxes = np.array([0, 1, 2, 3, 4, 5])
-        with patch.object(module.np.random, 'randint') as stub_randint:
+        with patch.object(module.np.random, "randint") as stub_randint:
             stub_randint.return_value = 3
             uniform_length_fluxes = module.make_uniform_length(fluxes, 6, randomize=True)
             assert np.array_equal(uniform_length_fluxes, [3, 4, 5, 0, 1, 2])
@@ -118,7 +127,7 @@ class TestLightCurveDatabase:
 
     def test_make_uniform_length_repeats_elements_when_input_is_too_short_with_random_roll(self):
         fluxes = np.array([0, 1, 2, 3])
-        with patch.object(module.np.random, 'randint') as stub_randint:
+        with patch.object(module.np.random, "randint") as stub_randint:
             stub_randint.return_value = 3
             uniform_length_fluxes = module.make_uniform_length(fluxes, 6)
             assert np.array_equal(uniform_length_fluxes, [1, 2, 3, 0, 1, 2])
@@ -130,7 +139,7 @@ class TestLightCurveDatabase:
 
     def test_make_uniform_length_clips_elements_when_input_is_too_long_with_random_roll(self):
         fluxes = np.array([0, 1, 2, 3, 4, 5])
-        with patch.object(module.np.random, 'randint') as stub_randint:
+        with patch.object(module.np.random, "randint") as stub_randint:
             stub_randint.return_value = 3
             uniform_length_fluxes = module.make_uniform_length(fluxes, 4, randomize=True)
             assert np.array_equal(uniform_length_fluxes, [3, 4, 5, 0])
@@ -142,14 +151,14 @@ class TestLightCurveDatabase:
 
     def test_remove_random_elements_removes_elements(self):
         array = np.array([0, 1, 2, 3])
-        with patch.object(module.np.random, 'randint') as mock_randint:
+        with patch.object(module.np.random, "randint") as mock_randint:
             mock_randint.side_effect = lambda x: x
             updated_array = module.remove_random_elements(array, ratio=0.5)
         assert updated_array.shape[0] == 2
 
     def test_remove_random_elements_acts_on_axis_0(self):
         array = np.array([[0, 0], [1, -1], [2, -2], [3, -3]])
-        with patch.object(module.np.random, 'choice') as mock_random_choice:
+        with patch.object(module.np.random, "choice") as mock_random_choice:
             mock_random_choice.return_value = [0, 2]
             updated_array = module.remove_random_elements(array)
         assert np.array_equal(updated_array, np.array([[1, -1], [3, -3]]))
@@ -158,20 +167,22 @@ class TestLightCurveDatabase:
         database = LightCurveDatabase()
         database.include_time_as_channel = True
         light_curve = np.array([[1, -1], [2, -2], [3, -3]])
-        with patch.object(module, 'normalize_on_percentiles') as mock_normalize_on_percentiles:
+        with patch.object(module, "normalize_on_percentiles") as mock_normalize_on_percentiles:
             mock_normalize_on_percentiles.side_effect = lambda x: x
             database.normalize_fluxes(light_curve=light_curve)
-            assert np.array_equal(mock_normalize_on_percentiles.call_args[0][0],
-                                  light_curve[:, 1])  # Channel 1 should be fluxes.
+            assert np.array_equal(
+                mock_normalize_on_percentiles.call_args[0][0], light_curve[:, 1]
+            )  # Channel 1 should be fluxes.
 
     def test_can_normalize_the_flux_channel_of_a_flux_only_light_curve(self):
         database = LightCurveDatabase()
         light_curve = np.array([[1], [2], [3]])
-        with patch.object(module, 'normalize_on_percentiles') as mock_normalize_on_percentiles:
+        with patch.object(module, "normalize_on_percentiles") as mock_normalize_on_percentiles:
             mock_normalize_on_percentiles.side_effect = lambda x: x
             database.normalize_fluxes(light_curve=light_curve)
-            assert np.array_equal(mock_normalize_on_percentiles.call_args[0][0],
-                                  light_curve[:, 0])  # Channel 1 should be fluxes.
+            assert np.array_equal(
+                mock_normalize_on_percentiles.call_args[0][0], light_curve[:, 0]
+            )  # Channel 1 should be fluxes.
 
     def test_flux_preprocessing_occurs_in_place(self):
         database = LightCurveDatabase()
@@ -250,10 +261,10 @@ class TestLightCurveDatabase:
         time_differences = module.calculate_time_differences(times)
         assert np.array_equal(time_differences, expected_time_differences)
 
-    @pytest.mark.parametrize(('evaluation_mode', 'called_expectation'), [(True, False),
-                                                                         (False, True)])
-    def test_flux_preprocessing_evaluation_modes_calling_of_remove_random_elements(self, database, evaluation_mode,
-                                                                                   called_expectation):
+    @pytest.mark.parametrize(("evaluation_mode", "called_expectation"), [(True, False), (False, True)])
+    def test_flux_preprocessing_evaluation_modes_calling_of_remove_random_elements(
+        self, database, evaluation_mode, called_expectation
+    ):
         mock_remove_random_elements = Mock(side_effect=lambda x: x)
         module.remove_random_elements = mock_remove_random_elements
 

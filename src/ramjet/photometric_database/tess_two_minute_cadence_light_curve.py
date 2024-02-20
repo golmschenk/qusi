@@ -20,22 +20,24 @@ class TessMissionLightCurveColumnName(Enum):
     """
     An enum to represent the column names of the TESS two minute cadence data.
     """
-    TIME__BTJD = 'time__btjd'
-    SAP_FLUX = 'sap_flux'
-    PDCSAP_FLUX = 'pdcsap_flux'
-    SAP_FLUX_ERROR = 'sap_flux_error'
-    PDCSAP_FLUX_ERROR = 'pdcsap_flux_error'
+
+    TIME__BTJD = "time__btjd"
+    SAP_FLUX = "sap_flux"
+    PDCSAP_FLUX = "pdcsap_flux"
+    SAP_FLUX_ERROR = "sap_flux_error"
+    PDCSAP_FLUX_ERROR = "pdcsap_flux_error"
 
 
 class TessMissionLightCurveFitsIndex(Enum):
     """
     An enum to represent the indexes of the TESS two minute cadence data in MAST FITS files.
     """
-    TIME__BTJD = 'TIME'
-    SAP_FLUX = 'SAP_FLUX'
-    PDCSAP_FLUX = 'PDCSAP_FLUX'
-    SAP_FLUX_ERROR = 'SAP_FLUX_ERR'
-    PDCSAP_FLUX_ERROR = 'PDCSAP_FLUX_ERR'
+
+    TIME__BTJD = "TIME"
+    SAP_FLUX = "SAP_FLUX"
+    PDCSAP_FLUX = "PDCSAP_FLUX"
+    SAP_FLUX_ERROR = "SAP_FLUX_ERR"
+    PDCSAP_FLUX_ERROR = "PDCSAP_FLUX_ERR"
 
 
 class TessMissionLightCurve(TessLightCurve):
@@ -45,12 +47,15 @@ class TessMissionLightCurve(TessLightCurve):
 
     def __init__(self):
         super().__init__()
-        self.flux_column_names = [TessMissionLightCurveColumnName.PDCSAP_FLUX.value,
-                                  TessMissionLightCurveColumnName.SAP_FLUX.value]
+        self.flux_column_names = [
+            TessMissionLightCurveColumnName.PDCSAP_FLUX.value,
+            TessMissionLightCurveColumnName.SAP_FLUX.value,
+        ]
 
     @classmethod
-    def from_path(cls, path: Path, fits_indexes_to_load: list[TessMissionLightCurveFitsIndex] | None = None
-                  ) -> TessMissionLightCurve:
+    def from_path(
+        cls, path: Path, fits_indexes_to_load: list[TessMissionLightCurveFitsIndex] | None = None
+    ) -> TessMissionLightCurve:
         """
         Creates a TESS two minute light curve from a path to the MAST FITS file.
 
@@ -74,9 +79,12 @@ class TessMissionLightCurve(TessLightCurve):
         return light_curve
 
     @classmethod
-    def from_mast(cls, tic_id: int, sector: int | None = None,
-                  fits_indexes_to_load: list[TessMissionLightCurveFitsIndex] | None = None
-                  ) -> TessMissionLightCurve:
+    def from_mast(
+        cls,
+        tic_id: int,
+        sector: int | None = None,
+        fits_indexes_to_load: list[TessMissionLightCurveFitsIndex] | None = None,
+    ) -> TessMissionLightCurve:
         """
         Downloads a FITS file from MAST and creates a TESS two minute light curve from it.
 
@@ -101,15 +109,16 @@ class TessMissionLightCurve(TessLightCurve):
         integer_types = (int, np.integer)
         if isinstance(identifier, Path):
             return cls.from_path(path=identifier)
-        if isinstance(identifier, tuple) and (isinstance(identifier[0], integer_types) and
-                                                isinstance(identifier[1], integer_types)):
+        if isinstance(identifier, tuple) and (
+            isinstance(identifier[0], integer_types) and isinstance(identifier[1], integer_types)
+        ):
             tic_id = identifier[0]
             sector = identifier[1]
             return cls.from_mast(tic_id=tic_id, sector=sector)
         if isinstance(identifier, str):
             tic_id, sector = cls.get_tic_id_and_sector_from_identifier_string(identifier)
             return cls.from_mast(tic_id=tic_id, sector=sector)
-        error_message = f'{identifier} does not match a known type to infer the light curve identifier from.'
+        error_message = f"{identifier} does not match a known type to infer the light curve identifier from."
         raise TypeError(error_message)
 
     @staticmethod
@@ -133,23 +142,23 @@ class TessMissionLightCurve(TessLightCurve):
         :return: The TIC ID and sector. The sector might be omitted (as None).
         """
         # Search for the human-readable version. E.g., "TIC 169480782 sector 5"
-        match = re.search(r'TIC (\d+) sector (\d+)', identifier_string)
+        match = re.search(r"TIC (\d+) sector (\d+)", identifier_string)
         if match:
             return int(match.group(1)), int(match.group(2))
         # Search for the human-readable TIC only version. E.g., "TIC 169480782"
-        match = re.search(r'TIC (\d+)', identifier_string)
+        match = re.search(r"TIC (\d+)", identifier_string)
         if match:
             return int(match.group(1)), None
         # Search for the TESS obs_id version. E.g., "tess2018319095959-s0005-0000000278956474-0125-s"
-        match = re.search(r'tess\d+-s(\d+)-(\d+)-\d+-s', identifier_string)
+        match = re.search(r"tess\d+-s(\d+)-(\d+)-\d+-s", identifier_string)
         if match:
             return int(match.group(2)), int(match.group(1))
         # Search for the TESS SPOC version. E.g., "hlsp_tess-spoc_tess_phot_0000000007583207-s0026_tess_v1_lc"
-        match = re.search(r'hlsp_tess-spoc_tess_phot_(\d+)-s(\d+)_tess_v1', identifier_string)
+        match = re.search(r"hlsp_tess-spoc_tess_phot_(\d+)-s(\d+)_tess_v1", identifier_string)
         if match:
             return int(match.group(1)), int(match.group(2))
         # Raise an error if none of the patterns matched.
-        error_string = f'{identifier_string} does not match a known pattern to extract TIC ID and sector from.'
+        error_string = f"{identifier_string} does not match a known pattern to extract TIC ID and sector from."
         raise ValueError(error_string)
 
 
@@ -158,7 +167,7 @@ class TessTwoMinuteCadenceLightCurve(TessMissionLightCurve):
 
 
 def ensure_native_byte_order(array: np.ndarray) -> np.ndarray:
-    native_byte_order = '>' if sys.byteorder == 'big' else '<'
-    if array.dtype.byteorder in ['|', '=', native_byte_order]:
+    native_byte_order = ">" if sys.byteorder == "big" else "<"
+    if array.dtype.byteorder in ["|", "=", native_byte_order]:
         return array
     return array.byteswap().newbyteorder(native_byte_order)

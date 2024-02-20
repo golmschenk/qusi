@@ -24,12 +24,14 @@ class TessFfiLightCurveCollection(SqlMetadataLightCurveCollection):
     """
     A light curve collection of the TESS two minute cadence data.
     """
+
     tess_ffi_light_curve_metadata_manger = TessFfiLightCurveMetadataManager()
 
-    def __init__(self, dataset_splits: list[int] | None = None,
-                 magnitude_range: (float | None, float | None) = (None, None)):
+    def __init__(
+        self, dataset_splits: list[int] | None = None, magnitude_range: (float | None, float | None) = (None, None)
+    ):
         super().__init__()
-        self.data_directory: Path = Path('data/tess_ffi_light_curves')
+        self.data_directory: Path = Path("data/tess_ffi_light_curves")
         self.label = 0
         self.dataset_splits: list[int] | None = dataset_splits
         self.magnitude_range: (float | None, float | None) = magnitude_range
@@ -57,8 +59,7 @@ class TessFfiLightCurveCollection(SqlMetadataLightCurveCollection):
 
         :return: The path to the light curve.
         """
-        return Path(self.tess_ffi_light_curve_metadata_manger.
-                    light_curve_root_directory_path.joinpath(model.path))
+        return Path(self.tess_ffi_light_curve_metadata_manger.light_curve_root_directory_path.joinpath(model.path))
 
     def load_times_and_fluxes_from_path(self, path: Path) -> (np.ndarray, np.ndarray):
         """

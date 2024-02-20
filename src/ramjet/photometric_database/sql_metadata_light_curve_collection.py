@@ -26,6 +26,7 @@ class SqlMetadataLightCurveCollection(LightCurveCollection):
     """
     Class for a light curve collection that stores its metadata in the SQL database.
     """
+
     def __init__(self):
         super().__init__()
 
@@ -80,8 +81,9 @@ class SqlMetadataLightCurveCollection(LightCurveCollection):
         return updated_select_query
 
     @staticmethod
-    def order_by_dataset_split_with_random_start(select_query: Select, dataset_split_field: Field,
-                                                 available_dataset_splits: list[int] | None) -> Select:
+    def order_by_dataset_split_with_random_start(
+        select_query: Select, dataset_split_field: Field, available_dataset_splits: list[int] | None
+    ) -> Select:
         """
         Applies an "order by" on a query using a passed dataset_split field. The "order by" starts at a random
         dataset_split out of the passed available options, then loops back to the minimum dataset_split to include all

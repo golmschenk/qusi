@@ -28,6 +28,7 @@ class LightCurveCollection:
     :ivar label: The default label to be used if the `load_label_from_path` method is not overridden.
     :ivar paths: The default list of paths to be used if the `get_paths` method is not overridden.
     """
+
     def __init__(self):
         self.label: float | list[float] | np.ndarray | None = None
         self.paths: list[Path] | None = None
@@ -97,15 +98,16 @@ class LightCurveCollection:
         np.random.seed(0)
         np.random.shuffle(path_array)
         dataset_split_arrays = np.array_split(path_array, number_of_splits)
-        dataset_split_arrays_to_keep = [dataset_split_array
-                                        for dataset_split_index, dataset_split_array in enumerate(dataset_split_arrays)
-                                        if dataset_split_index in dataset_splits]
+        dataset_split_arrays_to_keep = [
+            dataset_split_array
+            for dataset_split_index, dataset_split_array in enumerate(dataset_split_arrays)
+            if dataset_split_index in dataset_splits
+        ]
         paths_array = np.concatenate(dataset_split_arrays_to_keep)
         dataset_split_paths = list(map(Path, paths_array))
         return dataset_split_paths
 
-    def load_times_fluxes_and_flux_errors_from_path(self, path: Path
-                                                    ) -> (np.ndarray, np.ndarray, np.ndarray | None):
+    def load_times_fluxes_and_flux_errors_from_path(self, path: Path) -> (np.ndarray, np.ndarray, np.ndarray | None):
         """
         Loads the times, fluxes, and flux errors of a light curve from a path to the data.
         Unless overridden, defaults to using the method to load only the times and fluxes, and returns None for errors.
@@ -118,7 +120,8 @@ class LightCurveCollection:
         return times, fluxes, flux_errors
 
     def load_times_magnifications_and_magnification_errors_from_path(
-            self, path: Path) -> (np.ndarray, np.ndarray, np.ndarray | None):
+        self, path: Path
+    ) -> (np.ndarray, np.ndarray, np.ndarray | None):
         """
         Loads the times, magnifications, and magnification_errors of a light curve from a path to the data.
         Unless overridden, defaults to using the method to load only the times and magnifications,

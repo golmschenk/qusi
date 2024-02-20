@@ -117,5 +117,6 @@ ignore = [
     "EM102",  # The improved source readability is worth the loss in readibility of the traceback in my opinion.
     "TRY003",  # Disabling EM102 makes this rule trigger in areas it shouldn't.
     "G004",  # The improved source readability is worth the extra string evaluation cost in my opinion.
+    "N812",  # Bokeh uses lowercase for its figure class, and not changing that messes with other conventions.
 ]
 isort.known-first-party = ["qusi", "ramjet"]

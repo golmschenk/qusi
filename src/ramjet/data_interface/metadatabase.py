@@ -5,10 +5,8 @@ from uuid import UUID, uuid5
 
 from peewee import Model, SqliteDatabase
 
-metadatabase = SqliteDatabase('data/metadatabase.sqlite3',
-                              pragmas={'journal_mode': 'wal'},
-                              check_same_thread=False)
-metadatabase_uuid_namespace = UUID('ed5c78c4-d8dd-4525-9633-97beac696cd1')
+metadatabase = SqliteDatabase("data/metadatabase.sqlite3", pragmas={"journal_mode": "wal"}, check_same_thread=False)
+metadatabase_uuid_namespace = UUID("ed5c78c4-d8dd-4525-9633-97beac696cd1")
 
 
 def convert_class_to_table_name(model_class: type[Model]):
@@ -26,8 +24,10 @@ class MetadatabaseModel(Model):
     """
     A general model for the metadatabase tables.
     """
+
     class Meta:
         """The meta information for the metadatabase models."""
+
         database = metadatabase
         table_function = convert_class_to_table_name
         primary_key = False

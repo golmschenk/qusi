@@ -19,8 +19,10 @@ class TessFfiEclipsingBinaryLightCurveCollection(TessFfiLightCurveCollection):
     """
     A class representing the collection of TESS two minute cadence light curves containing eclipsing binaries.
     """
-    def __init__(self, dataset_splits: list[int] | None = None,
-                 magnitude_range: (float | None, float | None) = (None, None)):
+
+    def __init__(
+        self, dataset_splits: list[int] | None = None, magnitude_range: (float | None, float | None) = (None, None)
+    ):
         super().__init__(dataset_splits=dataset_splits, magnitude_range=magnitude_range)
         self.label = 1
 
@@ -41,8 +43,10 @@ class TessFfiAntiEclipsingBinaryForTransitLightCurveCollection(TessFfiLightCurve
     A class representing the collection of TESS two minute cadence light curves flagged as eclipsing binaries which are
     not a suspected transit.
     """
-    def __init__(self, dataset_splits: list[int] | None = None,
-                 magnitude_range: (float | None, float | None) = (None, None)):
+
+    def __init__(
+        self, dataset_splits: list[int] | None = None, magnitude_range: (float | None, float | None) = (None, None)
+    ):
         super().__init__(dataset_splits=dataset_splits, magnitude_range=magnitude_range)
         self.label = 0
 
@@ -54,9 +58,11 @@ class TessFfiAntiEclipsingBinaryForTransitLightCurveCollection(TessFfiLightCurve
         """
         query = super().get_sql_query()
         transit_tic_id_query = TessTransitMetadata.select(TessTransitMetadata.tic_id).where(
-            (TessTransitMetadata.disposition == TransitDisposition.CONFIRMED.value) |
-            (TessTransitMetadata.disposition == TransitDisposition.CANDIDATE.value))
+            (TessTransitMetadata.disposition == TransitDisposition.CONFIRMED.value)
+            | (TessTransitMetadata.disposition == TransitDisposition.CANDIDATE.value)
+        )
         eclipsing_binary_tic_id_query = TessEclipsingBinaryMetadata.select(TessEclipsingBinaryMetadata.tic_id).where(
-            TessEclipsingBinaryMetadata.tic_id.not_in(transit_tic_id_query))
+            TessEclipsingBinaryMetadata.tic_id.not_in(transit_tic_id_query)
+        )
         query = query.where(TessFfiLightCurveMetadata.tic_id.in_(eclipsing_binary_tic_id_query))
         return query

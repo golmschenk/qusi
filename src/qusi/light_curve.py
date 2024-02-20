@@ -17,6 +17,7 @@ class LightCurve:
     :ivar times: The times of the light curve.
     :ivar fluxes: The fluxes of the light curve.
     """
+
     times: npt.NDArray[np.float32]
     fluxes: npt.NDArray[np.float32]
 

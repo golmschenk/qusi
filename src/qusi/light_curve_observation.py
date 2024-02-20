@@ -15,6 +15,7 @@ class LightCurveObservation:
     :ivar light_curve: The light curve.
     :ivar label: The integer classification label.
     """
+
     light_curve: LightCurve
     label: int
 
@@ -31,16 +32,16 @@ class LightCurveObservation:
 
 
 def remove_nan_flux_data_points_from_light_curve_observation(
-        light_curve_observation: LightCurveObservation) -> LightCurveObservation:
+    light_curve_observation: LightCurveObservation,
+) -> LightCurveObservation:
     light_curve_observation = deepcopy(light_curve_observation)
     light_curve_observation.light_curve = remove_nan_flux_data_points_from_light_curve(
-        light_curve_observation.light_curve)
+        light_curve_observation.light_curve
+    )
     return light_curve_observation
 
 
-def randomly_roll_light_curve_observation(
-        light_curve_observation: LightCurveObservation) -> LightCurveObservation:
+def randomly_roll_light_curve_observation(light_curve_observation: LightCurveObservation) -> LightCurveObservation:
     light_curve_observation = deepcopy(light_curve_observation)
-    light_curve_observation.light_curve = randomly_roll_light_curve(
-        light_curve_observation.light_curve)
+    light_curve_observation.light_curve = randomly_roll_light_curve(light_curve_observation.light_curve)
     return light_curve_observation

@@ -1,11 +1,15 @@
 """
 Code for a class to calculate receiver operating characteristic (ROC) curves.
 """
-from pathlib import Path
-from typing import Optional, Union
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 import matplotlib.pyplot as plt
 import numpy as np
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 class RocCalculator:
@@ -82,18 +86,18 @@ class RocCalculator:
         self.true_negative_counts += true_negatives
         self.false_negative_counts += false_negatives
 
-    def generate_roc_plot(self, output_path: Union[str, Path] = 'roc_curve.svg', title: Optional[str] = None):
+    def generate_roc_plot(self, output_path: str | Path = "roc_curve.svg", title: str | None = None):
         """
         Generates a ROC curve plot from the confusion matrix totals which have been accumulated.
 
         :param output_path: The path to save the plot image file to.
         :param title: The title to add to the plot.
         """
-        with plt.style.context('seaborn-darkgrid'):
+        with plt.style.context("seaborn-darkgrid"):
             figure, axes = plt.subplots()
             axes.plot(self.false_positive_rates, self.true_positive_rates)
-            axes.set_xlabel('False positive rate')
-            axes.set_ylabel('True positive rate')
+            axes.set_xlabel("False positive rate")
+            axes.set_ylabel("True positive rate")
             if title is not None:
                 axes.set_title(title)
             figure.patch.set_alpha(0)  # Transparent figure background while keeping grid background.

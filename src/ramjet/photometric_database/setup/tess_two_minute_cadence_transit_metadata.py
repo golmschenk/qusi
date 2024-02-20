@@ -20,5 +20,5 @@ def build_tables():
     tess_target_metadata_manger.build_table()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     build_tables()

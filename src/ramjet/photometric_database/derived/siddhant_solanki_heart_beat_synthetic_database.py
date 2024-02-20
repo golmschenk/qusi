@@ -14,7 +14,8 @@ class SiddhantSolankiHeartBeatSyntheticDatabase(TessFfiDatabase):
         super().__init__()
         self.training_standard_light_curve_collections = [
             TessFfiLightCurveCollection(magnitude_range=magnitude_range),
-            TessFfiHeartBeatHardNegativeLightcurveCollection(magnitude_range=magnitude_range)]
+            TessFfiHeartBeatHardNegativeLightcurveCollection(magnitude_range=magnitude_range),
+        ]
         self.training_injectee_light_curve_collection = TessFfiLightCurveCollection(magnitude_range=magnitude_range)
         self.training_injectable_light_curve_collections = [
             SiddhantSolankiHeartBeatSyntheticSignalsCollection(),

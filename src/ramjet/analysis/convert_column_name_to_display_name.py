@@ -15,15 +15,15 @@ def convert_column_name_to_display_name(column_name: str) -> str:
     :param column_name: The column whose name should be converted.
     :return: The display version of the name.
     """
-    display_name = re.sub(r'__(.*)', r' (\g<1>)', column_name)  # Move units into parentheses.
-    display_name = display_name.replace('_', ' ')
+    display_name = re.sub(r"__(.*)", r" (\g<1>)", column_name)  # Move units into parentheses.
+    display_name = display_name.replace("_", " ")
     specific_replacements = {
-        r'tic id': 'TIC ID',
-        r'\(btjd\)': '(BTJD)',
-        r'\(bjd\)': '(BJD)',
-        r'\(jd\)': '(JD)',
-        r'pdcsap': 'PDCSAP',
-        r'(^|\s)sap($|\s)': r'\g<1>SAP\g<2>',  # SAP avoiding possible cases where `sap` is part of a real word.
+        r"tic id": "TIC ID",
+        r"\(btjd\)": "(BTJD)",
+        r"\(bjd\)": "(BJD)",
+        r"\(jd\)": "(JD)",
+        r"pdcsap": "PDCSAP",
+        r"(^|\s)sap($|\s)": r"\g<1>SAP\g<2>",  # SAP avoiding possible cases where `sap` is part of a real word.
     }
     for pattern, replacement in specific_replacements.items():
         display_name = re.sub(pattern, replacement, display_name)

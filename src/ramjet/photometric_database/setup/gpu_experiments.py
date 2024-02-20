@@ -11,9 +11,9 @@ def download():
     """
     Downloads and prepares the data needed for the GPU experiments.
     """
-    download_two_minute_cadence_light_curves(Path('data/tess_two_minute_cadence_light_curves'))
+    download_two_minute_cadence_light_curves(Path("data/tess_two_minute_cadence_light_curves"))
     build_tables()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     download()

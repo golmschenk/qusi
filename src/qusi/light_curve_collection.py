@@ -32,10 +32,12 @@ class LightCurveObservationCollectionBase(LightCurveCollectionBase):
     def observation_iter(self) -> Iterator[LightCurveObservation]:
         pass
 
+
 class LightCurveObservationIndexableBase(ABC):
     @abstractmethod
     def __getitem__(self, indexes: int | tuple[int]) -> LightCurveObservation | tuple[LightCurveObservation]:
         pass
+
 
 class PathIterableBase(ABC):
     @abstractmethod
@@ -65,6 +67,7 @@ class PathGetter(PathGetterBase):
     :ivar get_paths_function: The function which returns the path iterable.
     :ivar random_number_generator: A random number generator.
     """
+
     get_paths_function: Callable[[], Iterable[Path]]
     random_number_generator: Random
 
@@ -98,8 +101,7 @@ class PathGetter(PathGetterBase):
         indexed_light_curve_paths = np.array(light_curve_paths)[index]
         if isinstance(indexed_light_curve_paths, Path):
             return indexed_light_curve_paths
-        else:
-            return indexed_light_curve_paths.tolist()
+        return indexed_light_curve_paths.tolist()
 
 
 @dataclass
@@ -108,16 +110,18 @@ class LightCurveCollection(LightCurveCollectionBase, LightCurveObservationIndexa
     :ivar path_getter: The PathIterableBase object for the collection.
     :ivar load_times_and_fluxes_from_path_function: The function to load the times and fluxes from the light curve.
     """
+
     path_getter: PathGetterBase
-    load_times_and_fluxes_from_path_function: Callable[
-        [Path], tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]]
+    load_times_and_fluxes_from_path_function: Callable[[Path], tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]]
 
     @classmethod
-    def new(cls,
-            get_paths_function: Callable[[], Iterable[Path]],
-            load_times_and_fluxes_from_path_function: Callable[
-                [Path], tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]],
-            ) -> Self:
+    def new(
+        cls,
+        get_paths_function: Callable[[], Iterable[Path]],
+        load_times_and_fluxes_from_path_function: Callable[
+            [Path], tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]
+        ],
+    ) -> Self:
         """
         Creates a new light curve collection.
 
@@ -126,8 +130,9 @@ class LightCurveCollection(LightCurveCollectionBase, LightCurveObservationIndexa
         :return: The light curve collection.
         """
         path_getter = PathGetter.new(get_paths_function=get_paths_function)
-        return cls(path_getter=path_getter,
-                   load_times_and_fluxes_from_path_function=load_times_and_fluxes_from_path_function)
+        return cls(
+            path_getter=path_getter, load_times_and_fluxes_from_path_function=load_times_and_fluxes_from_path_function
+        )
 
     def light_curve_iter(self) -> Iterator[LightCurve]:
         """
@@ -158,17 +163,20 @@ class LabeledLightCurveCollection(LightCurveObservationCollectionBase, LightCurv
     :ivar light_curve_collection: The LightCurveCollectionBase object for the collection.
     :ivar load_label_from_path_function: The function to load the label for the light curve.
     """
+
     path_getter: PathGetterBase
     light_curve_collection: LightCurveCollectionBase
     load_label_from_path_function: Callable[[Path], int]
 
     @classmethod
-    def new(cls,
-            get_paths_function: Callable[[], Iterable[Path]],
-            load_times_and_fluxes_from_path_function: Callable[
-                [Path], tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]],
-            load_label_from_path_function: Callable[[Path], int]
-            ) -> Self:
+    def new(
+        cls,
+        get_paths_function: Callable[[], Iterable[Path]],
+        load_times_and_fluxes_from_path_function: Callable[
+            [Path], tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]
+        ],
+        load_label_from_path_function: Callable[[Path], int],
+    ) -> Self:
         """
         Creates a new light curve collection.
 
@@ -179,19 +187,23 @@ class LabeledLightCurveCollection(LightCurveObservationCollectionBase, LightCurv
         """
         path_iterable = PathGetter.new(get_paths_function=get_paths_function)
         light_curve_collection = LightCurveCollection(
+            path_getter=path_iterable, load_times_and_fluxes_from_path_function=load_times_and_fluxes_from_path_function
+        )
+        return cls(
             path_getter=path_iterable,
-            load_times_and_fluxes_from_path_function=load_times_and_fluxes_from_path_function)
-        return cls(path_getter=path_iterable,
-                   light_curve_collection=light_curve_collection,
-                   load_label_from_path_function=load_label_from_path_function)
+            light_curve_collection=light_curve_collection,
+            load_label_from_path_function=load_label_from_path_function,
+        )
 
     @classmethod
-    def new_with_label(cls,
-                       get_paths_function: Callable[[], Iterable[Path]],
-                       load_times_and_fluxes_from_path_function: Callable[
-                           [Path], tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]],
-                       label: int
-                       ) -> Self:
+    def new_with_label(
+        cls,
+        get_paths_function: Callable[[], Iterable[Path]],
+        load_times_and_fluxes_from_path_function: Callable[
+            [Path], tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]
+        ],
+        label: int,
+    ) -> Self:
         """
         Creates a new light curve collection with a specific label for all light curves..
 
@@ -203,11 +215,13 @@ class LabeledLightCurveCollection(LightCurveObservationCollectionBase, LightCurv
         load_label_from_path_function = create_constant_label_for_path_function(label)
         path_iterable = PathGetter.new(get_paths_function=get_paths_function)
         light_curve_collection = LightCurveCollection(
+            path_getter=path_iterable, load_times_and_fluxes_from_path_function=load_times_and_fluxes_from_path_function
+        )
+        return cls(
             path_getter=path_iterable,
-            load_times_and_fluxes_from_path_function=load_times_and_fluxes_from_path_function)
-        return cls(path_getter=path_iterable,
-                   light_curve_collection=light_curve_collection,
-                   load_label_from_path_function=load_label_from_path_function)
+            light_curve_collection=light_curve_collection,
+            load_label_from_path_function=load_label_from_path_function,
+        )
 
     def light_curve_iter(self) -> Iterator[LightCurve]:
         return self.light_curve_collection.light_curve_iter()

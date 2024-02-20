@@ -35,7 +35,7 @@ def test_interleave_infinite_iterators():
     dataset0 = IterableMock()
     dataset0.__iter__.return_value = itertools.cycle(iter([1, 2, 3]))
     dataset1 = IterableMock()
-    dataset1.__iter__.return_value = itertools.cycle(iter(['a', 'b']))
+    dataset1.__iter__.return_value = itertools.cycle(iter(["a", "b"]))
     combined_dataset = interleave_infinite_iterators(iter(dataset0), iter(dataset1))
     first_eight_elements = list(islice(combined_dataset, 8))
-    assert first_eight_elements == [1, 'a', 2, 'b', 3, 'a', 1, 'b']
+    assert first_eight_elements == [1, "a", 2, "b", 3, "a", 1, "b"]

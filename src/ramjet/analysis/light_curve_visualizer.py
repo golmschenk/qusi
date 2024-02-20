@@ -1,9 +1,9 @@
 """
 Code for visualizing light curves.
 """
+from __future__ import annotations
 
-from pathlib import Path
-from typing import Optional, Union
+from typing import TYPE_CHECKING
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -13,12 +13,25 @@ from bokeh.palettes import Turbo256
 from bokeh.plotting import figure as Figure
 from matplotlib.colors import LinearSegmentedColormap
 
+if TYPE_CHECKING:
+    from pathlib import Path
 
-def plot_light_curve(times: np.ndarray, fluxes: np.ndarray, labels: np.ndarray = None, predictions: np.ndarray = None,
-                     title: Optional[str] = None, x_label: str = 'Days', y_label: str = 'Flux',
-                     x_limits: (float, float) = (None, None), y_limits: (float, float) = (None, None),
-                     save_path: Optional[Union[Path, str]] = None, exclude_flux_outliers: bool = False,
-                     base_data_point_size: float = 3):
+
+def plot_light_curve(
+    times: np.ndarray,
+    fluxes: np.ndarray,
+    labels: np.ndarray = None,
+    predictions: np.ndarray = None,
+    title: str | None = None,
+    x_label: str = "Days",
+    y_label: str = "Flux",
+    x_limits: (float, float) = (None, None),
+    y_limits: (float, float) = (None, None),
+    save_path: Path | str | None = None,
+    *,
+    exclude_flux_outliers: bool = False,
+    base_data_point_size: float = 3,
+):
     """
     Plots a light curve with a consistent styling. If true labels and/or predictions are included, these will
     additionally be plotted.
@@ -36,11 +49,11 @@ def plot_light_curve(times: np.ndarray, fluxes: np.ndarray, labels: np.ndarray =
     :param exclude_flux_outliers: Whether or not to exclude flux outlier data points when plotting.
     :param base_data_point_size: The size of the data points to use when plotting (and related sizes).
     """
-    with plt.style.context('seaborn-whitegrid'):
+    with plt.style.context("seaborn-whitegrid"):
         figure, axes = plt.subplots(figsize=(16, 10))
         axes.set_xlabel(x_label)
         axes.set_ylabel(y_label)
-        color_map = plt.get_cmap('tab10')
+        color_map = plt.get_cmap("tab10")
         data_point_color = color_map(0)
         positive_data_point_color = color_map(2)
         prediction_color = color_map(3)
@@ -59,20 +72,30 @@ def plot_light_curve(times: np.ndarray, fluxes: np.ndarray, labels: np.ndarray =
         else:
             edge_colors = [data_point_color]
             face_colors = [(*data_point_color[:3], 0.2)]
-        axes.scatter(times, fluxes, c=face_colors, marker='o', edgecolors=edge_colors,
-                     linewidths=base_data_point_size / 10, s=base_data_point_size, zorder=3)
+        axes.scatter(
+            times,
+            fluxes,
+            c=face_colors,
+            marker="o",
+            edgecolors=edge_colors,
+            linewidths=base_data_point_size / 10,
+            s=base_data_point_size,
+            zorder=3,
+        )
         if predictions is not None:
             axes.autoscale(False)
             transparent_prediction_color = (*prediction_color[:3], 0)
-            prediction_color_map = LinearSegmentedColormap.from_list('prediction-color-map',
-                                                                     [transparent_prediction_color, prediction_color])
+            prediction_color_map = LinearSegmentedColormap.from_list(
+                "prediction-color-map", [transparent_prediction_color, prediction_color]
+            )
             midpoints_between_times = (times[1:] + times[:-1]) / 2
             average_midpoint_distance = np.mean(np.diff(midpoints_between_times))
             extra_start_point = times[0] - average_midpoint_distance
             extra_end_point = times[-1] + average_midpoint_distance
             midpoints_between_times = np.concatenate([[extra_start_point], midpoints_between_times, [extra_end_point]])
-            prediction_quad_mesh = axes.pcolormesh(midpoints_between_times, [0, 1], predictions[np.newaxis, :],
-                                                   cmap=prediction_color_map, vmin=0, vmax=1)
+            prediction_quad_mesh = axes.pcolormesh(
+                midpoints_between_times, [0, 1], predictions[np.newaxis, :], cmap=prediction_color_map, vmin=0, vmax=1
+            )
             transformation = axes.get_xaxis_transform()
             prediction_quad_mesh.set_transform(transformation)
             axes.grid(True)  # Re-enable the grid since pcolormesh disables it.
@@ -98,7 +121,9 @@ def is_outlier(points: np.ndarray, threshold: float = 5):
     :param threshold: The modified z-score to use as a threshold. Observations with a modified z-score based on the
                       median absolute deviation greater than this value will be classified as outliers.
     """
-    assert len(points.shape) == 1  # Only designed to work with 1D data.
+    if len(points.shape) != 1:
+        msg = "Outlier removal only implemented for 1D data."
+        raise ValueError(msg)
     median = np.nanmedian(points, axis=0)
     absolute_deviation_from_median = np.abs(points - median)
     median_absolute_deviation_from_median = np.nanmedian(absolute_deviation_from_median)
@@ -106,8 +131,9 @@ def is_outlier(points: np.ndarray, threshold: float = 5):
     return modified_z_score > threshold
 
 
-def create_dual_light_curve_figure(fluxes0, times0, name0, fluxes1, times1, name1, title, x_axis_label='Time (days)',
-                                   y_axis_label='Relative flux') -> Figure:
+def create_dual_light_curve_figure(
+    fluxes0, times0, name0, fluxes1, times1, name1, title, x_axis_label="Time (days)", y_axis_label="Relative flux"
+) -> Figure:
     """
     Plots two light curves together. Mostly for comparing a light curve cleaned by two different methods.
 
@@ -122,14 +148,15 @@ def create_dual_light_curve_figure(fluxes0, times0, name0, fluxes1, times1, name
     :param y_axis_label: The label of the y axis.
     :return: The resulting figure.
     """
-    figure = Figure(title=title, x_axis_label=x_axis_label, y_axis_label=y_axis_label, active_drag='box_zoom')
-    add_light_curve(figure, times0, fluxes0, name0, 'firebrick')
-    add_light_curve(figure, times1, fluxes1, name1, 'mediumblue')
+    figure = Figure(title=title, x_axis_label=x_axis_label, y_axis_label=y_axis_label, active_drag="box_zoom")
+    add_light_curve(figure, times0, fluxes0, name0, "firebrick")
+    add_light_curve(figure, times1, fluxes1, name1, "mediumblue")
     return figure
 
 
-def create_light_curve_figure(fluxes, times, name, title='', x_axis_label='Time (days)',
-                              y_axis_label='Relative flux') -> Figure:
+def create_light_curve_figure(
+    fluxes, times, name, title="", x_axis_label="Time (days)", y_axis_label="Relative flux"
+) -> Figure:
     """
     Plots two light curves together. Mostly for comparing a light curve cleaned by two different methods.
 
@@ -141,8 +168,8 @@ def create_light_curve_figure(fluxes, times, name, title='', x_axis_label='Time 
     :param y_axis_label: The label of the y axis.
     :return: The resulting figure.
     """
-    figure = Figure(title=title, x_axis_label=x_axis_label, y_axis_label=y_axis_label, active_drag='box_zoom')
-    add_light_curve(figure, times, fluxes, name, 'mediumblue')
+    figure = Figure(title=title, x_axis_label=x_axis_label, y_axis_label=y_axis_label, active_drag="box_zoom")
+    add_light_curve(figure, times, fluxes, name, "mediumblue")
     return figure
 
 
@@ -151,8 +178,15 @@ def add_light_curve(figure, times, fluxes, legend_label, color):
     fluxes -= np.minimum(np.nanmin(fluxes), 0)
     flux_median = np.median(fluxes)
     figure.line(times, fluxes / flux_median, line_color=color, line_alpha=0.1)
-    figure.circle(times, fluxes / flux_median, legend_label=legend_label, line_color=color, line_alpha=0.4,
-                  fill_color=color, fill_alpha=0.1)
+    figure.circle(
+        times,
+        fluxes / flux_median,
+        legend_label=legend_label,
+        line_color=color,
+        line_alpha=0.4,
+        fill_color=color,
+        fill_alpha=0.1,
+    )
 
 
 def add_folded_light_curve(figure, folded_times, fluxes, times):
@@ -161,10 +195,11 @@ def add_folded_light_curve(figure, folded_times, fluxes, times):
     flux_median = np.median(fluxes)
     relative_fluxes = fluxes / flux_median
     mapper = LinearColorMapper(palette=Turbo256, low=min(times), high=max(times))
-    data_frame = pd.DataFrame({'folded_time': folded_times, 'flux': relative_fluxes, 'time': times})
-    color = {'field': 'time', 'transform': mapper}
-    figure.circle(source=data_frame, x='folded_time', y='flux', line_color=color, line_alpha=0.4,
-                  fill_color=color, fill_alpha=0.1)
+    data_frame = pd.DataFrame({"folded_time": folded_times, "flux": relative_fluxes, "time": times})
+    color = {"field": "time", "transform": mapper}
+    figure.circle(
+        source=data_frame, x="folded_time", y="flux", line_color=color, line_alpha=0.4, fill_color=color, fill_alpha=0.1
+    )
     return figure
 
 
