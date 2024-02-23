@@ -9,19 +9,19 @@ Welcome to qusi's documentation!
 Installation
 ------------
 
-To install ``qusi`` with Python >= 3.11 use:
+To install ``qusi``, use
 
 .. code:: shell
 
     pip install qusi
 
-Although not required, as is generally good practice for any development project, we highly recommend creating a separate virtual environment for each distinct project. For example, via Conda, creating a virtual environment for a project using ``qusi`` might look like:
+Although not required, as is generally good practice for any development project, we highly recommend creating a separate virtual environment for each distinct project. For example, via Conda, creating a virtual environment for a project using ``qusi`` might look like
 
 .. code::
 
     conda create -n project_using_qusi_env python=3.11
 
-Then before working, be sure to activate your environment:
+Then before working, be sure to activate your environment with
 
 .. code:: shell
 
