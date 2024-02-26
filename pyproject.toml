@@ -8,46 +8,46 @@ authors = [
 readme = "README.md"
 requires-python = ">=3.9"
 packages = [
-    {include = "ramjet", from="src"},
-    {include = "qusi", from="src"}
+    { include = "ramjet", from = "src" },
+    { include = "qusi", from = "src" }
 ]
 dependencies = [
-"retrying>=1.3.4",
-"tenacity>=8.1.0",
-"numpy>=1.24.1",
-"pandas>=1.5.3",
-"astropy>=5.2.1",
-"astroquery>=0.4.6",
-"requests>=2.28.2",
-"pytest>=7.2.1,<8",
-"pyarrow>=11.0.0",
-"gitpython>=3.1.30",
-"matplotlib>=3.6.3",
-"pipreqs>=0.4.11",
-"bokeh>=3.0.0",
-"scipy>=1.10.0",
-"setuptools>=67.1.0",
-"peewee>=3.15.4",
-"pytest-asyncio>=0.20.3",
-"wandb>=0.13.9",
-"plotly>=5.13.0",
-"tornado>=6.2",
-"beautifulsoup4>=4.11.2",
-"lxml>=4.9.2",
-"lightkurve>=2.3.0",
-"uvloop>=0.17.0; platform_system != 'Windows'",
-"filelock>=3.9.0",
-"torch>=2.0.1",
-"torchvision>=0.15.2",
-"polars>=0.19.10",
-"torchmetrics>=1.2.0",
-"stringcase>=1.2.0",
-"atpublic>=4.0",
-"pytest-pycharm>=0.7.0",
-"furo>=2023.9.10",
-"sphinx>=6.1.3",
-"backports.strenum",
-"typing_extensions",
+    "retrying>=1.3.4",
+    "tenacity>=8.1.0",
+    "numpy>=1.24.1",
+    "pandas>=1.5.3",
+    "astropy>=5.2.1",
+    "astroquery>=0.4.6",
+    "requests>=2.28.2",
+    "pytest>=7.2.1,<8",
+    "pyarrow>=11.0.0",
+    "gitpython>=3.1.30",
+    "matplotlib>=3.6.3",
+    "pipreqs>=0.4.11",
+    "bokeh>=3.0.0",
+    "scipy>=1.10.0",
+    "setuptools>=67.1.0",
+    "peewee>=3.15.4",
+    "pytest-asyncio>=0.20.3",
+    "wandb>=0.13.9",
+    "plotly>=5.13.0",
+    "tornado>=6.2",
+    "beautifulsoup4>=4.11.2",
+    "lxml>=4.9.2",
+    "lightkurve>=2.3.0",
+    "uvloop>=0.17.0; platform_system != 'Windows'",
+    "filelock>=3.9.0",
+    "torch>=2.0.1",
+    "torchvision>=0.15.2",
+    "polars>=0.19.10",
+    "torchmetrics>=1.2.0",
+    "stringcase>=1.2.0",
+    "atpublic>=4.0",
+    "pytest-pycharm>=0.7.0",
+    "furo>=2023.9.10",
+    "sphinx>=6.1.3",
+    "backports.strenum",
+    "typing_extensions",
 ]
 
 [build-system]
@@ -56,6 +56,12 @@ build-backend = "hatchling.build"
 
 [tool.hatch.version]
 path = "src/qusi/__about__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = [
+    "src/qusi",
+    "src/ramjet",
+]
 
 [tool.hatch.envs.default]
 dependencies = [
@@ -108,15 +114,15 @@ extend-exclude = ["examples"]
 
 [tool.ruff.lint]
 ignore = [
-    "RET504",  # Subjective but, naming the returned value often seems to help readability.
-    "SIM108",  # Subjective but, ternary operators are often too confusing.
+    "RET504", # Subjective but, naming the returned value often seems to help readability.
+    "SIM108", # Subjective but, ternary operators are often too confusing.
     # We don't expect use cases of the frame to need to worry about security issues.
     "S608",
     "S301",
     "S311",
-    "EM102",  # The improved source readability is worth the loss in readibility of the traceback in my opinion.
-    "TRY003",  # Disabling EM102 makes this rule trigger in areas it shouldn't.
-    "G004",  # The improved source readability is worth the extra string evaluation cost in my opinion.
-    "N812",  # Bokeh uses lowercase for its figure class, and not changing that messes with other conventions.
+    "EM102", # The improved source readability is worth the loss in readibility of the traceback in my opinion.
+    "TRY003", # Disabling EM102 makes this rule trigger in areas it shouldn't.
+    "G004", # The improved source readability is worth the extra string evaluation cost in my opinion.
+    "N812", # Bokeh uses lowercase for its figure class, and not changing that messes with other conventions.
 ]
 isort.known-first-party = ["qusi", "ramjet"]
