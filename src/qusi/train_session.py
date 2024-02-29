@@ -25,8 +25,8 @@ def train_session(
     train_datasets: list[LightCurveDataset],
     validation_datasets: list[LightCurveDataset],
     model: Module,
-    hyperparameter_configuration: TrainHyperparameterConfiguration | None,
-    logging_configuration: TrainLoggingConfiguration | None,
+    hyperparameter_configuration: TrainHyperparameterConfiguration | None = None,
+    logging_configuration: TrainLoggingConfiguration | None = None,
 ):
     if hyperparameter_configuration is None:
         hyperparameter_configuration = TrainHyperparameterConfiguration.new()
