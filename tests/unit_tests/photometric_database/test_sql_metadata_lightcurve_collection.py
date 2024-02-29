@@ -1,7 +1,11 @@
 import pytest
 
-from ramjet.photometric_database.light_curve_collection import LightCurveCollectionMethodNotImplementedError
-from ramjet.photometric_database.sql_metadata_light_curve_collection import SqlMetadataLightCurveCollection
+from ramjet.photometric_database.light_curve_collection import (
+    LightCurveCollectionMethodNotImplementedError,
+)
+from ramjet.photometric_database.sql_metadata_light_curve_collection import (
+    SqlMetadataLightCurveCollection,
+)
 
 
 class TestSqlMetadataLightCurveCollection:
@@ -14,6 +18,8 @@ class TestSqlMetadataLightCurveCollection:
         """
         return SqlMetadataLightCurveCollection()
 
-    def test_get_sql_query_throws_error_when_called_without_implementing(self, collection):
+    def test_get_sql_query_throws_error_when_called_without_implementing(
+        self, collection
+    ):
         with pytest.raises(LightCurveCollectionMethodNotImplementedError):
             _ = collection.get_sql_query()

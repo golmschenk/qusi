@@ -17,39 +17,73 @@ class TestTessTwoMinuteCadenceFileBasedLightCurve:
     @pytest.fixture
     def fake_hdu_list(self):
         mock_hdu_data = {
-            TessMissionLightCurveFitsIndex.TIME__BTJD.value: np.array([0, 1], dtype=np.float32),
-            TessMissionLightCurveFitsIndex.PDCSAP_FLUX.value: np.array([2, 3], dtype=np.float32),
-            TessMissionLightCurveFitsIndex.SAP_FLUX.value: np.array([4, 5], dtype=np.float32),
-            TessMissionLightCurveFitsIndex.PDCSAP_FLUX_ERROR.value: np.array([6, 7], dtype=np.float32),
-            TessMissionLightCurveFitsIndex.SAP_FLUX_ERROR.value: np.array([8, 9], dtype=np.float32),
+            TessMissionLightCurveFitsIndex.TIME__BTJD.value: np.array(
+                [0, 1], dtype=np.float32
+            ),
+            TessMissionLightCurveFitsIndex.PDCSAP_FLUX.value: np.array(
+                [2, 3], dtype=np.float32
+            ),
+            TessMissionLightCurveFitsIndex.SAP_FLUX.value: np.array(
+                [4, 5], dtype=np.float32
+            ),
+            TessMissionLightCurveFitsIndex.PDCSAP_FLUX_ERROR.value: np.array(
+                [6, 7], dtype=np.float32
+            ),
+            TessMissionLightCurveFitsIndex.SAP_FLUX_ERROR.value: np.array(
+                [8, 9], dtype=np.float32
+            ),
         }
         mock_hdu = Mock()
         mock_hdu.data = mock_hdu_data
-        mock_hdu_list = [None, mock_hdu]  # TESS light curve data is in index 1 of the HDU list.
+        mock_hdu_list = [
+            None,
+            mock_hdu,
+        ]  # TESS light curve data is in index 1 of the HDU list.
         return mock_hdu_list
 
     def test_fits_index_enum_have_the_same_entries_as_column_name_enum(self):
-        column_name_entry_names = [entry.name for entry in TessMissionLightCurveColumnName]
-        fits_index_entry_names = [entry.name for entry in TessMissionLightCurveFitsIndex]
-        assert np.array_equal(sorted(column_name_entry_names), sorted(fits_index_entry_names))
+        column_name_entry_names = [
+            entry.name for entry in TessMissionLightCurveColumnName
+        ]
+        fits_index_entry_names = [
+            entry.name for entry in TessMissionLightCurveFitsIndex
+        ]
+        assert np.array_equal(
+            sorted(column_name_entry_names), sorted(fits_index_entry_names)
+        )
 
-    def test_from_path_factory_creates_data_frame_from_fits_hdu_list(self, fake_hdu_list):
+    def test_from_path_factory_creates_data_frame_from_fits_hdu_list(
+        self, fake_hdu_list
+    ):
         with patch.object(module.fits, "open") as mock_open:
             mock_open.return_value.__enter__.return_value = fake_hdu_list
-            light_curve = TessMissionLightCurve.from_path(Path("TIC 169480782 sector 5.fits"))
+            light_curve = TessMissionLightCurve.from_path(
+                Path("TIC 169480782 sector 5.fits")
+            )
             expected_data_frame = pd.DataFrame(fake_hdu_list[1].data)
-            for column_name, fits_index in zip(TessMissionLightCurveColumnName, TessMissionLightCurveFitsIndex):
-                assert np.array_equal(light_curve.data_frame[column_name.value], expected_data_frame[fits_index.value])
+            for column_name, fits_index in zip(
+                TessMissionLightCurveColumnName, TessMissionLightCurveFitsIndex
+            ):
+                assert np.array_equal(
+                    light_curve.data_frame[column_name.value],
+                    expected_data_frame[fits_index.value],
+                )
 
-    def test_from_path_factory_light_curve_uses_correct_default_times_and_fluxes(self, fake_hdu_list):
+    def test_from_path_factory_light_curve_uses_correct_default_times_and_fluxes(
+        self, fake_hdu_list
+    ):
         with patch.object(module.fits, "open") as mock_open:
             mock_open.return_value.__enter__.return_value = fake_hdu_list
-            light_curve = TessMissionLightCurve.from_path(Path("TIC 169480782 sector 5.fits"))
-            assert np.array_equal(
-                light_curve.times, fake_hdu_list[1].data[TessMissionLightCurveFitsIndex.TIME__BTJD.value]
+            light_curve = TessMissionLightCurve.from_path(
+                Path("TIC 169480782 sector 5.fits")
             )
             assert np.array_equal(
-                light_curve.fluxes, fake_hdu_list[1].data[TessMissionLightCurveFitsIndex.PDCSAP_FLUX.value]
+                light_curve.times,
+                fake_hdu_list[1].data[TessMissionLightCurveFitsIndex.TIME__BTJD.value],
+            )
+            assert np.array_equal(
+                light_curve.fluxes,
+                fake_hdu_list[1].data[TessMissionLightCurveFitsIndex.PDCSAP_FLUX.value],
             )
 
     def test_can_get_tic_id_and_sector_from_human_readable_file_name(self):
@@ -66,13 +100,18 @@ class TestTessTwoMinuteCadenceFileBasedLightCurve:
 
     def test_get_tic_id_and_sector_raises_error_with_unknown_pattern(self):
         with pytest.raises(
-            ValueError, match="a b c d e f g does not match a known pattern to extract TIC ID and sector from."
+            ValueError,
+            match="a b c d e f g does not match a known pattern to extract TIC ID and sector from.",
         ):
-            TessMissionLightCurve.get_tic_id_and_sector_from_file_path(Path("a b c d e f g"))
+            TessMissionLightCurve.get_tic_id_and_sector_from_file_path(
+                Path("a b c d e f g")
+            )
 
     def test_can_get_tic_id_and_sector_from_tess_obs_id_style_file_name(self):
         tic_id0, sector0 = TessMissionLightCurve.get_tic_id_and_sector_from_file_path(
-            Path("mast:TESS/product/tess2019006130736-s0007-0000000278956474-0131-s_lc.fits")
+            Path(
+                "mast:TESS/product/tess2019006130736-s0007-0000000278956474-0131-s_lc.fits"
+            )
         )
         assert tic_id0 == 278956474
         assert sector0 == 7
@@ -82,10 +121,14 @@ class TestTessTwoMinuteCadenceFileBasedLightCurve:
         assert tic_id1 == 278956474
         assert sector1 == 5
 
-    def test_from_path_factory_sets_the_tic_id_and_sector_of_the_light_curve(self, fake_hdu_list):
+    def test_from_path_factory_sets_the_tic_id_and_sector_of_the_light_curve(
+        self, fake_hdu_list
+    ):
         with patch.object(module.fits, "open") as mock_open:
             mock_open.return_value.__enter__.return_value = fake_hdu_list
-            light_curve = TessMissionLightCurve.from_path(Path("TIC 169480782 sector 5.fits"))
+            light_curve = TessMissionLightCurve.from_path(
+                Path("TIC 169480782 sector 5.fits")
+            )
             assert light_curve.tic_id == 169480782
             assert light_curve.sector == 5
 

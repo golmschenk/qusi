@@ -20,7 +20,9 @@ class TestTessLightCurve:
 
     @pytest.mark.slow
     @pytest.mark.external
-    def test_setting_tic_rows_from_mast_for_list_notes_missing_row_for_tic_ids_not_in_tic(self):
+    def test_setting_tic_rows_from_mast_for_list_notes_missing_row_for_tic_ids_not_in_tic(
+        self,
+    ):
         light_curve0 = TessLightCurve()
         light_curve0.tic_id = 99999999999999999
         assert light_curve0._tic_row is None  # noqa SLF001

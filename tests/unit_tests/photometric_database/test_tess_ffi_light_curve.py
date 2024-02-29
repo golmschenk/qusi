@@ -5,7 +5,11 @@ import numpy as np
 import pytest
 
 import ramjet.photometric_database.tess_ffi_light_curve as module
-from ramjet.photometric_database.tess_ffi_light_curve import TessFfiColumnName, TessFfiLightCurve, TessFfiPickleIndex
+from ramjet.photometric_database.tess_ffi_light_curve import (
+    TessFfiColumnName,
+    TessFfiLightCurve,
+    TessFfiPickleIndex,
+)
 
 
 class TestTessFfiDataInterface:
@@ -13,7 +17,18 @@ class TestTessFfiDataInterface:
     def ffi_pickle_contents(
         self,
     ) -> tuple[
-        int, float, float, float, int, int, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray
+        int,
+        float,
+        float,
+        float,
+        int,
+        int,
+        np.ndarray,
+        np.ndarray,
+        np.ndarray,
+        np.ndarray,
+        np.ndarray,
+        np.ndarray,
     ]:
         """
         Creates a mock content of one of Brian Powell's FFI data files.
@@ -50,11 +65,15 @@ class TestTessFfiDataInterface:
 
     @patch.object(module.pickle, "load")
     @patch.object(Path, "open")
-    def test_can_load_flux_and_data_from_ffi_pickle_files(self, mock_open, mock_pickle_load, ffi_pickle_contents):
+    def test_can_load_flux_and_data_from_ffi_pickle_files(
+        self, mock_open, mock_pickle_load, ffi_pickle_contents
+    ):
         light_curve = TessFfiLightCurve()
         mock_pickle_load.return_value = ffi_pickle_contents
         fake_file_path = Path("tesslc_290374453.pkl")
-        fluxes, times = light_curve.load_fluxes_and_times_from_pickle_file(fake_file_path)
+        fluxes, times = light_curve.load_fluxes_and_times_from_pickle_file(
+            fake_file_path
+        )
         assert mock_open.called
         assert np.array_equal(fluxes, ffi_pickle_contents[8])
         assert np.array_equal(times, ffi_pickle_contents[6])
@@ -67,7 +86,13 @@ class TestTessFfiDataInterface:
         light_curve = TessFfiLightCurve()
         mock_pickle_load.return_value = ffi_pickle_contents
         fake_file_path = Path("tesslc_290374453.pkl")
-        fluxes, flux_errors, times = light_curve.load_fluxes_flux_errors_and_times_from_pickle_file(fake_file_path)
+        (
+            fluxes,
+            flux_errors,
+            times,
+        ) = light_curve.load_fluxes_flux_errors_and_times_from_pickle_file(
+            fake_file_path
+        )
         assert mock_open.called
         assert np.array_equal(fluxes, ffi_pickle_contents[8])
         assert np.array_equal(flux_errors, ffi_pickle_contents[10])
@@ -85,7 +110,9 @@ class TestTessFfiDataInterface:
         )
         assert tic_id1 == 1234567
         assert sector1 == 1
-        tic_id2, sector2 = light_curve.get_tic_id_and_sector_from_file_path("tesslc_12345678.pkl")
+        tic_id2, sector2 = light_curve.get_tic_id_and_sector_from_file_path(
+            "tesslc_12345678.pkl"
+        )
         assert tic_id2 == 12345678
         assert sector2 is None
 
@@ -101,11 +128,15 @@ class TestTessFfiDataInterface:
         )
         assert tic_id1 == 1234567
         assert sector1 == 1
-        tic_id2, sector2 = light_curve.get_tic_id_and_sector_from_file_path("tesslc_12345678.pkl")
+        tic_id2, sector2 = light_curve.get_tic_id_and_sector_from_file_path(
+            "tesslc_12345678.pkl"
+        )
         assert tic_id2 == 12345678
         assert sector2 is None
 
-    def test_can_get_tic_id_and_sector_from_ffi_two_minute_portion_style_file_path(self):
+    def test_can_get_tic_id_and_sector_from_ffi_two_minute_portion_style_file_path(
+        self,
+    ):
         light_curve = TessFfiLightCurve()
         tic_id0, sector0 = light_curve.get_tic_id_and_sector_from_file_path(
             "tesslcs_sector_12_104/2_min_cadence_targets/tesslc_290374453"
@@ -117,11 +148,15 @@ class TestTessFfiDataInterface:
         )
         assert tic_id1 == 1234567
         assert sector1 == 1
-        tic_id2, sector2 = light_curve.get_tic_id_and_sector_from_file_path("tesslc_12345678.pkl")
+        tic_id2, sector2 = light_curve.get_tic_id_and_sector_from_file_path(
+            "tesslc_12345678.pkl"
+        )
         assert tic_id2 == 12345678
         assert sector2 is None
 
-    def test_can_get_tic_id_and_sector_from_ffi_project_flat_directory_style_file_path(self):
+    def test_can_get_tic_id_and_sector_from_ffi_project_flat_directory_style_file_path(
+        self,
+    ):
         light_curve = TessFfiLightCurve()
         tic_id0, sector0 = light_curve.get_tic_id_and_sector_from_file_path(
             "tic_id_290374453_sector_12_ffi_light_curve.pkl"
@@ -145,7 +180,8 @@ class TestTessFfiDataInterface:
         )
         assert magnitude1 == 14
         with pytest.raises(
-            ValueError, match="tesslc_12345678.pkl does not match a known pattern to extract magnitude from."
+            ValueError,
+            match="tesslc_12345678.pkl does not match a known pattern to extract magnitude from.",
         ):
             light_curve.get_floor_magnitude_from_file_path("tesslc_12345678.pkl")
 
@@ -160,7 +196,8 @@ class TestTessFfiDataInterface:
         )
         assert magnitude1 == 14
         with pytest.raises(
-            ValueError, match="tesslc_12345678.pkl does not match a known pattern to extract magnitude from."
+            ValueError,
+            match="tesslc_12345678.pkl does not match a known pattern to extract magnitude from.",
         ):
             light_curve.get_floor_magnitude_from_file_path("tesslc_12345678.pkl")
 
