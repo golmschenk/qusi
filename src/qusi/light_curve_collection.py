@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from functools import partial
 from pathlib import Path
 from random import Random
 from typing import TYPE_CHECKING, Callable
@@ -23,7 +24,9 @@ class LightCurveCollectionBase(ABC):
         pass
 
     @abstractmethod
-    def load_times_and_fluxes_from_path(self, path) -> tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]:
+    def load_times_and_fluxes_from_path(
+        self, path
+    ) -> tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]:
         pass
 
 
@@ -35,7 +38,9 @@ class LightCurveObservationCollectionBase(LightCurveCollectionBase):
 
 class LightCurveObservationIndexableBase(ABC):
     @abstractmethod
-    def __getitem__(self, indexes: int | tuple[int]) -> LightCurveObservation | tuple[LightCurveObservation]:
+    def __getitem__(
+        self, indexes: int | tuple[int]
+    ) -> LightCurveObservation | tuple[LightCurveObservation]:
         pass
 
 
@@ -74,7 +79,10 @@ class PathGetter(PathGetterBase):
     @classmethod
     def new(cls, get_paths_function: Callable[[], Iterable[Path]]) -> Self:
         random_number_generator = Random(0)
-        instance = cls(get_paths_function=get_paths_function, random_number_generator=random_number_generator)
+        instance = cls(
+            get_paths_function=get_paths_function,
+            random_number_generator=random_number_generator,
+        )
         return instance
 
     def get_shuffled_paths(self) -> Iterable[Path]:
@@ -105,14 +113,18 @@ class PathGetter(PathGetterBase):
 
 
 @dataclass
-class LightCurveCollection(LightCurveCollectionBase, LightCurveObservationIndexableBase):
+class LightCurveCollection(
+    LightCurveCollectionBase, LightCurveObservationIndexableBase
+):
     """
     :ivar path_getter: The PathIterableBase object for the collection.
     :ivar load_times_and_fluxes_from_path_function: The function to load the times and fluxes from the light curve.
     """
 
     path_getter: PathGetterBase
-    load_times_and_fluxes_from_path_function: Callable[[Path], tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]]
+    load_times_and_fluxes_from_path_function: Callable[
+        [Path], tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]
+    ]
 
     @classmethod
     def new(
@@ -131,7 +143,8 @@ class LightCurveCollection(LightCurveCollectionBase, LightCurveObservationIndexa
         """
         path_getter = PathGetter.new(get_paths_function=get_paths_function)
         return cls(
-            path_getter=path_getter, load_times_and_fluxes_from_path_function=load_times_and_fluxes_from_path_function
+            path_getter=path_getter,
+            load_times_and_fluxes_from_path_function=load_times_and_fluxes_from_path_function,
         )
 
     def light_curve_iter(self) -> Iterator[LightCurve]:
@@ -142,11 +155,15 @@ class LightCurveCollection(LightCurveCollectionBase, LightCurveObservationIndexa
         """
         light_curve_paths = self.path_getter.get_shuffled_paths()
         for light_curve_path in light_curve_paths:
-            times, fluxes = self.load_times_and_fluxes_from_path_function(light_curve_path)
+            times, fluxes = self.load_times_and_fluxes_from_path_function(
+                light_curve_path
+            )
             light_curve = LightCurve.new(times, fluxes)
             yield light_curve
 
-    def load_times_and_fluxes_from_path(self, path) -> tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]:
+    def load_times_and_fluxes_from_path(
+        self, path
+    ) -> tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]:
         return self.load_times_and_fluxes_from_path_function(path)
 
     def __getitem__(self, index: int) -> LightCurve:
@@ -157,7 +174,9 @@ class LightCurveCollection(LightCurveCollectionBase, LightCurveObservationIndexa
 
 
 @dataclass
-class LabeledLightCurveCollection(LightCurveObservationCollectionBase, LightCurveObservationIndexableBase):
+class LabeledLightCurveCollection(
+    LightCurveObservationCollectionBase, LightCurveObservationIndexableBase
+):
     """
     :ivar path_getter: The PathGetterBase object for the collection.
     :ivar light_curve_collection: The LightCurveCollectionBase object for the collection.
@@ -187,7 +206,8 @@ class LabeledLightCurveCollection(LightCurveObservationCollectionBase, LightCurv
         """
         path_iterable = PathGetter.new(get_paths_function=get_paths_function)
         light_curve_collection = LightCurveCollection(
-            path_getter=path_iterable, load_times_and_fluxes_from_path_function=load_times_and_fluxes_from_path_function
+            path_getter=path_iterable,
+            load_times_and_fluxes_from_path_function=load_times_and_fluxes_from_path_function,
         )
         return cls(
             path_getter=path_iterable,
@@ -215,7 +235,8 @@ class LabeledLightCurveCollection(LightCurveObservationCollectionBase, LightCurv
         load_label_from_path_function = create_constant_label_for_path_function(label)
         path_iterable = PathGetter.new(get_paths_function=get_paths_function)
         light_curve_collection = LightCurveCollection(
-            path_getter=path_iterable, load_times_and_fluxes_from_path_function=load_times_and_fluxes_from_path_function
+            path_getter=path_iterable,
+            load_times_and_fluxes_from_path_function=load_times_and_fluxes_from_path_function,
         )
         return cls(
             path_getter=path_iterable,
@@ -226,7 +247,9 @@ class LabeledLightCurveCollection(LightCurveObservationCollectionBase, LightCurv
     def light_curve_iter(self) -> Iterator[LightCurve]:
         return self.light_curve_collection.light_curve_iter()
 
-    def load_times_and_fluxes_from_path(self, path) -> tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]:
+    def load_times_and_fluxes_from_path(
+        self, path
+    ) -> tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]:
         return self.light_curve_collection.load_times_and_fluxes_from_path(path=path)
 
     def observation_iter(self) -> Iterator[LightCurveObservation]:
@@ -237,7 +260,9 @@ class LabeledLightCurveCollection(LightCurveObservationCollectionBase, LightCurv
         """
         light_curve_paths = self.path_getter.get_shuffled_paths()
         for light_curve_path in light_curve_paths:
-            times, fluxes = self.light_curve_collection.load_times_and_fluxes_from_path(light_curve_path)
+            times, fluxes = self.light_curve_collection.load_times_and_fluxes_from_path(
+                light_curve_path
+            )
             label = self.load_label_from_path_function(light_curve_path)
             light_curve = LightCurve.new(times, fluxes)
             light_curve_observation = LightCurveObservation.new(light_curve, label)
@@ -245,7 +270,9 @@ class LabeledLightCurveCollection(LightCurveObservationCollectionBase, LightCurv
 
     def __getitem__(self, index: int) -> LightCurveObservation:
         light_curve_path = self.path_getter[index]
-        times, fluxes = self.light_curve_collection.load_times_and_fluxes_from_path(light_curve_path)
+        times, fluxes = self.light_curve_collection.load_times_and_fluxes_from_path(
+            light_curve_path
+        )
         label = self.load_label_from_path_function(light_curve_path)
         light_curve = LightCurve.new(times, fluxes)
         light_curve_observation = LightCurveObservation.new(light_curve, label)
@@ -260,13 +287,18 @@ def create_constant_label_for_path_function(label: int) -> Callable[[Path], int]
     :return: The closure function.
     """
 
-    def constant_label_for_path(_path: Path) -> int:
-        """
-        The function which will return the outer label regardless of path.
-
-        :param _path: The unused path.
-        :return: The label
-        """
-        return label
+    constant_label_for_path = partial(
+        constant_label_for_path_before_partial, label=label
+    )
 
     return constant_label_for_path
+
+
+def constant_label_for_path_before_partial(_path: Path, label: int) -> int:
+    """
+    The function which will return the outer label regardless of path.
+
+    :param _path: The unused path.
+    :return: The label
+    """
+    return label

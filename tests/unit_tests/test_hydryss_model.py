@@ -24,6 +24,8 @@ def test_lengths_give_correct_output_size():
 
     hadryss100000 = Hadryss(input_length=100000)
 
-    output100000 = hadryss100000(torch.arange(100000, dtype=torch.float32).reshape([1, 100000]))
+    output100000 = hadryss100000(
+        torch.arange(100000, dtype=torch.float32).reshape([1, 100000])
+    )
 
     assert output100000.shape == torch.Size([1])

@@ -3,7 +3,11 @@ from pathlib import Path
 import numpy as np
 
 from qusi.light_curve import LightCurve
-from qusi.light_curve_collection import LabeledLightCurveCollection, create_constant_label_for_path_function
+from qusi.light_curve_collection import (
+    LabeledLightCurveCollection,
+    create_constant_label_for_path_function,
+)
+from qusi.light_curve_dataset import LightCurveDataset
 
 
 class ToyLightCurve:
@@ -30,7 +34,12 @@ class ToyLightCurve:
         """
         length = 100
         periods_to_produce = length / period
-        fluxes = (np.sin(np.linspace(0, np.pi * periods_to_produce, num=length, endpoint=False)) / 2) + 1
+        fluxes = (
+            np.sin(
+                np.linspace(0, np.pi * periods_to_produce, num=length, endpoint=False)
+            )
+            / 2
+        ) + 1
         times = np.arange(length)
         return LightCurve.new(times=times, fluxes=fluxes)
 
@@ -50,7 +59,9 @@ def toy_flat_light_curve_load_times_and_fluxes(_path: Path) -> (np.ndarray, np.n
     return light_curve.times, light_curve.fluxes
 
 
-def toy_sine_wave_light_curve_load_times_and_fluxes(_path: Path) -> (np.ndarray, np.ndarray):
+def toy_sine_wave_light_curve_load_times_and_fluxes(
+    _path: Path,
+) -> (np.ndarray, np.ndarray):
     """
     Loads a sine wave toy light curve.
     """
@@ -58,14 +69,26 @@ def toy_sine_wave_light_curve_load_times_and_fluxes(_path: Path) -> (np.ndarray,
     return light_curve.times, light_curve.fluxes
 
 
-toy_flat_light_curve_collection = LabeledLightCurveCollection.new(
-    get_paths_function=toy_light_curve_get_paths_function,
-    load_times_and_fluxes_from_path_function=toy_flat_light_curve_load_times_and_fluxes,
-    load_label_from_path_function=create_constant_label_for_path_function(0),
-)
+def get_toy_flat_light_curve_collection():
+    return LabeledLightCurveCollection.new(
+        get_paths_function=toy_light_curve_get_paths_function,
+        load_times_and_fluxes_from_path_function=toy_flat_light_curve_load_times_and_fluxes,
+        load_label_from_path_function=create_constant_label_for_path_function(0),
+    )
 
-toy_sine_wave_light_curve_collection = LabeledLightCurveCollection.new(
-    get_paths_function=toy_light_curve_get_paths_function,
-    load_times_and_fluxes_from_path_function=toy_sine_wave_light_curve_load_times_and_fluxes,
-    load_label_from_path_function=create_constant_label_for_path_function(1),
-)
+
+def get_toy_sine_wave_light_curve_collection():
+    return LabeledLightCurveCollection.new(
+        get_paths_function=toy_light_curve_get_paths_function,
+        load_times_and_fluxes_from_path_function=toy_sine_wave_light_curve_load_times_and_fluxes,
+        load_label_from_path_function=create_constant_label_for_path_function(1),
+    )
+
+
+def get_toy_dataset():
+    return LightCurveDataset.new(
+        standard_light_curve_collections=[
+            get_toy_sine_wave_light_curve_collection(),
+            get_toy_flat_light_curve_collection(),
+        ]
+    )

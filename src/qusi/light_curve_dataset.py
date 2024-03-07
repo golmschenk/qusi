@@ -20,7 +20,11 @@ from torch import Tensor
 from torch.utils.data import IterableDataset
 from typing_extensions import Self
 
-from qusi.light_curve import LightCurve, randomly_roll_light_curve, remove_nan_flux_data_points_from_light_curve
+from qusi.light_curve import (
+    LightCurve,
+    randomly_roll_light_curve,
+    remove_nan_flux_data_points_from_light_curve,
+)
 from qusi.light_curve_observation import (
     LightCurveObservation,
     randomly_roll_light_curve_observation,
@@ -49,12 +53,22 @@ class LightCurveDataset(IterableDataset):
         injectable_light_curve_collections: list[LabeledLightCurveCollection],
         post_injection_transform: Callable[[Any], Any],
     ):
-        self.standard_light_curve_collections: list[LabeledLightCurveCollection] = standard_light_curve_collections
-        self.injectee_light_curve_collections: list[LabeledLightCurveCollection] = injectee_light_curve_collections
-        self.injectable_light_curve_collections: list[LabeledLightCurveCollection] = injectable_light_curve_collections
-        if len(self.standard_light_curve_collections) == 0 and len(self.injectee_light_curve_collections) == 0:
+        self.standard_light_curve_collections: list[
+            LabeledLightCurveCollection
+        ] = standard_light_curve_collections
+        self.injectee_light_curve_collections: list[
+            LabeledLightCurveCollection
+        ] = injectee_light_curve_collections
+        self.injectable_light_curve_collections: list[
+            LabeledLightCurveCollection
+        ] = injectable_light_curve_collections
+        if (
+            len(self.standard_light_curve_collections) == 0
+            and len(self.injectee_light_curve_collections) == 0
+        ):
             error_message = (
-                "Either the standard or injectee light curve collection lists must not be empty. " "Both were empty."
+                "Either the standard or injectee light curve collection lists must not be empty. "
+                "Both were empty."
             )
             raise ValueError(error_message)
         self.post_injection_transform: Callable[[Any], Any] = post_injection_transform
@@ -75,21 +89,37 @@ class LightCurveDataset(IterableDataset):
                 injectee_collections.remove(standard_collection)
             else:
                 base_light_curve_collection_iter_and_type_pairs.append(
-                    (loop_iter_function(standard_collection.observation_iter), LightCurveCollectionType.STANDARD)
+                    (
+                        loop_iter_function(standard_collection.observation_iter),
+                        LightCurveCollectionType.STANDARD,
+                    )
                 )
         for injectee_collection in injectee_collections:
             base_light_curve_collection_iter_and_type_pair = (
                 loop_iter_function(injectee_collection.observation_iter),
                 LightCurveCollectionType.INJECTEE,
             )
-            base_light_curve_collection_iter_and_type_pairs.append(base_light_curve_collection_iter_and_type_pair)
-        injectable_light_curve_collection_iters: list[Iterator[LightCurveObservation]] = []
+            base_light_curve_collection_iter_and_type_pairs.append(
+                base_light_curve_collection_iter_and_type_pair
+            )
+        injectable_light_curve_collection_iters: list[
+            Iterator[LightCurveObservation]
+        ] = []
         for injectable_collection in self.injectable_light_curve_collections:
-            injectable_light_curve_collection_iter = loop_iter_function(injectable_collection.observation_iter)
-            injectable_light_curve_collection_iters.append(injectable_light_curve_collection_iter)
+            injectable_light_curve_collection_iter = loop_iter_function(
+                injectable_collection.observation_iter
+            )
+            injectable_light_curve_collection_iters.append(
+                injectable_light_curve_collection_iter
+            )
         while True:
-            for base_light_curve_collection_iter_and_type_pair in base_light_curve_collection_iter_and_type_pairs:
-                base_collection_iter, collection_type = base_light_curve_collection_iter_and_type_pair
+            for (
+                base_light_curve_collection_iter_and_type_pair
+            ) in base_light_curve_collection_iter_and_type_pairs:
+                (
+                    base_collection_iter,
+                    collection_type,
+                ) = base_light_curve_collection_iter_and_type_pair
                 if collection_type in [
                     LightCurveCollectionType.STANDARD,
                     LightCurveCollectionType.STANDARD_AND_INJECTEE,
@@ -97,30 +127,47 @@ class LightCurveDataset(IterableDataset):
                     # TODO: Preprocessing step should be here. Or maybe that should all be on the light curve collection
                     #  as well? Or passed in somewhere else?
                     standard_light_curve = next(base_collection_iter)
-                    transformed_standard_light_curve = self.post_injection_transform(standard_light_curve)
+                    transformed_standard_light_curve = self.post_injection_transform(
+                        standard_light_curve
+                    )
                     yield transformed_standard_light_curve
                 if collection_type in [
                     LightCurveCollectionType.INJECTEE,
                     LightCurveCollectionType.STANDARD_AND_INJECTEE,
                 ]:
-                    for injectable_light_curve_collection_iter in injectable_light_curve_collection_iters:
-                        injectable_light_curve = next(injectable_light_curve_collection_iter)
+                    for (
+                        injectable_light_curve_collection_iter
+                    ) in injectable_light_curve_collection_iters:
+                        injectable_light_curve = next(
+                            injectable_light_curve_collection_iter
+                        )
                         injectee_light_curve = next(base_collection_iter)
-                        injected_light_curve = inject_light_curve(injectee_light_curve, injectable_light_curve)
-                        transformed_injected_light_curve = self.post_injection_transform(injected_light_curve)
+                        injected_light_curve = inject_light_curve(
+                            injectee_light_curve, injectable_light_curve
+                        )
+                        transformed_injected_light_curve = (
+                            self.post_injection_transform(injected_light_curve)
+                        )
                         yield transformed_injected_light_curve
 
     @classmethod
     def new(
         cls,
-        standard_light_curve_collections: list[LabeledLightCurveCollection] | None = None,
-        injectee_light_curve_collections: list[LabeledLightCurveCollection] | None = None,
-        injectable_light_curve_collections: list[LabeledLightCurveCollection] | None = None,
+        standard_light_curve_collections: list[LabeledLightCurveCollection]
+        | None = None,
+        injectee_light_curve_collections: list[LabeledLightCurveCollection]
+        | None = None,
+        injectable_light_curve_collections: list[LabeledLightCurveCollection]
+        | None = None,
         post_injection_transform: Callable[[Any], Any] | None = None,
     ) -> Self:
-        if standard_light_curve_collections is None and injectee_light_curve_collections is None:
+        if (
+            standard_light_curve_collections is None
+            and injectee_light_curve_collections is None
+        ):
             error_message = (
-                "Either the standard or injectee light curve collection lists must be specified. " "Both were `None`."
+                "Either the standard or injectee light curve collection lists must be specified. "
+                "Both were `None`."
             )
             raise ValueError(error_message)
         if standard_light_curve_collections is None:
@@ -130,7 +177,9 @@ class LightCurveDataset(IterableDataset):
         if injectable_light_curve_collections is None:
             injectable_light_curve_collections = []
         if post_injection_transform is None:
-            post_injection_transform = partial(default_light_curve_observation_post_injection_transform, length=2500)
+            post_injection_transform = partial(
+                default_light_curve_observation_post_injection_transform, length=2500
+            )
         instance = cls(
             standard_light_curve_collections=standard_light_curve_collections,
             injectee_light_curve_collections=injectee_light_curve_collections,
@@ -141,9 +190,14 @@ class LightCurveDataset(IterableDataset):
 
 
 def inject_light_curve(
-    injectee_observation: LightCurveObservation, injectable_observation: LightCurveObservation
+    injectee_observation: LightCurveObservation,
+    injectable_observation: LightCurveObservation,
 ) -> LightCurveObservation:
-    fluxes_with_injected_signal, _, _ = inject_signal_into_light_curve_with_intermediates(
+    (
+        fluxes_with_injected_signal,
+        _,
+        _,
+    ) = inject_signal_into_light_curve_with_intermediates(
         light_curve_times=injectee_observation.light_curve.times,
         light_curve_fluxes=injectee_observation.light_curve.fluxes,
         signal_times=injectable_observation.light_curve.times,
@@ -152,7 +206,8 @@ def inject_light_curve(
         baseline_flux_estimation_method=BaselineFluxEstimationMethod.MEDIAN,
     )
     injected_light_curve = LightCurve.new(
-        times=injectee_observation.light_curve.times, fluxes=injectee_observation.light_curve.fluxes
+        times=injectee_observation.light_curve.times,
+        fluxes=injectee_observation.light_curve.fluxes,
     )
     injected_observation = LightCurveObservation.new(
         light_curve=injected_light_curve, label=injectable_observation.label
@@ -242,7 +297,9 @@ class LimitedIterableDataset(IterableDataset):
                 break
 
 
-def default_light_curve_observation_post_injection_transform(x: LightCurveObservation, length: int) -> (Tensor, Tensor):
+def default_light_curve_observation_post_injection_transform(
+    x: LightCurveObservation, length: int
+) -> (Tensor, Tensor):
     x = remove_nan_flux_data_points_from_light_curve_observation(x)
     x = randomly_roll_light_curve_observation(x)
     x = from_light_curve_observation_to_fluxes_array_and_label_array(x)
@@ -267,22 +324,36 @@ def normalize_tensor_by_modified_z_score(tensor: Tensor) -> Tensor:
     deviation_from_median = tensor - median
     absolute_deviation_from_median = torch.abs(deviation_from_median)
     median_absolute_deviation_from_median = torch.median(absolute_deviation_from_median)
-    modified_z_score = 0.6745 * deviation_from_median / median_absolute_deviation_from_median
+    if median_absolute_deviation_from_median != 0:
+        modified_z_score = (
+            0.6745 * deviation_from_median / median_absolute_deviation_from_median
+        )
+    else:
+        modified_z_score = torch.zeros_like(tensor)
     return modified_z_score
 
 
 def make_fluxes_and_label_array_uniform_length(
-    arrays: tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]], length: int, *, randomize: bool = True
+    arrays: tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]],
+    length: int,
+    *,
+    randomize: bool = True,
 ) -> (np.ndarray, np.ndarray):
     fluxes, label = arrays
-    uniform_length_times = make_uniform_length(fluxes, length=length, randomize=randomize)
+    uniform_length_times = make_uniform_length(
+        fluxes, length=length, randomize=randomize
+    )
     return uniform_length_times, label
 
 
-def make_uniform_length(example: np.ndarray, length: int, *, randomize: bool = True) -> np.ndarray:
+def make_uniform_length(
+    example: np.ndarray, length: int, *, randomize: bool = True
+) -> np.ndarray:
     """Makes the example a specific length, by clipping those too large and repeating those too small."""
     if len(example.shape) not in [1, 2]:  # Only tested for 1D and 2D cases.
-        raise ValueError(f"Light curve dimensions expected to be in [1, 2], but found {len(example.shape)}")
+        raise ValueError(
+            f"Light curve dimensions expected to be in [1, 2], but found {len(example.shape)}"
+        )
     if randomize:
         example = randomly_roll_elements(example)
     if example.shape[0] == length:
@@ -351,38 +422,67 @@ def inject_signal_into_light_curve_with_intermediates(
     signal_time_length = np.max(relative_signal_times)
     light_curve_time_length = np.max(relative_light_curve_times)
     time_length_difference = light_curve_time_length - signal_time_length
-    signal_start_offset = (np.random.random() * time_length_difference) + minimum_light_curve_time
+    signal_start_offset = (
+        np.random.random() * time_length_difference
+    ) + minimum_light_curve_time
     offset_signal_times = relative_signal_times + signal_start_offset
-    if baseline_flux_estimation_method == BaselineFluxEstimationMethod.MEDIAN_ABSOLUTE_DEVIATION:
+    if (
+        baseline_flux_estimation_method
+        == BaselineFluxEstimationMethod.MEDIAN_ABSOLUTE_DEVIATION
+    ):
         baseline_flux = stats.median_abs_deviation(light_curve_fluxes)
-        baseline_to_median_absolute_deviation_ratio = 10  # Arbitrarily chosen to give a reasonable scale.
+        baseline_to_median_absolute_deviation_ratio = (
+            10  # Arbitrarily chosen to give a reasonable scale.
+        )
         baseline_flux *= baseline_to_median_absolute_deviation_ratio
     else:
         baseline_flux = np.median(light_curve_fluxes)
     signal_fluxes = (signal_magnifications * baseline_flux) - baseline_flux
-    if out_of_bounds_injection_handling_method is OutOfBoundsInjectionHandlingMethod.RANDOM_INJECTION_LOCATION:
-        signal_flux_interpolator = interp1d(offset_signal_times, signal_fluxes, bounds_error=False, fill_value=0)
+    if (
+        out_of_bounds_injection_handling_method
+        is OutOfBoundsInjectionHandlingMethod.RANDOM_INJECTION_LOCATION
+    ):
+        signal_flux_interpolator = interp1d(
+            offset_signal_times, signal_fluxes, bounds_error=False, fill_value=0
+        )
     elif (
-        out_of_bounds_injection_handling_method is OutOfBoundsInjectionHandlingMethod.REPEAT_SIGNAL
+        out_of_bounds_injection_handling_method
+        is OutOfBoundsInjectionHandlingMethod.REPEAT_SIGNAL
         and time_length_difference > 0
     ):
         before_signal_gap = signal_start_offset - minimum_light_curve_time
         after_signal_gap = time_length_difference - before_signal_gap
         minimum_signal_time_step = np.min(np.diff(offset_signal_times))
-        before_repeats_needed = math.ceil(before_signal_gap / (signal_time_length + minimum_signal_time_step))
-        after_repeats_needed = math.ceil(after_signal_gap / (signal_time_length + minimum_signal_time_step))
-        repeated_signal_fluxes = np.tile(signal_fluxes, before_repeats_needed + 1 + after_repeats_needed)
+        before_repeats_needed = math.ceil(
+            before_signal_gap / (signal_time_length + minimum_signal_time_step)
+        )
+        after_repeats_needed = math.ceil(
+            after_signal_gap / (signal_time_length + minimum_signal_time_step)
+        )
+        repeated_signal_fluxes = np.tile(
+            signal_fluxes, before_repeats_needed + 1 + after_repeats_needed
+        )
         repeated_signal_times = None
         for repeat_index in range(-before_repeats_needed, after_repeats_needed + 1):
-            repeat_signal_start_offset = (signal_time_length + minimum_signal_time_step) * repeat_index
+            repeat_signal_start_offset = (
+                signal_time_length + minimum_signal_time_step
+            ) * repeat_index
             if repeated_signal_times is None:
                 repeated_signal_times = offset_signal_times + repeat_signal_start_offset
             else:
-                repeat_index_signal_times = offset_signal_times + repeat_signal_start_offset
-                repeated_signal_times = np.concatenate([repeated_signal_times, repeat_index_signal_times])
-        signal_flux_interpolator = interp1d(repeated_signal_times, repeated_signal_fluxes, bounds_error=True)
+                repeat_index_signal_times = (
+                    offset_signal_times + repeat_signal_start_offset
+                )
+                repeated_signal_times = np.concatenate(
+                    [repeated_signal_times, repeat_index_signal_times]
+                )
+        signal_flux_interpolator = interp1d(
+            repeated_signal_times, repeated_signal_fluxes, bounds_error=True
+        )
     else:
-        signal_flux_interpolator = interp1d(offset_signal_times, signal_fluxes, bounds_error=True)
+        signal_flux_interpolator = interp1d(
+            offset_signal_times, signal_fluxes, bounds_error=True
+        )
     interpolated_signal_fluxes = signal_flux_interpolator(light_curve_times)
     fluxes_with_injected_signal = light_curve_fluxes + interpolated_signal_fluxes
     return fluxes_with_injected_signal, offset_signal_times, signal_fluxes
