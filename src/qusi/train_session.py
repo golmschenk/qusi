@@ -37,7 +37,7 @@ def train_session(
         process_rank=0,
         project=logging_configuration.wandb_project,
         entity=logging_configuration.wandb_entity,
-        settings=wandb.Settings(start_method="fork"),
+        settings=wandb.Settings(start_method="thread"),
     )
     sessions_directory = Path("sessions")
     sessions_directory.mkdir(exist_ok=True)
