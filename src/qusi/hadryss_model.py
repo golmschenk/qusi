@@ -4,7 +4,16 @@ import math
 
 import torch
 from torch import Tensor
-from torch.nn import BatchNorm1d, Conv1d, Dropout, Dropout1d, LeakyReLU, MaxPool1d, Module, Sigmoid
+from torch.nn import (
+    BatchNorm1d,
+    Conv1d,
+    Dropout,
+    Dropout1d,
+    LeakyReLU,
+    MaxPool1d,
+    Module,
+    Sigmoid,
+)
 from typing_extensions import Self
 
 
@@ -15,10 +24,16 @@ class Hadryss(Module):
         pooling_sizes, dense_size = self.determine_block_pooling_sizes_and_dense_size()
         self.sigmoid = Sigmoid()
         self.block0 = LightCurveNetworkBlock(
-            input_channels=1, output_channels=8, kernel_size=3, pooling_size=pooling_sizes[0]
+            input_channels=1,
+            output_channels=8,
+            kernel_size=3,
+            pooling_size=pooling_sizes[0],
         )
         self.block1 = LightCurveNetworkBlock(
-            input_channels=8, output_channels=8, kernel_size=3, pooling_size=pooling_sizes[1]
+            input_channels=8,
+            output_channels=8,
+            kernel_size=3,
+            pooling_size=pooling_sizes[1],
         )
         self.block2 = LightCurveNetworkBlock(
             input_channels=8,
@@ -78,9 +93,15 @@ class Hadryss(Module):
             length=dense_size + 2,
         )
         self.block9 = LightCurveNetworkBlock(
-            input_channels=20, output_channels=20, kernel_size=dense_size, pooling_size=1, dropout_rate=0.1
+            input_channels=20,
+            output_channels=20,
+            kernel_size=dense_size,
+            pooling_size=1,
+            dropout_rate=0.1,
         )
-        self.block10 = LightCurveNetworkBlock(input_channels=20, output_channels=20, kernel_size=1, pooling_size=1)
+        self.block10 = LightCurveNetworkBlock(
+            input_channels=20, output_channels=20, kernel_size=1, pooling_size=1
+        )
         self.prediction_layer = Conv1d(in_channels=20, out_channels=1, kernel_size=1)
 
     def forward(self, x: Tensor) -> Tensor:
@@ -122,94 +143,6 @@ class Hadryss(Module):
                 pooling_sizes[pooling_size_index] += 1
 
 
-class HadryssNonResizing(Module):
-    def __init__(self):
-        super().__init__()
-        self.sigmoid = Sigmoid()
-        self.block0 = LightCurveNetworkBlock(input_channels=1, output_channels=8, kernel_size=3, pooling_size=2)
-        self.block1 = LightCurveNetworkBlock(input_channels=8, output_channels=8, kernel_size=3, pooling_size=2)
-        self.block2 = LightCurveNetworkBlock(
-            input_channels=8,
-            output_channels=16,
-            kernel_size=3,
-            pooling_size=2,
-            batch_normalization=True,
-            dropout_rate=0.1,
-        )
-        self.block3 = LightCurveNetworkBlock(
-            input_channels=16,
-            output_channels=32,
-            kernel_size=3,
-            pooling_size=2,
-            batch_normalization=True,
-            dropout_rate=0.1,
-        )
-        self.block4 = LightCurveNetworkBlock(
-            input_channels=32,
-            output_channels=64,
-            kernel_size=3,
-            pooling_size=2,
-            batch_normalization=True,
-            dropout_rate=0.1,
-        )
-        self.block5 = LightCurveNetworkBlock(
-            input_channels=64,
-            output_channels=128,
-            kernel_size=3,
-            pooling_size=2,
-            batch_normalization=True,
-            dropout_rate=0.1,
-        )
-        self.block6 = LightCurveNetworkBlock(
-            input_channels=128,
-            output_channels=128,
-            kernel_size=3,
-            pooling_size=2,
-            batch_normalization=True,
-            dropout_rate=0.1,
-        )
-        self.block7 = LightCurveNetworkBlock(
-            input_channels=128,
-            output_channels=128,
-            kernel_size=3,
-            pooling_size=2,
-            batch_normalization=True,
-            dropout_rate=0.1,
-        )
-        self.block8 = LightCurveNetworkBlock(
-            input_channels=128,
-            output_channels=20,
-            kernel_size=3,
-            pooling_size=1,
-            dropout_rate=0.1,
-            spatial=False,
-            length=7,
-        )
-        self.block9 = LightCurveNetworkBlock(
-            input_channels=20, output_channels=20, kernel_size=5, pooling_size=1, dropout_rate=0.1
-        )
-        self.block10 = LightCurveNetworkBlock(input_channels=20, output_channels=20, kernel_size=1, pooling_size=1)
-        self.prediction_layer = Conv1d(in_channels=20, out_channels=1, kernel_size=1)
-
-    def forward(self, x: Tensor) -> Tensor:
-        x = x.reshape([-1, 1, 2500])
-        x = self.block0(x)
-        x = self.block1(x)
-        x = self.block2(x)
-        x = self.block3(x)
-        x = self.block4(x)
-        x = self.block5(x)
-        x = self.block6(x)
-        x = self.block7(x)
-        x = self.block8(x)
-        x = self.block9(x)
-        x = self.block10(x)
-        x = self.prediction_layer(x)
-        x = self.sigmoid(x)
-        x = torch.reshape(x, (-1,))
-        return x
-
-
 class LightCurveNetworkBlock(Module):
     def __init__(
         self,
@@ -225,7 +158,11 @@ class LightCurveNetworkBlock(Module):
     ):
         super().__init__()
         self.leaky_relu = LeakyReLU()
-        self.convolution = Conv1d(in_channels=input_channels, out_channels=output_channels, kernel_size=kernel_size)
+        self.convolution = Conv1d(
+            in_channels=input_channels,
+            out_channels=output_channels,
+            kernel_size=kernel_size,
+        )
         self.spatial: bool = spatial
         self.output_channels: int = output_channels
         if dropout_rate > 0:
@@ -244,8 +181,12 @@ class LightCurveNetworkBlock(Module):
                 self.batch_normalization = BatchNorm1d(num_features=output_channels)
             else:
                 if length is None:
-                    ValueError("Non-spatial batch normalization requires a specified length.")
-                self.batch_normalization = BatchNorm1d(num_features=output_channels * length)
+                    ValueError(
+                        "Non-spatial batch normalization requires a specified length."
+                    )
+                self.batch_normalization = BatchNorm1d(
+                    num_features=output_channels * length
+                )
         else:
             self.batch_normalization = None
 
