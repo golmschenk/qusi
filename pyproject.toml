@@ -48,7 +48,8 @@ dependencies = [
     "sphinx>=6.1.3",
     "backports.strenum",
     "typing_extensions",
-    "myst-parser"
+    "myst-parser",
+    "sphinx-multiversion",
 ]
 
 [build-system]
