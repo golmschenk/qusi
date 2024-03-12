@@ -21,7 +21,6 @@ author = "Greg Olmschenk"
 extensions = [
     "myst_parser",
     "sphinx.ext.autodoc",
-    "sphinx_multiversion",
 ]
 
 templates_path = ["_templates"]
