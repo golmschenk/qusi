@@ -314,7 +314,7 @@ def default_light_curve_post_injection_transform(x: LightCurve, length: int) -> 
     x = randomly_roll_light_curve(x)
     x = x.fluxes
     x = make_uniform_length(x, length=length)
-    x = torch.tensor(x)
+    x = torch.tensor(x, dtype=torch.float32)
     x = normalize_tensor_by_modified_z_score(x)
     return x
 
