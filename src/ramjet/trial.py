@@ -58,6 +58,43 @@ def infer(model: tf.keras.Model, dataset: tf.data.Dataset, infer_results_path: P
     save_results(confidences_data_frame, infer_results_path, number_of_top_predictions_to_keep)
 
 
+
+def infer_random(model: tf.keras.Model, dataset: tf.data.Dataset, infer_results_path: Path,
+                 keep: int, limit: int):
+    """
+    Performs inference of a model on a dataset saving the results to a file.
+
+    :param model: The model to infer with.
+    :param dataset: The dataset to infer on.
+    :param infer_results_path: The path to save the resulting predictions to.
+    :param number_of_top_predictions_to_keep: The number of top results to keep. None will save all results.
+    """
+    confidences_data_frame = None
+    examples_count = 0
+    for batch_index, (paths, examples) in enumerate(dataset):
+        confidences = model(examples, training=False)
+        if confidences.shape[1] == 1:
+            batch_confidences_data_frame = pd.DataFrame({'light_curve_path': paths.numpy().astype(str),
+                                                         'confidence': np.squeeze(confidences, axis=1)})
+        else:
+            batch_confidences_data_frame = pd.DataFrame({'light_curve_path': paths.numpy().astype(str)})
+            for label_index in range(confidences.shape[1]):
+                batch_confidences_data_frame[f'label_{label_index}_confidence'] = confidences[:, label_index]
+        examples_count += batch_confidences_data_frame.shape[0]
+        if confidences_data_frame is None:
+            confidences_data_frame = batch_confidences_data_frame
+        else:
+            confidences_data_frame = pd.concat([confidences_data_frame, batch_confidences_data_frame])
+        print(f'{examples_count} examples inferred on.', flush=True)
+        if examples_count > limit:
+            break
+    confidences_data_frame = confidences_data_frame.sample(frac=1.0)
+    confidences_data_frame = confidences_data_frame.head(keep)
+    confidences_data_frame = confidences_data_frame.sort_values('confidence', ascending=False)
+    confidences_data_frame = confidences_data_frame.reset_index(drop=True)
+    confidences_data_frame.to_csv(infer_results_path, index_label='index')
+
+
 def save_results(confidences_data_frame: pd.DataFrame, infer_results_path: Path,
                  number_of_top_predictions_to_keep: int = None) -> pd.DataFrame:
     """
