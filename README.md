@@ -1,4 +1,4 @@
-![ramjet_engine](docs/ramjet_engine.png)
+![ramjet_engine](docs/qusi_logo.png)
 
 # qusi (formerly RAMjET)
 
