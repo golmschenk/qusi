@@ -25,6 +25,8 @@ def train_session(
     train_datasets: list[LightCurveDataset],
     validation_datasets: list[LightCurveDataset],
     model: Module,
+    loss_function: Module | None = None,
+    metric_functions: list[Module] | None = None,
     hyperparameter_configuration: TrainHyperparameterConfiguration | None = None,
     logging_configuration: TrainLoggingConfiguration | None = None,
 ):
@@ -32,6 +34,10 @@ def train_session(
         hyperparameter_configuration = TrainHyperparameterConfiguration.new()
     if logging_configuration is None:
         logging_configuration = TrainLoggingConfiguration.new()
+    if loss_function is None:
+        loss_function = BCELoss()
+    if metric_functions is None:
+        metric_functions = [BinaryAccuracy()]
     set_up_default_logger()
     wandb_init(
         process_rank=0,
@@ -76,8 +82,7 @@ def train_session(
     else:
         device = torch.device("cpu")
     model = model.to(device, non_blocking=True)
-    loss_function = BCELoss().to(device, non_blocking=True)
-    metric_functions = [BinaryAccuracy()]
+    loss_function = loss_function.to(device, non_blocking=True)
     optimizer = AdamW(model.parameters())
     metric_functions: list[Module] = [
         metric_function.to(device, non_blocking=True)
