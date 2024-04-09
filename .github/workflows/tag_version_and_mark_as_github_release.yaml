@@ -1,0 +1,46 @@
+name: tag_version_and_mark_as_github_release
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  tag_version:
+    name: tag_version
+    runs-on: ubuntu-latest
+    permissions: write-all
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: install_hatch
+        run: pipx install hatch
+      - name: get_version
+        run: |
+          echo "VERSION=$(hatch version)" >> $GITHUB_ENV
+      - name: check_if_tag_exists_for_version
+        run: |
+          if git show-ref --tags --verify --quiet "refs/tags/${VERSION}"; then
+            echo "Tag ${VERSION} exists."
+            echo "TAG_EXISTS=true" >> $GITHUB_ENV
+          else
+            echo "Tag ${VERSION} does not exist."
+            echo "TAG_EXISTS=false" >> $GITHUB_ENV
+          fi
+      - name: create_release_tag
+        uses: actions/github-script@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        if: ${{ env.TAG_EXISTS == 'false' }}
+        with:
+          script: |
+            github.rest.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: `refs/tags/${process.env.VERSION}`,
+              sha: context.sha,
+            })
