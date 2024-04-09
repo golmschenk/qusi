@@ -3,4 +3,6 @@ repos:
     rev: v0.2.2
     hooks:
       - id: ruff
+        pass_filenames: false  # TODO: Remove after https://github.com/astral-sh/ruff-pre-commit/issues/54 fixed.
       - id: ruff-format
+        pass_filenames: false  # TODO: Remove after https://github.com/astral-sh/ruff-pre-commit/issues/54 fixed.
