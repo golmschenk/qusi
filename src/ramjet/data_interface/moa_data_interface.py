@@ -30,10 +30,10 @@ class MoaDataInterface:
         """
         if self.survey_tag_to_path_list_dictionary_ is None:
             takahiro_sumi_nine_year_events_data_frame = self.read_corrected_nine_year_events_table_as_data_frame(
-                Path("data/moa_microlensing/moa9yr_events_oct2018.txt")
+                Path("data/moa_microlensing_550k/candlist_2023Oct12.txt")
             )
             self.survey_tag_to_path_list_dictionary_ = self.group_paths_by_tag_in_events_data_frame(
-                list(Path("data/moa_microlensing").glob("**/*.cor.feather")), takahiro_sumi_nine_year_events_data_frame
+                list(Path("data/moa_microlensing_550k").glob("**/*.cor.feather")), takahiro_sumi_nine_year_events_data_frame
             )
         return self.survey_tag_to_path_list_dictionary_
 
@@ -107,7 +107,7 @@ class MoaDataInterface:
         tbl = soup.find("table")
         events_data_frame = pd.read_html(str(tbl))[0]
         events_data_frame[["field", "clr", "chip", "subfield", "id"]] = events_data_frame["MOA INTERNAL ID"].str.split(
-            "-", 4, expand=True
+            "-", n=4, expand=True
         )
         events_data_frame["chip"] = events_data_frame["chip"].astype(int)
         events_data_frame["subfield"] = events_data_frame["subfield"].astype(int)

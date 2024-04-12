@@ -3,6 +3,7 @@ import torch
 from torch.nn import Module
 from torch.types import Device
 from torch.utils.data import DataLoader
+from tqdm import tqdm
 
 from qusi.finite_standard_light_curve_dataset import FiniteStandardLightCurveDataset
 
@@ -24,8 +25,10 @@ def infer_session(
 
 def get_device() -> Device:
     if torch.cuda.is_available():
+        print("Using CUDA")
         device = torch.device("cuda")
     else:
+        print("Using CPU")
         device = torch.device("cpu")
     return device
 
@@ -36,8 +39,9 @@ def infer_phase(dataloader, model: Module, device: Device):
     model = model.to(device=device)
     model.eval()
     with torch.no_grad():
-        for input_features in dataloader:
+        for input_features in tqdm(dataloader):
             input_features_on_device = input_features.to(device, non_blocking=True)
+            input_features_on_device = input_features_on_device.to(dtype=torch.float32)  # SIS added this line
             batch_predicted_targets = model(input_features_on_device)
             batches_of_predicted_targets.append(batch_predicted_targets)
             batch_count += 1
