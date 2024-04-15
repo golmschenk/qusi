@@ -302,3 +302,6 @@ def constant_label_for_path_before_partial(_path: Path, label: int) -> int:
     :return: The label
     """
     return label
+
+
+LightCurveObservationCollection = LabeledLightCurveCollection
