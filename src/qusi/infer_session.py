@@ -9,7 +9,7 @@ from qusi.finite_standard_light_curve_dataset import FiniteStandardLightCurveDat
 
 def infer_session(
     infer_datasets: list[FiniteStandardLightCurveDataset], model: Module, batch_size: int, device: Device
-):
+) -> list[np.ndarray]:
     infer_dataloaders: list[DataLoader] = []
     for infer_dataset in infer_datasets:
         infer_dataloader = DataLoader(infer_dataset, batch_size=batch_size, pin_memory=True)
