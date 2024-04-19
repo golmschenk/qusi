@@ -598,7 +598,10 @@ def download_spoc_light_curves_for_tic_ids(
     paths = []
     logger.info(f"Downloading light curves to {download_directory}...")
     for tic_id_list_chunk in np.array_split(tic_ids, math.ceil(len(tic_ids) / chunk_size)):
-        chunk_limit = limit - len(paths)
+        if limit is not None:
+            chunk_limit = limit - len(paths)
+        else:
+            chunk_limit = None
         paths_chunk = download_spoc_light_curves_for_tic_ids_chunk(
             tic_id_list_chunk, download_directory, sectors=sectors, limit=chunk_limit
         )

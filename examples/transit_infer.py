@@ -26,7 +26,7 @@ def main():
         load_times_and_fluxes_from_path_function=load_times_and_fluxes_from_path)
 
     test_light_curve_dataset = FiniteStandardLightCurveDataset.new(
-        light_curve_collections=[infer_light_curve_collection])
+       light_curve_collections=[infer_light_curve_collection])
 
     model = Hadryss.new()
     device = get_device()
