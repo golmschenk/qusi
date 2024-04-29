@@ -8,6 +8,7 @@ from torch.utils.data import DataLoader
 from torchmetrics.classification import BinaryAccuracy
 
 from qusi.hadryss_model import Hadryss
+from qusi.device import get_device
 from qusi.light_curve_collection import LabeledLightCurveCollection
 from qusi.light_curve_dataset import LightCurveDataset
 from ramjet.photometric_database.tess_two_minute_cadence_light_curve import TessMissionLightCurve
@@ -69,14 +70,6 @@ def infinite_datasets_test_session(test_datasets: list[LightCurveDataset], model
         result = infinite_dataset_test_phase(test_dataloader, model, metric_functions, device=device, steps=steps)
         results.append(result)
     return results
-
-
-def get_device():
-    if torch.cuda.is_available():
-        device = torch.device('cuda')
-    else:
-        device = torch.device('cpu')
-    return device
 
 
 def infinite_dataset_test_phase(dataloader, model: Module, metric_functions: list[Module], device: Device, steps: int):

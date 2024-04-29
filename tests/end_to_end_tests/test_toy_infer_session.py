@@ -3,7 +3,8 @@ from functools import partial
 
 import numpy as np
 
-from qusi.infer_session import get_device, infer_session
+from qusi.infer_session import infer_session
+from qusi.device import get_device
 from qusi.light_curve_dataset import (
     default_light_curve_post_injection_transform,
 )

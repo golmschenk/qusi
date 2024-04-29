@@ -22,14 +22,6 @@ def infer_session(
     return results
 
 
-def get_device() -> Device:
-    if torch.cuda.is_available():
-        device = torch.device("cuda")
-    else:
-        device = torch.device("cpu")
-    return device
-
-
 def infer_phase(dataloader, model: Module, device: Device):
     batch_count = 0
     batches_of_predicted_targets = []
