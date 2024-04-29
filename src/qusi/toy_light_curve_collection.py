@@ -5,7 +5,7 @@ import numpy as np
 from qusi.finite_standard_light_curve_dataset import FiniteStandardLightCurveDataset
 from qusi.light_curve import LightCurve
 from qusi.light_curve_collection import (
-    LabeledLightCurveCollection,
+    LightCurveObservationCollection,
     create_constant_label_for_path_function, LightCurveCollection,
 )
 from qusi.light_curve_dataset import LightCurveDataset
@@ -70,16 +70,16 @@ def toy_sine_wave_light_curve_load_times_and_fluxes(
     return light_curve.times, light_curve.fluxes
 
 
-def get_toy_flat_light_curve_observation_collection() -> LabeledLightCurveCollection:
-    return LabeledLightCurveCollection.new(
+def get_toy_flat_light_curve_observation_collection() -> LightCurveObservationCollection:
+    return LightCurveObservationCollection.new(
         get_paths_function=toy_light_curve_get_paths_function,
         load_times_and_fluxes_from_path_function=toy_flat_light_curve_load_times_and_fluxes,
         load_label_from_path_function=create_constant_label_for_path_function(0),
     )
 
 
-def get_toy_sine_wave_light_curve_observation_collection() -> LabeledLightCurveCollection:
-    return LabeledLightCurveCollection.new(
+def get_toy_sine_wave_light_curve_observation_collection() -> LightCurveObservationCollection:
+    return LightCurveObservationCollection.new(
         get_paths_function=toy_light_curve_get_paths_function,
         load_times_and_fluxes_from_path_function=toy_sine_wave_light_curve_load_times_and_fluxes,
         load_label_from_path_function=create_constant_label_for_path_function(1),

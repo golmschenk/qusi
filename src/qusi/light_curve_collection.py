@@ -174,7 +174,7 @@ class LightCurveCollection(
 
 
 @dataclass
-class LabeledLightCurveCollection(
+class LightCurveObservationCollection(
     LightCurveObservationCollectionBase, LightCurveObservationIndexableBase
 ):
     """
@@ -304,4 +304,4 @@ def constant_label_for_path_before_partial(_path: Path, label: int) -> int:
     return label
 
 
-LightCurveObservationCollection = LabeledLightCurveCollection
+LabeledLightCurveCollection = LightCurveObservationCollection

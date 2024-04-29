@@ -6,19 +6,19 @@ import numpy as np
 from torch.utils.data import Dataset
 from typing_extensions import Self
 
-from qusi.light_curve_collection import LabeledLightCurveCollection
+from qusi.light_curve_collection import LightCurveObservationCollection
 from qusi.light_curve_dataset import default_light_curve_observation_post_injection_transform
 
 
 @dataclass
 class FiniteStandardLightCurveObservationDataset(Dataset):
-    standard_light_curve_collections: list[LabeledLightCurveCollection]
+    standard_light_curve_collections: list[LightCurveObservationCollection]
     post_injection_transform: Callable[[Any], Any]
     length: int
     collection_start_indexes: list[int]
 
     @classmethod
-    def new(cls, standard_light_curve_collections: list[LabeledLightCurveCollection]) -> Self:
+    def new(cls, standard_light_curve_collections: list[LightCurveObservationCollection]) -> Self:
         length = 0
         collection_start_indexes: list[int] = []
         for standard_light_curve_collection in standard_light_curve_collections:

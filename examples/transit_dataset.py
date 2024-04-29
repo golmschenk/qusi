@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from qusi.finite_standard_light_curve_observation_dataset import FiniteStandardLightCurveObservationDataset
-from qusi.light_curve_collection import LabeledLightCurveCollection
+from qusi.light_curve_collection import LightCurveObservationCollection
 from qusi.light_curve_dataset import LightCurveDataset
 from ramjet.photometric_database.tess_two_minute_cadence_light_curve import TessMissionLightCurve
 
@@ -44,11 +44,11 @@ def negative_label_function(path):
 
 
 def get_transit_train_dataset():
-    positive_train_light_curve_collection = LabeledLightCurveCollection.new(
+    positive_train_light_curve_collection = LightCurveObservationCollection.new(
         get_paths_function=get_positive_train_paths,
         load_times_and_fluxes_from_path_function=load_times_and_fluxes_from_path,
         load_label_from_path_function=positive_label_function)
-    negative_train_light_curve_collection = LabeledLightCurveCollection.new(
+    negative_train_light_curve_collection = LightCurveObservationCollection.new(
         get_paths_function=get_negative_train_paths,
         load_times_and_fluxes_from_path_function=load_times_and_fluxes_from_path,
         load_label_from_path_function=negative_label_function)
@@ -59,11 +59,11 @@ def get_transit_train_dataset():
 
 
 def get_transit_validation_dataset():
-    positive_validation_light_curve_collection = LabeledLightCurveCollection.new(
+    positive_validation_light_curve_collection = LightCurveObservationCollection.new(
         get_paths_function=get_positive_validation_paths,
         load_times_and_fluxes_from_path_function=load_times_and_fluxes_from_path,
         load_label_from_path_function=positive_label_function)
-    negative_validation_light_curve_collection = LabeledLightCurveCollection.new(
+    negative_validation_light_curve_collection = LightCurveObservationCollection.new(
         get_paths_function=get_negative_validation_paths,
         load_times_and_fluxes_from_path_function=load_times_and_fluxes_from_path,
         load_label_from_path_function=negative_label_function)
@@ -74,11 +74,11 @@ def get_transit_validation_dataset():
 
 
 def get_transit_finite_test_dataset():
-    positive_test_light_curve_collection = LabeledLightCurveCollection.new(
+    positive_test_light_curve_collection = LightCurveObservationCollection.new(
         get_paths_function=get_positive_test_paths,
         load_times_and_fluxes_from_path_function=load_times_and_fluxes_from_path,
         load_label_from_path_function=positive_label_function)
-    negative_test_light_curve_collection = LabeledLightCurveCollection.new(
+    negative_test_light_curve_collection = LightCurveObservationCollection.new(
         get_paths_function=get_negative_test_paths,
         load_times_and_fluxes_from_path_function=load_times_and_fluxes_from_path,
         load_label_from_path_function=negative_label_function)

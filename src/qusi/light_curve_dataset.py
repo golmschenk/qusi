@@ -38,7 +38,7 @@ from qusi.light_curve_transforms import (
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
 
-    from qusi.light_curve_collection import LabeledLightCurveCollection
+    from qusi.light_curve_collection import LightCurveObservationCollection
 
 
 class LightCurveDataset(IterableDataset):
@@ -48,19 +48,19 @@ class LightCurveDataset(IterableDataset):
 
     def __init__(
         self,
-        standard_light_curve_collections: list[LabeledLightCurveCollection],
-        injectee_light_curve_collections: list[LabeledLightCurveCollection],
-        injectable_light_curve_collections: list[LabeledLightCurveCollection],
+        standard_light_curve_collections: list[LightCurveObservationCollection],
+        injectee_light_curve_collections: list[LightCurveObservationCollection],
+        injectable_light_curve_collections: list[LightCurveObservationCollection],
         post_injection_transform: Callable[[Any], Any],
     ):
         self.standard_light_curve_collections: list[
-            LabeledLightCurveCollection
+            LightCurveObservationCollection
         ] = standard_light_curve_collections
         self.injectee_light_curve_collections: list[
-            LabeledLightCurveCollection
+            LightCurveObservationCollection
         ] = injectee_light_curve_collections
         self.injectable_light_curve_collections: list[
-            LabeledLightCurveCollection
+            LightCurveObservationCollection
         ] = injectable_light_curve_collections
         if (
             len(self.standard_light_curve_collections) == 0
@@ -153,11 +153,11 @@ class LightCurveDataset(IterableDataset):
     @classmethod
     def new(
         cls,
-        standard_light_curve_collections: list[LabeledLightCurveCollection]
+        standard_light_curve_collections: list[LightCurveObservationCollection]
         | None = None,
-        injectee_light_curve_collections: list[LabeledLightCurveCollection]
+        injectee_light_curve_collections: list[LightCurveObservationCollection]
         | None = None,
-        injectable_light_curve_collections: list[LabeledLightCurveCollection]
+        injectable_light_curve_collections: list[LightCurveObservationCollection]
         | None = None,
         post_injection_transform: Callable[[Any], Any] | None = None,
     ) -> Self:

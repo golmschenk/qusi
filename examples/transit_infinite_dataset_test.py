@@ -9,7 +9,7 @@ from torchmetrics.classification import BinaryAccuracy
 
 from qusi.hadryss_model import Hadryss
 from qusi.device import get_device
-from qusi.light_curve_collection import LabeledLightCurveCollection
+from qusi.light_curve_collection import LightCurveObservationCollection
 from qusi.light_curve_dataset import LightCurveDataset
 from ramjet.photometric_database.tess_two_minute_cadence_light_curve import TessMissionLightCurve
 
@@ -36,11 +36,11 @@ def negative_label_function(_path: Path) -> int:
 
 
 def main():
-    positive_test_light_curve_collection = LabeledLightCurveCollection.new(
+    positive_test_light_curve_collection = LightCurveObservationCollection.new(
         get_paths_function=get_positive_test_paths,
         load_times_and_fluxes_from_path_function=load_times_and_fluxes_from_path,
         load_label_from_path_function=positive_label_function)
-    negative_test_light_curve_collection = LabeledLightCurveCollection.new(
+    negative_test_light_curve_collection = LightCurveObservationCollection.new(
         get_paths_function=get_negative_test_paths,
         load_times_and_fluxes_from_path_function=load_times_and_fluxes_from_path,
         load_label_from_path_function=negative_label_function)
