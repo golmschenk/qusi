@@ -627,6 +627,8 @@ def download_spoc_light_curves_for_tic_ids_chunk(
     light_curve_observations[ColumnName.SECTOR] = light_curve_observations["obs_id"].map(get_sector_from_spoc_obs_id)
     if sectors is not None:
         light_curve_observations = light_curve_observations[light_curve_observations[ColumnName.SECTOR].isin(sectors)]
+    if light_curve_observations.shape[0] == 0:
+        return []
     data_product_list = get_product_list(light_curve_observations)
     light_curve_data_products = data_product_list[data_product_list["productFilename"].str.endswith("lc.fits")]
     if limit is not None:
