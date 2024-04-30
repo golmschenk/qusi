@@ -1,6 +1,6 @@
 import torch
 
-from qusi.hadryss_model import Hadryss
+from qusi.internal.hadryss_model import Hadryss
 
 
 def test_lengths_give_correct_output_size():

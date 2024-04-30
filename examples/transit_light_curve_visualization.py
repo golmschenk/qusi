@@ -3,7 +3,7 @@ from pathlib import Path
 from bokeh.io import show
 from bokeh.plotting import figure as Figure
 
-from ramjet.photometric_database.tess_two_minute_cadence_light_curve import TessMissionLightCurve
+from qusi.experimental.application.tess import TessMissionLightCurve
 
 
 def main():

@@ -1,6 +1,5 @@
-from qusi.hadryss_model import Hadryss
-from qusi.train_hyperparameter_configuration import TrainHyperparameterConfiguration
-from qusi.train_session import train_session
+from qusi.model import Hadryss
+from qusi.session import TrainHyperparameterConfiguration, train_session
 
 from transit_dataset import get_transit_train_dataset, get_transit_validation_dataset
 

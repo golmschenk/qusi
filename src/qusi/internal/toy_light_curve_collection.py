@@ -2,13 +2,13 @@ from pathlib import Path
 
 import numpy as np
 
-from qusi.finite_standard_light_curve_dataset import FiniteStandardLightCurveDataset
-from qusi.light_curve import LightCurve
-from qusi.light_curve_collection import (
+from qusi.internal.finite_standard_light_curve_dataset import FiniteStandardLightCurveDataset
+from qusi.internal.light_curve import LightCurve
+from qusi.internal.light_curve_collection import (
     LightCurveObservationCollection,
     create_constant_label_for_path_function, LightCurveCollection,
 )
-from qusi.light_curve_dataset import LightCurveDataset
+from qusi.internal.light_curve_dataset import LightCurveDataset
 
 
 class ToyLightCurve:

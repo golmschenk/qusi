@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 from typing_extensions import Self
 
-from qusi.light_curve import LightCurve, randomly_roll_light_curve, remove_nan_flux_data_points_from_light_curve
+from qusi.internal.light_curve import LightCurve, randomly_roll_light_curve, remove_nan_flux_data_points_from_light_curve
 
 
 @dataclass

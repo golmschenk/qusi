@@ -4,7 +4,7 @@ from torch.nn import Module
 from torch.types import Device
 from torch.utils.data import DataLoader
 
-from qusi.finite_standard_light_curve_dataset import FiniteStandardLightCurveDataset
+from qusi.internal.finite_standard_light_curve_dataset import FiniteStandardLightCurveDataset
 
 
 def infer_session(

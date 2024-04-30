@@ -2,11 +2,12 @@ from pathlib import Path
 
 import numpy as np
 
-from ramjet.data_interface.tess_data_interface import (
+from qusi.experimental.application.tess import (
     download_spoc_light_curves_for_tic_ids,
     get_spoc_tic_id_list_from_mast,
+    TessToiDataInterface,
+    ToiColumns,
 )
-from ramjet.data_interface.tess_toi_data_interface import TessToiDataInterface, ToiColumns
 
 
 def main():

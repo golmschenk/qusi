@@ -3,7 +3,7 @@ import numpy.typing as npt
 import torch
 from torch import Tensor
 
-from qusi.light_curve_observation import LightCurveObservation
+from qusi.internal.light_curve_observation import LightCurveObservation
 
 
 def from_light_curve_observation_to_fluxes_array_and_label_array(

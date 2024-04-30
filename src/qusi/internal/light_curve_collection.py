@@ -11,8 +11,8 @@ import numpy as np
 import numpy.typing as npt
 from typing_extensions import Self
 
-from qusi.light_curve import LightCurve
-from qusi.light_curve_observation import LightCurveObservation
+from qusi.internal.light_curve import LightCurve
+from qusi.internal.light_curve_observation import LightCurveObservation
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator

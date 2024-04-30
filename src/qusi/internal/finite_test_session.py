@@ -3,7 +3,7 @@ from torch.nn import Module
 from torch.types import Device
 from torch.utils.data import DataLoader
 
-from qusi.finite_standard_light_curve_observation_dataset import FiniteStandardLightCurveObservationDataset
+from qusi.internal.finite_standard_light_curve_observation_dataset import FiniteStandardLightCurveObservationDataset
 
 
 def finite_datasets_test_session(

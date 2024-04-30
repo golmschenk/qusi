@@ -1,8 +1,6 @@
 from pathlib import Path
 
-from qusi.finite_standard_light_curve_observation_dataset import FiniteStandardLightCurveObservationDataset
-from qusi.light_curve_collection import LightCurveObservationCollection
-from qusi.light_curve_dataset import LightCurveDataset
+from qusi.data import FiniteStandardLightCurveObservationDataset, LightCurveDataset, LightCurveObservationCollection
 from ramjet.photometric_database.tess_two_minute_cadence_light_curve import TessMissionLightCurve
 
 

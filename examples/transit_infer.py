@@ -3,12 +3,10 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from qusi.finite_standard_light_curve_dataset import FiniteStandardLightCurveDataset
-from qusi.hadryss_model import Hadryss
-from qusi.infer_session import infer_session
-from qusi.device import get_device
-from qusi.light_curve_collection import LightCurveCollection
-from ramjet.photometric_database.tess_two_minute_cadence_light_curve import TessMissionLightCurve
+from qusi.data import FiniteStandardLightCurveDataset, LightCurveCollection
+from qusi.model import Hadryss
+from qusi.session import get_device, infer_session
+from qusi.experimental.application.tess import TessMissionLightCurve
 
 
 def get_infer_paths():

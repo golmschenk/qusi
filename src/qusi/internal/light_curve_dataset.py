@@ -20,17 +20,17 @@ from torch import Tensor
 from torch.utils.data import IterableDataset
 from typing_extensions import Self
 
-from qusi.light_curve import (
+from qusi.internal.light_curve import (
     LightCurve,
     randomly_roll_light_curve,
     remove_nan_flux_data_points_from_light_curve,
 )
-from qusi.light_curve_observation import (
+from qusi.internal.light_curve_observation import (
     LightCurveObservation,
     randomly_roll_light_curve_observation,
     remove_nan_flux_data_points_from_light_curve_observation,
 )
-from qusi.light_curve_transforms import (
+from qusi.internal.light_curve_transforms import (
     from_light_curve_observation_to_fluxes_array_and_label_array,
     pair_array_to_tensor,
 )
@@ -38,7 +38,7 @@ from qusi.light_curve_transforms import (
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
 
-    from qusi.light_curve_collection import LightCurveObservationCollection
+    from qusi.internal.light_curve_collection import LightCurveObservationCollection
 
 
 class LightCurveDataset(IterableDataset):

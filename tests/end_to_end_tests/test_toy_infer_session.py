@@ -3,13 +3,13 @@ from functools import partial
 
 import numpy as np
 
-from qusi.infer_session import infer_session
-from qusi.device import get_device
-from qusi.light_curve_dataset import (
+from qusi.internal.infer_session import infer_session
+from qusi.internal.device import get_device
+from qusi.internal.light_curve_dataset import (
     default_light_curve_post_injection_transform,
 )
-from qusi.single_dense_layer_model import SingleDenseLayerBinaryClassificationModel
-from qusi.toy_light_curve_collection import get_toy_finite_light_curve_dataset
+from qusi.internal.single_dense_layer_model import SingleDenseLayerBinaryClassificationModel
+from qusi.internal.toy_light_curve_collection import get_toy_finite_light_curve_dataset
 
 
 def test_toy_infer_session():

@@ -7,11 +7,11 @@ from torch.types import Device
 from torch.utils.data import DataLoader
 from torchmetrics.classification import BinaryAccuracy
 
-from qusi.hadryss_model import Hadryss
-from qusi.device import get_device
-from qusi.light_curve_collection import LightCurveObservationCollection
-from qusi.light_curve_dataset import LightCurveDataset
-from ramjet.photometric_database.tess_two_minute_cadence_light_curve import TessMissionLightCurve
+from qusi.model import Hadryss
+from qusi.session import get_device
+from qusi.data import LightCurveObservationCollection
+from qusi.data import LightCurveDataset
+from qusi.experimental.application.tess import TessMissionLightCurve
 
 
 def get_negative_test_paths():

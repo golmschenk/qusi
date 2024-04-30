@@ -12,11 +12,11 @@ from torch.utils.data import DataLoader
 from torchmetrics.classification import BinaryAccuracy
 
 import wandb
-from qusi.light_curve_dataset import InterleavedDataset, LightCurveDataset
-from qusi.logging import set_up_default_logger
-from qusi.train_hyperparameter_configuration import TrainHyperparameterConfiguration
-from qusi.train_logging_configuration import TrainLoggingConfiguration
-from qusi.wandb_liaison import wandb_commit, wandb_init, wandb_log
+from qusi.internal.light_curve_dataset import InterleavedDataset, LightCurveDataset
+from qusi.internal.logging import set_up_default_logger
+from qusi.internal.train_hyperparameter_configuration import TrainHyperparameterConfiguration
+from qusi.internal.train_logging_configuration import TrainLoggingConfiguration
+from qusi.internal.wandb_liaison import wandb_commit, wandb_init, wandb_log
 
 logger = logging.getLogger(__name__)
 

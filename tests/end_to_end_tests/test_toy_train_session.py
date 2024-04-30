@@ -1,13 +1,13 @@
 import os
 from functools import partial
 
-from qusi.light_curve_dataset import (
+from qusi.internal.light_curve_dataset import (
     default_light_curve_observation_post_injection_transform,
 )
-from qusi.single_dense_layer_model import SingleDenseLayerBinaryClassificationModel
-from qusi.toy_light_curve_collection import get_toy_dataset
-from qusi.train_hyperparameter_configuration import TrainHyperparameterConfiguration
-from qusi.train_session import train_session
+from qusi.internal.single_dense_layer_model import SingleDenseLayerBinaryClassificationModel
+from qusi.internal.toy_light_curve_collection import get_toy_dataset
+from qusi.internal.train_hyperparameter_configuration import TrainHyperparameterConfiguration
+from qusi.internal.train_session import train_session
 
 
 def test_toy_train_session():
