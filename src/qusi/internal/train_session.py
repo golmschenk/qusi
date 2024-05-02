@@ -22,13 +22,14 @@ logger = logging.getLogger(__name__)
 
 
 def train_session(
-    train_datasets: list[LightCurveDataset],
-    validation_datasets: list[LightCurveDataset],
-    model: Module,
-    loss_function: Module | None = None,
-    metric_functions: list[Module] | None = None,
-    hyperparameter_configuration: TrainHyperparameterConfiguration | None = None,
-    logging_configuration: TrainLoggingConfiguration | None = None,
+        train_datasets: list[LightCurveDataset],
+        validation_datasets: list[LightCurveDataset],
+        model: Module,
+        loss_function: Module | None = None,
+        metric_functions: list[Module] | None = None,
+        *,
+        hyperparameter_configuration: TrainHyperparameterConfiguration | None = None,
+        logging_configuration: TrainLoggingConfiguration | None = None,
 ):
     if hyperparameter_configuration is None:
         hyperparameter_configuration = TrainHyperparameterConfiguration.new()
@@ -112,13 +113,13 @@ def train_session(
 
 
 def train_phase(
-    dataloader,
-    model,
-    loss_function,
-    metric_functions: list[Module],
-    optimizer,
-    steps,
-    device,
+        dataloader,
+        model,
+        loss_function,
+        metric_functions: list[Module],
+        optimizer,
+        steps,
+        device,
 ):
     model.train()
     total_loss = 0
@@ -173,7 +174,7 @@ def get_metric_name(metric_function):
 
 
 def validation_phase(
-    dataloader, model, loss_function, metric_functions: list[Module], steps, device
+        dataloader, model, loss_function, metric_functions: list[Module], steps, device
 ):
     model.eval()
     validation_loss = 0

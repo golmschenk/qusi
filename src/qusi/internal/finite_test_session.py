@@ -7,11 +7,12 @@ from qusi.internal.finite_standard_light_curve_observation_dataset import Finite
 
 
 def finite_datasets_test_session(
-    test_datasets: list[FiniteStandardLightCurveObservationDataset],
-    model: Module,
-    metric_functions: list[Module],
-    batch_size: int,
-    device: Device,
+        test_datasets: list[FiniteStandardLightCurveObservationDataset],
+        model: Module,
+        *,
+        metric_functions: list[Module],
+        batch_size: int,
+        device: Device,
 ):
     test_dataloaders: list[DataLoader] = []
     for test_dataset in test_datasets:

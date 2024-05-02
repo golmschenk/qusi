@@ -22,15 +22,16 @@ class TrainHyperparameterConfiguration:
 
     @classmethod
     def new(
-        cls,
-        learning_rate: float = 1e-4,
-        optimizer_epsilon: float = 1e-7,
-        weight_decay: float = 0.0001,
-        batch_size: int = 100,
-        train_steps_per_cycle: int = 100,
-        validation_steps_per_cycle: int = 10,
-        cycles: int = 5000,
-        norm_based_gradient_clip: float = 1.0,
+            cls,
+            *,
+            learning_rate: float = 1e-4,
+            optimizer_epsilon: float = 1e-7,
+            weight_decay: float = 0.0001,
+            batch_size: int = 100,
+            train_steps_per_cycle: int = 100,
+            validation_steps_per_cycle: int = 10,
+            cycles: int = 5000,
+            norm_based_gradient_clip: float = 1.0,
     ):
         return cls(
             learning_rate=learning_rate,

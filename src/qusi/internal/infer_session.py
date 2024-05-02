@@ -8,7 +8,7 @@ from qusi.internal.finite_standard_light_curve_dataset import FiniteStandardLigh
 
 
 def infer_session(
-    infer_datasets: list[FiniteStandardLightCurveDataset], model: Module, batch_size: int, device: Device
+    infer_datasets: list[FiniteStandardLightCurveDataset], model: Module, *, batch_size: int, device: Device
 ) -> list[np.ndarray]:
     infer_dataloaders: list[DataLoader] = []
     for infer_dataset in infer_datasets:

@@ -14,5 +14,9 @@ class TrainSystemConfiguration:
     preprocessing_processes_per_train_process: int
 
     @classmethod
-    def new(cls, preprocessing_processes_per_train_process: int = 10):
+    def new(
+            cls,
+            *,
+            preprocessing_processes_per_train_process: int = 10
+    ):
         return cls(preprocessing_processes_per_train_process=preprocessing_processes_per_train_process)

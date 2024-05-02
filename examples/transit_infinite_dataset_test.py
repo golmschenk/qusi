@@ -60,7 +60,7 @@ def main():
 
 
 def infinite_datasets_test_session(test_datasets: list[LightCurveDataset], model: Module,
-                                   metric_functions: list[Module], batch_size: int, device: Device, steps: int):
+                                   metric_functions: list[Module], *, batch_size: int, device: Device, steps: int):
     test_dataloaders: list[DataLoader] = []
     for test_dataset in test_datasets:
         test_dataloaders.append(DataLoader(test_dataset, batch_size=batch_size, pin_memory=True))

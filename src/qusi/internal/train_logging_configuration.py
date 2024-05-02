@@ -20,10 +20,11 @@ class TrainLoggingConfiguration:
 
     @classmethod
     def new(
-        cls,
-        wandb_project: str | None = None,
-        wandb_entity: str | None = None,
-        additional_log_dictionary: dict[str, Any] | None = None,
+            cls,
+            *,
+            wandb_project: str | None = None,
+            wandb_entity: str | None = None,
+            additional_log_dictionary: dict[str, Any] | None = None,
     ):
         if additional_log_dictionary is None:
             additional_log_dictionary = {}

@@ -22,7 +22,7 @@ class Hadryss(Module):
     A 1D convolutional neural network model for light curve data that will auto-size itself for a given input light
     curve length.
     """
-    def __init__(self, input_length: int):
+    def __init__(self, *, input_length: int):
         super().__init__()
         self.input_length: int = input_length
         pooling_sizes, dense_size = self.determine_block_pooling_sizes_and_dense_size()
