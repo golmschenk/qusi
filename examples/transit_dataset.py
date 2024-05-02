@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from qusi.data import FiniteStandardLightCurveObservationDataset, LightCurveDataset, LightCurveObservationCollection
-from ramjet.photometric_database.tess_two_minute_cadence_light_curve import TessMissionLightCurve
+from qusi.experimental.application.tess import TessMissionLightCurve
 
 
 def get_positive_train_paths():
