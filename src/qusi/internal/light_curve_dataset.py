@@ -277,7 +277,7 @@ class LimitedIterableDataset(IterableDataset):
 
 
 def default_light_curve_observation_post_injection_transform(
-        x: LightCurveObservation, length: int
+        x: LightCurveObservation, *, length: int
 ) -> (Tensor, Tensor):
     x = remove_nan_flux_data_points_from_light_curve_observation(x)
     x = randomly_roll_light_curve_observation(x)
@@ -288,7 +288,7 @@ def default_light_curve_observation_post_injection_transform(
     return x
 
 
-def default_light_curve_post_injection_transform(x: LightCurve, length: int) -> Tensor:
+def default_light_curve_post_injection_transform(x: LightCurve, *, length: int) -> Tensor:
     x = remove_nan_flux_data_points_from_light_curve(x)
     x = randomly_roll_light_curve(x)
     x = x.fluxes
