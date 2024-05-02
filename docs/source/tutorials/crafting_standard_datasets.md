@@ -12,7 +12,7 @@ However, the uniform length is set to a specific default value. A good choice fo
 
 ```python
 from functools import partial
-from qusi.data import default_light_curve_post_injection_transform
+from qusi.transform import default_light_curve_post_injection_transform
 ```
 
 Then, were we specify the construction of our dataset, we'll add an additional input parameter. So taking what we had in the previous tutorial, we can now change the dataset creation statement to:
