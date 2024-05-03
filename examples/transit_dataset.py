@@ -81,6 +81,6 @@ def get_transit_finite_test_dataset():
         load_times_and_fluxes_from_path_function=load_times_and_fluxes_from_path,
         load_label_from_path_function=negative_label_function)
     test_light_curve_dataset = FiniteStandardLightCurveObservationDataset.new(
-        standard_light_curve_collections=[positive_test_light_curve_collection,
-                                          negative_test_light_curve_collection])
+        light_curve_collections=[positive_test_light_curve_collection,
+                                 negative_test_light_curve_collection])
     return test_light_curve_dataset

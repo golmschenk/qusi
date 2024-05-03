@@ -56,10 +56,7 @@ Note, `qusi` expects the label functions to take in a `Path` object as input, ev
 Now we're going to join the various functions we've just defined into `LightCurveObservationCollection`s. For the case of positive train light curves, this looks like:
 
 ```python
-positive_train_light_curve_collection = LightCurveObservationCollection.new(
-    get_paths_function=get_positive_train_paths,
-    load_times_and_fluxes_from_path_function=load_times_and_fluxes_from_path,
-    load_label_from_path_function=positive_label_function)
+positive_train_light_curve_collection = LightCurveObservationCollection.new()
 ```
 
 This defines a collection of labeled light curves where `qusi` knows how to obtain the paths, how to load the times and fluxes of the light curves, and how to load the labels. This `LightCurveObservationCollection.new(...` function takes in the three pieces we just built earlier. Note that you pass in the functions themselves, not the output of the functions. So for the `get_paths_function` parameter, we pass `get_positive_train_paths`, not `get_positive_train_paths()` (notice the difference in parenthesis). `qusi` will call these functions internally. However, the above bit of code is not by itself in `examples/transit_dataset.py` as the rest of the code in this tutorial was. This is because `qusi` doesn't use this collection by itself. It uses it as part of a dataset. We will explain why there's this extra layer in a moment.
@@ -70,17 +67,10 @@ Finally, we build the dataset `qusi` uses to train the network. First, we'll tak
 
 ```python
 def get_transit_train_dataset():
-    positive_train_light_curve_collection = LightCurveObservationCollection.new(
-        get_paths_function=get_positive_train_paths,
-        load_times_and_fluxes_from_path_function=load_times_and_fluxes_from_path,
-        load_label_from_path_function=positive_label_function)
-    negative_train_light_curve_collection = LightCurveObservationCollection.new(
-        get_paths_function=get_negative_train_paths,
-        load_times_and_fluxes_from_path_function=load_times_and_fluxes_from_path,
-        load_label_from_path_function=negative_label_function)
-    train_light_curve_dataset = LightCurveDataset.new(
-        standard_light_curve_collections=[positive_train_light_curve_collection,
-                                          negative_train_light_curve_collection])
+    positive_train_light_curve_collection = LightCurveObservationCollection.new()
+    negative_train_light_curve_collection = LightCurveObservationCollection.new()
+    train_light_curve_dataset = LightCurveDataset.new(light_curve_collections=[positive_train_light_curve_collection,
+                                                                               negative_train_light_curve_collection])
     return train_light_curve_dataset
 ```
 

@@ -49,6 +49,7 @@ class LightCurveDataset(IterableDataset):
     def __init__(
             self,
             standard_light_curve_collections: list[LightCurveObservationCollection],
+            *,
             injectee_light_curve_collections: list[LightCurveObservationCollection],
             injectable_light_curve_collections: list[LightCurveObservationCollection],
             post_injection_transform: Callable[[Any], Any],
@@ -134,8 +135,8 @@ class LightCurveDataset(IterableDataset):
     @classmethod
     def new(
             cls,
-            *,
             standard_light_curve_collections: list[LightCurveObservationCollection] | None = None,
+            *,
             injectee_light_curve_collections: list[LightCurveObservationCollection] | None = None,
             injectable_light_curve_collections: list[LightCurveObservationCollection] | None = None,
             post_injection_transform: Callable[[Any], Any] | None = None,
@@ -276,9 +277,8 @@ class LimitedIterableDataset(IterableDataset):
                 break
 
 
-def default_light_curve_observation_post_injection_transform(
-        x: LightCurveObservation, *, length: int
-) -> (Tensor, Tensor):
+def default_light_curve_observation_post_injection_transform(x: LightCurveObservation, *, length: int
+                                                             ) -> (Tensor, Tensor):
     x = remove_nan_flux_data_points_from_light_curve_observation(x)
     x = randomly_roll_light_curve_observation(x)
     x = from_light_curve_observation_to_fluxes_array_and_label_array(x)
