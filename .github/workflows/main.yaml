@@ -22,11 +22,12 @@ jobs:
       - name: build_dist
         run: hatch build
 
-  tag_version:
+  tag_and_release:
     name: tag_version
+    needs: [build]
     runs-on: ubuntu-latest
     permissions: write-all
-    if: github.ref == 'refs/heads/master' && github.event.pull_request.merged == true
+    if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v3
         with:
@@ -58,3 +59,8 @@ jobs:
               ref: `refs/tags/${process.env.VERSION}`,
               sha: context.sha,
             })
+      - name: create_release_from_tag
+        uses: softprops/action-gh-release@v2
+        if: ${{ env.TAG_EXISTS == 'false' }}
+        with:
+          tag_name: ${{ env.VERSION }}
