@@ -1,3 +1,4 @@
+import shutil
 from pathlib import Path
 
 import numpy as np
@@ -60,6 +61,12 @@ def main():
         download_directory=Path('data/spoc_transit_experiment/test/negatives'),
         sectors=sectors,
         limit=600)
+    # In this toy example, we reuse our test light curves as infer light curves. In a real world case, you would likely
+    #  want to infer on cases you don't already know the answer for.
+    infer_directory_path = Path('data/spoc_transit_experiment/infer')
+    infer_directory_path.mkdir(exist_ok=True, parents=True)
+    for light_curve_path in Path('data/spoc_transit_experiment/test').glob('**/*.fits'):
+        shutil.copy(light_curve_path, infer_directory_path.joinpath(light_curve_path.name))
 
 
 if __name__ == '__main__':

@@ -28,6 +28,10 @@ def get_positive_test_paths():
     return list(Path('data/spoc_transit_experiment/test/positives').glob('*.fits'))
 
 
+def get_infer_paths():
+    return list(Path('data/spoc_transit_experiment/infer').glob('*.fits'))
+
+
 def load_times_and_fluxes_from_path(path):
     light_curve = TessMissionLightCurve.from_path(path)
     return light_curve.times, light_curve.fluxes

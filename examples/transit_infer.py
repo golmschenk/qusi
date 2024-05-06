@@ -1,22 +1,11 @@
 from pathlib import Path
 
-import numpy as np
 import torch
 
 from qusi.data import FiniteStandardLightCurveDataset, LightCurveCollection
 from qusi.model import Hadryss
 from qusi.session import get_device, infer_session
-from qusi.experimental.application.tess import TessMissionLightCurve
-
-
-def get_infer_paths():
-    return (list(Path('data/spoc_transit_experiment/test/negatives').glob('*.fits')) +
-            list(Path('data/spoc_transit_experiment/test/positives').glob('*.fits')))
-
-
-def load_times_and_fluxes_from_path(path: Path) -> (np.ndarray, np.ndarray):
-    light_curve = TessMissionLightCurve.from_path(path)
-    return light_curve.times, light_curve.fluxes
+from transit_dataset import load_times_and_fluxes_from_path
 
 
 def main():
