@@ -43,7 +43,7 @@ if TYPE_CHECKING:
 
 class LightCurveDataset(IterableDataset):
     """
-    A dataset of light curve data.
+    A dataset of light curves. Includes cases where light curves can be injected into one another.
     """
 
     def __init__(
@@ -141,6 +141,16 @@ class LightCurveDataset(IterableDataset):
             injectable_light_curve_collections: list[LightCurveObservationCollection] | None = None,
             post_injection_transform: Callable[[Any], Any] | None = None,
     ) -> Self:
+        """
+        Creates a new light curve dataset.
+
+        :param standard_light_curve_collections: The light curve collections to be used without injection.
+        :param injectee_light_curve_collections: The light curve collections that other light curves will be injected
+                                                 into.
+        :param injectable_light_curve_collections: The light curve collections that will be injected into other light
+                                                   curves.
+        :return: The light curve dataset.
+        """
         if (
                 standard_light_curve_collections is None
                 and injectee_light_curve_collections is None
@@ -231,7 +241,7 @@ class LightCurveCollectionType(Enum):
 
 class InterleavedDataset(IterableDataset):
     def __init__(self, *datasets: IterableDataset):
-        self.datasets: tuple[IterableDataset] = datasets
+        self.datasets: tuple[IterableDataset, ...] = datasets
 
     @classmethod
     def new(cls, *datasets: IterableDataset):
@@ -246,7 +256,7 @@ class InterleavedDataset(IterableDataset):
 
 class ConcatenatedIterableDataset(IterableDataset):
     def __init__(self, *datasets: IterableDataset):
-        self.datasets: tuple[IterableDataset] = datasets
+        self.datasets: tuple[IterableDataset, ...] = datasets
 
     @classmethod
     def new(cls, *datasets: IterableDataset):
@@ -277,28 +287,64 @@ class LimitedIterableDataset(IterableDataset):
                 break
 
 
-def default_light_curve_observation_post_injection_transform(x: LightCurveObservation, *, length: int
-                                                             ) -> (Tensor, Tensor):
+def default_light_curve_observation_post_injection_transform(
+        x: LightCurveObservation,
+        *,
+        length: int,
+        randomize: bool = True,
+) -> (Tensor, Tensor):
+    """
+    The default light curve observation post injection transforms. A set of transforms that is expected to work well for
+    a variety of use cases.
+
+    :param x: The light curve observation to be transformed.
+    :param length: The length to make all light curves.
+    :param randomize: Whether to have randomization in the transforms.
+    :return: The transformed light curve observation.
+    """
     x = remove_nan_flux_data_points_from_light_curve_observation(x)
-    x = randomly_roll_light_curve_observation(x)
+    if randomize:
+        x = randomly_roll_light_curve_observation(x)
     x = from_light_curve_observation_to_fluxes_array_and_label_array(x)
-    x = make_fluxes_and_label_array_uniform_length(x, length=length)
+    x = (make_uniform_length(x[0], length=length, randomize=randomize), x[1])  # Make the fluxes a uniform length.
     x = pair_array_to_tensor(x)
     x = (normalize_tensor_by_modified_z_score(x[0]), x[1])
     return x
 
 
-def default_light_curve_post_injection_transform(x: LightCurve, *, length: int) -> Tensor:
+def default_light_curve_post_injection_transform(
+        x: LightCurve,
+        *,
+        length: int,
+        randomize: bool = True,
+) -> Tensor:
+    """
+    The default light curve post injection transforms. A set of transforms that is expected to work well for a variety
+    of use cases.
+
+    :param x: The light curve to be transformed.
+    :param length: The length to make all light curves.
+    :param randomize: Whether to have randomization in the transforms.
+    :return: The transformed light curve.
+    """
     x = remove_nan_flux_data_points_from_light_curve(x)
-    x = randomly_roll_light_curve(x)
+    if randomize:
+        x = randomly_roll_light_curve(x)
     x = x.fluxes
-    x = make_uniform_length(x, length=length)
+    x = make_uniform_length(x, length=length, randomize=randomize)
     x = torch.tensor(x, dtype=torch.float32)
     x = normalize_tensor_by_modified_z_score(x)
     return x
 
 
 def normalize_tensor_by_modified_z_score(tensor: Tensor) -> Tensor:
+    """
+    Normalizes a tensor by a modified z-score. That is, normalizes the values of the tensor based on the median
+    absolute deviation.
+
+    :param tensor: The tensor to normalize.
+    :return: The normalized tensor.
+    """
     median = torch.median(tensor)
     deviation_from_median = tensor - median
     absolute_deviation_from_median = torch.abs(deviation_from_median)
@@ -310,19 +356,6 @@ def normalize_tensor_by_modified_z_score(tensor: Tensor) -> Tensor:
     else:
         modified_z_score = torch.zeros_like(tensor)
     return modified_z_score
-
-
-def make_fluxes_and_label_array_uniform_length(
-        arrays: tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]],
-        length: int,
-        *,
-        randomize: bool = True,
-) -> (np.ndarray, np.ndarray):
-    fluxes, label = arrays
-    uniform_length_times = make_uniform_length(
-        fluxes, length=length, randomize=randomize
-    )
-    return uniform_length_times, label
 
 
 def make_uniform_length(

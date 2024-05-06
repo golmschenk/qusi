@@ -14,6 +14,9 @@ from qusi.internal.light_curve_dataset import default_light_curve_observation_po
 
 @dataclass
 class FiniteStandardLightCurveObservationDataset(Dataset):
+    """
+    A finite light curve observation dataset without injection.
+    """
     standard_light_curve_collections: list[LightCurveObservationCollection]
     post_injection_transform: Callable[[Any], Any]
     length: int
@@ -34,7 +37,8 @@ class FiniteStandardLightCurveObservationDataset(Dataset):
         :return: The dataset.
         """
         if post_injection_transform is None:
-            post_injection_transform = partial(default_light_curve_observation_post_injection_transform, length=2500)
+            post_injection_transform = partial(default_light_curve_observation_post_injection_transform, length=2500,
+                                               randomize=False)
         length = 0
         collection_start_indexes: list[int] = []
         for standard_light_curve_collection in light_curve_collections:

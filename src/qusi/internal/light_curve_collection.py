@@ -117,6 +117,8 @@ class LightCurveCollection(
     LightCurveCollectionBase, LightCurveObservationIndexableBase
 ):
     """
+    A collection of light curves, including where to find paths to the data and how to load the data.
+
     :ivar path_getter: The PathIterableBase object for the collection.
     :ivar load_times_and_fluxes_from_path_function: The function to load the times and fluxes from the light curve.
     """
@@ -178,6 +180,9 @@ class LightCurveObservationCollection(
     LightCurveObservationCollectionBase, LightCurveObservationIndexableBase
 ):
     """
+    A collection of light curve observations. Includes where to find the light curve data paths, and how to load
+    the times, fluxes, and label data.
+
     :ivar path_getter: The PathGetterBase object for the collection.
     :ivar light_curve_collection: The LightCurveCollectionBase object for the collection.
     :ivar load_label_from_path_function: The function to load the label for the light curve.

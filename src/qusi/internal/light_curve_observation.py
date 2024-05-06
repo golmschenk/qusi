@@ -34,6 +34,13 @@ class LightCurveObservation:
 def remove_nan_flux_data_points_from_light_curve_observation(
     light_curve_observation: LightCurveObservation,
 ) -> LightCurveObservation:
+    """
+    Removes the NaN values from a light curve in a light curve observation. If there is a NaN in either the times or the
+    fluxes, both corresponding values are removed.
+
+    :param light_curve_observation: The light curve observation.
+    :return: The light curve observation with NaN values removed.
+    """
     light_curve_observation = deepcopy(light_curve_observation)
     light_curve_observation.light_curve = remove_nan_flux_data_points_from_light_curve(
         light_curve_observation.light_curve
@@ -42,6 +49,13 @@ def remove_nan_flux_data_points_from_light_curve_observation(
 
 
 def randomly_roll_light_curve_observation(light_curve_observation: LightCurveObservation) -> LightCurveObservation:
+    """
+    Randomly rolls a light curve observation. That is, a random position in the light curve is chosen, the light curve
+    is split at that point, and the order of the two halves are swapped.
+
+    :param light_curve_observation: The light curve observation.
+    :return: The light curve observation with the rolled light curve.
+    """
     light_curve_observation = deepcopy(light_curve_observation)
     light_curve_observation.light_curve = randomly_roll_light_curve(light_curve_observation.light_curve)
     return light_curve_observation

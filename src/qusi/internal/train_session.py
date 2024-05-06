@@ -30,7 +30,18 @@ def train_session(
         *,
         hyperparameter_configuration: TrainHyperparameterConfiguration | None = None,
         logging_configuration: TrainLoggingConfiguration | None = None,
-):
+) -> None:
+    """
+    Runs a training session.
+
+    :param train_datasets: The datasets to train on.
+    :param validation_datasets: The datasets to validate on.
+    :param model: The model to train.
+    :param loss_function: The loss function to train the model on.
+    :param metric_functions: A list of metric functions to record during the training process.
+    :param hyperparameter_configuration: The configuration of the hyperparameters
+    :param logging_configuration: The configuration of the logging.
+    """
     if hyperparameter_configuration is None:
         hyperparameter_configuration = TrainHyperparameterConfiguration.new()
     if logging_configuration is None:

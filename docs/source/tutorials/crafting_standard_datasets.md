@@ -31,19 +31,20 @@ Before we run the updated code, we also need to use a NN model which expects our
 
 ## Modifying the preprocessing
 
-In the previous section, we only changed the length of that the uniform lengthening preprocessing transform is using. However, we still used all the remaining default preprocessing steps that are contained in `default_light_curve_observation_post_injection_transform`. Let's take a look at what the default one does. It looks like:
+In the previous section, we only changed the length of that the uniform lengthening preprocessing transform is using. However, we still used all the remaining default preprocessing steps that are contained in `default_light_curve_observation_post_injection_transform`. Let's take a look at what the default one does. It looks something like:
 
 ```python
-def default_light_curve_observation_post_injection_transform(x: LightCurveObservation, length: int) -> (Tensor, Tensor):
+def default_light_curve_observation_post_injection_transform(x: LightCurveObservation, length: int, randomize: bool = True) -> (Tensor, Tensor):
     x = remove_nan_flux_data_points_from_light_curve_observation(x)
-    x = randomly_roll_light_curve_observation(x)
+    if randomize:
+        x = randomly_roll_light_curve_observation(x)
     x = from_light_curve_observation_to_fluxes_array_and_label_array(x)
-    x = make_fluxes_and_label_array_uniform_length(x, length=length)
+    x = (make_uniform_length(x[0], length=length, randomize=randomize), x[1])  # Make the fluxes a uniform length.
     x = pair_array_to_tensor(x)
     x = (normalize_tensor_by_modified_z_score(x[0]), x[1])
     return x
 ```
 
-It's a function that takes in a `LightCurveObservation` and spits out two `Tensor`s, one for the fluxes and one for the label to predict. Most of the data transform functions within have names that are largely descriptive, but we'll walk through them anyway. `remove_nan_flux_data_points_from_light_curve_observation` removes time steps from a `LightCurveObservation` where the flux is NaN. `randomly_roll_light_curve_observation` randomly rolls the light curve (a random cut is made and the two segments' order is swapped). `from_light_curve_observation_to_fluxes_array_and_label_array` extracts two NumPy arrays from a `LightCurveObservation`, one for the fluxes and one from the label (which in this case will be an array with a single value). `make_fluxes_and_label_array_uniform_length` performs the uniform lengthening we discussed in the previous section. `pair_array_to_tensor` converts the pair of NumPy arrays to a pair of PyTorch tensors (PyTorch's equivalent of an array). `normalize_tensor_by_modified_z_score` normalizes a tensor via based on the median absolute deviation. Notice, this is only applied to the flux tensor, not the label tensor.
+It's a function that takes in a `LightCurveObservation` and spits out two `Tensor`s, one for the fluxes and one for the label to predict. Most of the data transform functions within have names that are largely descriptive, but we'll walk through them anyway. `remove_nan_flux_data_points_from_light_curve_observation` removes time steps from a `LightCurveObservation` where the flux is NaN. `randomly_roll_light_curve_observation` randomly rolls the light curve (a random cut is made and the two segments' order is swapped). `from_light_curve_observation_to_fluxes_array_and_label_array` extracts two NumPy arrays from a `LightCurveObservation`, one for the fluxes and one from the label (which in this case will be an array with a single value). `make_uniform_length` performs the uniform lengthening on the fluxes as we discussed in the previous section. `pair_array_to_tensor` converts the pair of NumPy arrays to a pair of PyTorch tensors (PyTorch's equivalent of an array). `normalize_tensor_by_modified_z_score` normalizes a tensor via based on the median absolute deviation. Notice, this is only applied to the flux tensor, not the label tensor. The `randomize` parameter enables or disables randomization of the functions which may include randomization. During training, randomization should be on to make sure we get variation in training observations. During evaluation and inference, it should be off to get repeatable results.
 
 It's worth noting, `default_light_curve_observation_post_injection_transform` is just a function that can be replaced as desired. To remove one of the preprocessing steps or add in an addition one, we can simply make a modified version of this function. Additionally, `qusi` does not require the transform function to output only the fluxes and a binary label. The `Hadryss` NN model expects these two types of values for training, but other models may take advantage of the times of the light curve, or they may predict multi-class or regression labels.

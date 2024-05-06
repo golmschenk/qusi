@@ -26,6 +26,14 @@ class TrainLoggingConfiguration:
             wandb_entity: str | None = None,
             additional_log_dictionary: dict[str, Any] | None = None,
     ):
+        """
+        Creates a `TrainLoggingConfiguration`.
+        
+        :param wandb_project: The wandb project to log to.
+        :param wandb_entity: The wandb entity to log to.
+        :param additional_log_dictionary: The dictionary of additional values to log.
+        :return: The `TrainLoggingConfiguration`.
+        """
         if additional_log_dictionary is None:
             additional_log_dictionary = {}
         return cls(
