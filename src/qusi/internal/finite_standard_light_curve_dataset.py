@@ -37,7 +37,7 @@ class FiniteStandardLightCurveDataset(Dataset):
         :return: The dataset.
         """
         if post_injection_transform is None:
-            post_injection_transform = partial(default_light_curve_post_injection_transform, length=2500,
+            post_injection_transform = partial(default_light_curve_post_injection_transform, length=3500,
                                                randomize=False)
         length = 0
         collection_start_indexes: list[int] = []

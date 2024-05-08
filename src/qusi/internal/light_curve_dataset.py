@@ -168,7 +168,7 @@ class LightCurveDataset(IterableDataset):
             injectable_light_curve_collections = []
         if post_injection_transform is None:
             post_injection_transform = partial(
-                default_light_curve_observation_post_injection_transform, length=2500
+                default_light_curve_observation_post_injection_transform, length=3500
             )
         instance = cls(
             standard_light_curve_collections=standard_light_curve_collections,

@@ -127,7 +127,7 @@ class Hadryss(Module):
         return x
 
     @classmethod
-    def new(cls, input_length: int = 2500) -> Self:
+    def new(cls, input_length: int = 3500) -> Self:
         """
         Creates a new Hadryss model.
 
