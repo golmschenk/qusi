@@ -9,7 +9,7 @@ import torch
 from torch.nn import BCELoss, Module
 from torch.optim import AdamW
 from torch.utils.data import DataLoader
-from torchmetrics.classification import BinaryAccuracy
+from torcheval.metrics import BinaryAccuracy, BinaryAUROC
 
 import wandb
 from qusi.internal.light_curve_dataset import InterleavedDataset, LightCurveDataset
@@ -49,7 +49,7 @@ def train_session(
     if loss_function is None:
         loss_function = BCELoss()
     if metric_functions is None:
-        metric_functions = [BinaryAccuracy()]
+        metric_functions = [BinaryAccuracy(), BinaryAUROC()]
     set_up_default_logger()
     wandb_init(
         process_rank=0,
