@@ -156,6 +156,8 @@ class LightCurveCollection(
         :return: The iterable of the light curves.
         """
         light_curve_paths = self.path_getter.get_shuffled_paths()
+        if len(light_curve_paths) == 0:
+            raise ValueError('LightCurveCollection returned no paths.')
         for light_curve_path in light_curve_paths:
             times, fluxes = self.load_times_and_fluxes_from_path_function(
                 light_curve_path
@@ -264,6 +266,8 @@ class LightCurveObservationCollection(
         :return: The iterable of the light curves.
         """
         light_curve_paths = self.path_getter.get_shuffled_paths()
+        if len(light_curve_paths) == 0:
+            raise ValueError('LightCurveObservationCollection returned no paths.')
         for light_curve_path in light_curve_paths:
             times, fluxes = self.light_curve_collection.load_times_and_fluxes_from_path(
                 light_curve_path

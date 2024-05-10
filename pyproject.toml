@@ -40,6 +40,7 @@ dependencies = [
     "torch>=2.0.1",
     "torchvision>=0.15.2",
     "polars>=0.19.10",
+    "torchmetrics>=1.2.0",
     "stringcase>=1.2.0",
     "atpublic>=4.0",
     "pytest-pycharm>=0.7.0",
