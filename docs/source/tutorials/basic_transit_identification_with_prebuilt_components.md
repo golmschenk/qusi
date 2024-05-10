@@ -4,11 +4,11 @@ This tutorial will get you up and running with a neural network (NN) that can id
 
 ## Getting the example code
 
-First, create a directory to hold the project named `qusi_example_project`, or some other suitable name. Then get the example scripts from the `qusi` repository. You can download just that directory by clicking [here](https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2Fgolmschenk%2Fqusi%2Ftree%2Fmain%2Fexamples). Move this `examples` directory into your project directory so that you have `qusi_example_project/examples`. The remainder of the commands will assume you are running code from the project directory, unless otherwise stated.
+First, open a terminal window on your computer and create a directory to hold the project named `qusi_example_project`, or some other suitable name. This will be your project directory. Then get the example scripts from the `qusi` repository. You can download just that directory by clicking [here](https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2Fgolmschenk%2Fqusi%2Ftree%2Fmain%2Fexamples). After unzipping the file, move this `examples` directory into your project directory so that you have `qusi_example_project/examples`. The remainder of the commands will assume you are running code from the project directory, unless otherwise stated.
 
 ## Downloading the dataset
 
-The next thing we'll do is download a dataset of light curves that include cases both with and without transiting planets. To do this, run the example script at `examples/download_spoc_transit_light_curves`. For now, don't worry about how each part of the code works. You can run the script with
+The next thing we'll do is download a dataset of light curves that include cases both with and without transiting planets. To do this, run the example script at `examples/download_spoc_transit_light_curves`. For now, don't worry about how each part of the code works. You can run the script by typing the following at the command prompt in your terminal window while in your project directory.
 
 ```sh
 python examples/download_spoc_transit_light_curves.py
