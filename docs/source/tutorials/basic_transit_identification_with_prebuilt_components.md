@@ -68,13 +68,19 @@ Next, we'll look at the `examples/transit_train.py` file. In this script is a `m
 2. Code to prepare the neural network model.
 3. Code to running the training of the model on the datasets.
 
-Since `qusi` provides both models and and training loop code, the only one of these components that every user will be expected to deal with is preparing the dataset, since you'll eventually want to have `qusi` tackle the task you're interested in which will require you're own data. And the `qusi` dataset component will help make your data more suitable for training a neural network. However, we're going to save how to set up your own dataset (and how these example datasets are created) for the next tutorial. For now, we'll just use the example datasets as is. So, in the example script, you will see the first couple of lines of the `main` function call other functions that produce an example train and validation dataset for us. Then we choose one of the neural network models `qusi` provides (in this case the `Hadryss` model). Then finally, we start the training session. To run this training, simply run the script with:
+Since `qusi` provides both models and training code, the only one of these components that every user will be expected to deal with is preparing the dataset, since you'll eventually want to have `qusi` tackle the task you're interested in, which will require you're own data. And the `qusi` dataset component will help make your data more suitable for training a neural network. However, we're going to save how to set up your own dataset (and how these example datasets are created) for the next tutorial. For now, we'll just use the example datasets as is. So, in the example script, you will see the first couple of lines of the `main` function call other functions that produce an example train and validation dataset for us. Then we choose one of the neural network models `qusi` provides (in this case the `Hadryss` model). 
+
+Training of the neural network is the most compute-intensive step for any machine-learned process. Even with a powerful computer, executing the steps in the code below will typically take a non-neglegable amount of time.
+
+To run this training, simply run the script with:
 
 ```sh
 python examples/transit_train.py
 ```
 
-You should see some output showing basic training statistics from the terminal as it runs through the training loop. It will run for as many train cycles as were specified in the script. On every completed cycle, `qusi` will save the latest version of the fitted model to `sessions/<wandb_run_name>/latest_model`.
+You should see console output showing basic training statistics from the terminal as it runs through the training loop. You will note that each itteration results in a 'loss' value. While we won't get into detail here, a machine learning algorithm typically builds a model by examining many examples of, in this case, positively identified transits. Loss is a measure of how poorly the growing model's prediction was for a single example. The best model is one that minimizes these losses across all examples. 
+
+The training loop will run for as many train cycles as were specified in the script. On every completed cycle, `qusi` will save the latest version of the fitted model to `sessions/<wandb_run_name>/latest_model`.
 
 You can also go to your Wandb project to see the metrics over the course of the training in plot form.
 
