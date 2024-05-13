@@ -86,7 +86,7 @@ You can also go to your Wandb project to see the metrics over the course of the 
 
 ## Test the fitted model
 
-A "fitted model" is a model which has been trained, or fitted, on some training data. Next, we'll take the fitted model we produced during training, and test it on data it didn't see during the training process. This is what happens in the `examples/transit_finite_dataset_test.py` script. The `main` function will look semi-similar to from the training script. Again, we'll defer how the dataset is produced until the next tutorial. Then we create the model as we did before, but this time we load the fitted parameters of the model from the saved file. Here, you will need to update the script to point to your saved model produced in the last section. You can find the saved model in the Sessions folder within your Project Directory. Then we can run the script with
+A "fitted model" is a neural network which has been trained, or fitted, on some training data. Next, we'll take the fitted model we produced during training, and test it on data it didn't see during the training process. This is what happens in the `examples/transit_finite_dataset_test.py` script. The `main` function will look semi-similar to from the training script. Again, we'll defer how the dataset is produced until the next tutorial. Then we create the model as we did before, but this time we load the fitted parameters of the model from the saved file. Here, you will need to update the script to point to your saved model produced in the last section. You can find the saved model in the Sessions folder within your Project Directory. Then we can run the script with
 
 ```sh
 python examples/transit_finite_dataset_test.py
