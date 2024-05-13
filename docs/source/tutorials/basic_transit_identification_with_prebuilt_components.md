@@ -92,6 +92,7 @@ A "fitted model" is a neural network which has been trained, or fitted, on some 
 python examples/transit_finite_dataset_test.py
 ```
 
-This will run the network on the test data, producing the metrics that are requested in the file.  
+This will run the network on the test data, producing the metrics that are requested in the file.  The binary accuracy is ratio of the total number of correctly labeled results (both positive and negative) to all results.
+The binary cross entropy is a loss function that is a measurement of the difference between the predicted labels and actual labels. 
 
 Now you will learn about how to construct your own training data for your own neural network. Open basic_transit_identification_dataset_construction.md and continue there.
