@@ -1,6 +1,6 @@
 # Crafting standard datasets
 
-In the earlier tutorials, we saw an example of how to use `qusi` on a transit dataset and how that dataset was constructed. We'll expand on the ways we can work with the datasets here to create a dataset that allows you to apply `qusi` to your own dataset.
+In the earlier tutorials, we saw an example of how to use `qusi` on a transit dataset and how that dataset was constructed. We'll expand on the ways we can work with the datasets here to create a dataset that allows you to apply `qusi`.
 
 The content of this tutorial will round out and material you need to create a standard binary or multi-class classification problem with simple light curves. In addition to the content of this tutorial, `qusi` includes a way easily to inject data into light curves (with any mix of real or synthetic data). This will be discussed in {doc}`/tutorials/crafting_injected_datasets`. Finally, `qusi` is not limited to simple light curves and classification. We'll explore more complex datasets in {doc}`/tutorials/advanced_crafting_datasets`.
 
