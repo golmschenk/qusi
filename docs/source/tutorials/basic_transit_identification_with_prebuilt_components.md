@@ -92,4 +92,6 @@ A "fitted model" is a neural network which has been trained, or fitted, on some 
 python examples/transit_finite_dataset_test.py
 ```
 
-This will run the network on the test data, producing the metrics that are requested in the file.
+This will run the network on the test data, producing the metrics that are requested in the file.  
+
+Now you will learn about how to construct your own training data for your own neural network. Open basic_transit_identification_dataset_construction.md and continue there.
