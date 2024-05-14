@@ -4,7 +4,6 @@ import logging
 from pathlib import Path
 
 import numpy as np
-import stringcase
 import torch
 from torch.nn import BCELoss, Module
 from torch.optim import AdamW
@@ -14,7 +13,7 @@ import wandb
 from torchmetrics.classification import BinaryAccuracy, BinaryAUROC
 
 from qusi.internal.light_curve_dataset import InterleavedDataset, LightCurveDataset
-from qusi.internal.logging import set_up_default_logger
+from qusi.internal.logging import set_up_default_logger, get_metric_name
 from qusi.internal.train_hyperparameter_configuration import TrainHyperparameterConfiguration
 from qusi.internal.train_logging_configuration import TrainLoggingConfiguration
 from qusi.internal.wandb_liaison import wandb_commit, wandb_init, wandb_log
@@ -177,13 +176,6 @@ def train_phase(
             cycle_metric_values[metric_function_index],
             process_rank=0,
         )
-
-
-def get_metric_name(metric_function):
-    metric_name = type(metric_function).__name__
-    metric_name = stringcase.snakecase(metric_name)
-    metric_name = metric_name.replace("_metric", "").replace("_loss", "")
-    return metric_name
 
 
 def validation_phase(
