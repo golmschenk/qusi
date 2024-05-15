@@ -63,16 +63,12 @@ def normalize_tensor_by_modified_z_score(tensor: Tensor) -> Tensor:
     return modified_z_score
 
 
-def make_uniform_length(
-        example: np.ndarray, length: int, *, randomize: bool = True
-) -> np.ndarray:
+def make_uniform_length(example: np.ndarray, length: int) -> np.ndarray:
     """Makes the example a specific length, by clipping those too large and repeating those too small."""
     if len(example.shape) not in [1, 2]:  # Only tested for 1D and 2D cases.
         raise ValueError(
             f"Light curve dimensions expected to be in [1, 2], but found {len(example.shape)}"
         )
-    if randomize:
-        example = randomly_roll_elements(example)
     if example.shape[0] == length:
         pass
     elif example.shape[0] > length:

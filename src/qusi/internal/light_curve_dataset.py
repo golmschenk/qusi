@@ -306,7 +306,7 @@ def default_light_curve_observation_post_injection_transform(
     if randomize:
         x = randomly_roll_light_curve_observation(x)
     x = from_light_curve_observation_to_fluxes_array_and_label_array(x)
-    x = (make_uniform_length(x[0], length=length, randomize=randomize), x[1])  # Make the fluxes a uniform length.
+    x = (make_uniform_length(x[0], length=length), x[1])  # Make the fluxes a uniform length.
     x = pair_array_to_tensor(x)
     x = (normalize_tensor_by_modified_z_score(x[0]), x[1])
     return x
@@ -331,7 +331,7 @@ def default_light_curve_post_injection_transform(
     if randomize:
         x = randomly_roll_light_curve(x)
     x = x.fluxes
-    x = make_uniform_length(x, length=length, randomize=randomize)
+    x = make_uniform_length(x, length=length)
     x = torch.tensor(x, dtype=torch.float32)
     x = normalize_tensor_by_modified_z_score(x)
     return x
