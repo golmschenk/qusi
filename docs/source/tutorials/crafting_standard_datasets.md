@@ -20,8 +20,8 @@ Then, were we specify the construction of our dataset, we'll add an additional i
 ```python
 train_light_curve_dataset = LightCurveObservationDataset.new(
     light_curve_collections=[positive_train_light_curve_collection,
-                             negative_train_light_curve_collection])
-post_injection_transform = partial(default_light_curve_post_injection_transform, length=4000)
+                             negative_train_light_curve_collection],
+    post_injection_transform = partial(default_light_curve_post_injection_transform, length=4000)
 )
 ```
 
