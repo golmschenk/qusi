@@ -11,8 +11,8 @@ import numpy as np
 import numpy.typing as npt
 from typing_extensions import Self
 
-from qusi.light_curve import LightCurve
-from qusi.light_curve_observation import LightCurveObservation
+from qusi.internal.light_curve import LightCurve
+from qusi.internal.light_curve_observation import LightCurveObservation
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
@@ -117,6 +117,8 @@ class LightCurveCollection(
     LightCurveCollectionBase, LightCurveObservationIndexableBase
 ):
     """
+    A collection of light curves, including where to find paths to the data and how to load the data.
+
     :ivar path_getter: The PathIterableBase object for the collection.
     :ivar load_times_and_fluxes_from_path_function: The function to load the times and fluxes from the light curve.
     """
@@ -154,6 +156,8 @@ class LightCurveCollection(
         :return: The iterable of the light curves.
         """
         light_curve_paths = self.path_getter.get_shuffled_paths()
+        if len(light_curve_paths) == 0:
+            raise ValueError('LightCurveCollection returned no paths.')
         for light_curve_path in light_curve_paths:
             times, fluxes = self.load_times_and_fluxes_from_path_function(
                 light_curve_path
@@ -178,6 +182,9 @@ class LightCurveObservationCollection(
     LightCurveObservationCollectionBase, LightCurveObservationIndexableBase
 ):
     """
+    A collection of light curve observations. Includes where to find the light curve data paths, and how to load
+    the times, fluxes, and label data.
+
     :ivar path_getter: The PathGetterBase object for the collection.
     :ivar light_curve_collection: The LightCurveCollectionBase object for the collection.
     :ivar load_label_from_path_function: The function to load the label for the light curve.
@@ -259,6 +266,8 @@ class LightCurveObservationCollection(
         :return: The iterable of the light curves.
         """
         light_curve_paths = self.path_getter.get_shuffled_paths()
+        if len(light_curve_paths) == 0:
+            raise ValueError('LightCurveObservationCollection returned no paths.')
         for light_curve_path in light_curve_paths:
             times, fluxes = self.light_curve_collection.load_times_and_fluxes_from_path(
                 light_curve_path

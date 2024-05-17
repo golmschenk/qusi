@@ -18,7 +18,11 @@ from typing_extensions import Self
 
 
 class Hadryss(Module):
-    def __init__(self, input_length: int):
+    """
+    A 1D convolutional neural network model for light curve data that will auto-size itself for a given input light
+    curve length.
+    """
+    def __init__(self, *, input_length: int):
         super().__init__()
         self.input_length: int = input_length
         pooling_sizes, dense_size = self.determine_block_pooling_sizes_and_dense_size()
@@ -123,7 +127,13 @@ class Hadryss(Module):
         return x
 
     @classmethod
-    def new(cls, input_length: int = 2500) -> Self:
+    def new(cls, input_length: int = 3500) -> Self:
+        """
+        Creates a new Hadryss model.
+
+        :param input_length: The length of the input to auto-size the network to.
+        :return: The model.
+        """
         instance = cls(input_length=input_length)
         return instance
 
@@ -145,16 +155,16 @@ class Hadryss(Module):
 
 class LightCurveNetworkBlock(Module):
     def __init__(
-        self,
-        input_channels: int,
-        output_channels: int,
-        kernel_size: int,
-        pooling_size: int,
-        dropout_rate: float = 0.0,
-        *,
-        batch_normalization: bool = False,
-        spatial: bool = True,
-        length: int | None = None,
+            self,
+            input_channels: int,
+            output_channels: int,
+            kernel_size: int,
+            pooling_size: int,
+            dropout_rate: float = 0.0,
+            *,
+            batch_normalization: bool = False,
+            spatial: bool = True,
+            length: int | None = None,
     ):
         super().__init__()
         self.leaky_relu = LeakyReLU()

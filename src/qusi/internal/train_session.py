@@ -4,32 +4,44 @@ import logging
 from pathlib import Path
 
 import numpy as np
-import stringcase
 import torch
 from torch.nn import BCELoss, Module
 from torch.optim import AdamW
 from torch.utils.data import DataLoader
-from torchmetrics.classification import BinaryAccuracy
 
 import wandb
-from qusi.light_curve_dataset import InterleavedDataset, LightCurveDataset
-from qusi.logging import set_up_default_logger
-from qusi.train_hyperparameter_configuration import TrainHyperparameterConfiguration
-from qusi.train_logging_configuration import TrainLoggingConfiguration
-from qusi.wandb_liaison import wandb_commit, wandb_init, wandb_log
+from torchmetrics.classification import BinaryAccuracy, BinaryAUROC
+
+from qusi.internal.light_curve_dataset import InterleavedDataset, LightCurveDataset
+from qusi.internal.logging import set_up_default_logger, get_metric_name
+from qusi.internal.train_hyperparameter_configuration import TrainHyperparameterConfiguration
+from qusi.internal.train_logging_configuration import TrainLoggingConfiguration
+from qusi.internal.wandb_liaison import wandb_commit, wandb_init, wandb_log
 
 logger = logging.getLogger(__name__)
 
 
 def train_session(
-    train_datasets: list[LightCurveDataset],
-    validation_datasets: list[LightCurveDataset],
-    model: Module,
-    loss_function: Module | None = None,
-    metric_functions: list[Module] | None = None,
-    hyperparameter_configuration: TrainHyperparameterConfiguration | None = None,
-    logging_configuration: TrainLoggingConfiguration | None = None,
-):
+        train_datasets: list[LightCurveDataset],
+        validation_datasets: list[LightCurveDataset],
+        model: Module,
+        loss_function: Module | None = None,
+        metric_functions: list[Module] | None = None,
+        *,
+        hyperparameter_configuration: TrainHyperparameterConfiguration | None = None,
+        logging_configuration: TrainLoggingConfiguration | None = None,
+) -> None:
+    """
+    Runs a training session.
+
+    :param train_datasets: The datasets to train on.
+    :param validation_datasets: The datasets to validate on.
+    :param model: The model to train.
+    :param loss_function: The loss function to train the model on.
+    :param metric_functions: A list of metric functions to record during the training process.
+    :param hyperparameter_configuration: The configuration of the hyperparameters
+    :param logging_configuration: The configuration of the logging.
+    """
     if hyperparameter_configuration is None:
         hyperparameter_configuration = TrainHyperparameterConfiguration.new()
     if logging_configuration is None:
@@ -37,16 +49,17 @@ def train_session(
     if loss_function is None:
         loss_function = BCELoss()
     if metric_functions is None:
-        metric_functions = [BinaryAccuracy()]
+        metric_functions = [BinaryAccuracy(), BinaryAUROC()]
     set_up_default_logger()
+    sessions_directory = Path("sessions")
+    sessions_directory.mkdir(exist_ok=True)
     wandb_init(
         process_rank=0,
         project=logging_configuration.wandb_project,
         entity=logging_configuration.wandb_entity,
         settings=wandb.Settings(start_method="thread"),
+        dir=sessions_directory,
     )
-    sessions_directory = Path("sessions")
-    sessions_directory.mkdir(exist_ok=True)
     train_dataset = InterleavedDataset.new(*train_datasets)
     torch.multiprocessing.set_start_method("spawn")
     debug = False
@@ -89,6 +102,7 @@ def train_session(
         for metric_function in metric_functions
     ]
     for _cycle_index in range(hyperparameter_configuration.cycles):
+        logger.info(f'Cycle {_cycle_index}')
         train_phase(
             dataloader=train_dataloader,
             model=model,
@@ -112,13 +126,13 @@ def train_session(
 
 
 def train_phase(
-    dataloader,
-    model,
-    loss_function,
-    metric_functions: list[Module],
-    optimizer,
-    steps,
-    device,
+        dataloader,
+        model,
+        loss_function,
+        metric_functions: list[Module],
+        optimizer,
+        steps,
+        device,
 ):
     model.train()
     total_loss = 0
@@ -165,15 +179,8 @@ def train_phase(
         )
 
 
-def get_metric_name(metric_function):
-    metric_name = type(metric_function).__name__
-    metric_name = stringcase.snakecase(metric_name)
-    metric_name = metric_name.replace("_metric", "").replace("_loss", "")
-    return metric_name
-
-
 def validation_phase(
-    dataloader, model, loss_function, metric_functions: list[Module], steps, device
+        dataloader, model, loss_function, metric_functions: list[Module], steps, device
 ):
     model.eval()
     validation_loss = 0

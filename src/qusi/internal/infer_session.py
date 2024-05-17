@@ -4,12 +4,25 @@ from torch.nn import Module
 from torch.types import Device
 from torch.utils.data import DataLoader
 
-from qusi.finite_standard_light_curve_dataset import FiniteStandardLightCurveDataset
+from qusi.internal.finite_standard_light_curve_dataset import FiniteStandardLightCurveDataset
 
 
 def infer_session(
-    infer_datasets: list[FiniteStandardLightCurveDataset], model: Module, batch_size: int, device: Device
+    infer_datasets: list[FiniteStandardLightCurveDataset],
+        model: Module,
+        *,
+        batch_size: int,
+        device: Device,
 ) -> list[np.ndarray]:
+    """
+    Runs an infer session on finite datasets.
+
+    :param infer_datasets: The list of datasets to run the infer session on.
+    :param model: The model to perform the inference.
+    :param batch_size: The batch size to use during inference.
+    :param device: The device to run the model on.
+    :return: A list of arrays with each element being the array predicted for each light curve in the dataset.
+    """
     infer_dataloaders: list[DataLoader] = []
     for infer_dataset in infer_datasets:
         infer_dataloader = DataLoader(infer_dataset, batch_size=batch_size, pin_memory=True)

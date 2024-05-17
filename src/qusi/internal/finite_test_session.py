@@ -3,16 +3,28 @@ from torch.nn import Module
 from torch.types import Device
 from torch.utils.data import DataLoader
 
-from qusi.finite_standard_light_curve_observation_dataset import FiniteStandardLightCurveObservationDataset
+from qusi.internal.finite_standard_light_curve_observation_dataset import FiniteStandardLightCurveObservationDataset
 
 
 def finite_datasets_test_session(
-    test_datasets: list[FiniteStandardLightCurveObservationDataset],
-    model: Module,
-    metric_functions: list[Module],
-    batch_size: int,
-    device: Device,
+        test_datasets: list[FiniteStandardLightCurveObservationDataset],
+        model: Module,
+        metric_functions: list[Module],
+        *,
+        batch_size: int = 100,
+        device: Device = torch.device('cpu'),
 ):
+    """
+    Runs a test session on finite datasets.
+
+    :param test_datasets: A list of datasets to run the test session on.
+    :param model: A model to perform the inference.
+    :param metric_functions: A metrics to test.
+    :param batch_size: A batch size to use during testing.
+    :param device: A device to run the model on.
+    :return: A list of arrays, with one array for each test dataset, with each array containing an element for each
+             metric that was tested.
+    """
     test_dataloaders: list[DataLoader] = []
     for test_dataset in test_datasets:
         test_dataloader = DataLoader(test_dataset, batch_size=batch_size, pin_memory=True)
@@ -23,14 +35,6 @@ def finite_datasets_test_session(
         result = finite_dataset_test_phase(test_dataloader, model, metric_functions, device=device)
         results.append(result)
     return results
-
-
-def get_device():
-    if torch.cuda.is_available():
-        device = torch.device("cuda")
-    else:
-        device = torch.device("cpu")
-    return device
 
 
 def finite_dataset_test_phase(dataloader, model: Module, metric_functions: list[Module], device: Device):

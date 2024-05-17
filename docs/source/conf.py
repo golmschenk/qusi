@@ -26,6 +26,10 @@ extensions = [
 templates_path = ["_templates"]
 exclude_patterns = []
 source_suffix = [".rst", ".md"]
+autodoc_class_signature = 'separated'
+autodoc_default_options = {
+    'special-members': None,
+}
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output

@@ -34,6 +34,13 @@ class LightCurve:
 
 
 def remove_nan_flux_data_points_from_light_curve(light_curve: LightCurve) -> LightCurve:
+    """
+    Removes the NaN values from a light curve in a light curve. If there is a NaN in either the times or the
+    fluxes, both corresponding values are removed.
+
+    :param light_curve: The light curve.
+    :return: The light curve with NaN values removed.
+    """
     light_curve = deepcopy(light_curve)
     nan_flux_indexes = np.isnan(light_curve.fluxes)
     light_curve.fluxes = light_curve.fluxes[~nan_flux_indexes]
@@ -42,6 +49,13 @@ def remove_nan_flux_data_points_from_light_curve(light_curve: LightCurve) -> Lig
 
 
 def randomly_roll_light_curve(light_curve: LightCurve) -> LightCurve:
+    """
+    Randomly rolls a light curve. That is, a random position in the light curve is chosen, the light curve
+    is split at that point, and the order of the two halves are swapped.
+
+    :param light_curve: The light curve.
+    :return: The rolled light curve.
+    """
     light_curve = deepcopy(light_curve)
     random_index = np.random.randint(light_curve.times.shape[0])
     light_curve.times = np.roll(light_curve.times, random_index)
