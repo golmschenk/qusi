@@ -102,6 +102,7 @@ def train_session(
         for metric_function in metric_functions
     ]
     for _cycle_index in range(hyperparameter_configuration.cycles):
+        logger.info(f'Cycle {_cycle_index}')
         train_phase(
             dataloader=train_dataloader,
             model=model,
