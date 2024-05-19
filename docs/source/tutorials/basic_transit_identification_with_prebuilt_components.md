@@ -13,10 +13,10 @@ The remainder of the commands will assume you are running code from the project 
 
 ## Downloading the dataset
 
-The next thing we'll do is download a dataset of light curves that include cases both with and without transiting planets. To do this, run the example script at `scripts/download_spoc_transit_light_curves`. For now, don't worry about how each part of the code works. You can run the script with
+The next thing we'll do is download a dataset of light curves that include cases both with and without transiting planets. To do this, run the example script at `scripts/download_data.py`. For now, don't worry about how each part of the code works. You can run the script with
 
 ```sh
-python scripts/download_spoc_transit_light_curves.py
+python scripts/download_data.py
 ```
 
 The main thing to know is that this will create a `data` directory within the project directory and within that will be a `spoc_transit_experiment` directory, referring to the data for the experiment of finding transiting planets within the TESS SPOC data. This will further contain 3 directories. One for train data, one for validation data, and one for test data. Within each of those, it will create a `positive` directory, that will hold the light curves with transits, and a `negative` directory, that will hold the light curves without transits. So the project directory tree now looks like
@@ -36,10 +36,10 @@ data
 examples
 ```
 
-Each of these `positive` and `negative` data directories will now contain a set of light curves. The reason why the code in this script is not very important for you to know, is that it's mostly irrelevant for future uses. When you're working on your own problem, you'll obtain your data some other way. And `qusi` is flexible about the data structure, so this directory structure is not required. It's just one way to structure the data. Note, this is a relatively small dataset to make sure it doesn't take very long to get up and running. To get a better result, you'd want to download all known transiting light curves and a much larger collection non-transiting light curves. To quickly visualize one of these light curves, you can use the script at `scripts/transit_light_curve_visualization.py`. Due to the available light curves on MAST being updated constantly, the random selection of light curves you downloaded might not include the light curve noted in this example file. Be sure to open the `scripts/transit_light_curve_visualization.py` file and update the path to one of the light curves you downloaded. To see a transit case, be sure to select one from one of the `positive` directories. Then run
+Each of these `positive` and `negative` data directories will now contain a set of light curves. The reason why the code in this script is not very important for you to know, is that it's mostly irrelevant for future uses. When you're working on your own problem, you'll obtain your data some other way. And `qusi` is flexible about the data structure, so this directory structure is not required. It's just one way to structure the data. Note, this is a relatively small dataset to make sure it doesn't take very long to get up and running. To get a better result, you'd want to download all known transiting light curves and a much larger collection non-transiting light curves. To quickly visualize one of these light curves, you can use the script at `scripts/light_curve_visualization.py`. Due to the available light curves on MAST being updated constantly, the random selection of light curves you downloaded might not include the light curve noted in this example file. Be sure to open the `scripts/light_curve_visualization.py` file and update the path to one of the light curves you downloaded. To see a transit case, be sure to select one from one of the `positive` directories. Then run
 
 ```sh
-python scripts/transit_light_curve_visualization.py
+python scripts/light_curve_visualization.py
 ```
 
 You should see something like
@@ -67,7 +67,7 @@ This will only log runs locally. If you choose the offline route, at some point,
 
 ## Train the network
 
-Next, we'll look at the `scripts/transit_train.py` file. In this script is a `main` function which will train our neural network on our data. The training script has 3 main components:
+Next, we'll look at the `scripts/train.py` file. In this script is a `main` function which will train our neural network on our data. The training script has 3 main components:
 
 1. Code to prepare our datasets.
 2. Code to prepare the neural network model.
@@ -76,7 +76,7 @@ Next, we'll look at the `scripts/transit_train.py` file. In this script is a `ma
 Since `qusi` provides both models and and training loop code, the only one of these components that every user will be expected to deal with is preparing the dataset, since you'll eventually want to have `qusi` tackle the task you're interested in which will require you're own data. And the `qusi` dataset component will help make your data more suitable for training a neural network. However, we're going to save how to set up your own dataset (and how these example datasets are created) for the next tutorial. For now, we'll just use the example datasets as is. So, in the example script, you will see the first couple of lines of the `main` function call other functions that produce an example train and validation dataset for us. Then we choose one of the neural network models `qusi` provides (in this case the `Hadryss` model). Then finally, we start the training session. To run this training, simply run the script with:
 
 ```sh
-python scripts/transit_train.py
+python scripts/train.py
 ```
 
 You should see some output showing basic training statistics from the terminal as it runs through the training loop. It will run for as many train cycles as were specified in the script. On every completed cycle, `qusi` will save the latest version of the fitted model to `sessions/<wandb_run_name>/latest_model`.
@@ -85,10 +85,10 @@ You can also go to your Wandb project to see the metrics over the course of the 
 
 ## Test the fitted model
 
-A "fitted model" is a model which has been trained, or fitted, on some training data. Next, we'll take the fitted model we produced during training, and test it on data it didn't see during the training process. This is what happens in the `scripts/transit_finite_dataset_test.py` script. The `main` function will look semi-similar to from the training script. Again, we'll defer how the dataset is produced until the next tutorial. Then we create the model as we did before, but this time we load the fitted parameters of the model from the saved file. Here, you will need to update the script to point to your saved model produced in the last section. Then we can run the script with
+A "fitted model" is a model which has been trained, or fitted, on some training data. Next, we'll take the fitted model we produced during training, and test it on data it didn't see during the training process. This is what happens in the `scripts/finite_dataset_test.py` script. The `main` function will look semi-similar to from the training script. Again, we'll defer how the dataset is produced until the next tutorial. Then we create the model as we did before, but this time we load the fitted parameters of the model from the saved file. Here, you will need to update the script to point to your saved model produced in the last section. Then we can run the script with
 
 ```sh
-python scripts/transit_finite_dataset_test.py
+python scripts/finite_dataset_test.py
 ```
 
 This will run the network on the test data, producing the metrics that are requested in the file.
