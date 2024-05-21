@@ -641,6 +641,7 @@ def download_spoc_light_curves_for_tic_ids_chunk(
         if manifest_row["Status"] == "COMPLETE":
             original_file_path = Path(manifest_row["Local Path"])
             updated_file_path = download_directory.joinpath(original_file_path.name)
+            updated_file_path.unlink(missing_ok=True)
             original_file_path.rename(updated_file_path)
             light_curve_paths.append(updated_file_path)
         else:
