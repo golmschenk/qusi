@@ -80,3 +80,15 @@ def make_uniform_length(example: np.ndarray, length: int) -> np.ndarray:
         else:
             example = np.pad(example, ((0, elements_to_repeat), (0, 0)), mode="wrap")
     return example
+
+
+def remove_random_elements(array: np.ndarray, ratio: float = 0.01) -> np.ndarray:
+    """Removes random values from an array."""
+    light_curve_length = array.shape[0]
+    max_values_to_remove = int(light_curve_length * ratio)
+    if max_values_to_remove != 0:
+        values_to_remove = np.random.randint(max_values_to_remove)
+    else:
+        values_to_remove = 0
+    random_indexes = np.random.choice(range(light_curve_length), values_to_remove, replace=False)
+    return np.delete(array, random_indexes, axis=0)

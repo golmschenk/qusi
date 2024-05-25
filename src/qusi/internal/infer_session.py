@@ -8,7 +8,7 @@ from qusi.internal.finite_standard_light_curve_dataset import FiniteStandardLigh
 
 
 def infer_session(
-    infer_datasets: list[FiniteStandardLightCurveDataset],
+        infer_datasets: list[FiniteStandardLightCurveDataset],
         model: Module,
         *,
         batch_size: int,

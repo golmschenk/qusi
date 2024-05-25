@@ -5,11 +5,10 @@ from pathlib import Path
 
 import numpy as np
 import torch
-from torch.nn import BCELoss, Module
-from torch.optim import AdamW
-from torch.utils.data import DataLoader
-
 import wandb
+from torch.nn import BCELoss, Module
+from torch.optim import AdamW, Optimizer
+from torch.utils.data import DataLoader
 from torchmetrics.classification import BinaryAccuracy, BinaryAUROC
 
 from qusi.internal.light_curve_dataset import InterleavedDataset, LightCurveDataset
@@ -25,6 +24,7 @@ def train_session(
         train_datasets: list[LightCurveDataset],
         validation_datasets: list[LightCurveDataset],
         model: Module,
+        optimizer: Optimizer | None = None,
         loss_function: Module | None = None,
         metric_functions: list[Module] | None = None,
         *,
@@ -91,12 +91,13 @@ def train_session(
         )
         validation_dataloaders.append(validation_dataloader)
     if torch.cuda.is_available() and not debug:
-        device = torch.device("cuda")
+        device = torch.device('cuda')
     else:
-        device = torch.device("cpu")
+        device = torch.device('cpu')
     model = model.to(device, non_blocking=True)
     loss_function = loss_function.to(device, non_blocking=True)
-    optimizer = AdamW(model.parameters())
+    if optimizer is None:
+        optimizer = AdamW(model.parameters())
     metric_functions: list[Module] = [
         metric_function.to(device, non_blocking=True)
         for metric_function in metric_functions
