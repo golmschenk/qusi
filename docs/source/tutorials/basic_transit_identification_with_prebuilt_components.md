@@ -54,7 +54,7 @@ where, in this case, the temporary dips are transiting events.
 `qusi` uses Weights & Biases (`wandb`), a machine learning logging platform, to record metrics from training experiments. Among other things, it will create plots showing the training progress and allow easy comparison among the various runs. While you can run the `wandb` platform locally, it's easiest to use their cloud platform, which has [free academic research team projects and free personal projects](https://wandb.ai/site/pricing). To use it with `qusi`, [sign up for an account](https://wandb.ai/site), then from your project directory use
 
 ```sh
-(cd sessions && wandb login)
+wandb login
 ```
 
 to login. If you want to proceed without a `wandb` account and log the data offline, you will need to run
