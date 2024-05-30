@@ -299,6 +299,10 @@ class LimitedIterableDataset(IterableDataset):
                 break
 
 
+def identity_transform(x: LightCurveObservation) -> LightCurveObservation:
+    return x
+
+
 def default_light_curve_observation_post_injection_transform(
         x: LightCurveObservation,
         *,
