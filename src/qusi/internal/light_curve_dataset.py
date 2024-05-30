@@ -41,6 +41,16 @@ if TYPE_CHECKING:
     from qusi.internal.light_curve_collection import LightCurveObservationCollection
 
 
+class OutOfBoundsInjectionHandlingMethod(Enum):
+    """
+    An enum of approaches for handling cases where the injectable signal is shorter than the injectee signal.
+    """
+
+    ERROR = "error"
+    REPEAT_SIGNAL = "repeat_signal"
+    RANDOM_INJECTION_LOCATION = "random_inject_location"
+
+
 class LightCurveDataset(IterableDataset):
     """
     A dataset of light curves. Includes cases where light curves can be injected into one another.
@@ -182,6 +192,8 @@ class LightCurveDataset(IterableDataset):
 def inject_light_curve(
         injectee_observation: LightCurveObservation,
         injectable_observation: LightCurveObservation,
+        *,
+        out_of_bounds_injection_handling_method=OutOfBoundsInjectionHandlingMethod.RANDOM_INJECTION_LOCATION,
 ) -> LightCurveObservation:
     (
         fluxes_with_injected_signal,
@@ -192,12 +204,12 @@ def inject_light_curve(
         light_curve_fluxes=injectee_observation.light_curve.fluxes,
         signal_times=injectable_observation.light_curve.times,
         signal_magnifications=injectable_observation.light_curve.fluxes,
-        out_of_bounds_injection_handling_method=OutOfBoundsInjectionHandlingMethod.RANDOM_INJECTION_LOCATION,
+        out_of_bounds_injection_handling_method=out_of_bounds_injection_handling_method,
         baseline_flux_estimation_method=BaselineFluxEstimationMethod.MEDIAN,
     )
     injected_light_curve = LightCurve.new(
         times=injectee_observation.light_curve.times,
-        fluxes=injectee_observation.light_curve.fluxes,
+        fluxes=fluxes_with_injected_signal,
     )
     injected_observation = LightCurveObservation.new(
         light_curve=injected_light_curve, label=injectable_observation.label
@@ -335,16 +347,6 @@ def default_light_curve_post_injection_transform(
     x = torch.tensor(x, dtype=torch.float32)
     x = normalize_tensor_by_modified_z_score(x)
     return x
-
-
-class OutOfBoundsInjectionHandlingMethod(Enum):
-    """
-    An enum of approaches for handling cases where the injectable signal is shorter than the injectee signal.
-    """
-
-    ERROR = "error"
-    REPEAT_SIGNAL = "repeat_signal"
-    RANDOM_INJECTION_LOCATION = "random_inject_location"
 
 
 class BaselineFluxEstimationMethod(Enum):
