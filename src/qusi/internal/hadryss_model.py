@@ -13,6 +13,7 @@ from torch.nn import (
     MaxPool1d,
     Module,
     Sigmoid,
+    Softmax,
 )
 from typing_extensions import Self
 
@@ -22,11 +23,10 @@ class Hadryss(Module):
     A 1D convolutional neural network model for light curve data that will auto-size itself for a given input light
     curve length.
     """
-    def __init__(self, *, input_length: int):
+    def __init__(self, *, input_length: int, end_module: Module):
         super().__init__()
         self.input_length: int = input_length
         pooling_sizes, dense_size = self.determine_block_pooling_sizes_and_dense_size()
-        self.sigmoid = Sigmoid()
         self.block0 = LightCurveNetworkBlock(
             input_channels=1,
             output_channels=8,
@@ -106,7 +106,7 @@ class Hadryss(Module):
         self.block10 = LightCurveNetworkBlock(
             input_channels=20, output_channels=20, kernel_size=1, pooling_size=1
         )
-        self.prediction_layer = Conv1d(in_channels=20, out_channels=1, kernel_size=1)
+        self.end_module = end_module
 
     def forward(self, x: Tensor) -> Tensor:
         x = x.reshape([-1, 1, self.input_length])
@@ -121,20 +121,21 @@ class Hadryss(Module):
         x = self.block8(x)
         x = self.block9(x)
         x = self.block10(x)
-        x = self.prediction_layer(x)
-        x = self.sigmoid(x)
-        x = torch.reshape(x, (-1,))
+        x = self.end_module(x)
         return x
 
     @classmethod
-    def new(cls, input_length: int = 3500) -> Self:
+    def new(cls, input_length: int = 3500, end_module: Module | None = None) -> Self:
         """
         Creates a new Hadryss model.
 
         :param input_length: The length of the input to auto-size the network to.
+        :param end_module: The end module of the network. Defaults to a `HadryssBinaryClassEndModule`.
         :return: The model.
         """
-        instance = cls(input_length=input_length)
+        if end_module is None:
+            end_module = HadryssBinaryClassEndModule.new()
+        instance = cls(input_length=input_length, end_module=end_module)
         return instance
 
     def determine_block_pooling_sizes_and_dense_size(self) -> (list[int], int):
@@ -211,7 +212,43 @@ class LightCurveNetworkBlock(Module):
             if not self.spatial:
                 old_shape = x.shape
                 x = torch.reshape(x, [-1, torch.prod(torch.tensor(old_shape[1:]))])
-            x = self.batch_normalization(x)
-            if not self.spatial:
+                x = self.batch_normalization(x)
                 x = torch.reshape(x, old_shape)
+            else:
+                x = self.batch_normalization(x)
         return x
+
+
+class HadryssBinaryClassEndModule(Module):
+    def __init__(self):
+        super().__init__()
+        self.prediction_layer = Conv1d(in_channels=20, out_channels=1, kernel_size=1)
+        self.sigmoid = Sigmoid()
+
+    def forward(self, x: Tensor) -> Tensor:
+        x = self.prediction_layer(x)
+        x = self.sigmoid(x)
+        x = torch.reshape(x, (-1,))
+        return x
+
+    @classmethod
+    def new(cls):
+        return cls()
+
+
+class HadryssMultiClassEndModule(Module):
+    def __init__(self, number_of_classes: int):
+        super().__init__()
+        self.number_of_classes: int = number_of_classes
+        self.prediction_layer = Conv1d(in_channels=20, out_channels=self.number_of_classes, kernel_size=1)
+        self.soft_max = Softmax(dim=1)
+
+    def forward(self, x: Tensor) -> Tensor:
+        x = self.prediction_layer(x)
+        x = self.soft_max(x)
+        x = torch.reshape(x, (-1, self.number_of_classes))
+        return x
+
+    @classmethod
+    def new(cls, number_of_classes: int):
+        return cls(number_of_classes)

@@ -1,6 +1,12 @@
+import math
+
+import random
+from functools import partial
+
 from pathlib import Path
 
 import numpy as np
+from scipy import signal
 
 from qusi.internal.finite_standard_light_curve_dataset import FiniteStandardLightCurveDataset
 from qusi.internal.light_curve import LightCurve
@@ -8,7 +14,8 @@ from qusi.internal.light_curve_collection import (
     LightCurveObservationCollection,
     create_constant_label_for_path_function, LightCurveCollection,
 )
-from qusi.internal.light_curve_dataset import LightCurveDataset
+from qusi.internal.light_curve_dataset import LightCurveDataset, \
+    default_light_curve_observation_post_injection_transform
 
 
 class ToyLightCurve:
@@ -61,7 +68,7 @@ def toy_flat_light_curve_load_times_and_fluxes(_path: Path) -> (np.ndarray, np.n
 
 
 def toy_sine_wave_light_curve_load_times_and_fluxes(
-    _path: Path,
+        _path: Path,
 ) -> (np.ndarray, np.ndarray):
     """
     Loads a sine wave toy light curve.
@@ -115,4 +122,40 @@ def get_toy_finite_light_curve_dataset() -> FiniteStandardLightCurveDataset:
             get_toy_sine_wave_light_curve_collection(),
             get_toy_flat_light_curve_collection(),
         ]
+    )
+
+
+def get_square_wave_light_curve_observation_collection() -> LightCurveObservationCollection:
+    return LightCurveObservationCollection.new(
+        get_paths_function=toy_light_curve_get_paths_function,
+        load_times_and_fluxes_from_path_function=square_wave_light_curve_load_times_and_fluxes,
+        load_label_from_path_function=create_constant_label_for_path_function(2),
+    )
+
+
+square_wave_random_generator = random.Random()
+
+
+def square_wave_light_curve_load_times_and_fluxes(_path: Path) -> (np.ndarray, np.ndarray):
+    """
+    Loads a square wave light curve.
+    """
+    length = 100
+    number_of_cycles = square_wave_random_generator.random() + 1 * 9
+    linear_space = np.linspace(0, 1, length, endpoint=False)
+    phases = math.tau * number_of_cycles * linear_space
+    times = np.arange(length, dtype=np.float32)
+    fluxes = signal.square(phases)
+    return times, fluxes
+
+
+def get_toy_multi_class_light_curve_dataset() -> LightCurveDataset:
+    return LightCurveDataset.new(
+        standard_light_curve_collections=[
+            get_toy_flat_light_curve_observation_collection(),
+            get_toy_sine_wave_light_curve_observation_collection(),
+            get_square_wave_light_curve_observation_collection(),
+        ],
+        post_injection_transform=partial(default_light_curve_observation_post_injection_transform,
+                                         length=100, number_of_classes=3, randomize=False)
     )
