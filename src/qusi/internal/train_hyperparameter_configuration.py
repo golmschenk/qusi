@@ -14,9 +14,6 @@ class TrainHyperparameterConfiguration:
     :ivar validation_steps_per_cycle: The number of validation steps per cycle.
     :ivar batch_size: The size of the batch for each train process. Each training step will use a number of observations
         equal to this value multiplied by the number of train processes.
-    :ivar learning_rate: The learning rate.
-    :ivar optimizer_epsilon: The epsilon to be used by the optimizer.
-    :ivar weight_decay: The weight decay of the optimizer.
     :ivar norm_based_gradient_clip: The norm based gradient clipping value.
     """
 

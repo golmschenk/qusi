@@ -220,6 +220,9 @@ class LightCurveNetworkBlock(Module):
 
 
 class HadryssBinaryClassEndModule(Module):
+    """
+    A module for the end of the Hadryss model designed for binary classification.
+    """
     def __init__(self):
         super().__init__()
         self.prediction_layer = Conv1d(in_channels=20, out_channels=1, kernel_size=1)
@@ -237,6 +240,9 @@ class HadryssBinaryClassEndModule(Module):
 
 
 class HadryssMultiClassEndModule(Module):
+    """
+    A module for the end of the Hadryss model designed for multi classification.
+    """
     def __init__(self, number_of_classes: int):
         super().__init__()
         self.number_of_classes: int = number_of_classes

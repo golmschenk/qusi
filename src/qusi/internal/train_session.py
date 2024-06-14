@@ -37,6 +37,7 @@ def train_session(
     :param train_datasets: The datasets to train on.
     :param validation_datasets: The datasets to validate on.
     :param model: The model to train.
+    :param optimizer: The optimizer to be used during training.
     :param loss_function: The loss function to train the model on.
     :param metric_functions: A list of metric functions to record during the training process.
     :param hyperparameter_configuration: The configuration of the hyperparameters
