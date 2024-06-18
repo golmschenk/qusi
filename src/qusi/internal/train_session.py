@@ -48,6 +48,8 @@ def train_session(
     """
     if hyperparameter_configuration is None:
         hyperparameter_configuration = TrainHyperparameterConfiguration.new()
+    if system_configuration is None:
+        system_configuration = TrainSystemConfiguration.new()
     if logging_configuration is None:
         logging_configuration = TrainLoggingConfiguration.new()
     if loss_function is None:
