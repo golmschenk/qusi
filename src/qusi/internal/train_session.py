@@ -68,13 +68,11 @@ def train_session(
     )
     train_dataset = InterleavedDataset.new(*train_datasets)
     torch.multiprocessing.set_start_method("spawn")
-    debug = False
-    if debug:
-        workers_per_dataloader = 0
+    workers_per_dataloader = system_configuration.preprocessing_processes_per_train_process
+    if workers_per_dataloader == 0:
         prefetch_factor = None
         persistent_workers = False
     else:
-        workers_per_dataloader = system_configuration.preprocessing_processes_per_train_process
         prefetch_factor = 10
         persistent_workers = True
     train_dataloader = DataLoader(
@@ -96,7 +94,7 @@ def train_session(
             num_workers=workers_per_dataloader,
         )
         validation_dataloaders.append(validation_dataloader)
-    if torch.cuda.is_available() and not debug:
+    if torch.cuda.is_available():
         device = torch.device('cuda')
     else:
         device = torch.device('cpu')
