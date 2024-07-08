@@ -39,9 +39,6 @@ def excepthook(exc_type, exc_value, exc_traceback):
 
 def get_metric_name(metric_function):
     metric_name = type(metric_function).__name__
-    metric_name = camel_case_acronyms(metric_name)
-    metric_name = stringcase.snakecase(metric_name)
-    metric_name = metric_name.replace('_metric', '').replace('_loss', '')
     return metric_name
 
 
