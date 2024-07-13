@@ -152,11 +152,7 @@ def train_phase(
             (batch_index + 1) * len(input_features_on_device),
         )
         total_loss += loss
-        for logging_metric_index, logging_metric in enumerate(logging_metrics):
-            batch_metric_value = logging_metric(
-                predicted_targets.to(device, non_blocking=True), targets_on_device
-            ).item()
-            metric_totals[logging_metric_index] += batch_metric_value
+        update_logging_metrics(predicted_targets, targets_on_device, logging_metrics, metric_totals)
         if batch_index % 10 == 0:
             logger.info(
                 f"loss: {loss:>7f}  [{current:>5d}/{steps * len(input_features_on_device):>5d}]"
@@ -164,13 +160,15 @@ def train_phase(
         if batch_index + 1 >= steps:
             break
     wandb_log("loss", total_loss / steps, process_rank=0)
-    cycle_metric_values = metric_totals / steps
+    log_metrics(logging_metrics, metric_totals, steps)
+
+
+def update_logging_metrics(predicted_targets, targets_on_device, logging_metrics, metric_totals):
     for logging_metric_index, logging_metric in enumerate(logging_metrics):
-        wandb_log(
-            f"{get_metric_name(logging_metric)}",
-            cycle_metric_values[logging_metric_index],
-            process_rank=0,
-        )
+        batch_metric_value = logging_metric(
+            predicted_targets, targets_on_device
+        ).item()
+        metric_totals[logging_metric_index] += batch_metric_value
 
 
 def validation_phase(
@@ -197,21 +195,22 @@ def validation_phase(
                 .to(device, non_blocking=True)
                 .item()
             )
-            for logging_metric_index, logging_metric in enumerate(logging_metrics):
-                batch_metric_value = logging_metric(
-                    predicted_targets.to(device, non_blocking=True), targets_on_device
-                ).item()
-                metric_totals[logging_metric_index] += batch_metric_value
+            update_logging_metrics(predicted_targets, targets_on_device, logging_metrics, metric_totals)
             if batch + 1 >= steps:
                 break
 
     validation_loss /= steps
     logger.info(f"Validation Error: \nAvg loss: {validation_loss:>8f} \n")
     wandb_log("val_loss", validation_loss, process_rank=0)
+    log_prefix = 'val_'
+    log_metrics(logging_metrics, metric_totals, steps, log_prefix)
+
+
+def log_metrics(logging_metrics, metric_totals, steps, log_prefix: str = ''):
     cycle_metric_values = metric_totals / steps
     for logging_metric_index, logging_metric in enumerate(logging_metrics):
         wandb_log(
-            f"val_{get_metric_name(logging_metric)}",
+            f'{log_prefix}{get_metric_name(logging_metric)}',
             cycle_metric_values[logging_metric_index],
             process_rank=0,
         )
