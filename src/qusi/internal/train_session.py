@@ -108,24 +108,13 @@ def train_session(
     ]
     for _cycle_index in range(hyperparameter_configuration.cycles):
         logger.info(f'Cycle {_cycle_index}')
-        train_phase(
-            dataloader=train_dataloader,
-            model=model,
-            loss_function=loss_function,
-            metric_functions=metric_functions,
-            optimizer=optimizer,
-            steps=hyperparameter_configuration.train_steps_per_cycle,
-            device=device,
-        )
+        train_phase(dataloader=train_dataloader, model=model, loss_metric=loss_function,
+                    logging_metrics=metric_functions, optimizer=optimizer,
+                    steps=hyperparameter_configuration.train_steps_per_cycle, device=device)
         for validation_dataloader in validation_dataloaders:
-            validation_phase(
-                dataloader=validation_dataloader,
-                model=model,
-                loss_function=loss_function,
-                metric_functions=metric_functions,
-                steps=hyperparameter_configuration.validation_steps_per_cycle,
-                device=device,
-            )
+            validation_phase(dataloader=validation_dataloader, model=model, loss_metric=loss_function,
+                             logging_metrics=metric_functions,
+                             steps=hyperparameter_configuration.validation_steps_per_cycle, device=device)
         save_model(model, suffix="latest_model", process_rank=0)
         wandb_commit(process_rank=0)
 
@@ -133,15 +122,15 @@ def train_session(
 def train_phase(
         dataloader,
         model,
-        loss_function,
-        metric_functions: list[Module],
+        loss_metric,
+        logging_metrics: list[Module],
         optimizer,
         steps,
         device,
 ):
     model.train()
     total_loss = 0
-    metric_totals = np.zeros(shape=[len(metric_functions)])
+    metric_totals = np.zeros(shape=[len(logging_metrics)])
     for batch_index, (input_features, targets) in enumerate(dataloader):
         # Compute prediction and loss
         # TODO: The conversion to float32 probably shouldn't be here, but the default collate_fn seems to be converting
@@ -151,7 +140,7 @@ def train_phase(
             device, non_blocking=True
         )
         predicted_targets = model(input_features_on_device)
-        loss = loss_function(predicted_targets, targets_on_device)
+        loss = loss_metric(predicted_targets, targets_on_device)
 
         # Backpropagation
         optimizer.zero_grad()
@@ -163,11 +152,11 @@ def train_phase(
             (batch_index + 1) * len(input_features_on_device),
         )
         total_loss += loss
-        for metric_function_index, metric_function in enumerate(metric_functions):
-            batch_metric_value = metric_function(
+        for logging_metric_index, logging_metric in enumerate(logging_metrics):
+            batch_metric_value = logging_metric(
                 predicted_targets.to(device, non_blocking=True), targets_on_device
             ).item()
-            metric_totals[metric_function_index] += batch_metric_value
+            metric_totals[logging_metric_index] += batch_metric_value
         if batch_index % 10 == 0:
             logger.info(
                 f"loss: {loss:>7f}  [{current:>5d}/{steps * len(input_features_on_device):>5d}]"
@@ -176,20 +165,25 @@ def train_phase(
             break
     wandb_log("loss", total_loss / steps, process_rank=0)
     cycle_metric_values = metric_totals / steps
-    for metric_function_index, metric_function in enumerate(metric_functions):
+    for logging_metric_index, logging_metric in enumerate(logging_metrics):
         wandb_log(
-            f"{get_metric_name(metric_function)}",
-            cycle_metric_values[metric_function_index],
+            f"{get_metric_name(logging_metric)}",
+            cycle_metric_values[logging_metric_index],
             process_rank=0,
         )
 
 
 def validation_phase(
-        dataloader, model, loss_function, metric_functions: list[Module], steps, device
+        dataloader,
+        model,
+        loss_metric,
+        logging_metrics: list[Module],
+        steps,
+        device
 ):
     model.eval()
     validation_loss = 0
-    metric_totals = np.zeros(shape=[len(metric_functions)])
+    metric_totals = np.zeros(shape=[len(logging_metrics)])
 
     with torch.no_grad():
         for batch, (input_features, targets) in enumerate(dataloader):
@@ -199,15 +193,15 @@ def validation_phase(
             )
             predicted_targets = model(input_features_on_device)
             validation_loss += (
-                loss_function(predicted_targets, targets_on_device)
+                loss_metric(predicted_targets, targets_on_device)
                 .to(device, non_blocking=True)
                 .item()
             )
-            for metric_function_index, metric_function in enumerate(metric_functions):
-                batch_metric_value = metric_function(
+            for logging_metric_index, logging_metric in enumerate(logging_metrics):
+                batch_metric_value = logging_metric(
                     predicted_targets.to(device, non_blocking=True), targets_on_device
                 ).item()
-                metric_totals[metric_function_index] += batch_metric_value
+                metric_totals[logging_metric_index] += batch_metric_value
             if batch + 1 >= steps:
                 break
 
@@ -215,10 +209,10 @@ def validation_phase(
     logger.info(f"Validation Error: \nAvg loss: {validation_loss:>8f} \n")
     wandb_log("val_loss", validation_loss, process_rank=0)
     cycle_metric_values = metric_totals / steps
-    for metric_function_index, metric_function in enumerate(metric_functions):
+    for logging_metric_index, logging_metric in enumerate(logging_metrics):
         wandb_log(
-            f"val_{get_metric_name(metric_function)}",
-            cycle_metric_values[metric_function_index],
+            f"val_{get_metric_name(logging_metric)}",
+            cycle_metric_values[logging_metric_index],
             process_rank=0,
         )
 
