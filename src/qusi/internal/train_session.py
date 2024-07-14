@@ -10,6 +10,7 @@ import wandb
 from torch.nn import BCELoss, Module
 from torch.optim import AdamW, Optimizer
 from torch.utils.data import DataLoader
+from torchmetrics import Metric
 from torchmetrics.classification import BinaryAccuracy, BinaryAUROC
 
 from qusi.internal.light_curve_dataset import InterleavedDataset, LightCurveDataset
@@ -227,9 +228,13 @@ def validation_phase(
 def log_metrics(logging_metrics, metric_totals, steps, log_prefix: str = ''):
     cycle_metric_values = metric_totals / steps
     for logging_metric_index, logging_metric in enumerate(logging_metrics):
+        if isinstance(logging_metric, Metric):
+            metric_value = logging_metric.compute()
+        else:
+            metric_value = cycle_metric_values[logging_metric_index]
         wandb_log(
             f'{log_prefix}{get_metric_name(logging_metric)}',
-            cycle_metric_values[logging_metric_index],
+            metric_value,
             process_rank=0,
         )
 
