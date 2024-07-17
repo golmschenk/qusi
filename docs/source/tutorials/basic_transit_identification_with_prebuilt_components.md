@@ -33,7 +33,8 @@ data
         validation
             negative
             positive
-examples
+        infer
+tess_toi
 ```
 
 Each of these `positive` and `negative` data directories will now contain a set of light curves. The reason why the code in this script is not very important for you to know, is that it's mostly irrelevant for future uses. When you're working on your own problem, you'll obtain your data some other way. And `qusi` is flexible about the data structure, so this directory structure is not required. It's just one way to structure the data. Note, this is a relatively small dataset to make sure it doesn't take very long to get up and running. To get a better result, you'd want to download all known transiting light curves and a much larger collection non-transiting light curves. To quickly visualize one of these light curves, you can use the script at `scripts/light_curve_visualization.py`. Due to the available light curves on MAST being updated constantly, the random selection of light curves you downloaded might not include the light curve noted in this example file. Be sure to open the `scripts/light_curve_visualization.py` file and update the path to one of the light curves you downloaded. To see a transit case, be sure to select one from one of the `positive` directories. Then run
