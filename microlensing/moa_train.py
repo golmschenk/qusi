@@ -6,7 +6,7 @@ from qusi.train_session import train_session
 from torchmetrics.classification import (BinaryAccuracy, BinaryAUROC, BinaryF1Score, BinarySpecificity,
                                          BinaryStatScores)
 
-from moa_dataset import MoaSurveyMicrolensingAndNonMicrolensingDatabase
+from moa_dataset_550 import MoaSurveyMicrolensingAndNonMicrolensingDatabase
 from wrapped_metrics import WrappedBinaryPrecision, WrappedBinaryRecall
 
 from tqdm import tqdm
@@ -21,7 +21,7 @@ def main(test_split):
     validation_light_curve_dataset = database.get_microlensing_validation_dataset()
 
     # model and config
-    model = Hadryss.new()
+    model = Hadryss.new(input_length=18_000)
     train_hyperparameter_configuration = TrainHyperparameterConfiguration.new(
         batch_size=100, cycles=50, train_steps_per_cycle=100, validation_steps_per_cycle=10)
 

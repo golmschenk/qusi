@@ -1,3 +1,5 @@
+from functools import partial
+
 import numpy as np
 
 from ramjet.data_interface.moa_data_interface import MoaDataInterface
@@ -5,7 +7,7 @@ from ramjet.photometric_database.derived.moa_survey_light_curve_collection impor
 from ramjet.photometric_database.standard_and_injected_light_curve_database import StandardAndInjectedLightCurveDatabase
 
 from qusi.light_curve_collection import LabeledLightCurveCollection
-from qusi.light_curve_dataset import LightCurveDataset
+from qusi.light_curve_dataset import LightCurveDataset, default_light_curve_observation_post_injection_transform
 from qusi.light_curve_collection import LightCurveCollection
 
 
@@ -83,7 +85,9 @@ class MoaSurveyMicrolensingAndNonMicrolensingDatabase(StandardAndInjectedLightCu
             load_label_from_path_function=negative_label_function)
         train_light_curve_dataset = LightCurveDataset.new(
             standard_light_curve_collections=[positive_train_light_curve_collection,
-                                              negative_train_light_curve_collection])
+                                              negative_train_light_curve_collection],
+            post_injection_transform=partial(
+                default_light_curve_observation_post_injection_transform, length=18_000))
         # print('check "properties" of the train_light_curve_dataset', train_light_curve_dataset)
         return train_light_curve_dataset
 
@@ -98,10 +102,13 @@ class MoaSurveyMicrolensingAndNonMicrolensingDatabase(StandardAndInjectedLightCu
             load_label_from_path_function=negative_label_function)
         validation_light_curve_dataset = LightCurveDataset.new(
             standard_light_curve_collections=[positive_validation_light_curve_collection,
-                                              negative_validation_light_curve_collection])
+                                              negative_validation_light_curve_collection],
+            post_injection_transform=partial(
+                default_light_curve_observation_post_injection_transform, length=18_000))
         return validation_light_curve_dataset
 
     def get_microlensing_infer_collection(self):
+        # TODO ADD post injection
         infer_light_curve_collection = LightCurveCollection.new(
             get_paths_function=self.all_inference.get_paths,
             load_times_and_fluxes_from_path_function=self.all_inference.load_times_and_fluxes_from_path)

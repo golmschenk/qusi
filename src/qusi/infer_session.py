@@ -13,7 +13,9 @@ def infer_session(
 ) -> list[np.ndarray]:
     infer_dataloaders: list[DataLoader] = []
     for infer_dataset in infer_datasets:
-        infer_dataloader = DataLoader(infer_dataset, batch_size=batch_size, pin_memory=True)
+        infer_dataloader = DataLoader(infer_dataset, batch_size=batch_size, pin_memory=True, num_workers=15,
+                                      persistent_workers=True, prefetch_factor=10)
+        # infer_dataloader = DataLoader(infer_dataset, batch_size=batch_size, pin_memory=True, num_workers=0)
         infer_dataloaders.append(infer_dataloader)
     model.eval()
     results = []

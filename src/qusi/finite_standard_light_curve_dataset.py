@@ -18,16 +18,22 @@ class FiniteStandardLightCurveDataset(Dataset):
     collection_start_indexes: list[int]
 
     @classmethod
-    def new(cls, light_curve_collections: list[LightCurveCollection]) -> Self:
+    def new(
+            cls,
+            light_curve_collections: list[LightCurveCollection],
+            post_injection_transform=None,
+    ) -> Self:
         length = 0
         collection_start_indexes: list[int] = []
         for light_curve_collection in light_curve_collections:
             standard_light_curve_collection_length = len(list(light_curve_collection.path_getter.get_paths()))
             collection_start_indexes.append(length)
             length += standard_light_curve_collection_length
+        if post_injection_transform is None:
+            post_injection_transform = partial(default_light_curve_post_injection_transform, length=2500)
         instance = cls(
             standard_light_curve_collections=light_curve_collections,
-            post_injection_transform=partial(default_light_curve_post_injection_transform, length=2500),
+            post_injection_transform=post_injection_transform,
             length=length,
             collection_start_indexes=collection_start_indexes,
         )
