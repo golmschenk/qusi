@@ -1,7 +1,7 @@
 import torch
 import pandas as pd
 
-from moa_dataset import MoaSurveyMicrolensingAndNonMicrolensingDatabase
+from moa_dataset_550 import MoaSurveyMicrolensingAndNonMicrolensingDatabase
 from functools import partial
 from qusi.finite_standard_light_curve_dataset import FiniteStandardLightCurveDataset
 from qusi.light_curve_dataset import default_light_curve_observation_post_injection_transform, \
