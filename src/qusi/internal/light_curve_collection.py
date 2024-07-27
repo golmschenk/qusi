@@ -61,7 +61,7 @@ class PathIndexableBase(ABC):
 
 
 class PathGetterBase(PathIterableBase, PathIndexableBase):
-    pass
+    random_number_generator: Random
 
 
 @dataclass
@@ -265,17 +265,26 @@ class LightCurveObservationCollection(
 
         :return: The iterable of the light curves.
         """
+        light_curve_paths = self.path_iter()
+        for light_curve_path in light_curve_paths:
+            light_curve_observation = self.observation_from_path(light_curve_path)
+            yield light_curve_observation
+
+    def observation_from_path(self, light_curve_path: Path) -> LightCurveObservation:
+        times, fluxes = self.light_curve_collection.load_times_and_fluxes_from_path(
+            light_curve_path
+        )
+        label = self.load_label_from_path_function(light_curve_path)
+        light_curve = LightCurve.new(times, fluxes)
+        light_curve_observation = LightCurveObservation.new(light_curve, label)
+        light_curve_observation.path = light_curve_path  # TODO: Quick debug hack.
+        return light_curve_observation
+
+    def path_iter(self) -> Iterable[Path]:
         light_curve_paths = self.path_getter.get_shuffled_paths()
         if len(light_curve_paths) == 0:
             raise ValueError('LightCurveObservationCollection returned no paths.')
-        for light_curve_path in light_curve_paths:
-            times, fluxes = self.light_curve_collection.load_times_and_fluxes_from_path(
-                light_curve_path
-            )
-            label = self.load_label_from_path_function(light_curve_path)
-            light_curve = LightCurve.new(times, fluxes)
-            light_curve_observation = LightCurveObservation.new(light_curve, label)
-            yield light_curve_observation
+        return light_curve_paths
 
     def __getitem__(self, index: int) -> LightCurveObservation:
         light_curve_path = self.path_getter[index]

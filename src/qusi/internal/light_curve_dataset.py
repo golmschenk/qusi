@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import itertools
 import math
 import re
 import shutil
@@ -8,6 +9,7 @@ import socket
 from enum import Enum
 from functools import partial
 from pathlib import Path
+from random import Random
 from typing import TYPE_CHECKING, Any, Callable, TypeVar
 
 import numpy as np
@@ -75,17 +77,24 @@ class LightCurveDataset(IterableDataset):
             )
             raise ValueError(error_message)
         self.post_injection_transform: Callable[[Any], Any] = post_injection_transform
+        self.worker_randomizing_set: bool = False
 
     def __iter__(self):
+        if not self.worker_randomizing_set:
+            worker_info = torch.utils.data.get_worker_info()
+            if worker_info is not None:
+                self.seed_random(worker_info.id)
+            self.worker_randomizing_set = True
         base_light_curve_collection_iter_and_type_pairs: list[
-            tuple[Iterator[LightCurveObservation], LightCurveCollectionType]
+            tuple[Iterator[Path], Callable[[Path], LightCurveObservation], LightCurveCollectionType]
         ] = []
         injectee_collections = copy.copy(self.injectee_light_curve_collections)
         for standard_collection in self.standard_light_curve_collections:
             if standard_collection in injectee_collections:
                 base_light_curve_collection_iter_and_type_pairs.append(
                     (
-                        loop_iter_function(standard_collection.observation_iter),
+                        loop_iter_function(standard_collection.path_iter),
+                        standard_collection.observation_from_path,
                         LightCurveCollectionType.STANDARD_AND_INJECTEE,
                     )
                 )
@@ -93,34 +102,39 @@ class LightCurveDataset(IterableDataset):
             else:
                 base_light_curve_collection_iter_and_type_pairs.append(
                     (
-                        loop_iter_function(standard_collection.observation_iter),
+                        loop_iter_function(standard_collection.path_iter),
+                        standard_collection.observation_from_path,
                         LightCurveCollectionType.STANDARD,
                     )
                 )
         for injectee_collection in injectee_collections:
             base_light_curve_collection_iter_and_type_pair = (
-                loop_iter_function(injectee_collection.observation_iter),
+                loop_iter_function(injectee_collection.path_iter),
+                injectee_collection.observation_from_path,
                 LightCurveCollectionType.INJECTEE,
             )
             base_light_curve_collection_iter_and_type_pairs.append(base_light_curve_collection_iter_and_type_pair)
         injectable_light_curve_collection_iters: list[
-            Iterator[LightCurveObservation]
+            tuple[Iterator[Path], Callable[[Path], LightCurveObservation]]
         ] = []
         for injectable_collection in self.injectable_light_curve_collections:
-            injectable_light_curve_collection_iter = loop_iter_function(injectable_collection.observation_iter)
-            injectable_light_curve_collection_iters.append(injectable_light_curve_collection_iter)
+            injectable_light_curve_collection_iter = loop_iter_function(injectable_collection.path_iter)
+            injectable_light_curve_collection_iters.append(
+                (injectable_light_curve_collection_iter, injectable_collection.observation_from_path))
         while True:
             for (
                     base_light_curve_collection_iter_and_type_pair
             ) in base_light_curve_collection_iter_and_type_pairs:
-                (base_collection_iter, collection_type) = base_light_curve_collection_iter_and_type_pair
+                (base_collection_iter, observation_from_path_function,
+                 collection_type) = base_light_curve_collection_iter_and_type_pair
                 if collection_type in [
                     LightCurveCollectionType.STANDARD,
                     LightCurveCollectionType.STANDARD_AND_INJECTEE,
                 ]:
                     # TODO: Preprocessing step should be here. Or maybe that should all be on the light curve collection
                     #  as well? Or passed in somewhere else?
-                    standard_light_curve = next(base_collection_iter)
+                    standard_path = next(base_collection_iter)
+                    standard_light_curve = observation_from_path_function(standard_path)
                     transformed_standard_light_curve = self.post_injection_transform(
                         standard_light_curve
                     )
@@ -129,10 +143,12 @@ class LightCurveDataset(IterableDataset):
                     LightCurveCollectionType.INJECTEE,
                     LightCurveCollectionType.STANDARD_AND_INJECTEE,
                 ]:
-                    for (injectable_light_curve_collection_iter) in injectable_light_curve_collection_iters:
-                        injectable_light_curve = next(
+                    for (injectable_light_curve_collection_iter,
+                         injectable_observation_from_path_function) in injectable_light_curve_collection_iters:
+                        injectable_light_path = next(
                             injectable_light_curve_collection_iter
                         )
+                        injectable_light_curve = injectable_observation_from_path_function(injectable_light_path)
                         injectee_light_curve = next(base_collection_iter)
                         injected_light_curve = inject_light_curve(
                             injectee_light_curve, injectable_light_curve
@@ -187,6 +203,12 @@ class LightCurveDataset(IterableDataset):
             post_injection_transform=post_injection_transform,
         )
         return instance
+
+    def seed_random(self, seed: int):
+        for collection_group in [self.standard_light_curve_collections, self.injectee_light_curve_collections,
+                                 self.injectable_light_curve_collections]:
+            for collection in collection_group:
+                collection.path_getter.random_number_generator = Random(seed)
 
 
 def inject_light_curve(
