@@ -46,5 +46,6 @@ def infer_phase(dataloader, model: Module, device: Device):
             batch_predicted_targets = model(input_features_on_device)
             batches_of_predicted_targets.append(batch_predicted_targets.cpu().numpy())
             batch_count += 1
+            print(f'Batches completed: {batch_count}')
     predicted_targets = np.concatenate(batches_of_predicted_targets, axis=0)
     return predicted_targets
