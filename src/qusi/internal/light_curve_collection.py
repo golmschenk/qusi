@@ -75,6 +75,7 @@ class PathGetter(PathGetterBase):
 
     get_paths_function: Callable[[], Iterable[Path]]
     random_number_generator: Random
+    _indexable_paths: np.ndarray | None = None
 
     @classmethod
     def new(cls, get_paths_function: Callable[[], Iterable[Path]]) -> Self:
@@ -105,8 +106,9 @@ class PathGetter(PathGetterBase):
         return light_curve_paths
 
     def __getitem__(self, index: int | tuple[int]) -> Path | tuple[Path]:
-        light_curve_paths = self.get_paths()
-        indexed_light_curve_paths = np.array(light_curve_paths)[index]
+        if self._indexable_paths is None:
+            self._indexable_paths = np.array(self.get_paths())
+        indexed_light_curve_paths = self._indexable_paths[index]
         if isinstance(indexed_light_curve_paths, Path):
             return indexed_light_curve_paths
         return indexed_light_curve_paths.tolist()
