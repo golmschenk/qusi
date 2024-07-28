@@ -86,7 +86,10 @@ def train_session(
         dir=sessions_directory,
     )
     train_dataset = InterleavedDataset.new(*train_datasets)
-    torch.multiprocessing.set_start_method("spawn")
+    try:
+        torch.multiprocessing.set_start_method("spawn")
+    except RuntimeError:
+        pass
     workers_per_dataloader = system_configuration.preprocessing_processes_per_train_process
     if workers_per_dataloader == 0:
         prefetch_factor = None
