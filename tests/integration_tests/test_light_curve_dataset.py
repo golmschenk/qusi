@@ -28,7 +28,7 @@ def post_injection_transform(x):
     return x
 
 
-def test_light_curve_dataset_with_and_without_multiple_workers_gives_same_batch_order():
+def test_multiple_data_workers_do_not_return_the_same_batches():
     light_curve_collection = LightCurveObservationCollection.new(
         get_paths_function=get_paths,
         load_times_and_fluxes_from_path_function=load_times_and_fluxes_from_path,
