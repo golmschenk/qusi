@@ -258,3 +258,24 @@ class HadryssMultiClassEndModule(Module):
     @classmethod
     def new(cls, number_of_classes: int):
         return cls(number_of_classes)
+
+
+class HadryssMultiClassEndModule2(Module):  # TODO: Temporary test for Abhina.
+    """
+    A module for the end of the Hadryss model designed for multi classification without softmax.
+    """
+    def __init__(self, number_of_classes: int):
+        super().__init__()
+        self.number_of_classes: int = number_of_classes
+        self.prediction_layer = Conv1d(in_channels=20, out_channels=self.number_of_classes, kernel_size=1)
+        self.soft_max = Softmax(dim=1)
+
+    def forward(self, x: Tensor) -> Tensor:
+        x = self.prediction_layer(x)
+        x = self.soft_max(x)
+        x = torch.reshape(x, (-1, self.number_of_classes))
+        return x
+
+    @classmethod
+    def new(cls, number_of_classes: int):
+        return cls(number_of_classes)

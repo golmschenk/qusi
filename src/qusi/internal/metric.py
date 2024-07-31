@@ -1,6 +1,6 @@
 import torch
 from torch import Tensor
-from torch.nn import NLLLoss, Module
+from torch.nn import NLLLoss, Module, CrossEntropyLoss
 from torchmetrics.classification import MulticlassAUROC, MulticlassAccuracy
 
 
@@ -17,6 +17,20 @@ class CrossEntropyAlt(Module):
         predicted_log_probabilities = torch.log(preds)
         target_int = target.to(torch.int64)
         cross_entropy = self.nll_loss(predicted_log_probabilities, target_int)
+        return cross_entropy
+
+class CrossEntropyAlt2(Module):  # TODO: Temporary test for Abhina.
+    @classmethod
+    def new(cls):
+        return cls()
+
+    def __init__(self):
+        super().__init__()
+        self.cross_entropy = CrossEntropyLoss()
+
+    def __call__(self, preds: Tensor, target: Tensor):
+        target_int = target.to(torch.int64)
+        cross_entropy = self.cross_entropy(preds, target_int)
         return cross_entropy
 
 class MulticlassAUROCAlt(Module):
