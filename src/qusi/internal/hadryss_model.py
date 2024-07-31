@@ -268,11 +268,9 @@ class HadryssMultiClassEndModule2(Module):  # TODO: Temporary test for Abhina.
         super().__init__()
         self.number_of_classes: int = number_of_classes
         self.prediction_layer = Conv1d(in_channels=20, out_channels=self.number_of_classes, kernel_size=1)
-        self.soft_max = Softmax(dim=1)
 
     def forward(self, x: Tensor) -> Tensor:
         x = self.prediction_layer(x)
-        x = self.soft_max(x)
         x = torch.reshape(x, (-1, self.number_of_classes))
         return x
 
