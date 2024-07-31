@@ -135,9 +135,15 @@ class LightCurveDataset(IterableDataset):
                     #  as well? Or passed in somewhere else?
                     standard_path = next(base_collection_iter)
                     standard_light_curve = observation_from_path_function(standard_path)
-                    transformed_standard_light_curve = self.post_injection_transform(
-                        standard_light_curve
-                    )
+                    try:
+                        transformed_standard_light_curve = self.post_injection_transform(
+                            standard_light_curve
+                        )
+                    except ValueError as error:
+                        with Path('problem_light_curves.txt').open('a') as problem_files_list_file:
+                            print(f'#############################', flush=True)
+                            print(f'{standard_light_curve.path}', file=problem_files_list_file, flush=True)
+                        continue
                     yield transformed_standard_light_curve
                 if collection_type in [
                     LightCurveCollectionType.INJECTEE,
@@ -149,7 +155,8 @@ class LightCurveDataset(IterableDataset):
                             injectable_light_curve_collection_iter
                         )
                         injectable_light_curve = injectable_observation_from_path_function(injectable_light_path)
-                        injectee_light_curve = next(base_collection_iter)
+                        injectee_light_curve_path = next(base_collection_iter)
+                        injectee_light_curve = observation_from_path_function(injectee_light_curve_path)
                         injected_light_curve = inject_light_curve(
                             injectee_light_curve, injectable_light_curve
                         )
