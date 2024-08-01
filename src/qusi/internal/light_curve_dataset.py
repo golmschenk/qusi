@@ -157,9 +157,17 @@ class LightCurveDataset(IterableDataset):
                         injectable_light_curve = injectable_observation_from_path_function(injectable_light_path)
                         injectee_light_curve_path = next(base_collection_iter)
                         injectee_light_curve = observation_from_path_function(injectee_light_curve_path)
-                        injected_light_curve = inject_light_curve(
-                            injectee_light_curve, injectable_light_curve
-                        )
+                        # TODO: Here's where the error occurs.
+                        try:
+                            injected_light_curve = inject_light_curve(
+                                injectee_light_curve, injectable_light_curve
+                            )
+                        except ValueError as error:
+                            with Path('problem_light_curves.txt').open('a') as problem_files_list_file:
+                                print(f'#############################', flush=True)
+                                print(f'{injectee_light_curve.path}', file=problem_files_list_file, flush=True)
+                                print(f'{injectable_light_curve.path}', file=problem_files_list_file, flush=True)
+                            continue
                         transformed_injected_light_curve = (
                             self.post_injection_transform(injected_light_curve)
                         )
