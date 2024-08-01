@@ -606,8 +606,9 @@ def download_spoc_light_curves_for_tic_ids(
             tic_id_list_chunk, download_directory, sectors=sectors, limit=chunk_limit
         )
         paths.extend(paths_chunk)
-        if len(paths) >= limit:
-            break
+        if limit is not None:
+            if len(paths) >= limit:
+                break
         logger.info(f"{len(paths)} downloaded...")
     logger.info(f"Finished downloading {len(paths)} light curves.")
     return paths
