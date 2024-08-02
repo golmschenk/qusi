@@ -169,6 +169,21 @@ class TestTessFfiDataInterface:
         assert tic_id1 == 1234567
         assert sector1 == 1
 
+    def test_can_get_tic_id_and_sector_from_spoc_style_file_path(
+            self,
+    ):
+        light_curve = TessFfiLightCurve()
+        tic_id0, sector0 = light_curve.get_tic_id_and_sector_from_file_path(
+            "hlsp_tess-spoc_tess_phot_0000001154626342-s0038_tess_v1_lc.fits"
+        )
+        assert tic_id0 == 1154626342
+        assert sector0 == 38
+        tic_id1, sector1 = light_curve.get_tic_id_and_sector_from_file_path(
+            "data/hlsp_tess-spoc_tess_phot_0000002025810344-s0039_tess_v1_lc.fits"
+        )
+        assert tic_id1 == 2025810344
+        assert sector1 == 39
+
     def test_can_get_floor_magnitude_from_ffi_style_file_path(self):
         light_curve = TessFfiLightCurve()
         magnitude0 = light_curve.get_floor_magnitude_from_file_path(

@@ -149,6 +149,11 @@ class TessFfiLightCurve(TessLightCurve):
         match = re.search(r"tic_id_(\d+)_sector_(\d+)_ffi_light_curve.pkl", path)
         if match:
             return int(match.group(1)), int(match.group(2))
+        # SPOC name format.
+        # E.g., "hlsp_tess-spoc_tess_phot_0000001154626342-s0038_tess_v1_lc.fits"
+        match = re.search(r"hlsp_tess-spoc_tess_phot_(\d+)-s(\d+)_tess_v1_lc.fits", path)
+        if match:
+            return int(match.group(1)), int(match.group(2))
         # Raise an error if none of the patterns matched.
         error_message = f"{path} does not match a known pattern to extract TIC ID and sector from."
         raise ValueError(error_message)
