@@ -76,6 +76,7 @@ class PathGetter(PathGetterBase):
     get_paths_function: Callable[[], Iterable[Path]]
     random_number_generator: Random
     _indexable_paths: np.ndarray | None = None
+    _paths_list: list[Path] | None = None  # TODO: Merge with above.
 
     @classmethod
     def new(cls, get_paths_function: Callable[[], Iterable[Path]]) -> Self:
@@ -92,9 +93,10 @@ class PathGetter(PathGetterBase):
 
         :return: The shuffled paths iterable.
         """
-        light_curve_paths = self.get_paths()
-        self.random_number_generator.shuffle(light_curve_paths)
-        return light_curve_paths
+        if self._paths_list is None:
+            self._paths_list = self.get_paths()
+        self.random_number_generator.shuffle(self._paths_list)
+        return self._paths_list
 
     def get_paths(self):
         """
