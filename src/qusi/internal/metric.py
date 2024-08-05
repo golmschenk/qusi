@@ -1,25 +1,10 @@
 import torch
 from torch import Tensor
-from torch.nn import NLLLoss, Module, CrossEntropyLoss
+from torch.nn import Module, CrossEntropyLoss, Softmax
 from torchmetrics.classification import MulticlassAUROC, MulticlassAccuracy
 
 
 class CrossEntropyAlt(Module):
-    @classmethod
-    def new(cls):
-        return cls()
-
-    def __init__(self):
-        super().__init__()
-        self.nll_loss = NLLLoss()
-
-    def __call__(self, preds: Tensor, target: Tensor):
-        predicted_log_probabilities = torch.log(preds)
-        target_int = target.to(torch.int64)
-        cross_entropy = self.nll_loss(predicted_log_probabilities, target_int)
-        return cross_entropy
-
-class CrossEntropyAlt2(Module):  # TODO: Temporary test for Abhina.
     @classmethod
     def new(cls):
         return cls()
@@ -33,6 +18,7 @@ class CrossEntropyAlt2(Module):  # TODO: Temporary test for Abhina.
         cross_entropy = self.cross_entropy(preds, target_int)
         return cross_entropy
 
+
 class MulticlassAUROCAlt(Module):
     @classmethod
     def new(cls, number_of_classes: int):
@@ -41,11 +27,14 @@ class MulticlassAUROCAlt(Module):
     def __init__(self, number_of_classes: int):
         super().__init__()
         self.multiclass_auroc = MulticlassAUROC(num_classes=number_of_classes)
+        self.softmax = Softmax()
 
     def __call__(self, preds: Tensor, target: Tensor):
+        probabilities = self.softmax(preds)
         target_int = target.to(torch.int64)
-        cross_entropy = self.multiclass_auroc(preds, target_int)
+        cross_entropy = self.multiclass_auroc(probabilities, target_int)
         return cross_entropy
+
 
 class MulticlassAccuracyAlt(Module):
     @classmethod
@@ -55,8 +44,10 @@ class MulticlassAccuracyAlt(Module):
     def __init__(self, number_of_classes: int):
         super().__init__()
         self.multiclass_accuracy = MulticlassAccuracy(num_classes=number_of_classes)
+        self.softmax = Softmax()
 
     def __call__(self, preds: Tensor, target: Tensor):
+        probabilities = self.softmax(preds)
         target_int = target.to(torch.int64)
-        cross_entropy = self.multiclass_accuracy(preds, target_int)
+        cross_entropy = self.multiclass_accuracy(probabilities, target_int)
         return cross_entropy

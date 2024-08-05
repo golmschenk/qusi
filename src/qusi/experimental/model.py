@@ -1,9 +1,11 @@
 """
 Neural network model related public interface.
 """
-from qusi.internal.hadryss_model import HadryssBinaryClassEndModule, HadryssMultiClassEndModule
+from qusi.internal.hadryss_model import HadryssBinaryClassEndModule, \
+    HadryssMultiClassScoreEndModule, HadryssMultiClassProbabilityEndModule
 
 __all__ = [
     'HadryssBinaryClassEndModule',
-    'HadryssMultiClassEndModule',
+    'HadryssMultiClassScoreEndModule',
+    'HadryssMultiClassProbabilityEndModule',
 ]

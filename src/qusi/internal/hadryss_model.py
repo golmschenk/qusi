@@ -239,7 +239,7 @@ class HadryssBinaryClassEndModule(Module):
         return cls()
 
 
-class HadryssMultiClassEndModule(Module):
+class HadryssMultiClassProbabilityEndModule(Module):
     """
     A module for the end of the Hadryss model designed for multi classification.
     """
@@ -260,7 +260,7 @@ class HadryssMultiClassEndModule(Module):
         return cls(number_of_classes)
 
 
-class HadryssMultiClassEndModule2(Module):  # TODO: Temporary test for Abhina.
+class HadryssMultiClassScoreEndModule(Module):
     """
     A module for the end of the Hadryss model designed for multi classification without softmax.
     """
