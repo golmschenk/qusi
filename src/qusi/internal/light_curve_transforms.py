@@ -73,7 +73,7 @@ def make_uniform_length(example: np.ndarray, length: int) -> np.ndarray:
         pass
     if example.shape[0] == 0:
         example = np.array([-1], dtype=example.dtype)
-    elif example.shape[0] > length:
+    if example.shape[0] > length:
         example = example[:length]
     else:
         elements_to_repeat = length - example.shape[0]
