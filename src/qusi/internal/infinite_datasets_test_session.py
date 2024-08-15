@@ -1,7 +1,7 @@
 from torch.nn import Module
 from torch.types import Device
 from torch.utils.data import DataLoader
-from wandb.wandb_torch import torch
+import torch
 
 from qusi.internal.light_curve_dataset import LightCurveDataset
 
