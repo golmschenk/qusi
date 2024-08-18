@@ -39,6 +39,7 @@ tutorials/basic_transit_identification_with_prebuilt_components
 tutorials/basic_transit_identification_dataset_construction
 tutorials/crafting_standard_datasets
 tutorials/crafting_injected_datasets
+tutorials/basic_multi_classification
 tutorials/advanced_crafting_datasets
 reference_index
 ```
