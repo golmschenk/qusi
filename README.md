@@ -1,4 +1,4 @@
-<img src="https://raw.githubusercontent.com/golmschenk/qusi/main/docs/qusi_logo.svg" width="250"/>
+<img src="docs/source/qusi_robot_with_telescope.png" width="250"/>
 
 # qusi (formerly RAMjET)
 
