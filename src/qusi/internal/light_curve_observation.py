@@ -50,10 +50,6 @@ def remove_nan_flux_data_points_from_light_curve_observation(
     return light_curve_observation
 
 
-def remove_inf_flux_data_points_from_light_curve(light_curve):
-    pass
-
-
 def remove_infinite_flux_data_points_from_light_curve_observation(
     light_curve_observation: LightCurveObservation,
 ) -> LightCurveObservation:
