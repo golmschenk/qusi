@@ -25,7 +25,7 @@ from typing_extensions import Self
 from qusi.internal.light_curve import (
     LightCurve,
     randomly_roll_light_curve,
-    remove_nan_flux_data_points_from_light_curve,
+    remove_nan_flux_data_points_from_light_curve, remove_infinite_flux_data_points_from_light_curve,
 )
 from qusi.internal.light_curve_observation import (
     LightCurveObservation,
@@ -369,6 +369,7 @@ def default_light_curve_post_injection_transform(
     :param randomize: Whether to have randomization in the transforms.
     :return: The transformed light curve.
     """
+    x = remove_infinite_flux_data_points_from_light_curve(x)
     x = remove_nan_flux_data_points_from_light_curve(x)
     if randomize:
         x = randomly_roll_light_curve(x)
