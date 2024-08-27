@@ -48,6 +48,21 @@ def remove_nan_flux_data_points_from_light_curve(light_curve: LightCurve) -> Lig
     return light_curve
 
 
+def remove_infinite_flux_data_points_from_light_curve(light_curve: LightCurve) -> LightCurve:
+    """
+    Removes infinite values from a light curve. If there is an infinite value in either the times or the
+    fluxes, both corresponding values are removed.
+
+    :param light_curve: The light curve.
+    :return: The light curve with infinite values removed.
+    """
+    light_curve = deepcopy(light_curve)
+    infinite_flux_indexes = np.isinf(light_curve.fluxes)
+    light_curve.fluxes = light_curve.fluxes[~infinite_flux_indexes]
+    light_curve.times = light_curve.times[~infinite_flux_indexes]
+    return light_curve
+
+
 def randomly_roll_light_curve(light_curve: LightCurve) -> LightCurve:
     """
     Randomly rolls a light curve. That is, a random position in the light curve is chosen, the light curve

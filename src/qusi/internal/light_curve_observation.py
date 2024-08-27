@@ -3,7 +3,9 @@ from dataclasses import dataclass
 
 from typing_extensions import Self
 
-from qusi.internal.light_curve import LightCurve, randomly_roll_light_curve, remove_nan_flux_data_points_from_light_curve
+from qusi.internal.light_curve import (LightCurve, randomly_roll_light_curve,
+                                       remove_nan_flux_data_points_from_light_curve,
+                                       remove_infinite_flux_data_points_from_light_curve)
 
 
 @dataclass
@@ -43,6 +45,23 @@ def remove_nan_flux_data_points_from_light_curve_observation(
     """
     light_curve_observation = deepcopy(light_curve_observation)
     light_curve_observation.light_curve = remove_nan_flux_data_points_from_light_curve(
+        light_curve_observation.light_curve
+    )
+    return light_curve_observation
+
+
+def remove_infinite_flux_data_points_from_light_curve_observation(
+    light_curve_observation: LightCurveObservation,
+) -> LightCurveObservation:
+    """
+    Removes the inf values from a light curve in a light curve observation. If there is an inf in either the times or the
+    fluxes, both corresponding values are removed.
+
+    :param light_curve_observation: The light curve observation.
+    :return: The light curve observation with inf values removed.
+    """
+    light_curve_observation = deepcopy(light_curve_observation)
+    light_curve_observation.light_curve = remove_infinite_flux_data_points_from_light_curve(
         light_curve_observation.light_curve
     )
     return light_curve_observation

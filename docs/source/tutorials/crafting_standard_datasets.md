@@ -35,6 +35,7 @@ In the previous section, we only changed the length of that the uniform lengthen
 
 ```python
 def default_light_curve_observation_post_injection_transform(x: LightCurveObservation, length: int, randomize: bool = True) -> (Tensor, Tensor):
+    x = remove_infinite_flux_data_points_from_light_curve_observation(x)
     x = remove_nan_flux_data_points_from_light_curve_observation(x)
     if randomize:
         x = randomly_roll_light_curve_observation(x)
