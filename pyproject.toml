@@ -50,6 +50,7 @@ dependencies = [
     "typing_extensions",
     "myst-parser",
     "torcheval>=0.0.7",
+    "lightning>=2",
 ]
 
 [build-system]
