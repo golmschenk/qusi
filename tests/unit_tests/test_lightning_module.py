@@ -27,7 +27,7 @@ def create_fake_qusi_lightning_module() -> QusiLightningModule:
 
 
 def create_fake_metric_group() -> MetricGroup:
-    fake_metric_group = MetricGroup(loss_metric=Mock(return_value=torch.tensor([1])),
+    fake_metric_group = MetricGroup(loss_metric=Mock(return_value=torch.tensor(1)),
                                     state_based_logging_metrics=ModuleList([MockStateBasedMetric()]),
                                     functional_logging_metrics=ModuleList([MockFunctionalMetric()]))
     return fake_metric_group
