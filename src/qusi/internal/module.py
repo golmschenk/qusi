@@ -1,10 +1,10 @@
 import copy
 from typing import Any
 
-import numpy as np
-import numpy.typing as npt
+import torch
 from lightning import LightningModule
 from lightning.pytorch.utilities.types import STEP_OUTPUT
+from torch import Tensor, tensor
 from torch.nn import Module, BCELoss, ModuleList
 from torch.optim import Optimizer, AdamW
 from torchmetrics import Metric
@@ -21,10 +21,15 @@ class MetricGroup(Module):
         self.loss_metric: Module = loss_metric
         self.state_based_logging_metrics: ModuleList = state_based_logging_metrics
         self.functional_logging_metrics: ModuleList = functional_logging_metrics
-        self.loss_cycle_total: float = 0
-        self.steps_run_in_phase: int = 0
-        self.functional_logging_metric_cycle_totals: npt.NDArray = np.zeros(
-            len(self.functional_logging_metrics), dtype=np.float32)
+        # Lightning requires tensors be registered to be automatically moved between devices.
+        # Then we assign it to itself to force IDE resolution.
+        self.register_buffer('loss_cycle_total', tensor(0, dtype=torch.float32))
+        self.loss_cycle_total: Tensor = self.loss_cycle_total
+        self.register_buffer('steps_run_in_phase', tensor(0, dtype=torch.int32))
+        self.steps_run_in_phase: Tensor = self.steps_run_in_phase
+        self.register_buffer('functional_logging_metric_cycle_totals',
+                             torch.zeros(len(self.functional_logging_metrics), dtype=torch.float32))
+        self.functional_logging_metric_cycle_totals: Tensor = self.functional_logging_metric_cycle_totals
 
     @classmethod
     def new(
@@ -48,7 +53,7 @@ class QusiLightningModule(LightningModule):
             model: Module,
             optimizer: Optimizer | None,
             loss_metric: Module | None = None,
-            logging_metrics: ModuleList | None = None,
+            logging_metrics: list[Module] | None = None,
     ) -> Self:
         if optimizer is None:
             optimizer = AdamW(model.parameters())
@@ -125,10 +130,9 @@ class QusiLightningModule(LightningModule):
         mean_cycle_loss = metric_group.loss_cycle_total / metric_group.steps_run_in_phase
         self.log(name=logging_name_prefix + 'loss',
                  value=mean_cycle_loss, sync_dist=True)
-        metric_group.loss_cycle_total = 0
-        metric_group.functional_logging_metric_cycle_totals = np.zeros(len(metric_group.functional_logging_metrics),
-                                                                      dtype=np.float32)
-        metric_group.steps_run_in_phase = 0
+        metric_group.loss_cycle_total.zero_()
+        metric_group.steps_run_in_phase.zero_()
+        metric_group.functional_logging_metric_cycle_totals.zero_()
 
     def validation_step(self, batch: tuple[Any, Any], batch_index: int) -> STEP_OUTPUT:
         return self.compute_loss_and_metrics(batch, self.validation_metric_groups[0])
