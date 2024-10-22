@@ -1,3 +1,4 @@
+import datetime
 import sys
 from pathlib import Path
 
@@ -12,7 +13,7 @@ sys.path.insert(0, str(Path("../../src/qusi").absolute()))
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "qusi"
-project_copyright = "2023, Greg Olmschenk"
+project_copyright = f'2023 - {datetime.datetime.now().year}, Greg Olmschenk'
 author = "Greg Olmschenk"
 
 # -- General configuration ---------------------------------------------------
