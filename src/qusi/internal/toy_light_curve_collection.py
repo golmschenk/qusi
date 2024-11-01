@@ -112,7 +112,9 @@ def get_toy_dataset():
         standard_light_curve_collections=[
             get_toy_sine_wave_light_curve_observation_collection(),
             get_toy_flat_light_curve_observation_collection(),
-        ]
+        ],
+        post_injection_transform=partial(default_light_curve_observation_post_injection_transform,
+                                         length=100, randomize=False)
     )
 
 

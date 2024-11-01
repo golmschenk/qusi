@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import copy
-import itertools
 import math
 import re
 import shutil
