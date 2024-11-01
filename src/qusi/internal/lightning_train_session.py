@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import datetime
 import logging
+from pathlib import Path
 from warnings import warn
 
 import lightning
+from lightning.pytorch.loggers import CSVLogger, WandbLogger
 from torch.nn import BCELoss, Module
 from torch.optim import Optimizer
 from torch.utils.data import DataLoader
@@ -102,11 +105,18 @@ def train_session(
 
     lightning_model = QusiLightningModule.new(model=model, optimizer=optimizer, loss_metric=loss_metric,
                                               logging_metrics=logging_metrics)
+    sessions_directory_path = Path(f'sessions')
+    session_name = f'{datetime.datetime.now():%Y_%m_%d_%H_%M_%S}'
+    sessions_directory_path.mkdir(exist_ok=True, parents=True)
+    loggers = [
+        CSVLogger(save_dir=sessions_directory_path, name=session_name),
+        WandbLogger(save_dir=sessions_directory_path, name=session_name)]
     trainer = lightning.Trainer(
         max_epochs=hyperparameter_configuration.cycles,
         limit_train_batches=hyperparameter_configuration.train_steps_per_cycle,
         limit_val_batches=hyperparameter_configuration.validation_steps_per_cycle,
         log_every_n_steps=0,
-        accelerator=system_configuration.accelerator
+        accelerator=system_configuration.accelerator,
+        logger=loggers,
     )
     trainer.fit(model=lightning_model, train_dataloaders=train_dataloader, val_dataloaders=validation_dataloaders)
