@@ -101,7 +101,6 @@ class QusiLightningModule(LightningModule):
         # Due to Lightning's inconsistent step ordering, performing this during the train epoch start gives the most
         # consistent results.
         self.cycle += 1
-        self.log(name='cycle', value=self.cycle, reduce_fx=torch.max, rank_zero_only=True, on_step=False, on_epoch=True)
 
     def training_step(self, batch: tuple[Any, Any], batch_index: int) -> STEP_OUTPUT:
         return self.compute_loss_and_metrics(batch, self.train_metric_group)
@@ -129,6 +128,7 @@ class QusiLightningModule(LightningModule):
         self.log(name=logging_name_prefix + 'loss',
                  value=mean_cycle_loss, sync_dist=True, on_step=False,
                  on_epoch=True)
+        self.log(name='cycle', value=self.cycle, reduce_fx=torch.max, rank_zero_only=True, on_step=False, on_epoch=True)
         for state_based_logging_metric in metric_group.state_based_logging_metrics:
             state_based_logging_metric_name = get_metric_name(state_based_logging_metric)
             self.log(name=logging_name_prefix + state_based_logging_metric_name,
