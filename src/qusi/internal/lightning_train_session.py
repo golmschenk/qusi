@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import datetime
 import logging
+import math
 from pathlib import Path
 from warnings import warn
 
@@ -75,36 +76,7 @@ def train_session(
         logging_metrics = [BinaryAccuracy(), BinaryAUROC()]
 
     set_up_default_logger()
-    train_dataset = InterleavedDataset.new(*train_datasets)
-    workers_per_dataloader = system_configuration.preprocessing_processes_per_train_process
-    if workers_per_dataloader == 0:
-        prefetch_factor = None
-        persistent_workers = False
-    else:
-        prefetch_factor = 10
-        persistent_workers = True
-    train_dataloader = DataLoader(
-        train_dataset,
-        batch_size=hyperparameter_configuration.batch_size,
-        pin_memory=True,
-        persistent_workers=persistent_workers,
-        prefetch_factor=prefetch_factor,
-        num_workers=workers_per_dataloader,
-    )
-    validation_dataloaders: list[DataLoader] = []
-    for validation_dataset in validation_datasets:
-        validation_dataloader = DataLoader(
-            validation_dataset,
-            batch_size=hyperparameter_configuration.batch_size,
-            pin_memory=True,
-            persistent_workers=persistent_workers,
-            prefetch_factor=prefetch_factor,
-            num_workers=workers_per_dataloader,
-        )
-        validation_dataloaders.append(validation_dataloader)
 
-    lightning_model = QusiLightningModule.new(model=model, optimizer=optimizer, loss_metric=loss_metric,
-                                              logging_metrics=logging_metrics)
     sessions_directory_path = Path(f'sessions')
     session_name = f'{datetime.datetime.now():%Y_%m_%d_%H_%M_%S}'
     sessions_directory_path.mkdir(exist_ok=True, parents=True)
@@ -119,4 +91,40 @@ def train_session(
         accelerator=system_configuration.accelerator,
         logger=loggers,
     )
+
+    train_dataset = InterleavedDataset.new(*train_datasets)
+    workers_per_dataloader = system_configuration.preprocessing_processes_per_train_process
+
+    local_batch_size = round(hyperparameter_configuration.batch_size / trainer.world_size)
+    if local_batch_size == 0:
+        local_batch_size = 1
+
+    if workers_per_dataloader == 0:
+        prefetch_factor = None
+        persistent_workers = False
+    else:
+        prefetch_factor = 10
+        persistent_workers = True
+    train_dataloader = DataLoader(
+        train_dataset,
+        batch_size=local_batch_size,
+        pin_memory=True,
+        persistent_workers=persistent_workers,
+        prefetch_factor=prefetch_factor,
+        num_workers=workers_per_dataloader,
+    )
+    validation_dataloaders: list[DataLoader] = []
+    for validation_dataset in validation_datasets:
+        validation_dataloader = DataLoader(
+            validation_dataset,
+            batch_size=local_batch_size,
+            pin_memory=True,
+            persistent_workers=persistent_workers,
+            prefetch_factor=prefetch_factor,
+            num_workers=workers_per_dataloader,
+        )
+        validation_dataloaders.append(validation_dataloader)
+
+    lightning_model = QusiLightningModule.new(model=model, optimizer=optimizer, loss_metric=loss_metric,
+                                              logging_metrics=logging_metrics)
     trainer.fit(model=lightning_model, train_dataloaders=train_dataloader, val_dataloaders=validation_dataloaders)
