@@ -41,7 +41,7 @@ from qusi.internal.light_curve_transforms import (
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
 
-    from qusi.internal.light_curve_collection import LightCurveObservationCollection
+from qusi.internal.light_curve_collection import LightCurveObservationCollection
 
 
 class OutOfBoundsInjectionHandlingMethod(Enum):
@@ -79,12 +79,27 @@ class LightCurveDataset(IterableDataset):
             raise ValueError(error_message)
         self.post_injection_transform: Callable[[Any], Any] = post_injection_transform
         self.worker_randomizing_set: bool = False
+        self.global_rank: int | None = None
+        self.world_size: int | None = None
+        self.worker_id: int | None = None
+        self.number_of_workers: int | None = None
+        self.global_worker_rank: int | None = None
 
     def __iter__(self):
+        # TODO: This is a hack and there are certainly better places to put this.
         if not self.worker_randomizing_set:
             worker_info = torch.utils.data.get_worker_info()
+            if self.global_rank is None:
+                self.global_rank = 0
+                self.world_size = 1
             if worker_info is not None:
-                self.seed_random(worker_info.id)
+                self.worker_id = worker_info.id
+                self.number_of_workers = worker_info.num_workers
+            else:
+                self.worker_id = 0
+                self.number_of_workers = 0
+            self.global_worker_rank = (self.global_rank * self.number_of_workers) + self.worker_id
+            self.seed_random(self.worker_id)
             self.worker_randomizing_set = True
         base_light_curve_collection_iter_and_type_pairs: list[
             tuple[Iterator[Path], Callable[[Path], LightCurveObservation], LightCurveCollectionType]
