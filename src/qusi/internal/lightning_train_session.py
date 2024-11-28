@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import datetime
 import logging
-import math
 from pathlib import Path
 from warnings import warn
 
@@ -91,6 +90,10 @@ def train_session(
         accelerator=system_configuration.accelerator,
         logger=loggers,
     )
+    # TODO: Not a fan of needing to magically pass the process number to the datasets here.
+    for train_dataset in train_datasets:
+        train_dataset.global_rank = trainer.global_rank
+        train_dataset.world_size = trainer.world_size
 
     train_dataset = InterleavedDataset.new(*train_datasets)
     workers_per_dataloader = system_configuration.preprocessing_processes_per_train_process
