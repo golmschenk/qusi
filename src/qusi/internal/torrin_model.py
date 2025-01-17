@@ -1,22 +1,30 @@
 from __future__ import annotations
 
+from typing import Self
+
 import torch
 from torch.nn import Module, Transformer, Conv1d, Parameter, Linear, Flatten, Sigmoid
 
 
 class Torrin(Module):
-    def __init__(self):
+    @classmethod
+    def new(cls, input_length: int = 3500) -> Self:
+        return cls(input_length=input_length)
+
+    def __init__(self, input_length: int):
         super().__init__()
         embedding_size = 16
+        self.input_length = input_length
         self.embedding_layer = Conv1d(in_channels=1, out_channels=embedding_size, kernel_size=35, stride=35)
-        self.transformer = Transformer(d_model=embedding_size, dim_feedforward=16, batch_first=True, num_decoder_layers=1)
+        self.transformer = Transformer(d_model=embedding_size, dim_feedforward=16, batch_first=True,
+                                       num_decoder_layers=1)
         self.class_embedding = Parameter(torch.randn([1, 1, embedding_size]))
         self.flatten = Flatten()
         self.classification_layer = Linear(in_features=16, out_features=1)
         self.sigmoid = Sigmoid()
 
     def forward(self, x):
-        x = x.reshape([-1, 1, 3500])
+        x = x.reshape([-1, 1, self.input_length])
         x = self.embedding_layer(x)
         x = torch.permute(x, (0, 2, 1))
         expanded_class_embedding = self.class_embedding.expand(x.size(0), -1, -1)
