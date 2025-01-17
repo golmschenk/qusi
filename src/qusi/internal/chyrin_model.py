@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+from typing import Self
 
 from torch import permute
 from torch.nn import (
@@ -15,19 +16,29 @@ from torch.nn import (
 
 
 class Chyrin(Module):
-    def __init__(self):
+    @classmethod
+    def new(cls, input_length: int = 3500) -> Self:
+        pooling_factors, final_dense_layer_size = Chyrin.determine_block_pooling_factors_and_final_dense_layer_size(
+            input_length=input_length)
+        return cls(input_length=input_length, pooling_factors=pooling_factors,
+                   final_dense_layer_size=final_dense_layer_size)
+
+    def __init__(self, input_length, pooling_factors: list[int], final_dense_layer_size: int):
         super().__init__()
         self.blocks = ModuleList()
         self.activation = LeakyReLU()
         self.sigmoid = Sigmoid()
+        self.length = input_length
         output_channels = 10
         self.blocks.append(ResidualLightCurveNetworkBlock(
             output_channels=output_channels, input_channels=1, dropout_rate=0.0,
             batch_normalization=False))
         input_channels = output_channels
-        for output_channels in [10, 10, 20, 20, 30, 30, 40, 40, 50, 50]:
+        for output_channels_index, output_channels in enumerate([10, 10, 20, 20, 30, 30, 40, 40, 50, 50]):
             self.blocks.append(ResidualLightCurveNetworkBlock(
-                output_channels=output_channels, input_channels=input_channels, pooling_scale_factor=2,
+                output_channels=output_channels,
+                input_channels=input_channels,
+                pooling_scale_factor=pooling_factors[output_channels_index],
                 dropout_rate=0.0,
                 batch_normalization=False))
             input_channels = output_channels
@@ -36,16 +47,31 @@ class Chyrin(Module):
                     input_channels=input_channels, output_channels=output_channels, dropout_rate=0.0,
                     batch_normalization=False))
                 input_channels = output_channels
-        self.end_conv = Conv1d(input_channels, 1, kernel_size=3)
+        self.end_conv = Conv1d(input_channels, 1, kernel_size=final_dense_layer_size)
 
     def forward(self, x):
-        x = x.reshape([-1, 1, 3500])
+        x = x.reshape([-1, 1, self.length])
         for index, block in enumerate(self.blocks):
             x = block(x)
         x = self.end_conv(x)
         x = self.sigmoid(x)
         outputs = x.reshape([-1])
         return outputs
+
+    @staticmethod
+    def determine_block_pooling_factors_and_final_dense_layer_size(input_length: int) -> (list[int], int):
+        number_of_pooling_blocks = 10
+        pooling_sizes = [1] * number_of_pooling_blocks
+        max_dense_final_layer_features = 10
+        while True:
+            for pooling_size_index, _pooling_size in enumerate(pooling_sizes):
+                current_size = input_length
+                for current_pooling_size in pooling_sizes:
+                    current_size /= current_pooling_size
+                    current_size = math.floor(current_size)
+                if current_size <= max_dense_final_layer_features:
+                    return pooling_sizes, current_size
+                pooling_sizes[pooling_size_index] += 1
 
 
 class ResidualLightCurveNetworkBlock(Module):
