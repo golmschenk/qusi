@@ -26,12 +26,13 @@ from qusi.internal.light_curve import (
     LightCurve,
     randomly_roll_light_curve,
     remove_nan_flux_data_points_from_light_curve, remove_infinite_flux_data_points_from_light_curve,
+    make_light_curve_non_empty,
 )
 from qusi.internal.light_curve_observation import (
     LightCurveObservation,
     randomly_roll_light_curve_observation,
     remove_nan_flux_data_points_from_light_curve_observation,
-    remove_infinite_flux_data_points_from_light_curve_observation,
+    remove_infinite_flux_data_points_from_light_curve_observation, make_light_curve_observation_non_empty,
 )
 from qusi.internal.light_curve_transforms import (
     from_light_curve_observation_to_fluxes_array_and_label_array,
@@ -360,6 +361,7 @@ def default_light_curve_observation_post_injection_transform(
     """
     x = remove_infinite_flux_data_points_from_light_curve_observation(x)
     x = remove_nan_flux_data_points_from_light_curve_observation(x)
+    x = make_light_curve_observation_non_empty(x)
     if randomize:
         x = randomly_roll_light_curve_observation(x)
     x = from_light_curve_observation_to_fluxes_array_and_label_array(x)
@@ -386,6 +388,7 @@ def default_light_curve_post_injection_transform(
     """
     x = remove_infinite_flux_data_points_from_light_curve(x)
     x = remove_nan_flux_data_points_from_light_curve(x)
+    x = make_light_curve_non_empty(x)
     if randomize:
         x = randomly_roll_light_curve(x)
     x = x.fluxes

@@ -5,7 +5,7 @@ from typing_extensions import Self
 
 from qusi.internal.light_curve import (LightCurve, randomly_roll_light_curve,
                                        remove_nan_flux_data_points_from_light_curve,
-                                       remove_infinite_flux_data_points_from_light_curve)
+                                       remove_infinite_flux_data_points_from_light_curve, make_light_curve_non_empty)
 
 
 @dataclass
@@ -62,6 +62,22 @@ def remove_infinite_flux_data_points_from_light_curve_observation(
     """
     light_curve_observation = deepcopy(light_curve_observation)
     light_curve_observation.light_curve = remove_infinite_flux_data_points_from_light_curve(
+        light_curve_observation.light_curve
+    )
+    return light_curve_observation
+
+
+def make_light_curve_observation_non_empty(
+        light_curve_observation: LightCurveObservation,
+) -> LightCurveObservation:
+    """
+    If the light curve in a light curve observation is empty, add a single placeholder value.
+
+    :param light_curve_observation: The light curve observation to check.
+    :return: The updated light curve observation.
+    """
+    light_curve_observation = deepcopy(light_curve_observation)
+    light_curve_observation.light_curve = make_light_curve_non_empty(
         light_curve_observation.light_curve
     )
     return light_curve_observation

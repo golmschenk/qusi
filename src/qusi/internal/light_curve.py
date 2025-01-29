@@ -48,6 +48,20 @@ def remove_nan_flux_data_points_from_light_curve(light_curve: LightCurve) -> Lig
     return light_curve
 
 
+def make_light_curve_non_empty(light_curve: LightCurve) -> LightCurve:
+    """
+    If the light curve is empty, add a single placeholder value.
+
+    :param light_curve: The light curve to check.
+    :return: The updated light curve.
+    """
+    if light_curve.times.shape[0] == 0:
+        light_curve = deepcopy(light_curve)
+        light_curve.times = np.array([-1], dtype=light_curve.times.dtype)
+        light_curve.fluxes = np.array([-1], dtype=light_curve.fluxes.dtype)
+    return light_curve
+
+
 def remove_infinite_flux_data_points_from_light_curve(light_curve: LightCurve) -> LightCurve:
     """
     Removes infinite values from a light curve. If there is an infinite value in either the times or the
