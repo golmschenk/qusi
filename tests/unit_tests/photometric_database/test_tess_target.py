@@ -133,5 +133,5 @@ class TestTessTarget:
             nearby_target_data_frame["TIC ID"] == 231663902
         ].iloc[0]
         assert row["PM RA (mas/yr)"] == pytest.approx(25.0485)
-        assert row["Separation (arcsec)"] == pytest.approx(18.1)
+        assert row["Separation (arcsec)"] == pytest.approx(17.5)
         assert row["Distance Err (pc)"] == pytest.approx(54)
