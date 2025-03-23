@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import logging
 from pathlib import Path
 from warnings import warn
@@ -76,6 +77,10 @@ def train_session(
         logging_metrics = [BinaryAccuracy(), BinaryAUROC()]
 
     set_up_default_logger()
+    train_loss_metric = loss_metric
+    validation_loss_metric = copy.deepcopy(loss_metric)
+    train_logging_metrics = logging_metrics
+    validation_logging_metrics = copy.deepcopy(logging_metrics)
     sessions_directory = Path("sessions")
     sessions_directory.mkdir(exist_ok=True)
     wandb_init(
@@ -85,10 +90,11 @@ def train_session(
         settings=wandb.Settings(start_method="thread"),
         dir=sessions_directory,
     )
+    print(f'{logging_configuration.additional_log_dictionary}')
     train_dataset = InterleavedDataset.new(*train_datasets)
     try:
         torch.multiprocessing.set_start_method("spawn")
-    except RuntimeError:
+    except RuntimeError:  # TODO: This is probably too general of a catch.
         pass
     workers_per_dataloader = system_configuration.preprocessing_processes_per_train_process
     if workers_per_dataloader == 0:
@@ -121,21 +127,26 @@ def train_session(
     else:
         device = torch.device('cpu')
     model = model.to(device, non_blocking=True)
-    loss_metric = loss_metric.to(device, non_blocking=True)
+    train_loss_metric = train_loss_metric.to(device, non_blocking=True)
+    validation_loss_metric = validation_loss_metric.to(device, non_blocking=True)
     if optimizer is None:
         optimizer = AdamW(model.parameters())
-    logging_metrics: list[Module] = [
+    train_logging_metrics: list[Module] = [
         metric_function.to(device, non_blocking=True)
-        for metric_function in logging_metrics
+        for metric_function in train_logging_metrics
+    ]
+    validation_logging_metrics: list[Module] = [
+        metric_function.to(device, non_blocking=True)
+        for metric_function in validation_logging_metrics
     ]
     for _cycle_index in range(hyperparameter_configuration.cycles):
         logger.info(f'Cycle {_cycle_index}')
-        train_phase(dataloader=train_dataloader, model=model, loss_metric=loss_metric,
-                    logging_metrics=logging_metrics, optimizer=optimizer,
+        train_phase(dataloader=train_dataloader, model=model, loss_metric=train_loss_metric,
+                    logging_metrics=train_logging_metrics, optimizer=optimizer,
                     steps=hyperparameter_configuration.train_steps_per_cycle, device=device)
         for validation_dataloader in validation_dataloaders:
-            validation_phase(dataloader=validation_dataloader, model=model, loss_metric=loss_metric,
-                             logging_metrics=logging_metrics,
+            validation_phase(dataloader=validation_dataloader, model=model, loss_metric=validation_loss_metric,
+                             logging_metrics=validation_logging_metrics,
                              steps=hyperparameter_configuration.validation_steps_per_cycle, device=device)
         save_model(model, suffix="latest_model", process_rank=0)
         wandb_commit(process_rank=0)
