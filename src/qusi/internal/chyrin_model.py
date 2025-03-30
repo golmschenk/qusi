@@ -3,7 +3,8 @@ from __future__ import annotations
 import math
 from typing import Self
 
-from torch import permute
+import torch
+from torch import permute, Tensor
 from torch.nn import (
     BatchNorm1d,
     Conv1d,
@@ -15,15 +16,58 @@ from torch.nn import (
 )
 
 
+class ChyrinBinaryClassEndModule(Module):
+    """
+    A module for the end of the Chyrin model designed for binary classification.
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.prediction_layer = Conv1d(in_channels=100, out_channels=1, kernel_size=1)
+        self.sigmoid = Sigmoid()
+
+    def forward(self, x: Tensor) -> Tensor:
+        x = self.prediction_layer(x)
+        x = self.sigmoid(x)
+        x = torch.reshape(x, (-1,))
+        return x
+
+    @classmethod
+    def new(cls):
+        return cls()
+
+
+class ChyrinMultiClassScoreEndModule(Module):
+    """
+    A module for the end of the Chyrin model designed for multi classification without softmax.
+    """
+
+    def __init__(self, number_of_classes: int):
+        super().__init__()
+        self.number_of_classes: int = number_of_classes
+        self.prediction_layer = Conv1d(in_channels=100, out_channels=self.number_of_classes, kernel_size=1)
+
+    def forward(self, x: Tensor) -> Tensor:
+        x = self.prediction_layer(x)
+        x = torch.reshape(x, (-1, self.number_of_classes))
+        return x
+
+    @classmethod
+    def new(cls, number_of_classes: int):
+        return cls(number_of_classes)
+
+
 class Chyrin(Module):
     @classmethod
-    def new(cls, input_length: int = 3500) -> Self:
+    def new(cls, input_length: int = 3500, end_module: Module | None = None) -> Self:
+        if end_module is None:
+            end_module = ChyrinBinaryClassEndModule.new()
         pooling_factors, final_dense_layer_size = Chyrin.determine_block_pooling_factors_and_final_dense_layer_size(
             input_length=input_length)
         return cls(input_length=input_length, pooling_factors=pooling_factors,
-                   final_dense_layer_size=final_dense_layer_size)
+                   final_dense_layer_size=final_dense_layer_size, end_module=end_module)
 
-    def __init__(self, input_length, pooling_factors: list[int], final_dense_layer_size: int):
+    def __init__(self, input_length, pooling_factors: list[int], final_dense_layer_size: int, end_module: Module):
         super().__init__()
         self.blocks = ModuleList()
         self.activation = LeakyReLU()
@@ -47,15 +91,15 @@ class Chyrin(Module):
                     input_channels=input_channels, output_channels=output_channels, dropout_rate=0.0,
                     batch_normalization=False))
                 input_channels = output_channels
-        self.end_conv = Conv1d(input_channels, 1, kernel_size=final_dense_layer_size)
+        self.end_global_conv = Conv1d(input_channels, 100, kernel_size=final_dense_layer_size)
+        self.end_module = end_module
 
     def forward(self, x):
         x = x.reshape([-1, 1, self.length])
         for index, block in enumerate(self.blocks):
             x = block(x)
-        x = self.end_conv(x)
-        x = self.sigmoid(x)
-        outputs = x.reshape([-1])
+        x = self.end_global_conv(x)
+        outputs = self.end_module(x)
         return outputs
 
     @staticmethod
