@@ -6,6 +6,7 @@ from pathlib import Path
 from warnings import warn
 
 import lightning
+from lightning.pytorch.callbacks import TQDMProgressBar
 from lightning.pytorch.loggers import CSVLogger, WandbLogger
 from torch.nn import BCELoss, Module
 from torch.optim import Optimizer
@@ -89,6 +90,7 @@ def train_session(
         log_every_n_steps=0,
         accelerator=system_configuration.accelerator,
         logger=loggers,
+        callbacks=[TQDMProgressBar(refresh_rate=100)],
     )
     # TODO: Not a fan of needing to magically pass the process number to the datasets here.
     for train_dataset in train_datasets:
