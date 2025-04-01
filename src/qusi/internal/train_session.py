@@ -244,6 +244,7 @@ def log_metrics(logging_metrics, metric_totals, steps, log_prefix: str = ''):
     for logging_metric_index, logging_metric in enumerate(logging_metrics):
         if isinstance(logging_metric, Metric):
             metric_value = logging_metric.compute()
+            logging_metric.reset()
         else:
             metric_value = cycle_metric_values[logging_metric_index]
         wandb_log(
