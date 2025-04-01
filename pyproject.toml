@@ -72,7 +72,7 @@ dependencies = [
     "pytest",
 ]
 [tool.hatch.envs.default.scripts]
-test = "pytest {args:tests}"
+test = "pytest {args:tests} && hatch env remove {env_name}"
 test-cov = "coverage run -m pytest {args:tests}"
 cov-report = [
     "- coverage combine",
