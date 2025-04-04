@@ -1,6 +1,7 @@
 import torch
 
-from qusi.internal.chyrin_model import Chyrin, ChyrinBinaryClassEndModule, ChyrinMultiClassScoreEndModule
+from qusi.internal.chyrin_model import Chyrin
+from qusi.internal.standard_end_modules import BinaryClassEndModule, MultiClassScoreEndModule
 
 
 def test_lengths_give_correct_output_size():
@@ -32,7 +33,7 @@ def test_lengths_give_correct_output_size():
 
 
 def test_binary_classification_end_module_produces_expected_shape():
-    model = Chyrin.new(input_length=100, end_module=ChyrinBinaryClassEndModule.new())
+    model = Chyrin.new(input_length=100, end_module=BinaryClassEndModule.new())
 
     output = model(torch.arange(7 * 100, dtype=torch.float32).reshape([7, 100]))
 
@@ -40,7 +41,7 @@ def test_binary_classification_end_module_produces_expected_shape():
 
 
 def test_multi_class_classification_end_module_produces_expected_shape():
-    model = Chyrin.new(input_length=100, end_module=ChyrinMultiClassScoreEndModule.new(number_of_classes=3))
+    model = Chyrin.new(input_length=100, end_module=MultiClassScoreEndModule.new(number_of_classes=3))
 
     output = model(torch.arange(7 * 100, dtype=torch.float32).reshape([7, 100]))
 

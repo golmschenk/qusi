@@ -1,10 +1,8 @@
 from __future__ import annotations
 
 import math
-from typing_extensions import Self
 
-import torch
-from torch import permute, Tensor
+from torch import permute
 from torch.nn import (
     BatchNorm1d,
     Conv1d,
@@ -14,54 +12,16 @@ from torch.nn import (
     Module,
     ModuleList, ConstantPad1d, Sigmoid,
 )
+from typing_extensions import Self
 
-
-class ChyrinBinaryClassEndModule(Module):
-    """
-    A module for the end of the Chyrin model designed for binary classification.
-    """
-
-    def __init__(self):
-        super().__init__()
-        self.prediction_layer = Conv1d(in_channels=100, out_channels=1, kernel_size=1)
-        self.sigmoid = Sigmoid()
-
-    def forward(self, x: Tensor) -> Tensor:
-        x = self.prediction_layer(x)
-        x = self.sigmoid(x)
-        x = torch.reshape(x, (-1,))
-        return x
-
-    @classmethod
-    def new(cls):
-        return cls()
-
-
-class ChyrinMultiClassScoreEndModule(Module):
-    """
-    A module for the end of the Chyrin model designed for multi classification without softmax.
-    """
-
-    def __init__(self, number_of_classes: int):
-        super().__init__()
-        self.number_of_classes: int = number_of_classes
-        self.prediction_layer = Conv1d(in_channels=100, out_channels=self.number_of_classes, kernel_size=1)
-
-    def forward(self, x: Tensor) -> Tensor:
-        x = self.prediction_layer(x)
-        x = torch.reshape(x, (-1, self.number_of_classes))
-        return x
-
-    @classmethod
-    def new(cls, number_of_classes: int):
-        return cls(number_of_classes)
+from qusi.internal.standard_end_modules import BinaryClassEndModule
 
 
 class Chyrin(Module):
     @classmethod
     def new(cls, input_length: int = 3500, end_module: Module | None = None) -> Self:
         if end_module is None:
-            end_module = ChyrinBinaryClassEndModule.new()
+            end_module = BinaryClassEndModule.new()
         pooling_factors, final_dense_layer_size = Chyrin.determine_block_pooling_factors_and_final_dense_layer_size(
             input_length=input_length)
         return cls(input_length=input_length, pooling_factors=pooling_factors,

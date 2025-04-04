@@ -1,59 +1,20 @@
 from __future__ import annotations
 
 import math
-from typing_extensions import Self
 
 import torch
-from torch import tensor, Tensor
+from torch import tensor
 from torch.nn import Module, Transformer, Conv1d, Parameter, Linear, Flatten, Sigmoid, Dropout
+from typing_extensions import Self
 
-
-class TorrinBinaryClassEndModule(Module):
-    """
-    A module for the end of the Torrin model designed for binary classification.
-    """
-
-    def __init__(self):
-        super().__init__()
-        self.prediction_layer = Linear(in_features=100, out_features=1)
-        self.sigmoid = Sigmoid()
-
-    def forward(self, x: Tensor) -> Tensor:
-        x = self.prediction_layer(x)
-        x = self.sigmoid(x)
-        x = torch.reshape(x, (-1,))
-        return x
-
-    @classmethod
-    def new(cls):
-        return cls()
-
-
-class TorrinMultiClassScoreEndModule(Module):
-    """
-    A module for the end of the Torrin model designed for multi classification without softmax.
-    """
-
-    def __init__(self, number_of_classes: int):
-        super().__init__()
-        self.number_of_classes: int = number_of_classes
-        self.prediction_layer = Linear(in_features=100, out_features=self.number_of_classes)
-
-    def forward(self, x: Tensor) -> Tensor:
-        x = self.prediction_layer(x)
-        x = torch.reshape(x, (-1, self.number_of_classes))
-        return x
-
-    @classmethod
-    def new(cls, number_of_classes: int):
-        return cls(number_of_classes)
+from qusi.internal.standard_end_modules import BinaryClassEndModule
 
 
 class Torrin(Module):
     @classmethod
     def new(cls, input_length: int = 3500, end_module: Module | None = None) -> Self:
         if end_module is None:
-            end_module = TorrinBinaryClassEndModule.new()
+            end_module = BinaryClassEndModule.new()
         return cls(input_length=input_length, end_module=end_module)
 
     def __init__(self, input_length: int, end_module: Module):
@@ -65,9 +26,8 @@ class Torrin(Module):
                                        num_decoder_layers=1)
         self.class_embedding = Parameter(torch.randn([1, 1, embedding_size]))
         self.flatten = Flatten()
-        self.end_latent_layer = Linear(in_features=16, out_features=100)
+        self.end_latent_layer = Conv1d(in_channels=16, out_channels=100, kernel_size=1)
         self.end_module = end_module
-        self.sigmoid = Sigmoid()
 
     def forward(self, x):
         x = x.reshape([-1, 1, self.input_length])
@@ -77,8 +37,8 @@ class Torrin(Module):
         x = torch.cat([expanded_class_embedding, x], dim=1)
         target = torch.zeros_like(x)
         x = self.transformer(x, target)
-        x = x[:, 0, :]
-        x = self.flatten(x)
+        x = x[:, [0], :]
+        x = torch.permute(x, (0, 2, 1))
         x = self.end_latent_layer(x)
         x = self.end_module(x)
         return x
@@ -386,7 +346,7 @@ class Torrin9(Module):
     @classmethod
     def new(cls, input_length: int = 3500, end_module: Module | None = None) -> Self:
         if end_module is None:
-            end_module = TorrinBinaryClassEndModule.new()
+            end_module = BinaryClassEndModule.new()
         return cls(input_length=input_length, end_module=end_module)
 
     def __init__(self, input_length: int, end_module: Module):

@@ -1,6 +1,7 @@
 import torch
 
-from qusi.internal.torrin_model import Torrin, TorrinBinaryClassEndModule, TorrinMultiClassScoreEndModule
+from qusi.internal.standard_end_modules import BinaryClassEndModule, MultiClassScoreEndModule
+from qusi.internal.torrin_model import Torrin
 
 
 def test_lengths_give_correct_output_size():
@@ -31,7 +32,7 @@ def test_lengths_give_correct_output_size():
     assert output100000.shape == torch.Size([1])
 
 def test_binary_classification_end_module_produces_expected_shape():
-    model = Torrin.new(input_length=100, end_module=TorrinBinaryClassEndModule.new())
+    model = Torrin.new(input_length=100, end_module=BinaryClassEndModule.new())
 
     output = model(torch.arange(7 * 100, dtype=torch.float32).reshape([7, 100]))
 
@@ -39,7 +40,7 @@ def test_binary_classification_end_module_produces_expected_shape():
 
 
 def test_multi_class_classification_end_module_produces_expected_shape():
-    model = Torrin.new(input_length=100, end_module=TorrinMultiClassScoreEndModule.new(number_of_classes=3))
+    model = Torrin.new(input_length=100, end_module=MultiClassScoreEndModule.new(number_of_classes=3))
 
     output = model(torch.arange(7 * 100, dtype=torch.float32).reshape([7, 100]))
 
