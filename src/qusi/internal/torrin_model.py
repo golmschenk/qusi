@@ -385,7 +385,7 @@ class Torrin10(Module):
     @classmethod
     def new(cls, input_length: int = 3500, end_module: Module | None = None) -> Self:
         if end_module is None:
-            end_module = TorrinBinaryClassEndModule.new()
+            end_module = BinaryClassEndModule.new()
         return cls(input_length=input_length, end_module=end_module)
 
     def __init__(self, input_length: int, end_module: Module):
