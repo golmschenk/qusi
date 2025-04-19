@@ -226,3 +226,4 @@ logs/
 /wandb/
 !/ramjet.iml
 /.idea/
+/scripts
