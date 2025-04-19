@@ -4,6 +4,7 @@ from torch.types import Device
 from torch.utils.data import DataLoader
 
 from qusi.internal.finite_standard_light_curve_observation_dataset import FiniteStandardLightCurveObservationDataset
+from qusi.internal.train_session import update_logging_metrics, get_cycle_metric_values
 
 
 def finite_datasets_test_session(
@@ -46,9 +47,7 @@ def finite_dataset_test_phase(dataloader, model: Module, metric_functions: list[
             input_features_on_device = input_features.to(device, non_blocking=True)
             targets_on_device = targets.to(device, non_blocking=True)
             predicted_targets = model(input_features_on_device)
-            for metric_function_index, metric_function in enumerate(metric_functions):
-                batch_metric_value = metric_function(predicted_targets.to(device, non_blocking=True), targets_on_device)
-                metric_totals[metric_function_index] += batch_metric_value.to("cpu", non_blocking=True)
+            update_logging_metrics(predicted_targets, targets_on_device, metric_functions, metric_totals)
             batch_count += 1
-    cycle_metric_values = metric_totals / batch_count
+    cycle_metric_values = get_cycle_metric_values(metric_functions, metric_totals, batch_count)
     return cycle_metric_values

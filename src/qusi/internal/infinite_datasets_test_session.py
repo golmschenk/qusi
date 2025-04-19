@@ -4,6 +4,7 @@ from torch.utils.data import DataLoader
 import torch
 
 from qusi.internal.light_curve_dataset import LightCurveDataset
+from qusi.internal.train_session import update_logging_metrics, get_cycle_metric_values
 
 
 def infinite_datasets_test_session(test_datasets: list[LightCurveDataset], model: Module,
@@ -40,12 +41,9 @@ def infinite_dataset_test_phase(dataloader, model: Module, metric_functions: lis
             input_features = input_features.to(device, non_blocking=True)
             targets = targets.to(device, non_blocking=True)
             predicted_targets = model(input_features)
-            for metric_function_index, metric_function in enumerate(metric_functions):
-                batch_metric_value = metric_function(predicted_targets.to(device, non_blocking=True),
-                                                     targets)
-                metric_totals[metric_function_index] += batch_metric_value.to('cpu', non_blocking=True)
+            update_logging_metrics(predicted_targets, targets, metric_functions, metric_totals)
             batch_count += 1
             if batch_count >= steps:
                 break
-    cycle_metric_values = metric_totals / batch_count
+    cycle_metric_values = get_cycle_metric_values(metric_functions, metric_totals, batch_count)
     return cycle_metric_values

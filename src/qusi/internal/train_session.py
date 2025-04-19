@@ -8,6 +8,7 @@ from warnings import warn
 import numpy as np
 import torch
 import wandb
+from torch import Tensor
 from torch.nn import BCELoss, Module
 from torch.optim import AdamW, Optimizer
 from torch.utils.data import DataLoader
@@ -198,10 +199,13 @@ def train_phase(
 
 def update_logging_metrics(predicted_targets, targets_on_device, logging_metrics, metric_totals):
     for logging_metric_index, logging_metric in enumerate(logging_metrics):
-        batch_metric_value = logging_metric(
-            predicted_targets, targets_on_device
-        ).item()
-        metric_totals[logging_metric_index] += batch_metric_value
+        if isinstance(logging_metric, Metric):
+            logging_metric.update(predicted_targets, targets_on_device)
+        else:
+            batch_metric_value = logging_metric(
+                predicted_targets, targets_on_device
+            ).item()
+            metric_totals[logging_metric_index] += batch_metric_value
 
 
 def validation_phase(
@@ -240,16 +244,11 @@ def validation_phase(
 
 
 def log_metrics(logging_metrics, metric_totals, steps, log_prefix: str = ''):
-    cycle_metric_values = metric_totals / steps
+    cycle_metric_values = get_cycle_metric_values(logging_metrics, metric_totals, steps)
     for logging_metric_index, logging_metric in enumerate(logging_metrics):
-        if isinstance(logging_metric, Metric):
-            metric_value = logging_metric.compute()
-            logging_metric.reset()
-        else:
-            metric_value = cycle_metric_values[logging_metric_index]
         wandb_log(
             f'{log_prefix}{get_metric_name(logging_metric)}',
-            metric_value,
+            cycle_metric_values[logging_metric_index],
             process_rank=0,
         )
 
@@ -260,3 +259,12 @@ def save_model(model: Module, suffix: str, process_rank: int):
         if model_name == "":
             model_name = wandb.run.id
         torch.save(model.state_dict(), Path(f"sessions/{model_name}_{suffix}.pt"))
+
+
+def get_cycle_metric_values(metrics: list[Module], metric_totals: Tensor, batch_count: int) -> Tensor:
+    cycle_metric_values = metric_totals / batch_count
+    for logging_metric_index, logging_metric in enumerate(metrics):
+        if isinstance(logging_metric, Metric):
+            cycle_metric_values[logging_metric_index] = logging_metric.compute()
+            logging_metric.reset()
+    return cycle_metric_values
