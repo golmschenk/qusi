@@ -88,7 +88,7 @@ class QusiLightningModule(LightningModule):
         self._optimizer: Optimizer = optimizer
         self.train_metric_group: MetricGroup = train_metric_group
         self.validation_metric_groups: ModuleList | list[MetricGroup] = validation_metric_groups
-        # Lightning requires tensors be registered to be automatically moved between devices.
+        # Lightning requires tensors are registered to be automatically moved between devices.
         # Then we assign it to itself to force IDE resolution.
         # `cycle` is incremented and logged during the train epoch start, so it needs to start at -1.
         self.register_buffer('cycle', tensor(-1, dtype=torch.int64))
