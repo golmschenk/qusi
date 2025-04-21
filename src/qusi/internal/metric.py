@@ -27,7 +27,7 @@ class MulticlassAUROCAlt(Module):
     def __init__(self, number_of_classes: int):
         super().__init__()
         self.multiclass_auroc = MulticlassAUROC(num_classes=number_of_classes)
-        self.softmax = Softmax()
+        self.softmax = Softmax(dim=1)
 
     def __call__(self, preds: Tensor, target: Tensor):
         probabilities = self.softmax(preds)
@@ -44,7 +44,7 @@ class MulticlassAccuracyAlt(Module):
     def __init__(self, number_of_classes: int):
         super().__init__()
         self.multiclass_accuracy = MulticlassAccuracy(num_classes=number_of_classes)
-        self.softmax = Softmax()
+        self.softmax = Softmax(dim=1)
 
     def __call__(self, preds: Tensor, target: Tensor):
         probabilities = self.softmax(preds)
