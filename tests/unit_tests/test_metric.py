@@ -1,10 +1,13 @@
+import warnings
 from unittest.mock import patch
 
+import pytest
 import torch
-from torch.nn import MSELoss
+from torch.nn import MSELoss, CrossEntropyLoss
 from torchmetrics import MeanSquaredError
-from torchmetrics.classification import BinaryAUROC
+from torchmetrics.classification import BinaryAUROC, MulticlassAccuracy
 
+from qusi.internal.metric import MulticlassAUROCAlt, MulticlassAccuracyAlt
 from qusi.internal.train_session import update_logging_metrics, log_metrics
 
 
@@ -42,3 +45,49 @@ def test_log_metrics_uses_torchmetrics_compute_if_available():
     with patch('qusi.internal.train_session.wandb_log') as mock_wandb_log:
         log_metrics([metric], placeholder_metric_totals, 2)
         assert mock_wandb_log.call_args.args[1] == torch.tensor(0.5)
+
+
+def test_multiclass_auroc_alt_with_only_one_class_in_one_update():
+    number_of_classes = 3
+    metric = MulticlassAUROCAlt(number_of_classes=number_of_classes)
+
+    predictions0 = torch.tensor([[0.9, 0.05, 0.05], [0.05, 0.9, 0.05]])
+    targets0 = torch.tensor([1, 1], dtype=torch.float32)
+    metric.update(predictions0, targets0)
+
+    predictions1 = torch.tensor([[0.9, 0.05, 0.05], [0.05, 0.05, 0.9]])
+    targets1 = torch.tensor([0, 2], dtype=torch.float32)
+    metric.update(predictions1, targets1)
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", UserWarning)  # Ensure warning for empty class not raised.
+        result = metric.compute()
+
+    assert result.item() == pytest.approx(0.8611, rel=0.001)
+
+
+def test_multiclass_auroc_alt_with_only_one_class_in_only_update():
+    number_of_classes = 3
+    metric = MulticlassAUROCAlt(number_of_classes=number_of_classes)
+
+    predictions0 = torch.tensor([[0.9, 0.05, 0.05], [0.05, 0.9, 0.05]])
+    targets0 = torch.tensor([1, 1], dtype=torch.float32)
+    metric.update(predictions0, targets0)
+
+    with pytest.warns(UserWarning): # Ensure warning for empty class not raised.
+        _ = metric.compute()
+
+
+def test_multiclass_accuracy_alt_update_compute():
+    metric = MulticlassAccuracyAlt(number_of_classes=3)
+
+    predictions0 = torch.tensor([[0.9, 0.05, 0.05], [0.05, 0.05, 0.9], [0.05, 0.9, 0.05]])
+    targets0 = torch.tensor([0, 1, 1], dtype=torch.float32)
+    metric.update(predictions0, targets0)
+
+    predictions1 = torch.tensor([[0.05, 0.9, 0.05], [0.05, 0.05, 0.9]])
+    targets1 = torch.tensor([1, 2], dtype=torch.float32)
+    metric.update(predictions1, targets1)
+
+    accuracy = metric.compute().item()
+    assert accuracy == pytest.approx(0.888888, rel=0.001)
