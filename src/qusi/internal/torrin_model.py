@@ -4,7 +4,8 @@ import math
 
 import torch
 from torch import tensor
-from torch.nn import Module, Transformer, Conv1d, Parameter, Linear, Flatten, Sigmoid, Dropout
+from torch.nn import Module, Transformer, Conv1d, Parameter, Linear, Flatten, Sigmoid, Dropout, TransformerEncoderLayer, \
+    LayerNorm, TransformerEncoder
 from typing_extensions import Self
 
 from qusi.internal.standard_end_modules import BinaryClassEndModule
@@ -415,8 +416,56 @@ class Torrin10(Module):
         return x
 
 
+class TorrinE0(Module):
+    @classmethod
+    def new(cls, input_length: int = 3500, end_module: Module | None = None) -> Self:
+        if end_module is None:
+            end_module = BinaryClassEndModule.new()
+        return cls(input_length=input_length, end_module=end_module)
+
+    def __init__(self, input_length: int, end_module: Module):
+        super().__init__()
+        number_of_attention_features = 16
+        number_of_encoding_layers = 8
+        number_of_attention_heads = 8
+        number_of_dense_features = 16
+        self.input_length = input_length
+        self.embedding_layer = Conv1d(in_channels=1, out_channels=number_of_attention_features, kernel_size=35, stride=35)
+        self.transformer = TorrinTransformerEncoder(number_of_encoding_layers, number_of_attention_features,
+                                                    number_of_attention_heads, number_of_dense_features)
+        self.class_embedding = Parameter(torch.randn([1, 1, number_of_attention_features]))
+        self.end_latent_layer = Conv1d(in_channels=16, out_channels=100, kernel_size=1)
+        self.end_module = end_module
+
+    def forward(self, x):
+        x = x.reshape([-1, 1, self.input_length])
+        x = self.embedding_layer(x)
+        x = torch.permute(x, (0, 2, 1))
+        expanded_class_embedding = self.class_embedding.expand(x.size(0), -1, -1)
+        x = torch.cat([expanded_class_embedding, x], dim=1)
+        x = self.transformer(x)
+        x = x[:, [0], :]
+        x = torch.permute(x, (0, 2, 1))
+        x = self.end_latent_layer(x)
+        x = self.end_module(x)
+        return x
+
+
+class TorrinTransformerEncoder(Module):
+    def __init__(self, number_of_encoding_layers: int, number_of_attention_features: int, number_of_attention_heads: int,
+                 number_of_dense_features: int):
+        super().__init__()
+        encoder_layer = TransformerEncoderLayer(number_of_attention_features, number_of_attention_heads,
+                                                dim_feedforward=number_of_dense_features, batch_first=True)
+        layer_normalization = LayerNorm(number_of_attention_features)
+        self.encoder = TransformerEncoder(encoder_layer, number_of_encoding_layers, layer_normalization)
+
+    def forward(self, x):
+        return self.encoder(x)
+
+
 if __name__ == '__main__':
-    model = Torrin10.new()
+    model = TorrinE0.new()
     x_ = torch.rand(size=[7, 3500])
     y_ = model(x_)
     pass
