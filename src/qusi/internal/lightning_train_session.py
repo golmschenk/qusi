@@ -82,7 +82,8 @@ def train_session(
     sessions_directory_path.mkdir(exist_ok=True, parents=True)
     loggers = [
         CSVLogger(save_dir=sessions_directory_path, name=session_name),
-        WandbLogger(save_dir=sessions_directory_path, name=session_name)]
+        WandbLogger(save_dir=sessions_directory_path, name=session_name, project=logging_configuration.wandb_project,
+                    entity=logging_configuration.wandb_entity)]
     trainer = lightning.Trainer(
         max_epochs=hyperparameter_configuration.cycles,
         limit_train_batches=hyperparameter_configuration.train_steps_per_cycle,
