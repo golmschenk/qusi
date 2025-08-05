@@ -12,6 +12,7 @@ from typing import Any
 import numpy as np
 from astropy.io import fits
 
+from qusi.internal.light_curve_transforms import ensure_native_byteorder
 from ramjet.data_interface.tess_data_interface import download_two_minute_cadence_light_curve
 from ramjet.photometric_database.tess_light_curve import TessLightCurve
 
@@ -73,7 +74,7 @@ class TessMissionLightCurve(TessLightCurve):
             for fits_index in fits_indexes_to_load:
                 column_name = TessMissionLightCurveColumnName[fits_index.name]
                 column = light_curve_table[fits_index.value]
-                column = ensure_native_byte_order(column)
+                column = ensure_native_byteorder(column)
                 light_curve.data_frame[column_name.value] = column
         light_curve.tic_id, light_curve.sector = cls.get_tic_id_and_sector_from_file_path(path)
         return light_curve
@@ -164,10 +165,3 @@ class TessMissionLightCurve(TessLightCurve):
 
 class TessTwoMinuteCadenceLightCurve(TessMissionLightCurve):
     pass
-
-
-def ensure_native_byte_order(array: np.ndarray) -> np.ndarray:
-    native_byte_order = ">" if sys.byteorder == "big" else "<"
-    if array.dtype.byteorder in ["|", "=", native_byte_order]:
-        return array
-    return array.byteswap().newbyteorder(native_byte_order)
