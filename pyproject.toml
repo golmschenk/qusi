@@ -6,7 +6,7 @@ authors = [
     { name = "Greg Olmschenk", email = "greg@olmschenk.com" },
 ]
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 packages = [
     { include = "ramjet", from = "src" },
     { include = "qusi", from = "src" }
@@ -83,7 +83,7 @@ cov = [
 ]
 
 [[tool.hatch.envs.all.matrix]]
-python = ["3.9", "3.10", "3.11", "3.12", "3.13"]
+python = ["3.10", "3.11", "3.12", "3.13"]
 
 [tool.hatch.envs.types]
 dependencies = [
