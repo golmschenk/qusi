@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import sys
+
 import numpy as np
 import numpy.typing as npt
 import torch
@@ -92,3 +94,10 @@ def remove_random_elements(array: np.ndarray, ratio: float = 0.01) -> np.ndarray
         values_to_remove = 0
     random_indexes = np.random.choice(range(light_curve_length), values_to_remove, replace=False)
     return np.delete(array, random_indexes, axis=0)
+
+
+def ensure_native_byteorder(array: np.ndarray) -> np.ndarray:
+    native_byte_order = '>' if sys.byteorder == 'big' else '<'
+    if array.dtype.byteorder in ["|", "=", native_byte_order]:
+        return array
+    return array.byteswap().view(array.dtype.newbyteorder('S'))
