@@ -99,3 +99,5 @@ Now for a few quick starting points for how you might adjust this for your own b
 If you were simply looking for a different type of phenomena that wasn't transits, but were still searching in the TESS SPOC data, you would just need to replace the light curve FITS files in the data directory with the ones that match what you're trying to search for. Then, nothing else would need to change, and you would be able to use these same scripts to train a NN for search for that phenomena.
 
 Let's say you weren't searching for TESS SPOC data, but were searching some other telescope data with light curves around the same length. If you're still able to put the light curves in the same data directory file structure as previously, you would just need to update the `load_times_and_fluxes_from_path` function to tell `qusi` how to get the times and fluxes from your file paths. And again, the existing scripts will allow you to start training a NN to search for your phenomena.
+
+Working with light curves with a different length is also fairly simple, but does require passing a different integer to the preprocessing step.
