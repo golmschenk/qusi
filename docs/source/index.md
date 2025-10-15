@@ -17,6 +17,7 @@ To install `qusi`, use
 pip install qusi
 ```
 
+````{note}
 Although not required, as is generally good practice for any development project, we highly recommend creating a separate virtual environment for each distinct project. For example, via Conda, creating a virtual environment for a project using `qusi` might look like
 
 ```
@@ -30,6 +31,7 @@ conda activate project_using_qusi_env
 ```
 
 Then install `qusi` within this environment.
+````
 
 ```{toctree}
 :caption: 'Contents:'

@@ -1,6 +1,6 @@
 # Basic transit identification dataset construction
 
-This tutorial will show you how we built the datasets for the {doc}`/tutorials/basic_transit_identification_with_prebuilt_components` tutorial. This will also show how this can be adjusted for your own datasets. This tutorial expects you have already completed the {doc}`/tutorials/basic_transit_identification_with_prebuilt_components` tutorial and that you have the `examples` directory as obtained in that tutorial. Telling `qusi` how to access and use your data is the most complex part of using `qusi`. So if this tutorial seems a bit challenging, don't worry, this is hardest part.
+This tutorial will show you how we built the datasets for the {doc}`/tutorials/basic_transit_identification_with_prebuilt_components` tutorial. This will also show how this can be adjusted for your own datasets. This tutorial expects you have already completed the {doc}`/tutorials/basic_transit_identification_with_prebuilt_components` tutorial and that you have the `examples` directory as obtained in that tutorial.
 
 ## User defined components of a qusi dataset
 
@@ -19,7 +19,7 @@ def get_positive_train_paths():
     return list(Path('data/spoc_transit_experiment/train/positives').glob('*.fits'))
 ```
 
-This functions says to create a `Path` object for a directory at `data/spoc_transit_experiment/train/positives`. Then, it obtains all the files ending with the `.fits` extension. It puts that in a list and returns that list. In particular, `qusi` expects a function that takes no input parameters and outputs a list of `Path`s.
+This functions says to create a `Path` object for a directory at `data/spoc_transit_experiment/train/positives`. Then, it obtains all the files ending with the `.fits` extension within that directory. It puts that in a list and returns that list. In particular, `qusi` expects a function that takes no input parameters and outputs a list of `Path`s.
 
 In our example code, we've split the data based on if it's train, validation, or test data and we've split the data based on if it's positive or negative data. And we provide a function for each of the 6 permutations of this, which is almost identical to what's above. You can see the above function and other 5 similar functions near the top of `scripts/dataset.py`.
 

@@ -13,7 +13,7 @@ The remainder of the commands will assume you are running code from the project 
 
 ## Downloading the dataset
 
-The next thing we'll do is download a dataset of light curves that include cases both with and without transiting planets. To do this, run the example script at `scripts/download_data.py`. For now, don't worry about how each part of the code works. You can run the script with
+The next thing we'll do is download a dataset of light curves that include cases both with and without transiting planets. To do this, run the example script at `scripts/download_data.py`. For now, we won't worry about how this code works, we'll just get the data. You can run the script with
 
 ```sh
 python scripts/download_data.py
@@ -57,13 +57,17 @@ where, in this case, the temporary dips are transiting events.
 wandb login
 ```
 
-to login. If you want to proceed without a `wandb` account and log the data offline, you will need to run
+to login.
+
+````{note}
+If you want to proceed without a `wandb` account and log the data offline, you will need to run
 
 ```sh
 (cd sessions && wandb offline)
 ```
 
 This will only log runs locally. If you choose the offline route, at some point, you will want to follow [their guide to run the local server](https://docs.wandb.ai/guides/hosting/how-to-guides/basic-setup) so that you can view the metric plots. However, for the moment, just running `wandb offline` (from the sessions directory) will allow you to proceed with this tutorial.
+````
 
 ## Train the network
 
@@ -71,7 +75,7 @@ Next, we'll look at the `scripts/train.py` file. In this script is a `main` func
 
 1. Code to prepare our datasets.
 2. Code to prepare the neural network model.
-3. Code to running the training of the model on the datasets.
+3. Code to run the training of the model on the datasets.
 
 Since `qusi` provides both models and and training loop code, the only one of these components that every user will be expected to deal with is preparing the dataset, since you'll eventually want to have `qusi` tackle the task you're interested in which will require you're own data. And the `qusi` dataset component will help make your data more suitable for training a neural network. However, we're going to save how to set up your own dataset (and how these example datasets are created) for the next tutorial. For now, we'll just use the example datasets as is. So, in the example script, you will see the first couple of lines of the `main` function call other functions that produce an example train and validation dataset for us. Then we choose one of the neural network models `qusi` provides (in this case the `Hadryss` model). Then finally, we start the training session. To run this training, simply run the script with:
 
@@ -79,7 +83,7 @@ Since `qusi` provides both models and and training loop code, the only one of th
 python scripts/train.py
 ```
 
-You should see some output showing basic training statistics from the terminal as it runs through the training loop. It will run for as many train cycles as were specified in the script. On every completed cycle, `qusi` will save the latest version of the fitted model to `sessions/<wandb_run_name>/latest_model`.
+You should see some output showing basic training statistics from the terminal as it runs through the training loop. It will run for as many train cycles as were specified in the script. On every completed cycle, `qusi` will save the latest version of the fitted model to `sessions/<wandb_run_name>_latest_model.pt`.
 
 You can also go to your Wandb project to see the metrics over the course of the training in plot form.
 
