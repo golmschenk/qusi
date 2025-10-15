@@ -53,6 +53,10 @@ Note, `qusi` expects the label functions to take in a `Path` object as input, ev
 
 ## Creating a light curve collection
 
+```{note}
+In the below classes, qusi uses the word "observation" in the statistics meaning of the term. That is, a single example of the data with a label. It is not referring to an "observation" in astrophysical terminology. Unfortunately, when different disiplines collide, they can have conflicting terminology.
+```
+
 Now we're going to join the various functions we've just defined into `LightCurveObservationCollection`s. For the case of positive train light curves, this looks like:
 
 ```python
