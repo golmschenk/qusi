@@ -1,4 +1,5 @@
-from typing import override, Any
+from typing import Any
+from typing_extensions import override
 
 import lightning
 from lightning.pytorch.callbacks import TQDMProgressBar
