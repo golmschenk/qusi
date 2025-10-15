@@ -16,6 +16,7 @@ from torchmetrics.classification import BinaryAccuracy, BinaryAUROC
 from qusi.internal.light_curve_dataset import InterleavedDataset, LightCurveDataset
 from qusi.internal.logging import set_up_default_logger
 from qusi.internal.module import QusiLightningModule
+from qusi.internal.progress_bar import ProgressBar
 from qusi.internal.train_hyperparameter_configuration import TrainHyperparameterConfiguration
 from qusi.internal.train_logging_configuration import TrainLoggingConfiguration
 from qusi.internal.train_system_configuration import TrainSystemConfiguration
@@ -83,9 +84,7 @@ def train_session(
     wandb_logger = WandbLogger(save_dir=sessions_directory_path, name=session_name,
                          project=logging_configuration.wandb_project, entity=logging_configuration.wandb_entity)
     wandb_logger.log_hyperparams(logging_configuration.additional_log_dictionary)
-    loggers = [
-        CSVLogger(save_dir=sessions_directory_path, name=session_name),
-        wandb_logger]
+    loggers = [CSVLogger(save_dir=sessions_directory_path, name=session_name), wandb_logger]
 
     progress_refresh_rate = min(100, hyperparameter_configuration.train_steps_per_cycle // 10)
     trainer = lightning.Trainer(
@@ -95,7 +94,7 @@ def train_session(
         log_every_n_steps=0,
         accelerator=system_configuration.accelerator,
         logger=loggers,
-        callbacks=[TQDMProgressBar(refresh_rate=progress_refresh_rate)],
+        callbacks=[ProgressBar(refresh_rate=progress_refresh_rate)],
     )
     # TODO: Not a fan of needing to magically pass the process number to the datasets here.
     for train_dataset in train_datasets:
