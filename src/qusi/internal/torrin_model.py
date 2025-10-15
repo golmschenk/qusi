@@ -343,6 +343,7 @@ class Torrin8(Module):
         x = x.reshape([-1])
         return x
 
+
 class Torrin9(Module):
     @classmethod
     def new(cls, input_length: int = 3500, end_module: Module | None = None) -> Self:
@@ -362,7 +363,7 @@ class Torrin9(Module):
                                        num_decoder_layers=num_decoder_layers)
         self.class_embedding = Parameter(torch.randn([1, 1, embedding_size]))
         self.flatten = Flatten()
-        self.end_latent_layer = Linear(in_features=16, out_features=100)
+        self.end_latent_layer = Linear(in_features=32, out_features=100)
         self.end_module = end_module
         self.sigmoid = Sigmoid()
 
@@ -430,7 +431,8 @@ class TorrinE0(Module):
         number_of_attention_heads = 8
         number_of_dense_features = 16
         self.input_length = input_length
-        self.embedding_layer = Conv1d(in_channels=1, out_channels=number_of_attention_features, kernel_size=35, stride=35)
+        self.embedding_layer = Conv1d(in_channels=1, out_channels=number_of_attention_features, kernel_size=35,
+                                      stride=35)
         self.transformer = TorrinTransformerEncoder(number_of_encoding_layers, number_of_attention_features,
                                                     number_of_attention_heads, number_of_dense_features)
         self.class_embedding = Parameter(torch.randn([1, 1, number_of_attention_features]))
@@ -452,7 +454,8 @@ class TorrinE0(Module):
 
 
 class TorrinTransformerEncoder(Module):
-    def __init__(self, number_of_encoding_layers: int, number_of_attention_features: int, number_of_attention_heads: int,
+    def __init__(self, number_of_encoding_layers: int, number_of_attention_features: int,
+                 number_of_attention_heads: int,
                  number_of_dense_features: int):
         super().__init__()
         encoder_layer = TransformerEncoderLayer(number_of_attention_features, number_of_attention_heads,
@@ -462,6 +465,48 @@ class TorrinTransformerEncoder(Module):
 
     def forward(self, x):
         return self.encoder(x)
+
+
+class TorrinE1(Module):
+    @classmethod
+    def new(cls, input_length: int = 3500, end_module: Module | None = None) -> Self:
+        if end_module is None:
+            end_module = BinaryClassEndModule.new()
+        return cls(input_length=input_length, end_module=end_module)
+
+    def __init__(self, input_length: int, end_module: Module):
+        super().__init__()
+        number_of_attention_features = 32
+        number_of_encoding_layers = 8
+        number_of_attention_heads = 8
+        number_of_dense_features = 16
+        self.input_length = input_length
+        self.embedding_layer0 = Conv1d(in_channels=1, out_channels=number_of_attention_features // 2, kernel_size=7,
+                                       stride=7)
+        self.embedding_layer1 = Conv1d(in_channels=number_of_attention_features // 2,
+                                       out_channels=number_of_attention_features, kernel_size=5, stride=5)
+        self.positional_encoding = PositionalEncoding(number_of_attention_features, dropout=0,
+                                                      input_length=self.input_length // 35)
+        self.transformer = TorrinTransformerEncoder(number_of_encoding_layers, number_of_attention_features,
+                                                    number_of_attention_heads, number_of_dense_features)
+        self.class_embedding = Parameter(torch.randn([1, 1, number_of_attention_features]))
+        self.end_latent_layer = Conv1d(in_channels=number_of_attention_features, out_channels=100, kernel_size=1)
+        self.end_module = end_module
+
+    def forward(self, x):
+        x = x.reshape([-1, 1, self.input_length])
+        x = self.embedding_layer0(x)
+        x = self.embedding_layer1(x)
+        x = torch.permute(x, (0, 2, 1))
+        x = self.positional_encoding(x)
+        expanded_class_embedding = self.class_embedding.expand(x.size(0), -1, -1)
+        x = torch.cat([expanded_class_embedding, x], dim=1)
+        x = self.transformer(x)
+        x = x[:, [0], :]
+        x = torch.permute(x, (0, 2, 1))
+        x = self.end_latent_layer(x)
+        x = self.end_module(x)
+        return x
 
 
 if __name__ == '__main__':

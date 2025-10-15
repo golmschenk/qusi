@@ -1,7 +1,8 @@
 import torch
 
 from qusi.internal.standard_end_modules import BinaryClassEndModule, MultiClassScoreEndModule
-from qusi.internal.torrin_model import Torrin
+from qusi.internal.torrin_model import TorrinE1 as Torrin
+# from qusi.internal.torrin_model import Torrin as Torrin
 
 
 def test_lengths_give_correct_output_size():
