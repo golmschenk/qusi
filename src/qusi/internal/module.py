@@ -127,7 +127,7 @@ class QusiLightningModule(LightningModule):
         mean_cycle_loss = metric_group.loss_cycle_total / metric_group.steps_run_in_phase
         self.log(name=logging_name_prefix + 'loss',
                  value=mean_cycle_loss, sync_dist=True, on_step=False,
-                 on_epoch=True)
+                 on_epoch=True, prog_bar=True)
         self.log(name='cycle', value=self.cycle, reduce_fx=torch.max, rank_zero_only=True, on_step=False, on_epoch=True)
         for state_based_logging_metric in metric_group.state_based_logging_metrics:
             state_based_logging_metric_name = get_metric_name(state_based_logging_metric)
