@@ -3,6 +3,15 @@ Code for a class to represent a light curve. See the contained class docstring f
 """
 from __future__ import annotations
 
+import warnings
+
+# Ignore warning message from LightKurve.
+warnings.filterwarnings(
+    'ignore',
+    message='.*the tpfmodel submodule is not available without oktopus installed.*',
+    category=UserWarning
+)
+
 import lightkurve.lightcurve
 import numpy as np
 import pandas as pd
@@ -111,7 +120,7 @@ class LightCurve:
         return lightkurve.lightcurve.LightCurve(time=self.times, flux=self.fluxes)
 
     def get_variability_phase_folding_parameters(
-        self, minimum_period: float | None = None, maximum_period: float | None = None
+            self, minimum_period: float | None = None, maximum_period: float | None = None
     ) -> (float, float, float, float, float):
         (
             fold_period,
@@ -130,7 +139,7 @@ class LightCurve:
         return fold_period, fold_epoch, time_bin_size, minimum_bin_phase, maximum_bin_phase
 
     def get_variability_phase_folding_parameters_and_folding_lightkurve_light_curves(
-        self, minimum_period: float | None = None, maximum_period: float | None = None
+            self, minimum_period: float | None = None, maximum_period: float | None = None
     ):
         np.median(np.diff(self.times[~np.isnan(self.times)]))
         lightkurve_light_curve = self.to_lightkurve()

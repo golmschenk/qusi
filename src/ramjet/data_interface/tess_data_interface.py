@@ -4,8 +4,17 @@ Code for a class for common interfacing with TESS data, such as downloading, sor
 from __future__ import annotations
 
 import itertools
+import warnings
 from io import StringIO
 from random import Random
+
+
+# Ignore warning message from LightKurve.
+warnings.filterwarnings(
+    'ignore',
+    message='.*the tpfmodel submodule is not available without oktopus installed.*',
+    category=UserWarning
+)
 
 import astroquery
 import lightkurve
@@ -155,7 +164,7 @@ def get_product_list(observations: pd.DataFrame, mast_input_query_chunk_size: in
     if observations.shape[0] > 1:
         product_list_chunks = []
         for observations_chunk in np.array_split(
-            observations, math.ceil(observations.shape[0] / mast_input_query_chunk_size)
+                observations, math.ceil(observations.shape[0] / mast_input_query_chunk_size)
         ):
             product_list_chunk = get_product_list_chunk(observations_chunk)
             product_list_chunks.append(product_list_chunk)
@@ -166,7 +175,7 @@ def get_product_list(observations: pd.DataFrame, mast_input_query_chunk_size: in
 
 
 def get_all_tess_time_series_observations(
-    tic_id: int | list[int] | None = None, mast_input_query_chunk_size: int = 1000
+        tic_id: int | list[int] | None = None, mast_input_query_chunk_size: int = 1000
 ) -> pd.DataFrame:
     """
     Gets all TESS time-series observations, limited to science data product level. Breaks large queries up to make
@@ -188,7 +197,7 @@ def get_all_tess_time_series_observations(
 
 
 def download_two_minute_cadence_light_curve(
-    tic_id: int, sector: int | None = None, save_directory: Path | str | None = None
+        tic_id: int, sector: int | None = None, save_directory: Path | str | None = None
 ) -> Path:
     """
     Downloads a light curve from MAST.
@@ -313,7 +322,7 @@ def load_light_curve_from_fits_file(light_curve_path: str | Path) -> dict[str, n
 
 
 def load_fluxes_and_times_from_fits_file(
-    light_curve_path: str | Path, flux_type: TessFluxType = TessFluxType.PDCSAP, *, remove_nans: bool = True
+        light_curve_path: str | Path, flux_type: TessFluxType = TessFluxType.PDCSAP, *, remove_nans: bool = True
 ) -> (np.ndarray, np.ndarray):
     """
     Extract the flux and time values from a TESS FITS file.
@@ -340,7 +349,7 @@ def load_fluxes_and_times_from_fits_file(
 
 
 def load_fluxes_flux_errors_and_times_from_fits_file(
-    light_curve_path: str | Path, flux_type: TessFluxType = TessFluxType.PDCSAP, *, remove_nans: bool = True
+        light_curve_path: str | Path, flux_type: TessFluxType = TessFluxType.PDCSAP, *, remove_nans: bool = True
 ) -> (np.ndarray, np.ndarray, np.ndarray):
     """
     Extract the flux and time values from a TESS FITS file.
@@ -371,7 +380,7 @@ def load_fluxes_flux_errors_and_times_from_fits_file(
 
 
 def plot_light_curve_from_mast(
-    tic_id: int, sector: int | None = None, *, exclude_flux_outliers: bool = False, base_data_point_size=3
+        tic_id: int, sector: int | None = None, *, exclude_flux_outliers: bool = False, base_data_point_size=3
 ):
     """
     Downloads and plots a light curve from MAST.
@@ -525,7 +534,7 @@ def get_all_tess_time_series_observations_chunk(tic_id: int | list[int] | None =
 
 
 def get_all_tess_spoc_light_curve_observations(
-    tic_id: int | list[int], mast_input_query_chunk_size: int = 1000
+        tic_id: int | list[int], mast_input_query_chunk_size: int = 1000
 ) -> pd.DataFrame:
     """
     Gets all TESS SPOC light curves. Breaks large queries up to make the communication with MAST smoother.
@@ -587,11 +596,11 @@ def get_spoc_tic_id_list_from_mast() -> list[int]:
 
 
 def download_spoc_light_curves_for_tic_ids(
-    tic_ids: list[int],
-    download_directory: Path,
-    sectors: list[int] | None = None,
-    limit: int | None = None,
-    chunk_size: int = 1000,
+        tic_ids: list[int],
+        download_directory: Path,
+        sectors: list[int] | None = None,
+        limit: int | None = None,
+        chunk_size: int = 1000,
 ) -> list[Path]:
     random = Random(0)
     random.shuffle(tic_ids)
@@ -622,7 +631,7 @@ def get_sector_from_spoc_obs_id(obs_id: str) -> int | None:
 
 
 def download_spoc_light_curves_for_tic_ids_chunk(
-    tic_ids: list[int], download_directory: Path, sectors: list[int] | None = None, limit: int | None = None
+        tic_ids: list[int], download_directory: Path, sectors: list[int] | None = None, limit: int | None = None
 ) -> list[Path]:
     light_curve_observations = get_all_tess_spoc_light_curve_observations(tic_id=tic_ids)
     light_curve_observations[ColumnName.SECTOR] = light_curve_observations["obs_id"].map(get_sector_from_spoc_obs_id)
