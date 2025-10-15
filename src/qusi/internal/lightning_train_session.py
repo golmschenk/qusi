@@ -87,6 +87,7 @@ def train_session(
         CSVLogger(save_dir=sessions_directory_path, name=session_name),
         wandb_logger]
 
+    progress_refresh_rate = min(100, hyperparameter_configuration.train_steps_per_cycle // 10)
     trainer = lightning.Trainer(
         max_epochs=hyperparameter_configuration.cycles,
         limit_train_batches=hyperparameter_configuration.train_steps_per_cycle,
@@ -94,7 +95,7 @@ def train_session(
         log_every_n_steps=0,
         accelerator=system_configuration.accelerator,
         logger=loggers,
-        callbacks=[TQDMProgressBar(refresh_rate=100)],
+        callbacks=[TQDMProgressBar(refresh_rate=progress_refresh_rate)],
     )
     # TODO: Not a fan of needing to magically pass the process number to the datasets here.
     for train_dataset in train_datasets:
