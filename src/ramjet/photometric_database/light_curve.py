@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import warnings
 
-# Ignore warning message from LightKurve.
+# Ignore the warning messages from LightKurve.
 warnings.filterwarnings(
     'ignore',
     message='.*the tpfmodel submodule is not available without oktopus installed.*',
@@ -20,7 +20,7 @@ from lightkurve.periodogram import LombScarglePeriodogram
 
 class LightCurve:
     """
-    A class to represent a light curve. A light curve is a collection of data which may includes times, fluxes,
+    A class to represent a light curve. A light curve is a collection of data which may include times, fluxes,
     flux errors, and related values.
     """
 
@@ -88,7 +88,7 @@ class LightCurve:
 
     def convert_column_to_relative_scale(self, column_name: str):
         """
-        Converts a column to relative scale.
+        Converts a column to a relative scale.
 
         :param column_name: The name of the column to be converted.
         """
@@ -96,7 +96,7 @@ class LightCurve:
 
     def convert_columns_to_relative_scale(self, column_names: list[str]):
         """
-        Converts multiple columns to relative scale.
+        Converts multiple columns to a relative scale.
 
         :param column_names: The list of names of columns to be converted.
         """
@@ -105,7 +105,7 @@ class LightCurve:
 
     def convert_to_relative_scale(self):
         """
-        Converts the light curve to relative scale.
+        Converts the light curve to a relative scale.
         """
         self.convert_columns_to_relative_scale(self.flux_column_names)
 
