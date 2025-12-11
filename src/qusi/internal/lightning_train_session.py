@@ -13,7 +13,7 @@ from torch.optim import Optimizer
 from torch.utils.data import DataLoader, Dataset
 from torchmetrics.classification import BinaryAccuracy, BinaryAUROC
 
-from qusi.internal.light_curve_dataset import InterleavedDataset, LightCurveDataset
+from qusi.internal.light_curve_dataset import InterleavedDataset
 from qusi.internal.logging import set_up_default_logger
 from qusi.internal.module import QusiLightningModule
 from qusi.internal.progress_bar import ProgressBar
