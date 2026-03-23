@@ -10,7 +10,7 @@ from lightning.pytorch.callbacks import TQDMProgressBar
 from lightning.pytorch.loggers import CSVLogger, WandbLogger
 from torch.nn import BCELoss, Module
 from torch.optim import Optimizer
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Dataset
 from torchmetrics.classification import BinaryAccuracy, BinaryAUROC
 
 from qusi.internal.light_curve_dataset import InterleavedDataset, LightCurveDataset
@@ -24,8 +24,8 @@ logger = logging.getLogger(__name__)
 
 
 def train_session(
-        train_datasets: list[LightCurveDataset],
-        validation_datasets: list[LightCurveDataset],
+        train_datasets: list[Dataset],
+        validation_datasets: list[Dataset],
         model: Module,
         optimizer: Optimizer | None = None,
         loss_metric: Module | None = None,
