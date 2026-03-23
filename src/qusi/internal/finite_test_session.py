@@ -14,7 +14,7 @@ def finite_datasets_test_session(
         *,
         batch_size: int = 100,
         device: Device = torch.device('cpu'),
-):
+) -> list[torch.Tensor]:
     """
     Runs a test session on finite datasets.
 
@@ -38,7 +38,8 @@ def finite_datasets_test_session(
     return results
 
 
-def finite_dataset_test_phase(dataloader, model: Module, metric_functions: list[Module], device: Device):
+def finite_dataset_test_phase(dataloader, model: Module, metric_functions: list[Module], device: Device
+                              ) -> torch.Tensor:
     batch_count = 0
     metric_totals = torch.zeros(size=[len(metric_functions)])
     model.eval()
