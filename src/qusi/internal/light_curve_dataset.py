@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+
 import copy
 import math
 import re
@@ -20,6 +22,7 @@ from scipy.interpolate import interp1d
 from torch import Tensor
 from torch.utils.data import IterableDataset
 from typing_extensions import Self
+
 
 from qusi.internal.light_curve import (
     LightCurve,
@@ -42,6 +45,9 @@ if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
 
 from qusi.internal.light_curve_collection import LightCurveObservationCollection
+
+
+logger = logging.getLogger(__name__)
 
 
 class OutOfBoundsInjectionHandlingMethod(Enum):
@@ -156,10 +162,8 @@ class LightCurveDataset(IterableDataset):
                             standard_light_curve
                         )
                     except ValueError as error:
-                        with Path('problem_light_curves.txt').open('a') as problem_files_list_file:
-                            print(f'#############################', flush=True)
-                            print(f'{standard_light_curve.path}', file=problem_files_list_file, flush=True)
-                        continue
+                        logger.error(f'Encountered error processing standard path `{standard_light_curve.path}`.')
+                        raise error
                     yield transformed_standard_light_curve
                 if collection_type in [
                     LightCurveCollectionType.INJECTEE,
@@ -173,17 +177,14 @@ class LightCurveDataset(IterableDataset):
                         injectable_light_curve = injectable_observation_from_path_function(injectable_light_path)
                         injectee_light_curve_path = next(base_collection_iter)
                         injectee_light_curve = observation_from_path_function(injectee_light_curve_path)
-                        # TODO: Here's where the error occurs.
                         try:
                             injected_light_curve = inject_light_curve(
                                 injectee_light_curve, injectable_light_curve
                             )
                         except ValueError as error:
-                            with Path('problem_light_curves.txt').open('a') as problem_files_list_file:
-                                print(f'#############################', flush=True)
-                                print(f'{injectee_light_curve.path}', file=problem_files_list_file, flush=True)
-                                print(f'{injectable_light_curve.path}', file=problem_files_list_file, flush=True)
-                            continue
+                            logger.error(f'Encountered error processing injectee path `{injectee_light_curve.path}` '
+                                         f'with injectable path `{injectable_light_curve.path}`.')
+                            raise error
                         transformed_injected_light_curve = (
                             self.post_injection_transform(injected_light_curve)
                         )
