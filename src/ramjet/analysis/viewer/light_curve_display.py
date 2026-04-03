@@ -68,6 +68,7 @@ class LightCurveDisplay:
             y_axis_label=flux_axis_label,
             active_drag="box_zoom",
             active_scroll="wheel_zoom",
+            tools=["pan", "wheel_zoom", "box_zoom", "save", "reset", "help"]
         )
         self.figure.sizing_mode = "stretch_width"
 
