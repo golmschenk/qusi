@@ -31,6 +31,7 @@ class TestTessFfiLightCurveMetadataManager:
         mock_dataset_split_generator,
         metadata_manger,
     ):
+        Path('data').mkdir(parents=True, exist_ok=True)
         light_curve_path0 = Path(
             "tesslcs_sector_1_104/tesslcs_tmag_7_8/tesslc_1111.pkl"
         )

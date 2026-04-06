@@ -31,7 +31,7 @@ class TessFfiLightCurveMetadata(MetadatabaseModel):
     magnitude = FloatField()
 
     class Meta:
-        """Schema meta data for the model."""
+        """Schema metadata for the model."""
 
         indexes = (
             (("sector", "tic_id"), True),  # Ensures TIC ID and sector entry is unique.
