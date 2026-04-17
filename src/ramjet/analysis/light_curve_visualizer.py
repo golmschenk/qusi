@@ -148,7 +148,7 @@ def create_dual_light_curve_figure(
     :param y_axis_label: The label of the y axis.
     :return: The resulting figure.
     """
-    figure = Figure(title=title, x_axis_label=x_axis_label, y_axis_label=y_axis_label, active_drag="box_zoom")
+    figure = Figure(title=title, x_axis_label=x_axis_label, y_axis_label=y_axis_label, active_drag="auto_box_zoom")
     add_light_curve(figure, times0, fluxes0, name0, "firebrick")
     add_light_curve(figure, times1, fluxes1, name1, "mediumblue")
     return figure
@@ -168,7 +168,7 @@ def create_light_curve_figure(
     :param y_axis_label: The label of the y axis.
     :return: The resulting figure.
     """
-    figure = Figure(title=title, x_axis_label=x_axis_label, y_axis_label=y_axis_label, active_drag="box_zoom")
+    figure = Figure(title=title, x_axis_label=x_axis_label, y_axis_label=y_axis_label, active_drag="auto_box_zoom")
     add_light_curve(figure, times, fluxes, name, "mediumblue")
     return figure
 

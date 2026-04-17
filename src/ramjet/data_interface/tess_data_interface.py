@@ -454,7 +454,7 @@ def show_light_curve(light_curve_path: Path):
     :param light_curve_path: The path of the light curve.
     """
     fluxes, times = load_fluxes_and_times_from_fits_file(light_curve_path)
-    figure = Figure(title=str(light_curve_path), x_axis_label="Flux", y_axis_label="Time", active_drag="box_zoom")
+    figure = Figure(title=str(light_curve_path), x_axis_label="Flux", y_axis_label="Time", active_drag="auto_box_zoom")
     color = "mediumblue"
     figure.line(times, fluxes, line_color=color, line_alpha=0.1)
     figure.circle(times, fluxes, line_color=color, line_alpha=0.4, fill_color=color, fill_alpha=0.1)
