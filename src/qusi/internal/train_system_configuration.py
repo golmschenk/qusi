@@ -7,8 +7,8 @@ class TrainSystemConfiguration:
     Configuration settings for the system of a train session.
 
     :ivar preprocessing_processes_per_train_process: The number of processes that are started to preprocess the data
-        per train process. The train session will create this many processes for each the train data and the validation
-        data.
+        per train process. The train session will create this many processes for each of the train data and the
+        validation data.
     """
 
     preprocessing_processes_per_train_process: int

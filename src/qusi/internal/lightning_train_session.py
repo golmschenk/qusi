@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+
 import datetime
 import logging
 from pathlib import Path
@@ -13,6 +15,7 @@ from torch.optim import Optimizer
 from torch.utils.data import DataLoader, Dataset
 from torchmetrics.classification import BinaryAccuracy, BinaryAUROC
 
+from qusi.internal.distributed import ensure_torchrun_environment_variables
 from qusi.internal.light_curve_dataset import InterleavedDataset
 from qusi.internal.logging import set_up_default_logger
 from qusi.internal.module import QusiLightningModule
@@ -66,16 +69,17 @@ def train_session(
         logging_metrics = metric_functions
 
     if hyperparameter_configuration is None:
-        hyperparameter_configuration = TrainHyperparameterConfiguration.new()
+        hyperparameter_configuration:TrainHyperparameterConfiguration = TrainHyperparameterConfiguration.new()
     if system_configuration is None:
-        system_configuration = TrainSystemConfiguration.new()
+        system_configuration: TrainSystemConfiguration = TrainSystemConfiguration.new()
     if loss_metric is None:
-        loss_metric = BCELoss()
+        loss_metric: Module = BCELoss()
     if logging_configuration is None:
-        logging_configuration = TrainLoggingConfiguration.new()
+        logging_configuration: TrainLoggingConfiguration = TrainLoggingConfiguration.new()
     if logging_metrics is None:
-        logging_metrics = [BinaryAccuracy(), BinaryAUROC()]
+        logging_metrics: list[Module] = [BinaryAccuracy(), BinaryAUROC()]
 
+    ensure_torchrun_environment_variables()
     set_up_default_logger()
 
     sessions_directory_path = Path(f'sessions')
@@ -93,6 +97,8 @@ def train_session(
         limit_val_batches=hyperparameter_configuration.validation_steps_per_cycle,
         log_every_n_steps=0,
         accelerator=system_configuration.accelerator,
+        num_nodes=int(os.environ['WORLD_SIZE']) // int(os.environ['LOCAL_WORLD_SIZE']),
+        devices=int(os.environ['LOCAL_WORLD_SIZE']),
         logger=loggers,
         callbacks=[ProgressBar(refresh_rate=progress_refresh_rate)],
     )
