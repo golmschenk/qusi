@@ -18,3 +18,5 @@ def test_job_file_creation():
     assert '--nnodes=7' in test_output_string
     assert '--nproc_per_node=2' in test_output_string
     assert test_output_string.strip().endswith('fake_path.py')
+    if test_output_path.exists():
+        test_output_path.unlink()
