@@ -24,7 +24,7 @@ class Job:
         self.options: dict[str, str] = {}
 
     @classmethod
-    def new(cls, torch_task_script_path: Path, options: dict[str, str] | None = None) -> Self:
+    def new(cls, torch_task_script_path: Path, options: dict[str, str | int] | None = None) -> Self:
         """
         The default constructor for new jobs.
 
@@ -57,7 +57,7 @@ class Job:
         if isinstance(option_value, int):
             option_value = str(option_value)
         if option_key == '-N':
-            option_key = '--nnodes'
+            option_key = '--nodes'
         self.options[option_key] = option_value
 
     def generate_job_script_at_file_path(self, path: Path) -> None:
@@ -77,8 +77,10 @@ class Job:
         """
         self.write_hashbang_to_file_handle(file_handle)
         self.write_job_options_to_file_handle(file_handle)
+        self.write_torch_distributed_call_to_file_handle(file_handle)
 
-    def write_hashbang_to_file_handle(self, file_handle: TextIO) -> None:
+    @staticmethod
+    def write_hashbang_to_file_handle(file_handle: TextIO) -> None:
         """
         Writes the hashbang to the file handle.
 
@@ -93,7 +95,7 @@ class Job:
 
         :param file_handle: The file handle to write to.
         """
-        for option_name, option_value in self.options:
+        for option_name, option_value in self.options.items():
             file_handle.write(fr'#SBATCH {option_name}={option_value}\n')
 
     def write_torch_distributed_call_to_file_handle(self, file_handle: TextIO) -> None:
@@ -102,18 +104,18 @@ class Job:
 
         :param file_handle: The file handle to write to.
         """
-        if self.options.get('--nnodes') is None:
-            raise MissingRequiredJobOptionException('--nnodes')
+        if self.options.get('--nodes') is None:
+            raise MissingRequiredJobOptionException('--nodes')
         if self.options.get('--ntasks-per-node') is None:
             raise MissingRequiredJobOptionException('--ntasks-per-node')
-        number_of_nodes = int(self.options['--nnodes'])
+        number_of_nodes = int(self.options['--nodes'])
         training_processes_per_node = int(self.options['--ntasks-per-node'])
         file_handle.write(
             f'python -m torch.distributed.run \\\n'
-            f'--nnodes {number_of_nodes} \\\n'
-            f'--nproc_per_node {training_processes_per_node} \\\n'
-            f'--rdzv_id $RANDOM \\\n'
-            f'--rdzv_backend c10d \\\n'
-            f'--rdzv_endpoint $head_node_hostname \\\n'
+            f'--nnodes={number_of_nodes} \\\n'
+            f'--nproc_per_node={training_processes_per_node} \\\n'
+            f'--rdzv_id=$RANDOM \\\n'
+            f'--rdzv_backend=c10d \\\n'
+            f'--rdzv_endpoint=$head_node_hostname \\\n'
             f'{self.torch_task_script_path}\n'
         )
