@@ -19,20 +19,22 @@ class Job:
     """
     A class to represent launch SLURM jobs.
     """
-    def __init__(self):
+    def __init__(self, torch_task_script_path: Path):
+        self.torch_task_script_path: Path = torch_task_script_path
         self.options: dict[str, str] = {}
 
     @classmethod
-    def new(cls, options: dict[str, str] | None = None) -> Self:
+    def new(cls, torch_task_script_path: Path, options: dict[str, str] | None = None) -> Self:
         """
         The default constructor for new jobs.
 
+        :param torch_task_script_path: The path to the torch job script to run from the SLURM job.
         :param options: The options to pass to the SLURM job.
         :return: The SLURM job.
         """
         if options is None:
             options = {}
-        instance = cls()
+        instance = cls(torch_task_script_path=torch_task_script_path)
         instance.add_options(options)
         return instance
 
@@ -102,11 +104,10 @@ class Job:
         """
         if self.options.get('--nnodes') is None:
             raise MissingRequiredJobOptionException('--nnodes')
-        if self.options.get('--nproc_per_node') is None:
-            raise MissingRequiredJobOptionException('--nproc_per_node')
+        if self.options.get('--ntasks-per-node') is None:
+            raise MissingRequiredJobOptionException('--ntasks-per-node')
         number_of_nodes = int(self.options['--nnodes'])
         training_processes_per_node = int(self.options['--ntasks-per-node'])
-        script_path = Path('scripts/1m_sqlite_train_session.py')
         file_handle.write(
             f'python -m torch.distributed.run \\\n'
             f'--nnodes {number_of_nodes} \\\n'
@@ -114,5 +115,5 @@ class Job:
             f'--rdzv_id $RANDOM \\\n'
             f'--rdzv_backend c10d \\\n'
             f'--rdzv_endpoint $head_node_hostname \\\n'
-            f'{script_path}'
+            f'{self.torch_task_script_path}\n'
         )
