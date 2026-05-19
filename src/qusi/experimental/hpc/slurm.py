@@ -1,6 +1,7 @@
 """
 A module for running SLURM jobs.
 """
+import datetime
 from pathlib import Path
 
 from typing import Self, TextIO
@@ -49,10 +50,23 @@ class Job:
             sessions_root_directory = Path('sessions')
         if options is None:
             options = {}
-        session_directory = sessions_root_directory.joinpath(session_name)
+        session_directory = cls.get_session_directory(session_name, sessions_root_directory)
         instance = cls(session_directory=session_directory, torch_task_script_path=torch_task_script_path)
         instance.add_options(options)
         return instance
+
+    @classmethod
+    def get_session_directory(cls, session_name: str, sessions_root_directory: Path) -> Path:
+        """
+        Get a session directory with a datetime prefix.
+
+        :param session_name: The name of the session.
+        :param sessions_root_directory: The root directory that contains all the sessions.
+        :return: The path to the session directory.
+        """
+        datetime_string = datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
+        session_directory = sessions_root_directory.joinpath(f'{datetime_string}_{session_name}')
+        return session_directory
 
     def add_options(self, options: dict[str, str | int]) -> None:
         """
