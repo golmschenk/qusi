@@ -10,6 +10,7 @@ class MissingRequiredJobOptionException(Exception):
     """
     Exception for missing job options that are required by the SLURM job configuration.
     """
+
     def __init__(self, option_key):
         self.message = f'Job option `{option_key}` is required.'
         super().__init__(self.message)
@@ -19,22 +20,37 @@ class Job:
     """
     A class to represent launch SLURM jobs.
     """
-    def __init__(self, torch_task_script_path: Path):
-        self.torch_task_script_path: Path = torch_task_script_path
+
+    def __init__(self, session_directory: Path, torch_task_script_path: Path):
+        self.session_directory: Path = session_directory
+        self.original_torch_task_script_path: Path = torch_task_script_path
+        self.session_torch_task_script_path: Path = session_directory.joinpath(torch_task_script_path.name)
+        self.session_shell_task_script_path: Path = session_directory.joinpath('job_script.sh')
         self.options: dict[str, str] = {}
 
     @classmethod
-    def new(cls, torch_task_script_path: Path, options: dict[str, str | int] | None = None) -> Self:
+    def new(
+            cls,
+            torch_task_script_path: Path,
+            session_name: str,
+            sessions_root_directory: Path | None = None,
+            options: dict[str, str | int] | None = None
+    ) -> Self:
         """
         The default constructor for new jobs.
 
         :param torch_task_script_path: The path to the torch job script to run from the SLURM job.
+        :param session_name: The name of the session.
+        :param sessions_root_directory: The root sessions directory that contains all sessions (defaults to `sessions`).
         :param options: The options to pass to the SLURM job.
         :return: The SLURM job.
         """
+        if sessions_root_directory is None:
+            sessions_root_directory = Path('sessions')
         if options is None:
             options = {}
-        instance = cls(torch_task_script_path=torch_task_script_path)
+        session_directory = sessions_root_directory.joinpath(session_name)
+        instance = cls(session_directory=session_directory, torch_task_script_path=torch_task_script_path)
         instance.add_options(options)
         return instance
 
@@ -117,5 +133,5 @@ class Job:
             f'--rdzv_id=$RANDOM \\\n'
             f'--rdzv_backend=c10d \\\n'
             f'--rdzv_endpoint=$head_node_hostname \\\n'
-            f'{self.torch_task_script_path}\n'
+            f'{self.session_torch_task_script_path}\n'
         )
