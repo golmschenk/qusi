@@ -2,6 +2,8 @@
 A module for running SLURM jobs.
 """
 import datetime
+import shutil
+import subprocess
 from pathlib import Path
 
 from typing import Self, TextIO
@@ -149,3 +151,18 @@ class Job:
             f'--rdzv_endpoint=$head_node_hostname \\\n'
             f'{self.session_torch_task_script_path}\n'
         )
+
+    def prepare_session_directory(self) -> None:
+        """
+        Prepare the session directory for running, including creation of the directory and moving the scripts in.
+        """
+        self.session_directory.mkdir(parents=True)
+        shutil.copyfile(self.original_torch_task_script_path, self.session_torch_task_script_path)
+        self.generate_job_script_at_file_path(self.session_shell_task_script_path)
+
+    def run(self) -> None:
+        """
+        Executes the job.
+        """
+        self.prepare_session_directory()
+        subprocess.run(['sbatch', f'{self.session_shell_task_script_path}'])
