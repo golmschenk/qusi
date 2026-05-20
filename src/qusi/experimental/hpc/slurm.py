@@ -136,14 +136,13 @@ class Job:
 
         :param file_handle: The file handle to write to.
         """
-        if self.options.get('--nodes') is None:
-            raise MissingRequiredJobOptionException('--nodes')
-        if self.options.get('--ntasks-per-node') is None:
-            raise MissingRequiredJobOptionException('--ntasks-per-node')
+        for required_job_option in ['--nodes', '--ntasks-per-node', '--gpus-per-node']:
+            if self.options.get(required_job_option) is None:
+                raise MissingRequiredJobOptionException('--nodes')
         number_of_nodes = int(self.options['--nodes'])
-        training_processes_per_node = int(self.options['--ntasks-per-node'])
+        training_processes_per_node = int(self.options['--gpus-per-node']) // int(self.options['--ntasks-per-node'])
         file_handle.write(
-            f'python -m torch.distributed.run \\\n'
+            f'srun python -m torch.distributed.run \\\n'
             f'--nnodes={number_of_nodes} \\\n'
             f'--nproc_per_node={training_processes_per_node} \\\n'
             f'--rdzv_id=$RANDOM \\\n'
