@@ -4,7 +4,7 @@ import os
 import sys
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Generator, TextIO, Callable, Any, ParamSpec, TypeVar
+from typing import Generator, TextIO, Callable, ParamSpec, TypeVar
 
 logger = logging.getLogger(__name__)
 

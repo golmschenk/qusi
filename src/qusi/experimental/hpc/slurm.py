@@ -128,7 +128,7 @@ class Job:
         :param file_handle: The file handle to write to.
         """
         for option_name, option_value in self.options.items():
-            file_handle.write(fr'#SBATCH {option_name}={option_value}\n')
+            file_handle.write(f'#SBATCH {option_name}={option_value}\n')
 
     def write_torch_distributed_call_to_file_handle(self, file_handle: TextIO) -> None:
         """
@@ -138,7 +138,7 @@ class Job:
         """
         for required_job_option in ['--nodes', '--ntasks-per-node', '--gpus-per-node']:
             if self.options.get(required_job_option) is None:
-                raise MissingRequiredJobOptionException('--nodes')
+                raise MissingRequiredJobOptionException(required_job_option)
         number_of_nodes = int(self.options['--nodes'])
         training_processes_per_node = int(self.options['--gpus-per-node']) // int(self.options['--ntasks-per-node'])
         file_handle.write(
