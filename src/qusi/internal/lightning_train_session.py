@@ -94,9 +94,21 @@ def train_session(
     train_dataset = InterleavedDataset.new(*train_datasets)
     workers_per_dataloader = system_configuration.preprocessing_processes_per_train_process
 
-    local_batch_size = round(hyperparameter_configuration.global_batch_size / trainer.world_size)
-    if local_batch_size == 0:
-        local_batch_size = 1
+    if hyperparameter_configuration.global_batch_size is not None:
+        unrounded_local_batch_size = hyperparameter_configuration.global_batch_size / trainer.world_size
+        if not unrounded_local_batch_size.is_integer():
+            raise UserWarning(f'The global batch size of `{hyperparameter_configuration.global_batch_size}` is not '
+                              f'divisible by the world size of `{trainer.world_size}`. Rounding to determine local '
+                              f'batch size.')
+        hyperparameter_configuration.local_batch_size = round(unrounded_local_batch_size)
+        if hyperparameter_configuration.local_batch_size == 0:
+            hyperparameter_configuration.local_batch_size = 1
+    elif hyperparameter_configuration.local_batch_size is not None:
+        hyperparameter_configuration.global_batch_size = (hyperparameter_configuration.local_batch_size *
+                                                          trainer.world_size)
+    else:
+        raise ValueError('The hyperparameter configuration requires that either `global_batch_size` or '
+                         '`local_batch_size` be set.')
 
     if workers_per_dataloader == 0:
         prefetch_factor = None
@@ -106,7 +118,7 @@ def train_session(
         persistent_workers = True
     train_dataloader = DataLoader(
         train_dataset,
-        batch_size=local_batch_size,
+        batch_size=hyperparameter_configuration.local_batch_size,
         pin_memory=True,
         persistent_workers=persistent_workers,
         prefetch_factor=prefetch_factor,
@@ -116,7 +128,7 @@ def train_session(
     for validation_dataset in validation_datasets:
         validation_dataloader = DataLoader(
             validation_dataset,
-            batch_size=local_batch_size,
+            batch_size=hyperparameter_configuration.local_batch_size,
             pin_memory=True,
             persistent_workers=persistent_workers,
             prefetch_factor=prefetch_factor,
