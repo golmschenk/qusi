@@ -88,7 +88,6 @@ def train_session(
         process_rank=0,
         project=logging_configuration.wandb_project,
         entity=logging_configuration.wandb_entity,
-        settings=wandb.Settings(start_method="thread"),
         dir=sessions_directory,
     )
     print(f'{logging_configuration.additional_log_dictionary}')

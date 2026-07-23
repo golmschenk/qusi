@@ -193,7 +193,7 @@ class WandbLogger:
 
         :return: The logger.
         """
-        wandb.init(entity=entity, project=project, settings=wandb.Settings(start_method="fork"))
+        wandb.init(entity=entity, project=project)
         return cls()
 
     def process_py_mapper_example_queues(self, epoch: int) -> None:
