@@ -19,6 +19,13 @@ class MissingRequiredJobOptionException(Exception):
         super().__init__(self.message)
 
 
+class InvalidValueForJobOptionException(ValueError):
+    """
+    Exception for invalid value for a job option.
+    """
+    pass
+
+
 class Job:
     """
     A class to represent launch SLURM jobs.
@@ -139,6 +146,9 @@ class Job:
         for required_job_option in ['--nodes', '--ntasks-per-node', '--gpus-per-node']:
             if self.options.get(required_job_option) is None:
                 raise MissingRequiredJobOptionException(required_job_option)
+        if int(self.options['--ntasks-per-node']) != 1:
+            raise InvalidValueForJobOptionException(f'`--ntasks-per-node` is only allowed to be set to `1`. '
+                                                    f'Found {self.options['--ntasks-per-node']}')
         number_of_nodes = int(self.options['--nodes'])
         training_processes_per_node = int(self.options['--gpus-per-node']) // int(self.options['--ntasks-per-node'])
         file_handle.write(

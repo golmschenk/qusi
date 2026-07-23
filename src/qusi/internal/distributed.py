@@ -34,7 +34,7 @@ def distributed_logging(decorated_function: Callable[P, R]) -> Callable[P, R]:
     file.
 
     :param decorated_function: The function that should be logged in a distributed way.
-    :return:
+    :return: The decorated function.
     """
     if 'RANK' not in os.environ:
         return decorated_function

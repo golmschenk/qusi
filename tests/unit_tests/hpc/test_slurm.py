@@ -5,7 +5,7 @@ import pytest
 from io import StringIO
 from pathlib import Path
 
-from qusi.experimental.hpc.slurm import Job, MissingRequiredJobOptionException
+from qusi.experimental.hpc.slurm import Job, MissingRequiredJobOptionException, InvalidValueForJobOptionException
 
 
 def test_adding_option():
@@ -43,7 +43,18 @@ def test_torch_distributed_call_uses_script_path():
     task_path = Path('fake_path.py')
     job = Job(Path('sessions/fake_session'), task_path)
     job.add_option('--nodes', 7)
-    job.add_option('--ntasks-per-node', 2)
+    job.add_option('--gpus-per-node', 4)
+    job.add_option('--ntasks-per-node', 1)
     string_io = StringIO()
     job.write_torch_distributed_call_to_file_handle(string_io)
     assert string_io.getvalue().strip().endswith(str(task_path))
+
+def test_torch_distributed_call_generation_requires_tasks_per_node_be_set_to_1():
+    task_path = Path('fake_path.py')
+    job = Job(Path('sessions/fake_session'), task_path)
+    job.add_option('--nodes', 7)
+    job.add_option('--gpus-per-node', 4)
+    job.add_option('--ntasks-per-node', 2)
+    string_io = StringIO()
+    with pytest.raises(InvalidValueForJobOptionException, match='--ntasks-per-node'):
+        job.write_torch_distributed_call_to_file_handle(string_io)
