@@ -38,9 +38,6 @@ def train_session(
         hyperparameter_configuration: TrainHyperparameterConfiguration | None = None,
         system_configuration: TrainSystemConfiguration | None = None,
         logging_configuration: TrainLoggingConfiguration | None = None,
-        # Deprecated keyword parameters.
-        loss_function: Module | None = None,
-        metric_functions: list[Module] | None = None,
 ) -> None:
     """
     Runs a training session.
@@ -55,19 +52,6 @@ def train_session(
     :param system_configuration: The configuration of the system.
     :param logging_configuration: The configuration of the logging.
     """
-    if loss_metric is not None and loss_function is not None:
-        raise ValueError('Both `loss_metric` and `loss_function` cannot be set at the same time.')
-    if logging_metrics is not None and metric_functions is not None:
-        raise ValueError('Both `logging_metrics` and `metric_functions` cannot be set at the same time.')
-    if loss_function is not None:
-        warn('`loss_function` is deprecated and will be removed in the future. '
-             'Please use `loss_metric` instead.', UserWarning)
-        loss_metric = loss_function
-    if metric_functions is not None:
-        warn('`metric_functions` is deprecated and will be removed in the future. '
-             'Please use `logging_metrics` instead.', UserWarning)
-        logging_metrics = metric_functions
-
     if hyperparameter_configuration is None:
         hyperparameter_configuration:TrainHyperparameterConfiguration = TrainHyperparameterConfiguration.new()
     if system_configuration is None:
