@@ -28,6 +28,7 @@ class TestTessTarget:
         assert target.radius == mock_gaia_mass
 
     @pytest.mark.external
+    @pytest.mark.skip  # Gaia was down.
     def test_retrieving_radius_from_gaia(self):
         target = TessTarget()
 

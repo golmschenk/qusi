@@ -19,7 +19,7 @@ def test_toy_train_session():
         default_light_curve_observation_post_injection_transform, length=100
     )
     train_hyperparameter_configuration = TrainHyperparameterConfiguration.new(
-        batch_size=3, cycles=2, train_steps_per_cycle=5, validation_steps_per_cycle=5
+        global_batch_size=3, cycles=2, train_steps_per_cycle=5, validation_steps_per_cycle=5
     )
     train_system_configuration = TrainSystemConfiguration.new(accelerator='cpu')
     train_session(

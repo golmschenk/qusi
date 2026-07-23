@@ -105,7 +105,7 @@ def train_session(
         persistent_workers = True
     train_dataloader = DataLoader(
         train_dataset,
-        batch_size=hyperparameter_configuration.batch_size,
+        batch_size=hyperparameter_configuration.global_batch_size,
         pin_memory=True,
         persistent_workers=persistent_workers,
         prefetch_factor=prefetch_factor,
@@ -115,7 +115,7 @@ def train_session(
     for validation_dataset in validation_datasets:
         validation_dataloader = DataLoader(
             validation_dataset,
-            batch_size=hyperparameter_configuration.batch_size,
+            batch_size=hyperparameter_configuration.global_batch_size,
             pin_memory=True,
             persistent_workers=persistent_workers,
             prefetch_factor=prefetch_factor,

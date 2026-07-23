@@ -94,7 +94,7 @@ def train_session(
     train_dataset = InterleavedDataset.new(*train_datasets)
     workers_per_dataloader = system_configuration.preprocessing_processes_per_train_process
 
-    local_batch_size = round(hyperparameter_configuration.batch_size / trainer.world_size)
+    local_batch_size = round(hyperparameter_configuration.global_batch_size / trainer.world_size)
     if local_batch_size == 0:
         local_batch_size = 1
 
