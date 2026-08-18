@@ -45,7 +45,7 @@ def distributed_logging(decorated_function: Callable[P, R]) -> Callable[P, R]:
     session_directory = Path(os.environ['QUSI_SESSION_DIRECTORY'])
     session_directory.mkdir(parents=True, exist_ok=True)
     rank_logging_path = session_directory.joinpath(
-        f'rank_{os.environ["RANK"]}_group_rank_{os.environ["GROUP_RANK"]}_local_rank_{os.environ["GROUP_RANK"]}.log')
+        f'rank_{os.environ["RANK"]}_group_rank_{os.environ["GROUP_RANK"]}_local_rank_{os.environ["LOCAL_RANK"]}.log')
 
     @functools.wraps(decorated_function)
     def redirect_wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
@@ -72,34 +72,21 @@ def redirected_output(path: Path) -> Generator[None, None, None]:
     """
     stdout_file_descriptor = sys.stdout.fileno()
     stderr_file_descriptor = sys.stderr.fileno()
-
-    def redirect_stdout(file_handle_: TextIO) -> None:
-        """
-        Redirect stdout to a file handle.
-
-        :param file_handle_: The file handle.
-        """
-        sys.stdout.close()
-        os.dup2(file_handle_.fileno(), stdout_file_descriptor)
-        sys.stdout = os.fdopen(stdout_file_descriptor, 'a')
-
-    def redirect_stderr(file_handle_: TextIO) -> None:
-        """
-        Redirect stderr to a file handle.
-
-        :param file_handle_: The file handle.
-        """
-        sys.stderr.close()
-        os.dup2(file_handle_.fileno(), stderr_file_descriptor)
-        sys.stderr = os.fdopen(stderr_file_descriptor, 'a')
-
-    with (os.fdopen(os.dup(stdout_file_descriptor), 'a') as original_stdout,
-          os.fdopen(os.dup(stderr_file_descriptor), 'a') as original_stderr):
-        with open(path, 'a') as file:
-            redirect_stdout(file_handle_=file)
-            redirect_stderr(file_handle_=file)
-        try:
-            yield
-        finally:
-            redirect_stdout(file_handle_=original_stdout)
-            redirect_stderr(file_handle_=original_stderr)
+    original_stdout_file_descriptor = os.dup(stdout_file_descriptor)
+    original_stderr_file_descriptor = os.dup(stderr_file_descriptor)
+    try:
+        with path.open('a') as file:
+            sys.stdout.flush()
+            os.dup2(file.fileno(), stdout_file_descriptor)
+            sys.stderr.flush()
+            os.dup2(file.fileno(), stderr_file_descriptor)
+            try:
+                yield
+            finally:
+                sys.stdout.flush()
+                os.dup2(original_stdout_file_descriptor, stdout_file_descriptor)
+                sys.stderr.flush()
+                os.dup2(original_stderr_file_descriptor, stderr_file_descriptor)
+    finally:
+        os.close(original_stdout_file_descriptor)
+        os.close(original_stderr_file_descriptor)
