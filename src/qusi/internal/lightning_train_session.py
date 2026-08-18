@@ -66,8 +66,13 @@ def train_session(
     ensure_torchrun_environment_variables()
     set_up_default_logger()
 
-    sessions_directory_path = Path(f'sessions')
-    session_name = f'{datetime.datetime.now():%Y_%m_%d_%H_%M_%S}'
+    if 'QUSI_SESSION_DIRECTORY' in os.environ:
+        session_directory = Path(os.environ['QUSI_SESSION_DIRECTORY'])
+        sessions_directory_path = session_directory.parent
+        session_name = session_directory.name
+    else:
+        sessions_directory_path = Path(f'sessions')
+        session_name = f'{datetime.datetime.now():%Y_%m_%d_%H_%M_%S}'
     sessions_directory_path.mkdir(exist_ok=True, parents=True)
     wandb_logger = WandbLogger(save_dir=sessions_directory_path, name=session_name,
                          project=logging_configuration.wandb_project, entity=logging_configuration.wandb_entity)
