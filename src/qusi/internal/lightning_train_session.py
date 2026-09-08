@@ -1,14 +1,11 @@
 from __future__ import annotations
 
-import os
-
 import datetime
 import logging
+import os
 from pathlib import Path
-from warnings import warn
 
 import lightning
-from lightning.pytorch.callbacks import TQDMProgressBar
 from lightning.pytorch.loggers import CSVLogger, WandbLogger
 from torch.nn import BCELoss, Module
 from torch.optim import Optimizer
@@ -74,10 +71,10 @@ def train_session(
         sessions_directory_path = Path(f'sessions')
         session_name = f'{datetime.datetime.now():%Y_%m_%d_%H_%M_%S}'
     sessions_directory_path.mkdir(exist_ok=True, parents=True)
-    wandb_logger = WandbLogger(save_dir=sessions_directory_path, name=session_name,
+    wandb_logger = WandbLogger(save_dir=sessions_directory_path, name=session_name, version='',
                          project=logging_configuration.wandb_project, entity=logging_configuration.wandb_entity)
     wandb_logger.log_hyperparams(logging_configuration.additional_log_dictionary)
-    loggers = [CSVLogger(save_dir=sessions_directory_path, name=session_name), wandb_logger]
+    loggers = [CSVLogger(save_dir=sessions_directory_path, name=session_name, version=''), wandb_logger]
 
     progress_refresh_rate = min(100, hyperparameter_configuration.train_steps_per_cycle // 10)
     trainer = lightning.Trainer(
