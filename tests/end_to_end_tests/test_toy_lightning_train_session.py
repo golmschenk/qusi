@@ -21,7 +21,7 @@ def test_toy_train_session():
     train_hyperparameter_configuration = TrainHyperparameterConfiguration.new(
         global_batch_size=3, cycles=2, train_steps_per_cycle=5, validation_steps_per_cycle=5
     )
-    train_system_configuration = TrainSystemConfiguration.new(accelerator='cpu')
+    train_system_configuration = TrainSystemConfiguration.new(accelerator='cpu', preprocessing_processes_per_train_process=1)
     train_session(
         train_datasets=[dataset],
         validation_datasets=[dataset],

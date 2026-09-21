@@ -7,6 +7,7 @@ from pathlib import Path
 
 import lightning
 from lightning.pytorch.loggers import CSVLogger, WandbLogger
+from lightning.pytorch.strategies import DDPStrategy
 from torch.nn import BCELoss, Module
 from torch.optim import Optimizer
 from torch.utils.data import DataLoader, Dataset
@@ -78,6 +79,7 @@ def train_session(
 
     progress_refresh_rate = min(100, hyperparameter_configuration.train_steps_per_cycle // 10)
     trainer = lightning.Trainer(
+        strategy=DDPStrategy(process_group_backend=system_configuration.distributed_backend),
         max_epochs=hyperparameter_configuration.cycles,
         limit_train_batches=hyperparameter_configuration.train_steps_per_cycle,
         limit_val_batches=hyperparameter_configuration.validation_steps_per_cycle,
