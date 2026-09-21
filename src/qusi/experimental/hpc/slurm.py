@@ -148,7 +148,7 @@ class Job:
                 raise MissingRequiredJobOptionException(required_job_option)
         if int(self.options['--ntasks-per-node']) != 1:
             raise InvalidValueForJobOptionException(f'`--ntasks-per-node` is only allowed to be set to `1`. '
-                                                    f'Found {self.options['--ntasks-per-node']}')
+                                                    f'Found {self.options["--ntasks-per-node"]}')
         number_of_nodes = int(self.options['--nodes'])
         training_processes_per_node = int(self.options['--gpus-per-node']) // int(self.options['--ntasks-per-node'])
         file_handle.write(
