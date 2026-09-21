@@ -8,6 +8,16 @@ from lightning.pytorch.callbacks.progress.tqdm_progress import convert_inf
 
 class ProgressBar(TQDMProgressBar):
     @override
+    def setup(
+            self,
+            trainer: lightning.pytorch.Trainer,
+            pl_module: lightning.pytorch.LightningModule,
+            stage: str,
+    ) -> None:
+        super().setup(trainer, pl_module, stage)
+        self.enable()
+
+    @override
     def on_train_epoch_start(self, trainer: lightning.pytorch.Trainer, *_: Any) -> None:
         if self._leave:
             self.train_progress_bar = self.init_train_tqdm()
