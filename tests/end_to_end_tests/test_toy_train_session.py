@@ -7,6 +7,7 @@ from qusi.internal.light_curve_dataset import (
 from qusi.internal.single_dense_layer_model import SingleDenseLayerBinaryClassificationModel
 from qusi.internal.toy_light_curve_collection import get_toy_dataset
 from qusi.internal.train_hyperparameter_configuration import TrainHyperparameterConfiguration
+from qusi.internal.train_system_configuration import TrainSystemConfiguration
 from qusi.internal.train_session import train_session
 
 
@@ -21,9 +22,11 @@ def test_toy_train_session():
     train_hyperparameter_configuration = TrainHyperparameterConfiguration.new(
         global_batch_size=3, cycles=2, train_steps_per_cycle=5, validation_steps_per_cycle=5
     )
+    train_system_configuration = TrainSystemConfiguration.new(preprocessing_processes_per_train_process=1)
     train_session(
         train_datasets=[dataset],
         validation_datasets=[dataset],
         model=model,
         hyperparameter_configuration=train_hyperparameter_configuration,
+        system_configuration=train_system_configuration,
     )
