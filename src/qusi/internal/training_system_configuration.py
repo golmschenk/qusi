@@ -4,9 +4,9 @@ import torch
 
 
 @dataclass
-class TrainSystemConfiguration:
+class TrainingSystemConfiguration:
     """
-    Configuration settings for the system of a train session.
+    Configuration settings for the system of a training session.
 
     :ivar preprocessing_processes_per_train_process: The number of processes that are started to preprocess the data
         per train process. The train session will create this many processes for each of the train data and the
@@ -28,13 +28,13 @@ class TrainSystemConfiguration:
             distributed_backend: torch.distributed.Backend = torch.distributed.Backend.GLOO,
     ):
         """
-        Creates a `TrainSystemConfiguration`.
+        Creates a `TrainingSystemConfiguration`.
 
         :param data_workers_per_train_process: The number of processes that are started to preprocess the data
             per train process. The train session will create this many processes for both the train data and the
             validation data.
         :param accelerator: A string identifying the Lightning accelerator to use.
-        :return: The `TrainSystemConfiguration`.
+        :return: The `TrainingSystemConfiguration`.
         """
         return cls(
             preprocessing_processes_per_train_process=data_workers_per_train_process,

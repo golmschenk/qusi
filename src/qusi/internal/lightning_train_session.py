@@ -18,29 +18,29 @@ from qusi.internal.light_curve_dataset import InterleavedDataset
 from qusi.internal.logging import set_up_default_logger
 from qusi.internal.module import QusiLightningModule
 from qusi.internal.progress_bar import ProgressBar
-from qusi.internal.train_hyperparameter_configuration import TrainHyperparameterConfiguration
-from qusi.internal.train_logging_configuration import TrainLoggingConfiguration
-from qusi.internal.train_system_configuration import TrainSystemConfiguration
+from qusi.internal.training_hyperparameter_configuration import TrainingHyperparameterConfiguration
+from qusi.internal.training_logging_configuration import TrainingLoggingConfiguration
+from qusi.internal.training_system_configuration import TrainingSystemConfiguration
 
 logger = logging.getLogger(__name__)
 
 
-def train_session(
-        train_datasets: list[Dataset],
+def run_training_session(
+        training_datasets: list[Dataset],
         validation_datasets: list[Dataset],
         model: Module,
         optimizer: Optimizer | None = None,
         loss_metric: Module | None = None,
         logging_metrics: list[Module] | None = None,
         *,
-        hyperparameter_configuration: TrainHyperparameterConfiguration | None = None,
-        system_configuration: TrainSystemConfiguration | None = None,
-        logging_configuration: TrainLoggingConfiguration | None = None,
+        hyperparameter_configuration: TrainingHyperparameterConfiguration | None = None,
+        system_configuration: TrainingSystemConfiguration | None = None,
+        logging_configuration: TrainingLoggingConfiguration | None = None,
 ) -> None:
     """
     Runs a training session.
 
-    :param train_datasets: The datasets to train on.
+    :param training_datasets: The datasets to train on.
     :param validation_datasets: The datasets to validate on.
     :param model: The model to train.
     :param optimizer: The optimizer to be used during training.
@@ -51,13 +51,13 @@ def train_session(
     :param logging_configuration: The configuration of the logging.
     """
     if hyperparameter_configuration is None:
-        hyperparameter_configuration:TrainHyperparameterConfiguration = TrainHyperparameterConfiguration.new()
+        hyperparameter_configuration:TrainingHyperparameterConfiguration = TrainingHyperparameterConfiguration.new()
     if system_configuration is None:
-        system_configuration: TrainSystemConfiguration = TrainSystemConfiguration.new()
+        system_configuration: TrainingSystemConfiguration = TrainingSystemConfiguration.new()
     if loss_metric is None:
         loss_metric: Module = BCELoss()
     if logging_configuration is None:
-        logging_configuration: TrainLoggingConfiguration = TrainLoggingConfiguration.new()
+        logging_configuration: TrainingLoggingConfiguration = TrainingLoggingConfiguration.new()
     if logging_metrics is None:
         logging_metrics: list[Module] = [BinaryAccuracy(), BinaryAUROC()]
 
@@ -91,11 +91,11 @@ def train_session(
         callbacks=[ProgressBar(refresh_rate=progress_refresh_rate)],
     )
     # TODO: Not a fan of needing to magically pass the process number to the datasets here.
-    for train_dataset in train_datasets:
-        train_dataset.global_rank = trainer.global_rank
-        train_dataset.world_size = trainer.world_size
+    for training_dataset in training_datasets:
+        training_dataset.global_rank = trainer.global_rank
+        training_dataset.world_size = trainer.world_size
 
-    train_dataset = InterleavedDataset.new(*train_datasets)
+    training_dataset = InterleavedDataset.new(*training_datasets)
     workers_per_dataloader = system_configuration.preprocessing_processes_per_train_process
 
     if hyperparameter_configuration.global_batch_size is not None:
@@ -120,8 +120,8 @@ def train_session(
     else:
         prefetch_factor = 10
         persistent_workers = True
-    train_dataloader = DataLoader(
-        train_dataset,
+    training_dataloader = DataLoader(
+        training_dataset,
         batch_size=hyperparameter_configuration.local_batch_size,
         pin_memory=True,
         persistent_workers=persistent_workers,
@@ -142,4 +142,4 @@ def train_session(
 
     lightning_model = QusiLightningModule.new(model=model, optimizer=optimizer, loss_metric=loss_metric,
                                               logging_metrics=logging_metrics)
-    trainer.fit(model=lightning_model, train_dataloaders=train_dataloader, val_dataloaders=validation_dataloaders)
+    trainer.fit(model=lightning_model, train_dataloaders=training_dataloader, val_dataloaders=validation_dataloaders)

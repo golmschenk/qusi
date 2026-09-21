@@ -3,7 +3,7 @@ from functools import partial
 
 import numpy as np
 
-from qusi.internal.infer_session import infer_session
+from qusi.internal.inference_session import run_inference_session
 from qusi.internal.device import get_device
 from qusi.internal.light_curve_dataset import (
     default_light_curve_post_injection_transform,
@@ -20,7 +20,7 @@ def test_toy_infer_session():
         default_light_curve_post_injection_transform, length=100
     )
     device = get_device()
-    confidences = infer_session(infer_datasets=[test_light_curve_dataset], model=model,
-                                batch_size=100, device=device)[0]
+    confidences = run_inference_session(inference_datasets=[test_light_curve_dataset], model=model, batch_size=100,
+                                        device=device)[0]
     assert isinstance(confidences, np.ndarray)
     assert 0 <= confidences[0] <= 1

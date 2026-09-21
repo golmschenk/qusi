@@ -16,8 +16,8 @@
 .. autoclass:: qusi.model.Hadryss
     :members: new
 .. autofunction:: qusi.session.get_device
-.. autofunction:: qusi.session.infer_session
-.. autofunction:: qusi.session.train_session
-.. autoclass:: qusi.session.TrainHyperparameterConfiguration
+.. autofunction:: qusi.session.inference_session
+.. autofunction:: qusi.session.training_session
+.. autoclass:: qusi.session.TrainingHyperparameterConfiguration
     :members: new
 ```

@@ -8,7 +8,7 @@ from torchmetrics import MeanSquaredError
 from torchmetrics.classification import BinaryAUROC, MulticlassAccuracy
 
 from qusi.internal.metric import MulticlassAUROCAlt, MulticlassAccuracyAlt
-from qusi.internal.train_session import update_logging_metrics, log_metrics
+from qusi.internal.training_session import update_logging_metrics, log_metrics
 
 
 def test_update_logging_metrics_for_functional_metrics():
@@ -42,7 +42,7 @@ def test_log_metrics_uses_torchmetrics_compute_if_available():
     target = torch.tensor([1, 1])
     metric(predicted_targets, target)
     placeholder_metric_totals = torch.tensor([-2.])
-    with patch('qusi.internal.train_session.wandb_log') as mock_wandb_log:
+    with patch('qusi.internal.training_session.wandb_log') as mock_wandb_log:
         log_metrics([metric], placeholder_metric_totals, 2)
         assert mock_wandb_log.call_args.args[1] == torch.tensor(0.5)
 

@@ -12,8 +12,8 @@ from qusi.internal.finite_standard_light_curve_dataset import FiniteStandardLigh
 logger = logging.getLogger(__name__)
 
 
-def infer_session(
-        infer_datasets: list[FiniteStandardLightCurveDataset],
+def run_inference_session(
+        inference_datasets: list[FiniteStandardLightCurveDataset],
         model: Module,
         *,
         batch_size: int,
@@ -21,9 +21,9 @@ def infer_session(
         workers_per_dataloader: int = 0,
 ) -> list[np.ndarray]:
     """
-    Runs an infer session on finite datasets.
+    Runs an inference session on finite datasets.
 
-    :param infer_datasets: The list of datasets to run the infer session on.
+    :param inference_datasets: The list of datasets to run the infer session on.
     :param model: The model to perform the inference.
     :param batch_size: The batch size to use during inference.
     :param device: The device to run the model on.
@@ -38,21 +38,21 @@ def infer_session(
         prefetch_factor = None
     else:
         prefetch_factor = 10
-    infer_dataloaders: list[DataLoader] = []
-    for infer_dataset in infer_datasets:
-        infer_dataloader = DataLoader(infer_dataset, batch_size=batch_size, pin_memory=True,
-                                      prefetch_factor=prefetch_factor, num_workers=workers_per_dataloader)
-        infer_dataloaders.append(infer_dataloader)
+    inference_dataloaders: list[DataLoader] = []
+    for inference_dataset in inference_datasets:
+        inference_dataloader = DataLoader(inference_dataset, batch_size=batch_size, pin_memory=True,
+                                          prefetch_factor=prefetch_factor, num_workers=workers_per_dataloader)
+        inference_dataloaders.append(inference_dataloader)
     model.eval()
     results = []
     logger.info(f'Entering infer loop...')
-    for infer_dataloader in infer_dataloaders:
-        result = infer_phase(infer_dataloader, model, device=device)
+    for inference_dataloader in inference_dataloaders:
+        result = inference_phase(inference_dataloader, model, device=device)
         results.append(result)
     return results
 
 
-def infer_phase(dataloader, model: Module, device: Device):
+def inference_phase(dataloader, model: Module, device: Device):
     batch_count = 0
     processed_count = 0
     batches_of_predicted_targets = []

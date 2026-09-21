@@ -4,10 +4,10 @@ from torch.types import Device
 from torch.utils.data import DataLoader
 
 from qusi.internal.finite_standard_light_curve_observation_dataset import FiniteStandardLightCurveObservationDataset
-from qusi.internal.train_session import update_logging_metrics, get_cycle_metric_values
+from qusi.internal.training_session import update_logging_metrics, get_cycle_metric_values
 
 
-def finite_datasets_test_session(
+def run_finite_datasets_test_session(
         test_datasets: list[FiniteStandardLightCurveObservationDataset],
         model: Module,
         metric_functions: list[Module],

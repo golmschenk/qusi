@@ -4,10 +4,10 @@ from torch.utils.data import DataLoader
 import torch
 
 from qusi.internal.light_curve_dataset import LightCurveDataset
-from qusi.internal.train_session import update_logging_metrics, get_cycle_metric_values
+from qusi.internal.training_session import update_logging_metrics, get_cycle_metric_values
 
 
-def infinite_datasets_test_session(test_datasets: list[LightCurveDataset], model: Module,
+def run_infinite_datasets_test_session(test_datasets: list[LightCurveDataset], model: Module,
                                    metric_functions: list[Module], *, batch_size: int, device: Device, steps: int):
     """
     Runs a test session on finite datasets.

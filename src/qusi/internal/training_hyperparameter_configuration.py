@@ -3,9 +3,9 @@ from dataclasses import dataclass
 
 
 @dataclass
-class TrainHyperparameterConfiguration:
+class TrainingHyperparameterConfiguration:
     """
-    Hyperparameter configuration settings for a train session.
+    Hyperparameter configuration settings for a training session.
 
     :ivar cycles: The number of cycles to run. Cycles consist of one set of training steps and one set of validation
                   steps. They can be seen as analogous to epochs. However, as qusi datasets are often
@@ -47,7 +47,7 @@ class TrainHyperparameterConfiguration:
             norm_based_gradient_clip: float = 1.0,
     ):
         """
-        Creates a new `TrainHyperparameterConfiguration`.
+        Creates a new `TrainingHyperparameterConfiguration`.
 
         :param cycles: The number of cycles to run. Cycles consist of one set of training steps and one set of validation
                   steps. They can be seen as analogous to epochs. However, as qusi datasets are often

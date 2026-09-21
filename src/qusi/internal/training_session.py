@@ -17,25 +17,25 @@ from torchmetrics.classification import BinaryAccuracy, BinaryAUROC
 
 from qusi.internal.light_curve_dataset import InterleavedDataset
 from qusi.internal.logging import set_up_default_logger, get_metric_name
-from qusi.internal.train_hyperparameter_configuration import TrainHyperparameterConfiguration
-from qusi.internal.train_logging_configuration import TrainLoggingConfiguration
-from qusi.internal.train_system_configuration import TrainSystemConfiguration
+from qusi.internal.training_hyperparameter_configuration import TrainingHyperparameterConfiguration
+from qusi.internal.training_logging_configuration import TrainingLoggingConfiguration
+from qusi.internal.training_system_configuration import TrainingSystemConfiguration
 from qusi.internal.wandb_liaison import wandb_commit, wandb_init, wandb_log
 
 logger = logging.getLogger(__name__)
 
 
-def train_session(
-        train_datasets: list[Dataset],
+def run_training_session(
+        training_datasets: list[Dataset],
         validation_datasets: list[Dataset],
         model: Module,
         optimizer: Optimizer | None = None,
         loss_metric: Module | None = None,
         logging_metrics: list[Module] | None = None,
         *,
-        hyperparameter_configuration: TrainHyperparameterConfiguration | None = None,
-        system_configuration: TrainSystemConfiguration | None = None,
-        logging_configuration: TrainLoggingConfiguration | None = None,
+        hyperparameter_configuration: TrainingHyperparameterConfiguration | None = None,
+        system_configuration: TrainingSystemConfiguration | None = None,
+        logging_configuration: TrainingLoggingConfiguration | None = None,
         # Deprecated keyword parameters.
         loss_function: Module | None = None,
         metric_functions: list[Module] | None = None,
@@ -43,7 +43,7 @@ def train_session(
     """
     Runs a training session.
 
-    :param train_datasets: The datasets to train on.
+    :param training_datasets: The datasets to train on.
     :param validation_datasets: The datasets to validate on.
     :param model: The model to train.
     :param optimizer: The optimizer to be used during training.
@@ -67,18 +67,18 @@ def train_session(
         logging_metrics = metric_functions
 
     if hyperparameter_configuration is None:
-        hyperparameter_configuration = TrainHyperparameterConfiguration.new()
+        hyperparameter_configuration = TrainingHyperparameterConfiguration.new()
     if system_configuration is None:
-        system_configuration = TrainSystemConfiguration.new()
+        system_configuration = TrainingSystemConfiguration.new()
     if logging_configuration is None:
-        logging_configuration = TrainLoggingConfiguration.new()
+        logging_configuration = TrainingLoggingConfiguration.new()
     if loss_metric is None:
         loss_metric = BCELoss()
     if logging_metrics is None:
         logging_metrics = [BinaryAccuracy(), BinaryAUROC()]
 
     set_up_default_logger()
-    train_loss_metric = loss_metric
+    training_loss_metric = loss_metric
     validation_loss_metric = copy.deepcopy(loss_metric)
     train_logging_metrics = logging_metrics
     validation_logging_metrics = copy.deepcopy(logging_metrics)
@@ -91,7 +91,7 @@ def train_session(
         dir=sessions_directory,
     )
     print(f'{logging_configuration.additional_log_dictionary}')
-    train_dataset = InterleavedDataset.new(*train_datasets)
+    training_dataset = InterleavedDataset.new(*training_datasets)
     try:
         torch.multiprocessing.set_start_method("spawn")
     except RuntimeError:  # TODO: This is probably too general of a catch.
@@ -103,8 +103,8 @@ def train_session(
     else:
         prefetch_factor = 10
         persistent_workers = True
-    train_dataloader = DataLoader(
-        train_dataset,
+    training_dataloader = DataLoader(
+        training_dataset,
         batch_size=hyperparameter_configuration.global_batch_size,
         pin_memory=True,
         persistent_workers=persistent_workers,
@@ -127,7 +127,7 @@ def train_session(
     else:
         device = torch.device('cpu')
     model = model.to(device, non_blocking=True)
-    train_loss_metric = train_loss_metric.to(device, non_blocking=True)
+    training_loss_metric = training_loss_metric.to(device, non_blocking=True)
     validation_loss_metric = validation_loss_metric.to(device, non_blocking=True)
     if optimizer is None:
         optimizer = AdamW(model.parameters())
@@ -141,7 +141,7 @@ def train_session(
     ]
     for _cycle_index in range(hyperparameter_configuration.cycles):
         logger.info(f'Cycle {_cycle_index}')
-        train_phase(dataloader=train_dataloader, model=model, loss_metric=train_loss_metric,
+        train_phase(dataloader=training_dataloader, model=model, loss_metric=training_loss_metric,
                     logging_metrics=train_logging_metrics, optimizer=optimizer,
                     steps=hyperparameter_configuration.train_steps_per_cycle, device=device)
         for validation_dataloader in validation_dataloaders:

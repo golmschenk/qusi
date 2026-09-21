@@ -5,9 +5,9 @@ from typing import Any
 
 
 @dataclass
-class TrainLoggingConfiguration:
+class TrainingLoggingConfiguration:
     """
-    Configuration settings for the logging of a train session.
+    Configuration settings for the logging of a training session.
 
     :ivar wandb_project: The wandb project to log to.
     :ivar wandb_entity: The wandb entity to log to.
@@ -27,12 +27,12 @@ class TrainLoggingConfiguration:
             additional_log_dictionary: dict[str, Any] | None = None,
     ):
         """
-        Creates a `TrainLoggingConfiguration`.
+        Creates a `TrainingLoggingConfiguration`.
         
         :param wandb_project: The wandb project to log to.
         :param wandb_entity: The wandb entity to log to.
         :param additional_log_dictionary: The dictionary of additional values to log.
-        :return: The `TrainLoggingConfiguration`.
+        :return: The `TrainingLoggingConfiguration`.
         """
         if additional_log_dictionary is None:
             additional_log_dictionary = {}
