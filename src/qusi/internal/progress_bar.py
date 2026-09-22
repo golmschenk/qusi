@@ -25,4 +25,4 @@ class ProgressBar(TQDMProgressBar):
         self.train_progress_bar.reset()
         self.train_progress_bar.total = total
         self.train_progress_bar.initial = 0
-        self.train_progress_bar.set_description(f"Cycle {trainer.current_epoch}")
+        self.train_progress_bar.set_description(f'Cycle {trainer.current_epoch}')

@@ -12,7 +12,7 @@ from qusi.internal.training_system_configuration import TrainingSystemConfigurat
 
 
 def test_toy_train_session():
-    os.environ["WANDB_MODE"] = "disabled"
+    os.environ['WANDB_MODE'] = 'disabled'
     model = SingleDenseLayerBinaryClassificationModel.new(input_size=100)
     dataset = get_toy_dataset()
     dataset.post_injection_transform = partial(
