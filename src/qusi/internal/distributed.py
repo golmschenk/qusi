@@ -6,6 +6,8 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Generator, TextIO, Callable, ParamSpec, TypeVar
 
+import torch
+
 logger = logging.getLogger(__name__)
 
 P = ParamSpec('P')
@@ -24,8 +26,58 @@ def ensure_torchrun_environment_variables() -> None:
         os.environ['WORLD_SIZE'] = str(1)
         os.environ['LOCAL_WORLD_SIZE'] = str(1)
         os.environ['MASTER_ADDR'] = 'localhost'
-        os.environ['MASTER_PORT'] = '35728'
+        os.environ['MASTER_PORT'] = '0'
         os.environ['TORCHELASTIC_RESTART_COUNT'] = str(0)
+
+
+def get_world_size() -> int:
+    return int(os.environ['WORLD_SIZE'])
+
+
+def get_world_rank() -> int:
+    return int(os.environ['RANK'])
+
+
+def get_world_worker_id() -> int:
+    worker_info = torch.utils.data.get_worker_info()
+    global_rank = get_world_rank()
+    if worker_info is not None:
+        local_worker_id = worker_info.id
+        number_of_workers = worker_info.num_workers
+    else:
+        local_worker_id = 0
+        number_of_workers = 1
+    world_worker_id = (global_rank * number_of_workers) + local_worker_id
+    return world_worker_id
+
+
+def get_world_worker_count() -> int:
+    worker_info = torch.utils.data.get_worker_info()
+    global_world_size = get_world_size()
+    if worker_info is not None:
+        number_of_workers = worker_info.num_workers
+    else:
+        number_of_workers = 1
+    world_worker_count = global_world_size * number_of_workers
+    return world_worker_count
+
+
+def get_local_worker_id() -> int:
+    worker_info = torch.utils.data.get_worker_info()
+    if worker_info is not None:
+        local_worker_id = worker_info.id
+    else:
+        local_worker_id = 0
+    return local_worker_id
+
+
+def get_local_worker_count() -> int:
+    worker_info = torch.utils.data.get_worker_info()
+    if worker_info is not None:
+        local_worker_count = worker_info.num_workers
+    else:
+        local_worker_count = 1
+    return local_worker_count
 
 
 def distributed_logging(decorated_function: Callable[P, R]) -> Callable[P, R]:

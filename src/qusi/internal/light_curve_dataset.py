@@ -23,7 +23,6 @@ from torch import Tensor
 from torch.utils.data import IterableDataset
 from typing_extensions import Self
 
-
 from qusi.internal.light_curve import (
     LightCurve,
     randomly_roll_light_curve,
@@ -45,7 +44,6 @@ if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
 
 from qusi.internal.light_curve_collection import LightCurveObservationCollection
-
 
 logger = logging.getLogger(__name__)
 
